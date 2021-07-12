@@ -1,6 +1,12 @@
 #include "GS2Compiler.h"
 #include "ast.h"
 
+void writeByteIntegerCode(GS2Bytecode& bc, char a)
+{
+	bc.emit(char(0xF3));
+	bc.emit(a);
+}
+
 void GS2Compiler::Visit(Node *node)
 {
 	fprintf(stderr, "Unimplemented node type: %s\n", node->NodeType());
@@ -21,6 +27,7 @@ void GS2Compiler::Visit(StatementFnDeclNode *node)
 	printf("Declare function: %s\n", node->ident.c_str());
 
 	byteCode.emit(opcode::OP_SET_INDEX);
+	//writeByteIntegerCode(byteCode, 0);
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0)); // replaced with jump index to last opcode
 	
@@ -54,8 +61,8 @@ void GS2Compiler::Visit(StatementFnDeclNode *node)
 	{
 		// TODO: unsure if this is needed
 		byteCode.emit(opcode::OP_TYPE_NUMBER);
-		byteCode.emit(char(0xF4));
-		byteCode.emit(short(0));
+		byteCode.emit(char(0xF3));
+		byteCode.emit(char(0));
 
 		byteCode.emit(opcode::OP_RET);
 	}
@@ -130,7 +137,9 @@ void GS2Compiler::Visit(ExpressionFnCallNode *node)
 	node->expr->visit(this);
 
 	byteCode.emit(opcode::OP_CALL);
-	byteCode.emit(opcode::OP_INDEX_DEC);
+
+	if (node->discardReturnValue)
+		byteCode.emit(opcode::OP_INDEX_DEC);
 }
 
 void GS2Compiler::Visit(StatementReturnNode *node)

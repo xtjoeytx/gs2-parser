@@ -9,8 +9,9 @@
 #include "astvisitor.h"
 
 #define _NodeName(name) \
+    inline static const char * NodeName = name; \
     virtual const char * NodeType() const { \
-        return name; \
+        return NodeName; \
     } \
     virtual void visit(NodeVisitor *v) { v->Visit(this); }
 
@@ -178,11 +179,12 @@ public:
     _NodeName("ExpressionFnCallNode")
 
     ExpressionFnCallNode(ExpressionNode *e, std::vector<ExpressionNode *> *a = 0)
-        : ExpressionNode(), expr(e), args(a)
+        : ExpressionNode(), expr(e), args(a), discardReturnValue(false)
     {
     }
     virtual ~ExpressionFnCallNode() { }
 
+    bool discardReturnValue;
     ExpressionNode *expr;
     std::vector<ExpressionNode *> *args;
 
@@ -243,6 +245,11 @@ public:
 
     void append(StatementNode *node) {
         if (node) {
+            if (strcmp(node->NodeType(), ExpressionFnCallNode::NodeName) == 0) {
+                auto fnNode = reinterpret_cast<ExpressionFnCallNode*>(node);
+                fnNode->discardReturnValue = true;
+            }
+
             statements.push_back(node);
         }
     }

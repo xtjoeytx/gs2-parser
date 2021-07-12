@@ -55,7 +55,7 @@ Buffer GS2Bytecode::getByteCode()
 			functionNames.write(func.functionName.c_str(), func.functionName.length());
 			functionNames.write('\0');
 			
-			emit(short(bytecode.length()), func.functionIP - 2);
+			emit(short(opcodePos), func.functionIP - 2);
 		}
 
 		byteCode.Write<encoding::Int32>(2);
@@ -81,6 +81,7 @@ Buffer GS2Bytecode::getByteCode()
 	byteCode.Write<encoding::Int32>(4);
 	byteCode.Write<encoding::Int32>(bytecode.length());
 	byteCode.write(bytecode);
+	byteCode.write('\n');
 
 	return byteCode;
 }

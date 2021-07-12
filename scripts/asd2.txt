@@ -1,6 +1,6 @@
 //#CLIENTSIDE
 function onCreated() {
-  echo("testgs2compiler2");
+  echo("testgs2compiler23");
   echo(doSomething());
 }
 

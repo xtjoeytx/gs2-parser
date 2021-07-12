@@ -389,7 +389,12 @@ int main(int argc, const char *argv[]) {
 
 		auto buf = byteCode.buffer();
 
-		FILE *file = fopen("weaponTestCode.dump", "wb");
+		FILE *file;
+		if (argc >= 2) {
+			file = fopen(argv[2], "wb");
+		}
+		else file = fopen("weaponTestCode.dump", "wb");
+
 		if (file)
 		{
 			uint8_t packetId = 140 + 32;
@@ -397,6 +402,7 @@ int main(int argc, const char *argv[]) {
 			fwrite(buf, sizeof(uint8_t), byteCode.length(), file);
 			fclose(file);
 		}
+		else printf("Couldn't open file\n");
 	}
 
 	#ifdef _WIN32
