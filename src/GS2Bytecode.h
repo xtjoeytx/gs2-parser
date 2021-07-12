@@ -4,6 +4,7 @@
 #define GS2BYTECODE_H
 
 #include <algorithm>
+#include <limits>
 #include <string>
 #include <vector>
 #include "encoding/buffer.h"
@@ -28,9 +29,9 @@ class GS2Bytecode
         void addFunction(FunctionEntry entry);
         
         void emit(opcode::Opcode op);
-        void emit(char v, size_t pos = SIZE_T_MAX);
-        void emit(short v, size_t pos = SIZE_T_MAX);
-        void emit(int v, size_t pos = SIZE_T_MAX);
+        void emit(char v, size_t pos = SIZE_MAX);
+        void emit(short v, size_t pos = SIZE_MAX);
+        void emit(int v, size_t pos = SIZE_MAX);
 
         opcode::Opcode getLastOp() const {
             return lastOp;

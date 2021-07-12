@@ -1,4 +1,4 @@
-#pragma ONCE
+#pragma once
 
 #ifndef GS2COMPILER_H
 #define GS2COMPILER_H

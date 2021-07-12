@@ -378,7 +378,7 @@ int main(int argc, const char *argv[]) {
 	if (stmtBlock != nullptr)
 	{
 		TestNodeVisitor visit;
-		printf("Children: %lu\n", stmtBlock->statements.size());
+		printf("Children: %zu\n", stmtBlock->statements.size());
 		visit.Visit(stmtBlock);
 
 		GS2Compiler compilerVisitor;
@@ -389,7 +389,7 @@ int main(int argc, const char *argv[]) {
 
 		auto buf = byteCode.buffer();
 
-		FILE *file = fopen("weaponTestCode.dump", "w");
+		FILE *file = fopen("weaponTestCode.dump", "wb");
 		if (file)
 		{
 			uint8_t packetId = 140 + 32;
@@ -397,11 +397,9 @@ int main(int argc, const char *argv[]) {
 			fwrite(buf, sizeof(uint8_t), byteCode.length(), file);
 			fclose(file);
 		}
-
-
-//		printf("Children 2: %lu\n", ((StatementBlock *)stmtBlock->statements[0])->statements.size());
 	}
 
+	system("pause");
 	return 0;
 }
 

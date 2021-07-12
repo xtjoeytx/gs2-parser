@@ -1,3 +1,4 @@
+#include <cassert>
 #include <cstdio>
 #include "buffer.h"
 
@@ -10,7 +11,10 @@ Buffer::Buffer(size_t len)
 Buffer::Buffer(Buffer&& o) noexcept
     : buf(std::move(o.buf)), buflen(o.buflen), readpos(o.readpos), writepos(o.writepos)
 {
-
+    o.buf = nullptr;
+    //o.buflen = 0;
+    //o.readpos = 0;
+    //o.writepos = 0;
 }
 
 Buffer::~Buffer()
@@ -45,52 +49,8 @@ void Buffer::write(char val)
         resize();
 
     buf[writepos++] = val;
+
+    if (val == 0x0d) {
+        printf("written\n");
+    }
 }
-
-/*
-int main(int argc, char *argv[])
-{
-    Buffer buf;
-
-    // const char *test = "test str";
-    // buf.write(test, strlen(test));
-
-    // char *tmp = new char[30];
-    // buf.read(tmp, strlen(test), 0);
-    // tmp[strlen(test)+1] = '\0';
-
-    // printf("data: %s\n", tmp);
-
-    uint16_t t = 17954;
-    buf.Write<GraalShort>(t);
-
-    auto out = buf.Read<GraalByte>(0);
-    printf("Val: %d\n", out);
-    out = buf.Read<GraalByte>(1);
-    printf("Val: %d\n", out);
-
-    auto out2 = buf.Read<GraalShort>(0);
-    printf("Val: %d\n", out2);
-
-    buf.Write<GraalString>("test str");
-
-    auto eee = buf.Read<GraalString>(2);
-    printf("string: %s\n", eee.c_str());
-
-//////////////
-
-    Buffer strBuffer;
-    strBuffer.Write<GraalString>("hello");
-
-    buf.write(strBuffer);
-
-    eee = buf.Read<GraalString>(2);
-    printf("string: %s\n", eee.c_str());
-
-    eee = buf.Read<GraalString>(10);
-    printf("string: %s\n", eee.c_str());
-
-
-    return 0;
-}
-*/

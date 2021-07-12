@@ -46,7 +46,7 @@ Buffer GS2Bytecode::getByteCode()
 		byteCode.write(gs1flags);
 	}
 
-	// Function Names (TODO)
+	// Function Names
 	{
 		Buffer functionNames;
 		for (const auto& func : functionTable)
@@ -55,7 +55,6 @@ Buffer GS2Bytecode::getByteCode()
 			functionNames.write(func.functionName.c_str(), func.functionName.length());
 			functionNames.write('\0');
 			
-			//bytecode.write(short(byteCode.getBytecodePos()), jumpIdx);
 			emit(short(bytecode.length()), func.functionIP - 2);
 		}
 
@@ -102,17 +101,18 @@ void GS2Bytecode::addFunction(FunctionEntry entry) {
 
 void GS2Bytecode::emit(opcode::Opcode op)
 {
-	printf("%5zu EMIT OPER: %s\n", bytecode.length(), opcode::OpcodeToString(op).c_str());
+	printf("%5zu EMIT OPER: %s (%d)\n", bytecode.length(), opcode::OpcodeToString(op).c_str(), op);
 	
-	bytecode.write(op);
+	bytecode.write((char)op);
 	lastOp = op;
 	++opcodePos;
 }
 
-void GS2Bytecode::emit(char v, size_t pos) {
-	printf("%5zu EMIT byte: %d\n", (pos == SIZE_T_MAX ? bytecode.length() : pos), v);
+void GS2Bytecode::emit(char v, size_t pos)
+{
+	printf("%5zu EMIT byte: %d\n", (pos == SIZE_MAX ? bytecode.length() : pos), v);
 
-	if (pos != SIZE_T_MAX)
+	if (pos != SIZE_MAX)
 	{
 		auto current = bytecode.length();
 		bytecode.setWritePos(pos);
@@ -125,10 +125,11 @@ void GS2Bytecode::emit(char v, size_t pos) {
 	}
 }
 
-void GS2Bytecode::emit(short v, size_t pos) {
-	printf("%5zu EMIT short: %d\n", (pos == SIZE_T_MAX ? bytecode.length() : pos), v);
+void GS2Bytecode::emit(short v, size_t pos)
+{
+	printf("%5zu EMIT short: %d\n", (pos == SIZE_MAX ? bytecode.length() : pos), v);
 
-	if (pos != SIZE_T_MAX)
+	if (pos != SIZE_MAX)
 	{
 		bytecode.Write<encoding::Int16>(v, pos);
 	}
@@ -138,10 +139,11 @@ void GS2Bytecode::emit(short v, size_t pos) {
 	}
 }
 
-void GS2Bytecode::emit(int v, size_t pos) {
-	printf("%5zu EMIT int: %d\n", (pos == SIZE_T_MAX ? bytecode.length() : pos), v);
+void GS2Bytecode::emit(int v, size_t pos)
+{
+	printf("%5zu EMIT int: %d\n", (pos == SIZE_MAX ? bytecode.length() : pos), v);
 
-	if (pos != SIZE_T_MAX)
+	if (pos != SIZE_MAX)
 	{
 		bytecode.Write<encoding::Int32>(v, pos);
 	}

@@ -138,6 +138,7 @@ void GS2Compiler::Visit(StatementReturnNode *node)
 	// pretty sure it goes on top
 	if (node->expr)
 		node->expr->visit(this);
+
 	//byteCode.emit(opcode::OP_CONV_TO_STRING);
 	byteCode.emit(opcode::OP_RET);
 }

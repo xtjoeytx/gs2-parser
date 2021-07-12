@@ -3,6 +3,7 @@
 #ifndef GS2VISITOR_H
 #define GS2VISITOR_H
 
+#include <cstdarg>
 #include "ast.h"
 
 std::string getArgList(std::vector<ExpressionNode *> *args) {
