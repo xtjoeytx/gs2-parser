@@ -20,4 +20,4 @@ bison --debug -d generator/calc.y -o src/calc.tab.cc $extra
 flex -o src/lex.yy.cc generator/calc.l
 
 #compile
-g++ -std=c++17 src/calc.tab.cc src/lex.yy.cc -o calc -lm
+g++ -std=c++17 src/calc.tab.cc src/lex.yy.cc src/GS2Compiler.cpp src/GS2Bytecode.cpp src/encoding/buffer.cpp -o calc -lm

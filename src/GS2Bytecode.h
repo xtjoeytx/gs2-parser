@@ -1,0 +1,70 @@
+#pragma once
+
+#ifndef GS2BYTECODE_H
+#define GS2BYTECODE_H
+
+#include <algorithm>
+#include <string>
+#include <vector>
+#include "encoding/buffer.h"
+#include "opcodes.h"
+
+struct FunctionEntry
+{
+    std::string functionName;
+    size_t functionIP;
+    size_t opIndex;
+};
+
+class GS2Bytecode
+{
+    public:
+        GS2Bytecode() : opcodePos(0) {}
+        void Reset() { opcodePos = 0; }
+        
+        Buffer getByteCode();
+
+        size_t getStringConst(const std::string& str);
+        void addFunction(FunctionEntry entry);
+        
+        void emit(opcode::Opcode op);
+        void emit(char v, size_t pos = SIZE_T_MAX);
+        void emit(short v, size_t pos = SIZE_T_MAX);
+        void emit(int v, size_t pos = SIZE_T_MAX);
+
+        opcode::Opcode getLastOp() const {
+            return lastOp;
+        }
+
+        size_t getOpcodePos() const {
+            return opcodePos;
+        }
+
+        size_t getBytecodePos() const {
+            return bytecode.length();
+        }
+
+    private:
+        Buffer bytecode;
+        std::vector<std::string> stringTable;
+        std::vector<FunctionEntry> functionTable;
+
+        opcode::Opcode lastOp;
+        size_t opcodePos;
+};
+
+// Format:
+// {GINT2(LENGTH_OF_STARTSECTION)}{STARTSECTION}{SEGMENTS}
+
+// Start Section:
+// weapon,npcName,saveToDisk[0,1],GINT5(HASH1)GINT5(HASH2)
+
+// Segments: GS1EventFlags:1, FunctionNames:2, Strings:3, Bytecode:4
+// {INT4(SEGMENT_TYPE)}{INT4(SEGMENT_LEN)}
+
+// GS1EventFlags: {INT4(0)} - bitflags
+// FunctionNames: {INT4(INSTRUCT_ID)}{CSTR-NULL-TERMINATED}...
+// StringTable: {CSTR-NULL-TERMINATED}...
+// Bytecode: ...
+
+#endif

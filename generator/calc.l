@@ -59,12 +59,12 @@ string_const (\"(\\.|[^"])*\")
 ">"		{return T_OPGREATERTHAN;}
 ">="	{return T_OPGREATERTHANEQUAL;}
 
-"+"		{return T_OPADD;}
-"-"		{return T_OPSUB;}
-"*"		{return T_OPMUL;}
-"/"		{return T_OPDIVIDE;}
-"^"		{return T_OPPOW;}
-"%"		{return T_OPMOD;}
+"+"		{return '+';}
+"-"		{return '-';}
+"*"		{return '*';}
+"/"		{return '/';}
+"^"		{return '^';}
+"%"		{return '%';}
 
 "="		{return T_OPASSIGN;}
 "+="	{return T_OPADDASSIGN;}
@@ -134,7 +134,7 @@ string_const (\"(\\.|[^"])*\")
 {DIGIT}+\.{DIGIT}+	{yylval.fval = atof(yytext); return T_FLOAT;}
 {DIGIT}+			{yylval.ival = atoi(yytext); return T_INT;}
 {ALPHANUM}+			{yytext[yyleng] = 0; yylval.sval = saveString(yytext); return T_IDENTIFIER;}
-{string_const}		{yytext[yyleng] = 0; yylval.sval = saveString(yytext); printf("Constant: %s\n", yylval.sval); return T_STRCONSTANT;}
+{string_const}		{yytext[yyleng - 1] = 0; yylval.sval = saveString(yytext+1); return T_STRCONSTANT;}
 %%
 
 void setLexBuffer(const char *s) {

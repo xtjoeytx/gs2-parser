@@ -1,0 +1,22 @@
+//#CLIENTSIDE
+function onCreated() {
+  echo("testgs2compiler2");
+  echo(doSomething());
+}
+
+function doSomething() {
+  echo("dosomething");
+  return "test";
+}
+
+/*
+//this.istaff.eeeffg ;
+function onCreated()
+{
+  this.isstaff = false;
+  requesttext("options", "");
+  
+  sendtext("irc", "login", player.nick);
+  onShowGUI();
+}
+*/

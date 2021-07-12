@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <string>
 #include "ast.h"
-#include "astvisitor.h"
+#include "GS2SourceVisitor.h"
+#include "GS2Compiler.h"
 
 #include <fstream>
 #include <streambuf>
@@ -62,7 +63,7 @@ void yyerror(const char* s);
 %token T_OPLESSTHAN T_OPLESSTHANEQUAL
 %token T_OPGREATERTHAN T_OPGREATERTHANEQUAL
 
-%token T_OPADD T_OPSUB T_OPMUL T_OPDIVIDE T_OPPOW T_OPMOD
+%token '+' '-' '*' '/' '^' '%'
 %token T_OPASSIGN
 %token T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN
 %token T_OPDECREMENT T_OPINCREMENT
@@ -77,13 +78,13 @@ void yyerror(const char* s);
 %left '['
 %left T_OPOR
 %left T_OPAND
-%left T_OPPOW
+%left '^'
 %left '@'
 %left T_OPLESSTHAN T_OPLESSTHANEQUAL
 %left T_OPGREATERTHAN T_OPGREATERTHANEQUAL
 %left T_OPEQUALS T_OPNOTEQUALS
-%left T_OPADD T_OPSUB
-%left T_OPMUL T_OPDIVIDE T_OPMOD
+%left '+' '-'
+%left '*' '/' '%'
 %right T_OPNOT T_OPDECREMENT T_OPINCREMENT
 %left '.'
 
@@ -92,14 +93,14 @@ void yyerror(const char* s);
 %type<exprIdentNode> expr_ident
 %type<exprNode> expr_strconst
 %type<exprUnaryNode> expr_ops_unary
-%type<exprBinaryNode> expr_ops_binary
+%type<exprBinaryNode> expr_ops_binary expr_ops_comparison
 %type<exprCallNode> expr_fncall
 %type<exprListNode> expr_arraylist
 %type<exprObjectAccessNode> expr_objaccess
 %type<stmtIfNode> stmt_if
 %type<stmtBlock> stmt_list
-%type<stmtNode> stmt_ret stmt_break stmt_continue stmt_expr
 %type<stmtNode> stmt
+%type<stmtNode> stmt_ret stmt_break stmt_continue stmt_expr
 %type<stmtBlock> stmt_block
 %type<stmtNewNode> stmt_new
 %type<stmtNode> stmt_for
@@ -235,6 +236,12 @@ primary_expression:
 	| '(' expr ')'					{ $$ = $2; }
 	;
 
+// postfix_expression
+// 	: primary_expression
+// 	| postfix_expression '[' expr ']'
+// 	| postfix_expression '.' expr_ident
+// 	;
+
 expr:
 	primary_expression
 	| expr_fncall 					{ $$ = $1; }
@@ -242,11 +249,12 @@ expr:
 	| expr_arraylist				{ $$ = $1; }
 	| expr_ops_binary 				{ $$ = $1; }
 	| expr_ops_unary				{ $$ = $1; }
+	| expr_ops_comparison			{ $$ = $1; }
 	| expr '[' expr ']'				{ $$ = $1; }
 	;
 
 expr_ops_unary:
-	T_OPSUB expr 					{ $$ = new ExpressionUnaryOpNode($2, "-"); }
+	'-' expr 						{ $$ = new ExpressionUnaryOpNode($2, "-"); }
 	| T_OPNOT expr 					{ $$ = new ExpressionUnaryOpNode($2, "!"); }
 	| T_OPDECREMENT expr 			{ $$ = new ExpressionUnaryOpNode($2, "--"); }
 	| T_OPINCREMENT expr 			{ $$ = new ExpressionUnaryOpNode($2, "++"); }
@@ -254,23 +262,27 @@ expr_ops_unary:
 	;
 
 expr_ops_binary:
-	expr T_OPADD expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, "+"); }
-	| expr T_OPSUB expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, "-"); }
-	| expr T_OPMUL expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, "*"); }
-	| expr T_OPDIVIDE expr	 		{ $$ = new ExpressionBinaryOpNode($1, $3, "/"); }
-	| expr T_OPMOD expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, "%"); }
-	| expr T_OPPOW expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, "^"); }
-	| expr T_OPEQUALS expr	 		{ $$ = new ExpressionBinaryOpNode($1, $3, "=="); }
-	| expr T_OPNOTEQUALS expr	 	{ $$ = new ExpressionBinaryOpNode($1, $3, "!="); }
-	| expr T_OPLESSTHAN expr	 	{ $$ = new ExpressionBinaryOpNode($1, $3, "<"); }
-	| expr T_OPGREATERTHAN expr	 	{ $$ = new ExpressionBinaryOpNode($1, $3, ">"); }
-	| expr T_OPLESSTHANEQUAL expr	 	{ $$ = new ExpressionBinaryOpNode($1, $3, "<="); }
-	| expr T_OPGREATERTHANEQUAL expr	{ $$ = new ExpressionBinaryOpNode($1, $3, ">="); }
-	| expr T_OPAND expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, "&&"); }
-	| expr T_OPOR expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, "||"); }
+	expr '+' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "+"); }
+	| expr '-' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "-"); }
+	| expr '*' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "*"); }
+	| expr '/' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "/"); }
+	| expr '%' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "%"); }
+	| expr '^' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "^"); }
 	| expr T_OPASSIGN expr		 	{ $$ = new ExpressionBinaryOpNode($1, $3, "=", true); }
 	| expr '@' expr		 			{ $$ = new ExpressionBinaryOpNode($1, $3, "@"); }
 	;
+
+expr_ops_comparison:
+	expr T_OPEQUALS expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, "=="); }
+	| expr T_OPNOTEQUALS expr	 		{ $$ = new ExpressionBinaryOpNode($1, $3, "!="); }
+	| expr T_OPLESSTHAN expr	 		{ $$ = new ExpressionBinaryOpNode($1, $3, "<"); }
+	| expr T_OPGREATERTHAN expr	 		{ $$ = new ExpressionBinaryOpNode($1, $3, ">"); }
+	| expr T_OPLESSTHANEQUAL expr	 	{ $$ = new ExpressionBinaryOpNode($1, $3, "<="); }
+	| expr T_OPGREATERTHANEQUAL expr	{ $$ = new ExpressionBinaryOpNode($1, $3, ">="); }
+	| expr T_OPAND expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "&&"); }
+	| expr T_OPOR expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "||"); }
+	;
+
 
 expr_intconst:
 	T_INT							{ $$ = new ExpressionIntegerNode($1); }
@@ -294,7 +306,7 @@ expr_fncall:
 	;
 
 expr_objaccess:
-	expr '.' expr_ident			{ $$ = new ExpressionObjectAccessNode($1, $3); }
+	expr '.' expr_ident							{ $$ = new ExpressionObjectAccessNode($1, $3); }
 	;
 
 %%
@@ -368,6 +380,24 @@ int main(int argc, const char *argv[]) {
 		TestNodeVisitor visit;
 		printf("Children: %lu\n", stmtBlock->statements.size());
 		visit.Visit(stmtBlock);
+
+		GS2Compiler compilerVisitor;
+		compilerVisitor.Visit(stmtBlock);
+
+		auto byteCode = compilerVisitor.getByteCode();
+		printf("Total length of bytecode w/ headers: %5zu\n", byteCode.length());
+
+		auto buf = byteCode.buffer();
+
+		FILE *file = fopen("weaponTestCode.dump", "w");
+		if (file)
+		{
+			uint8_t packetId = 140 + 32;
+			fwrite(&packetId, sizeof(uint8_t), 1, file);
+			fwrite(buf, sizeof(uint8_t), byteCode.length(), file);
+			fclose(file);
+		}
+
 
 //		printf("Children 2: %lu\n", ((StatementBlock *)stmtBlock->statements[0])->statements.size());
 	}
