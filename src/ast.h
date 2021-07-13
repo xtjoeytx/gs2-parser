@@ -9,438 +9,458 @@
 #include "astvisitor.h"
 
 #define _NodeName(name) \
-    inline static const char * NodeName = name; \
-    virtual const char * NodeType() const { \
-        return NodeName; \
-    } \
-    virtual void visit(NodeVisitor *v) { v->Visit(this); }
+	inline static const char * NodeName = name; \
+	virtual const char * NodeType() const { \
+		return NodeName; \
+	} \
+	virtual void visit(NodeVisitor *v) { v->Visit(this); }
 
 
 class Node
 {
 public:
-    Node() {}
-    virtual ~Node() { }
+	Node() {}
+	virtual ~Node() { }
 
-    virtual const char * NodeType() const = 0;
-    virtual void visit(NodeVisitor *v) { v->Visit(this); }
+	virtual const char * NodeType() const = 0;
+	virtual void visit(NodeVisitor *v) { v->Visit(this); }
 };
 
 class ProgramNode : public Node
 {
 public:
-    _NodeName("ProgramNode")
+	_NodeName("ProgramNode")
 
-    ProgramNode() : Node() { }
+	ProgramNode() : Node() { }
 
-    std::vector<StatementNode *> nodes;
+	std::vector<StatementNode *> nodes;
 };
 
 class StatementNode : public Node
 {
 public:
-    _NodeName("StatementNode")
+	_NodeName("StatementNode")
 
-    StatementNode() : Node() { }
+	StatementNode() : Node() { }
 };
 
+enum class ExpressionType
+{
+	EXPR_ANY,
+	EXPR_INTEGER,
+	EXPR_NUMBER,
+	EXPR_STRING
+};
 
 class ExpressionNode : public StatementNode
 {
 public:
-    _NodeName("ExpressionNode")
+	_NodeName("ExpressionNode")
 
-    ExpressionNode() : StatementNode() { }
+	ExpressionNode() : StatementNode() { }
 
-    virtual std::string toString() const = 0;
+	virtual std::string toString() const = 0;
+	virtual ExpressionType expressionType() const {
+		return ExpressionType::EXPR_ANY;
+	}
 };
 
 class ExpressionIntegerNode : public ExpressionNode
 {
 public:
-    _NodeName("ExpressionIntegerNode")
+	_NodeName("ExpressionIntegerNode")
 
-    ExpressionIntegerNode(int num) : ExpressionNode()
-    {
-        val = num;
-    }
-   virtual std::string toString() const {
-       return std::to_string(val);
-   }
+	ExpressionIntegerNode(int num) : ExpressionNode()
+	{
+		val = num;
+	}
 
-    int val;
+	virtual std::string toString() const {
+		return std::to_string(val);
+	}
+
+	virtual ExpressionType expressionType() const {
+		return ExpressionType::EXPR_INTEGER;
+	}
+
+	int val;
 };
 
 class ExpressionIdentifierNode : public ExpressionNode
 {
 public:
-    _NodeName("ExpressionIdentifierNode")
+	_NodeName("ExpressionIdentifierNode")
 
-    ExpressionIdentifierNode(const char *str) : ExpressionNode()
-    {
-        val = std::string(str);
-    }
-    virtual std::string toString() const {
-       return val;
-   }
+	ExpressionIdentifierNode(const char *str) : ExpressionNode()
+	{
+		val = std::string(str);
+	}
 
-    std::string val;
+	virtual std::string toString() const {
+		return val;
+	}
+
+	std::string val;
 };
 
 class ExpressionStringConstNode : public ExpressionNode
 {
 public:
-    _NodeName("ExpressionStringConstNode")
+	_NodeName("ExpressionStringConstNode")
 
-    ExpressionStringConstNode(const char *str) : ExpressionNode()
-    {
-        val = std::string(str);
-    }
-    virtual std::string toString() const {
-       return val;
-   }
+	ExpressionStringConstNode(const char *str) : ExpressionNode()
+	{
+		val = std::string(str);
+	}
 
-    std::string val;
+	virtual std::string toString() const {
+		return val;
+	}
+
+	virtual ExpressionType expressionType() const {
+		return ExpressionType::EXPR_STRING;
+	}
+
+	std::string val;
 };
 
 class ExpressionBinaryOpNode : public ExpressionNode
 {
-    public:
-        _NodeName("ExpressionBinaryOpNode");
+	public:
+		_NodeName("ExpressionBinaryOpNode");
 
-        ExpressionBinaryOpNode(ExpressionNode *l, ExpressionNode *r, std::string op, bool assign = false)
-            : ExpressionNode(), left(l), right(r), op(op), assignment(assign)
-        {
+		ExpressionBinaryOpNode(ExpressionNode *l, ExpressionNode *r, std::string op, bool assign = false)
+			: ExpressionNode(), left(l), right(r), op(op), assignment(assign)
+		{
 
-        }
+		}
 
-        ExpressionNode *left;
-        ExpressionNode *right;
-        std::string op;
-        bool assignment;
+		ExpressionNode *left;
+		ExpressionNode *right;
+		std::string op;
+		bool assignment;
 
-        virtual std::string toString() const {
-            std::string ret;
+		virtual std::string toString() const {
+			std::string ret;
 
-            if (!assignment)
-                ret += "(";
-            
-            ret += left->toString() + " " + op.c_str() + " " + right->toString();
+			if (!assignment)
+				ret += "(";
+			
+			ret += left->toString() + " " + op.c_str() + " " + right->toString();
 
-            if (!assignment)
-                ret += ")";
+			if (!assignment)
+				ret += ")";
 
-            return ret;
-        }
+			return ret;
+		}
 };
 
 class ExpressionUnaryOpNode : public ExpressionNode
 {
-    public:
-        _NodeName("ExpressionUnaryOpNode");
+	public:
+		_NodeName("ExpressionUnaryOpNode");
 
-        ExpressionUnaryOpNode(ExpressionNode *e, std::string op)
-            : ExpressionNode(), expr(e), op(op)
-        {
+		ExpressionUnaryOpNode(ExpressionNode *e, std::string op)
+			: ExpressionNode(), expr(e), op(op)
+		{
 
-        }
+		}
 
-        ExpressionNode *expr;
-        std::string op;
+		ExpressionNode *expr;
+		std::string op;
 
-        virtual std::string toString() const {
-            return std::string(op) + expr->toString();
-        }
+		virtual std::string toString() const {
+			return std::string(op) + expr->toString();
+		}
 };
 
 class ExpressionObjectAccessNode : public ExpressionNode
 {
-    public:
-        _NodeName("ExpressionObjectAccessNode")
+	public:
+		_NodeName("ExpressionObjectAccessNode")
 
-        ExpressionObjectAccessNode(ExpressionNode *l, ExpressionNode *r)
-            : ExpressionNode(), left(l), right(r)
-        {
+		ExpressionObjectAccessNode(ExpressionNode *l, ExpressionNode *r)
+			: ExpressionNode(), left(l), right(r)
+		{
 
-        }
+		}
 
-        ExpressionNode *left;
-        ExpressionNode *right;
+		virtual std::string toString() const {
+			return std::string(left->toString()) + "." + std::string(right->toString());
+		}
 
-        virtual std::string toString() const {
-            return std::string(left->toString()) + "." + std::string(right->toString());
-        }
+		ExpressionNode* left;
+		ExpressionNode* right;
 };
 
 
 class ExpressionFnCallNode : public ExpressionNode
 {
 public:
-    _NodeName("ExpressionFnCallNode")
+	_NodeName("ExpressionFnCallNode")
 
-    ExpressionFnCallNode(ExpressionNode *e, std::vector<ExpressionNode *> *a = 0)
-        : ExpressionNode(), expr(e), args(a), discardReturnValue(false)
-    {
-    }
-    virtual ~ExpressionFnCallNode() { }
+	ExpressionFnCallNode(ExpressionNode *e, std::vector<ExpressionNode *> *a = 0)
+		: ExpressionNode(), expr(e), args(a), discardReturnValue(false)
+	{
+	}
+	
+	bool discardReturnValue;
+	ExpressionNode *expr;
+	std::vector<ExpressionNode *> *args;
 
-    bool discardReturnValue;
-    ExpressionNode *expr;
-    std::vector<ExpressionNode *> *args;
+	virtual std::string toString() const {
+		std::string argList;
+		if (args)
+		{
+			for (const auto& s : *args)
+			{
+				argList += s->toString();
+				argList += ",";
+			}
+			argList.pop_back();
+		}
 
-    virtual std::string toString() const {
-        std::string argList;
-        if (args)
-        {
-            for (const auto& s : *args)
-            {
-                argList += s->toString();
-                argList += ",";
-            }
-            argList.pop_back();
-        }
-
-        return std::string(expr->toString()) + "(" + argList + ")";
-    }
+		return std::string(expr->toString()) + "(" + argList + ")";
+	}
 };
 
 class ExpressionListNode : public ExpressionNode
 {
 public:
-    _NodeName("ExpressionListNode")
+	_NodeName("ExpressionListNode")
 
-    ExpressionListNode(std::vector<ExpressionNode *> *a) : args(a) {
+	ExpressionListNode(std::vector<ExpressionNode *> *a) : args(a) {
 
-    }
+	}
 
-    virtual std::string toString() const {
-        std::string argList;
-        if (args)
-        {
-            for (const auto& s : *args)
-            {
-                argList += s->toString();
-                argList += ",";
-            }
-            argList.pop_back();
-        }
+	virtual std::string toString() const {
+		std::string argList;
+		if (args)
+		{
+			for (const auto& s : *args)
+			{
+				argList += s->toString();
+				argList += ",";
+			}
+			argList.pop_back();
+		}
 
-        return std::string("{") + argList + "}";
+		return std::string("{") + argList + "}";
 
-    }
+	}
 
-    std::vector<ExpressionNode *> *args;
+	std::vector<ExpressionNode *> *args;
 };
 
 class StatementBlock : public StatementNode
 {
 public:
-    _NodeName("StatementBlock")
+	_NodeName("StatementBlock")
 
-    StatementBlock(StatementNode *node = 0) : StatementNode() {
-        append(node);
-    }
+	StatementBlock(StatementNode *node = 0) : StatementNode() {
+		append(node);
+	}
 
-    virtual ~StatementBlock() { }
+	virtual ~StatementBlock() { }
 
-    void append(StatementNode *node) {
-        if (node) {
-            if (strcmp(node->NodeType(), ExpressionFnCallNode::NodeName) == 0) {
-                auto fnNode = reinterpret_cast<ExpressionFnCallNode*>(node);
-                fnNode->discardReturnValue = true;
-            }
+	void append(StatementNode *node) {
+		if (node) {
+			if (strcmp(node->NodeType(), ExpressionFnCallNode::NodeName) == 0) {
+				auto fnNode = reinterpret_cast<ExpressionFnCallNode*>(node);
+				fnNode->discardReturnValue = true;
+			}
 
-            statements.push_back(node);
-        }
-    }
+			statements.push_back(node);
+		}
+	}
 
-    std::vector<StatementNode *> statements;
+	std::vector<StatementNode *> statements;
 };
 
 class StatementIfNode : public StatementNode
 {
 public:
-    _NodeName("StatementIfNode")
+	_NodeName("StatementIfNode")
 
-    StatementIfNode(ExpressionNode *expr, StatementNode *thenBlock, StatementNode *elseBlock = nullptr)
-        : StatementNode(), expr(expr), thenBlock(thenBlock), elseBlock(elseBlock)
-    {
+	StatementIfNode(ExpressionNode *expr, StatementNode *thenBlock, StatementNode *elseBlock = nullptr)
+		: StatementNode(), expr(expr), thenBlock(thenBlock), elseBlock(elseBlock)
+	{
 
-    }
-    virtual ~StatementIfNode() { }
+	}
+	virtual ~StatementIfNode() { }
 
-    ExpressionNode *expr;
-    StatementNode *thenBlock;
-    StatementNode *elseBlock;
+	ExpressionNode *expr;
+	StatementNode *thenBlock;
+	StatementNode *elseBlock;
 };
 
 class StatementFnDeclNode : public StatementNode
 {
 public:
-    _NodeName("StatementFnDeclNode")
+	_NodeName("StatementFnDeclNode")
 
-    StatementFnDeclNode(const char *id, std::vector<ExpressionNode *> *a, StatementBlock *block)
-        : StatementNode(), stmtBlock(block), args(a), pub(false)
-    {
-        ident = std::string(id);
-    }
-    virtual ~StatementFnDeclNode() { }
+	StatementFnDeclNode(const char *id, std::vector<ExpressionNode *> *a, StatementBlock *block)
+		: StatementNode(), stmtBlock(block), args(a), pub(false)
+	{
+		ident = std::string(id);
+	}
+	virtual ~StatementFnDeclNode() { }
 
-    void setPublic(bool r) {
-        pub = r;
-    }
+	void setPublic(bool r) {
+		pub = r;
+	}
 
-    bool pub;
-    std::string ident;
-    StatementBlock *stmtBlock;
-    std::vector<ExpressionNode *> *args;
+	bool pub;
+	std::string ident;
+	StatementBlock *stmtBlock;
+	std::vector<ExpressionNode *> *args;
 };
 
 class StatementNewNode : public StatementNode
 {
 public:
-    _NodeName("StatementNewNode")
+	_NodeName("StatementNewNode")
 
-    StatementNewNode(const char *objname, std::vector<ExpressionNode *> *a, StatementBlock *block)
-        : StatementNode(), stmtBlock(block), args(a)
-    {
-        ident = std::string(objname);
-    }
-    virtual ~StatementNewNode() { }
+	StatementNewNode(const char *objname, std::vector<ExpressionNode *> *a, StatementBlock *block)
+		: StatementNode(), stmtBlock(block), args(a)
+	{
+		ident = std::string(objname);
+	}
+	virtual ~StatementNewNode() { }
 
-    std::string ident;
-    StatementBlock *stmtBlock;
-    std::vector<ExpressionNode *> *args;
+	std::string ident;
+	StatementBlock *stmtBlock;
+	std::vector<ExpressionNode *> *args;
 };
 
 class StatementBreakNode : public StatementNode
 {
 public:
-    _NodeName("StatementBreakNode")
+	_NodeName("StatementBreakNode")
 
-    StatementBreakNode()
-        : StatementNode()
-    {
+	StatementBreakNode()
+		: StatementNode()
+	{
 
-    }
+	}
 };
 
 class StatementContinueNode : public StatementNode
 {
 public:
-    _NodeName("StatementContinueNode")
+	_NodeName("StatementContinueNode")
 
-    StatementContinueNode()
-        : StatementNode()
-    {
+	StatementContinueNode()
+		: StatementNode()
+	{
 
-    }
+	}
 };
 
 class StatementReturnNode : public StatementNode
 {
 public:
-    _NodeName("StatementReturnNode")
+	_NodeName("StatementReturnNode")
 
-    StatementReturnNode(ExpressionNode *expr)
-        : StatementNode(), expr(expr)
-    {
+	StatementReturnNode(ExpressionNode *expr)
+		: StatementNode(), expr(expr)
+	{
 
-    }
-    
-    ExpressionNode *expr;
+	}
+	
+	ExpressionNode *expr;
 };
 
 class StatementWhileNode : public StatementNode
 {
 public:
-    _NodeName("StatementWhileNode")
+	_NodeName("StatementWhileNode")
 
-    StatementWhileNode(ExpressionNode *expr, StatementNode *block)
-        : StatementNode(), expr(expr), block(block)
-    {
+	StatementWhileNode(ExpressionNode *expr, StatementNode *block)
+		: StatementNode(), expr(expr), block(block)
+	{
 
-    }
-    virtual ~StatementWhileNode() { }
+	}
+	virtual ~StatementWhileNode() { }
 
-    ExpressionNode *expr;
-    StatementNode *block;
+	ExpressionNode *expr;
+	StatementNode *block;
 };
 
 class StatementWithNode : public StatementNode
 {
 public:
-    _NodeName("StatementWithNode")
+	_NodeName("StatementWithNode")
 
-    StatementWithNode(ExpressionNode *expr, StatementNode *block)
-        : StatementNode(), expr(expr), block(block)
-    {
+	StatementWithNode(ExpressionNode *expr, StatementNode *block)
+		: StatementNode(), expr(expr), block(block)
+	{
 
-    }
+	}
 
-    ExpressionNode *expr;
-    StatementNode *block;
+	ExpressionNode *expr;
+	StatementNode *block;
 };
 
 class StatementForNode : public StatementNode
 {
 public:
-    _NodeName("StatementForNode")
+	_NodeName("StatementForNode")
 
-    StatementForNode(ExpressionNode *init, ExpressionNode *cond, ExpressionNode *incr, StatementNode *block)
-        : StatementNode(), init(init), cond(cond), postop(incr), block(block)
-    {
+	StatementForNode(ExpressionNode *init, ExpressionNode *cond, ExpressionNode *incr, StatementNode *block)
+		: StatementNode(), init(init), cond(cond), postop(incr), block(block)
+	{
 
-    }
-    
-    ExpressionNode *init;
-    ExpressionNode *cond;
-    ExpressionNode *postop;
-    StatementNode *block;
+	}
+	
+	ExpressionNode *init;
+	ExpressionNode *cond;
+	ExpressionNode *postop;
+	StatementNode *block;
 };
 
 class StatementForEachNode : public StatementNode
 {
 public:
-    _NodeName("StatementForEachNode")
+	_NodeName("StatementForEachNode")
 
-    StatementForEachNode(ExpressionNode *name, ExpressionNode *expr, StatementNode *block)
-        : StatementNode(), name(name), expr(expr), block(block)
-    {
+	StatementForEachNode(ExpressionNode *name, ExpressionNode *expr, StatementNode *block)
+		: StatementNode(), name(name), expr(expr), block(block)
+	{
 
-    }
-    
-    ExpressionNode *name;
-    ExpressionNode *expr;
-    StatementNode *block;
+	}
+	
+	ExpressionNode *name;
+	ExpressionNode *expr;
+	StatementNode *block;
 };
 
 class CaseNode
 {
 public:
-    CaseNode(ExpressionNode *expr, StatementNode *stmt)
-        : expr(expr), stmt(stmt)
-    {
+	CaseNode(ExpressionNode *expr, StatementNode *stmt)
+		: expr(expr), stmt(stmt)
+	{
 
-    }
+	}
 
-    ExpressionNode *expr;
-    StatementNode *stmt;
+	ExpressionNode *expr;
+	StatementNode *stmt;
 };
 
 class StatementSwitchNode : public StatementNode
 {
 public:
-    _NodeName("StatementSwitchNode")
+	_NodeName("StatementSwitchNode")
 
-    StatementSwitchNode(ExpressionNode *expr, std::vector<CaseNode *> *caseNodes)
-        : StatementNode(), expr(expr), cases(caseNodes)
-    {
+	StatementSwitchNode(ExpressionNode *expr, std::vector<CaseNode *> *caseNodes)
+		: StatementNode(), expr(expr), cases(caseNodes)
+	{
 
-    }
+	}
 
-    ExpressionNode *expr;
-    std::vector<CaseNode *> *cases;
+	ExpressionNode *expr;
+	std::vector<CaseNode *> *cases;
 };
 
 #endif

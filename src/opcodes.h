@@ -7,6 +7,10 @@
 
 namespace opcode
 {
+	enum class ExpressionOp {
+
+	};
+
 	enum Opcode {
 
 		// @formatter:off
@@ -37,6 +41,8 @@ namespace opcode
 		OP_TYPE_ARRAY = 23,
 		OP_TYPE_TRUE = 24,
 		OP_TYPE_FALSE = 25,
+		OP_TYPE_NULL = 26,
+		OP_PI = 27,
 		OP_COPY_LAST_OP = 30,
 		OP_INDEX_DEC = 32,
 		OP_CONV_TO_FLOAT = 33,
@@ -72,6 +78,21 @@ namespace opcode
 		OP_STOP, // Stops execution
 
 		OP_DBG_OUT, //  Debug output
+		OP_FORMAT = 84,
+		OP_INT = 85,
+		OP_ABS = 86,
+		OP_RANDOM = 87,
+		OP_SIN = 88,
+		OP_COS = 89,
+		OP_ARCTAN = 90,
+		OP_EXP = 91,
+		OP_LOG = 92,
+		OP_MIN = 93,
+		OP_MAX = 94,
+		OP_GETANGLE = 95,
+		OP_GETDIR = 96,
+		OP_VECX = 97,
+		OP_VECY = 98,
 		OP_JOIN = 113,
 		OP_ARRAY = 131,
 		OP_WITH = 150,
@@ -82,6 +103,10 @@ namespace opcode
 
 		// @formatter:on
 	};
+
+	//inline ExpressionOp OpcodeToString(const std::string& token) {
+		
+	//}
 
 	inline std::string OpcodeToString(Opcode opcode) {
 		switch ( opcode ) {

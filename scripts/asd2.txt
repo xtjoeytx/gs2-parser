@@ -1,11 +1,22 @@
 //#CLIENTSIDE
 function onCreated() {
   echo("testgs2compiler23");
-  echo(doSomething());
+//  echo(doSomething("lol " @ 3, "yess" @ 2*(6*3+90/((5+2*10)/5))));
+ // echo(doSomething("test" @ 1, random(0, 10)));
+  echo(format("test str: %s (%d)", "testgs2", 3+3));
+  echo("done");
 }
 
-function doSomething() {
+function onPlayerChats()
+{
+  echo("---chatted");
+  echo(format("test str: %s (%d)", "testgs2", random(0,20)));
+  echo("---done");
+}
+
+function doSomething(test, val2) {
   echo("dosomething");
+  echo(test @ ": " @ val2);
   return "test";
 }
 

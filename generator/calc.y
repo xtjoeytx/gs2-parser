@@ -120,7 +120,7 @@ void yyerror(const char* s);
 %%
 
 program:
-	decl_list { stmtBlock = (StatementBlock *)$1; }
+	decl_list				{ stmtBlock = (StatementBlock *)$1; }
 	;
 
 decl_list: 					{ $$ = new StatementBlock(); }
@@ -154,75 +154,75 @@ stmt: stmt_if				{ $$ = $1;}
 	| stmt_with				{ $$ = $1; }
 	| stmt_switch 			{ $$ = $1; }
 	;
+	
+stmt_expr:
+	';'						{ $$ = 0; }
+	| expr ';'				{ $$ = $1; }
+	;
 
 stmt_new:
 	T_KWNEW T_IDENTIFIER '(' args_list_decl ')' stmt_block	{ $$ = new StatementNewNode($2, $4, $6); }
 	;
 
 stmt_if:
-	T_KWIF '(' expr ')' stmt 									{ $$ = new StatementIfNode($3, $5); }
+	T_KWIF '(' expr ')' stmt 								{ $$ = new StatementIfNode($3, $5); }
 	| T_KWIF '(' expr ')' stmt T_KWELSE stmt 				{ $$ = new StatementIfNode($3, $5, $7); }
 	;
 
 stmt_for:
-	T_KWFOR '(' expr ';' expr ';' expr ')' stmt 		{ $$ = new StatementForNode($3, $5, $7, $9); }
-	| T_KWFOR '(' expr ':' expr ')' stmt				{ $$ = new StatementForEachNode($3, $5, $7); }
+	T_KWFOR '(' expr ';' expr ';' expr ')' stmt 			{ $$ = new StatementForNode($3, $5, $7, $9); }
+	| T_KWFOR '(' expr ':' expr ')' stmt					{ $$ = new StatementForEachNode($3, $5, $7); }
 	;
 
 stmt_while:
-	T_KWWHILE '(' expr ')' stmt 						{ $$ = new StatementWhileNode($3, $5); }
+	T_KWWHILE '(' expr ')' stmt 							{ $$ = new StatementWhileNode($3, $5); }
 	;
 
 stmt_with:
-	T_KWWITH '(' expr ')' stmt							{ $$ = new StatementWithNode($3, $5); }
+	T_KWWITH '(' expr ')' stmt								{ $$ = new StatementWithNode($3, $5); }
 	;
 
 stmt_break:
-	T_KWBREAK ';' 										{ $$ = new StatementBreakNode(); }
+	T_KWBREAK ';' 											{ $$ = new StatementBreakNode(); }
 	;
 
 stmt_continue:
-	T_KWCONTINUE ';'									{ $$ = new StatementContinueNode(); }
+	T_KWCONTINUE ';'										{ $$ = new StatementContinueNode(); }
 	;
 
 stmt_ret:
-	T_KWRETURN expr ';' 								{ $$ = new StatementReturnNode($2); }
-	| T_KWRETURN ';' 									{ $$ = new StatementReturnNode(0); }
+	T_KWRETURN expr ';' 									{ $$ = new StatementReturnNode($2); }
+	| T_KWRETURN ';' 										{ $$ = new StatementReturnNode(0); }
 	;
 
 stmt_switch:
-	T_KWSWITCH '(' expr ')' '{' stmt_caseblock_list '}'	{ $$ = new StatementSwitchNode($3, $6); }
+	T_KWSWITCH '(' expr ')' '{' stmt_caseblock_list '}'		{ $$ = new StatementSwitchNode($3, $6); }
 	;
 
 stmt_caseblock_list:
-	stmt_caseblock_list stmt_caseblock 					{ $1->push_back($2); }
-	| stmt_caseblock 									{ $$ = new std::vector<CaseNode *>(); $$->push_back($1); }
+	stmt_caseblock_list stmt_caseblock 						{ $1->push_back($2); }
+	| stmt_caseblock 										{ $$ = new std::vector<CaseNode *>(); $$->push_back($1); }
 	;
 
 stmt_caseblock:
-	T_KWCASE expr ':' stmt_list 						{ $$ = new CaseNode($2, $4); }
-	| T_KWDEFAULT ':' stmt_list							{ $$ = new CaseNode(0, $3); }
-	;
-
-stmt_expr:
-	';'													{ $$ = 0; }
-	| expr ';'											{ $$ = $1; }
+	T_KWCASE expr ':' stmt_list 							{ $$ = new CaseNode($2, $4); }
+	| T_KWDEFAULT ':' stmt_list								{ $$ = new CaseNode(0, $3); }
 	;
 
 stmt_fndecl:
 	T_KWFUNCTION T_IDENTIFIER '(' args_list_decl ')' stmt_block						{ $$ = new StatementFnDeclNode($2, $4, $6); }
 	| T_KWFUNCTION T_IDENTIFIER '.' T_IDENTIFIER '(' args_list_decl ')' stmt_block	{ $$ = new StatementFnDeclNode($4, $6, $8); }
-	| T_KWPUBLIC stmt_fndecl { $$ = $2; $$->setPublic(true); }
+	| T_KWPUBLIC stmt_fndecl														{ $$ = $2; $$->setPublic(true); }
 	;
 
 args_list_decl:
 	{ $$ = 0; }
-	| args_list { $$ = $1; }
+	| args_list						{ $$ = $1; }
 	;
 
 args_list:
-	args_list ',' expr { $1->push_back($3); }
-	| expr { $$ = new std::vector<ExpressionNode *>(); $$->push_back($1); }
+	args_list ',' expr				{ $1->push_back($3); }
+	| expr							{ $$ = new std::vector<ExpressionNode *>(); $$->push_back($1); }
 	;
 
 constant:
@@ -273,31 +273,31 @@ expr_ops_binary:
 	;
 
 expr_ops_comparison:
-	expr T_OPEQUALS expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, "=="); }
-	| expr T_OPNOTEQUALS expr	 		{ $$ = new ExpressionBinaryOpNode($1, $3, "!="); }
-	| expr T_OPLESSTHAN expr	 		{ $$ = new ExpressionBinaryOpNode($1, $3, "<"); }
-	| expr T_OPGREATERTHAN expr	 		{ $$ = new ExpressionBinaryOpNode($1, $3, ">"); }
-	| expr T_OPLESSTHANEQUAL expr	 	{ $$ = new ExpressionBinaryOpNode($1, $3, "<="); }
-	| expr T_OPGREATERTHANEQUAL expr	{ $$ = new ExpressionBinaryOpNode($1, $3, ">="); }
-	| expr T_OPAND expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "&&"); }
-	| expr T_OPOR expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "||"); }
+	expr T_OPEQUALS expr	 					{ $$ = new ExpressionBinaryOpNode($1, $3, "=="); }
+	| expr T_OPNOTEQUALS expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "!="); }
+	| expr T_OPLESSTHAN expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "<"); }
+	| expr T_OPGREATERTHAN expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ">"); }
+	| expr T_OPLESSTHANEQUAL expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, "<="); }
+	| expr T_OPGREATERTHANEQUAL expr			{ $$ = new ExpressionBinaryOpNode($1, $3, ">="); }
+	| expr T_OPAND expr	 						{ $$ = new ExpressionBinaryOpNode($1, $3, "&&"); }
+	| expr T_OPOR expr	 						{ $$ = new ExpressionBinaryOpNode($1, $3, "||"); }
 	;
 
 
 expr_intconst:
-	T_INT							{ $$ = new ExpressionIntegerNode($1); }
+	T_INT										{ $$ = new ExpressionIntegerNode($1); }
 	;
 
 expr_ident:
-	T_IDENTIFIER					{ $$ = new ExpressionIdentifierNode($1); }
+	T_IDENTIFIER								{ $$ = new ExpressionIdentifierNode($1); }
 	;
 
 expr_strconst:
-	T_STRCONSTANT 					{ $$ = new ExpressionStringConstNode($1); }
+	T_STRCONSTANT 								{ $$ = new ExpressionStringConstNode($1); }
 	;
 
 expr_arraylist:
-	'{' args_list '}' 				{ $$ = new ExpressionListNode($2); }
+	'{' args_list '}' 							{ $$ = new ExpressionListNode($2); }
 	;
 
 expr_fncall:
