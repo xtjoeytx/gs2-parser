@@ -199,15 +199,11 @@ class ExpressionFnCallNode : public ExpressionNode
 public:
 	_NodeName("ExpressionFnCallNode")
 
-	ExpressionFnCallNode(ExpressionNode *e, std::vector<ExpressionNode *> *a = 0)
-		: ExpressionNode(), expr(e), args(a), discardReturnValue(false)
+	ExpressionFnCallNode(ExpressionNode *e, std::vector<ExpressionNode *> *a = 0, bool methodCall = false)
+		: ExpressionNode(), expr(e), args(a), methodCall(methodCall), discardReturnValue(false)
 	{
 	}
 	
-	bool discardReturnValue;
-	ExpressionNode *expr;
-	std::vector<ExpressionNode *> *args;
-
 	virtual std::string toString() const {
 		std::string argList;
 		if (args)
@@ -222,6 +218,12 @@ public:
 
 		return std::string(expr->toString()) + "(" + argList + ")";
 	}
+
+	bool discardReturnValue;
+	bool methodCall;
+	ExpressionNode* expr;
+	std::vector<ExpressionNode*>* args;
+
 };
 
 class ExpressionListNode : public ExpressionNode

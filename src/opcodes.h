@@ -78,6 +78,8 @@ namespace opcode
 		OP_STOP, // Stops execution
 
 		OP_DBG_OUT, //  Debug output
+		OP_OBJ_INDEX = 82,
+		OP_OBJ_TYPE = 83,	// gets the type of the var (float 0, string 1, object 2, array 3)
 		OP_FORMAT = 84,
 		OP_INT = 85,
 		OP_ABS = 86,
@@ -93,8 +95,23 @@ namespace opcode
 		OP_GETDIR = 96,
 		OP_VECX = 97,
 		OP_VECY = 98,
+		OP_OBJ_INDICES = 99,
+		OP_OBJ_LINK = 100,
+		OP_OBJ_TRIM = 110,
+		OP_OBJ_LENGTH = 111,
+		OP_OBJ_POS = 112,
 		OP_JOIN = 113,
+		OP_OBJ_CHARAT = 114,
+		OP_OBJ_SUBSTR = 115,
+		OP_OBJ_STARTS = 116,
+		OP_OBJ_ENDS = 117,
+		OP_OBJ_TOKENIZE = 118,
+		OP_TRANSLATE = 119,
+		OP_OBJ_POSITIONS = 120, // array of positions of the substring in the string
+		OP_OBJ_SIZE = 130,
 		OP_ARRAY = 131,
+		OP_OBJ_SUBARRAY = 135,
+		OP_OBJ_CLEAR = 141,
 		OP_WITH = 150,
 		OP_WITHEND = 151,
 		OP_THIS = 180,

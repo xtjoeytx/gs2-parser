@@ -140,6 +140,14 @@ void GS2Compiler::Visit(ExpressionBinaryOpNode *node)
 
 void GS2Compiler::Visit(ExpressionIdentifierNode *node)
 {
+	// this -> 180
+	// thiso -> 181
+	// player -> 182
+	// playero -> 183
+	// level -> 184
+	// temp -> 189
+	// params[] -> 190
+
 	auto id = byteCode.getStringConst(node->val);
 
 	byteCode.emit(opcode::OP_TYPE_VAR);
@@ -177,39 +185,103 @@ void GS2Compiler::Visit(ExpressionStringConstNode *node)
 	byteCode.emit((char)id);
 }
 
+struct BuiltInCmd
+{
+	std::string name;
+	opcode::Opcode op;
+	bool useArray;
+};
+
+const BuiltInCmd defaultCall = {
+	"",
+	opcode::OP_CALL,
+	true
+};
+
+const BuiltInCmd builtInCmds[] = {
+	{"format", opcode::OP_FORMAT, true},
+	{"int", opcode::OP_INT, false},
+	{"abs", opcode::OP_ABS, false},
+	{"random", opcode::OP_RANDOM, false},
+	{"sin", opcode::OP_SIN, false},
+	{"cos", opcode::OP_COS, false},
+
+	{"arctan", opcode::OP_ARCTAN, false},
+	{"exp", opcode::OP_EXP, false},
+	{"log", opcode::OP_LOG, false},
+	{"min", opcode::OP_MIN, false},
+	{"max", opcode::OP_MAX, false},
+	{"getangle", opcode::OP_GETANGLE, false},
+	{"getdir", opcode::OP_GETDIR, false},
+	{"vecx", opcode::OP_VECX, false},
+	{"vecy", opcode::OP_VECY, false},
+};
+
+const BuiltInCmd builtInObjCmds[] = {
+	{"index", opcode::OP_OBJ_INDEX, false},
+	{"type", opcode::OP_OBJ_TYPE, false},
+
+	// no opcode yet
+	{"indices", opcode::OP_ABS, false},
+	{"link", opcode::OP_RANDOM, false},
+	{"trim", opcode::OP_SIN, false},
+	{"length", opcode::OP_COS, false},
+	{"pos", opcode::OP_COS, false},
+	{"charat", opcode::OP_COS, false},
+	{"substring", opcode::OP_COS, false},
+	{"starts", opcode::OP_COS, false},
+	{"ends", opcode::OP_COS, false},
+	{"tokenize", opcode::OP_COS, false},
+	{"positions", opcode::OP_COS, false},
+	{"size", opcode::OP_COS, false},
+	{"subarray", opcode::OP_COS, false},
+	{"clear", opcode::OP_COS, false},
+};
+
+const std::unordered_map<std::string, BuiltInCmd>& getCommandList()
+{
+	static bool initialized = false;
+	static std::unordered_map<std::string, BuiltInCmd> builtInMap;
+
+	if (!initialized)
+	{
+		for (const auto& cmd : builtInCmds)
+			builtInMap.insert({ cmd.name, cmd });
+
+		initialized = true;
+	}
+
+	return builtInMap;
+}
+
+const std::unordered_map<std::string, BuiltInCmd>& getCommandListMethod()
+{
+	static bool initialized = false;
+	static std::unordered_map<std::string, BuiltInCmd> builtInMap;
+
+	if (!initialized)
+	{
+		for (const auto& cmd : builtInObjCmds)
+			builtInMap.insert({ cmd.name, cmd });
+
+		initialized = true;
+	}
+
+	return builtInMap;
+}
+
 void GS2Compiler::Visit(ExpressionFnCallNode *node)
 {
-	printf("Call: %s\n", node->expr->toString().c_str());
+	printf("Call Function: %s\n", node->expr->toString().c_str());
 
 	// Build-in commands
-	static const std::unordered_map<std::string, opcode::Opcode> builtInCmds = {
-		{"format", opcode::Opcode::OP_FORMAT},
-		{"int", opcode::Opcode::OP_INT},
-		{"abs", opcode::Opcode::OP_ABS},
-		{"random", opcode::Opcode::OP_RANDOM},
-		{"sin", opcode::Opcode::OP_SIN},
-		{"cos", opcode::Opcode::OP_COS},
+	auto& cmdList = (node->methodCall ? getCommandListMethod() : getCommandList());
 
-		{"arctan", opcode::Opcode::OP_ARCTAN},
-		{"exp", opcode::Opcode::OP_EXP},
-		{"log", opcode::Opcode::OP_LOG},
-		{"min", opcode::Opcode::OP_MIN},
-		{"max", opcode::Opcode::OP_MAX},
-		{"getangle", opcode::Opcode::OP_GETANGLE},
-		{"getdir", opcode::Opcode::OP_GETDIR},
-		{"vecx", opcode::Opcode::OP_VECX},
-		{"vecy", opcode::Opcode::OP_VECY},
-	};
-	
-	opcode::Opcode opCode = opcode::OP_CALL;
-
-	std::string cmdName = node->expr->toString();
-	auto it = builtInCmds.find(cmdName);
-	if (it != builtInCmds.end())
-		opCode = it->second;
+	auto iter = cmdList.find(node->expr->toString());
+	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : defaultCall);
 	
 	{
-		if (opCode != opcode::OP_MAX && opCode != opcode::OP_MIN)
+		if (cmd.useArray)
 			byteCode.emit(opcode::OP_TYPE_ARRAY);
 
 		if (node->args)
@@ -222,15 +294,11 @@ void GS2Compiler::Visit(ExpressionFnCallNode *node)
 			}
 		}
 
-		if (opCode == opcode::OP_CALL)
+		if (cmd.op == opcode::OP_CALL)
 			node->expr->visit(this);
-		byteCode.emit(opCode);
+
+		byteCode.emit(cmd.op);
 	}
-
-	//if (opCode == opcode::OP_CALL)
-	//	node->expr->visit(this);
-
-	//byteCode.emit(opcode::OP_CALL);
 
 	if (node->discardReturnValue)
 		byteCode.emit(opcode::OP_INDEX_DEC);

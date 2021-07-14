@@ -301,8 +301,8 @@ expr_arraylist:
 	;
 
 expr_fncall:
-	expr_ident '(' args_list_decl ')' 			{ $$ = new ExpressionFnCallNode($1, $3); }
-	| expr_objaccess '(' args_list_decl ')' 	{ $$ = new ExpressionFnCallNode($1, $3); }
+	expr_ident '(' args_list_decl ')' 			{ $$ = new ExpressionFnCallNode($1, $3, false); }
+	| expr_objaccess '(' args_list_decl ')' 	{ $$ = new ExpressionFnCallNode($1, $3, true); }
 	;
 
 expr_objaccess:
