@@ -1,6 +1,23 @@
 //#CLIENTSIDE
 function onCreated() {
+  //echo("--start--");
+  //echo("test".length());
+  //echo("pos: " @ format("(%f, %f)", player.x, player.y));
+//  temp.a = player.x - 5;
+//  player.x = player.x - 5;
+  echo("test: " @ temp.a);
+  //echo("--end--");
+}
+
+function onPlayerChats()
+{
+  player.chat = "no";
+}
+
+/*
+function onCreated() {
   echo("testgs2compiler23");
+
 //  echo(doSomething("lol " @ 3, "yess" @ 2*(6*3+90/((5+2*10)/5))));
  // echo(doSomething("test" @ 1, random(0, 10)));
   echo(format("test str: %s (%d)", "testgs2", 3+3));
@@ -10,7 +27,9 @@ function onCreated() {
 function onPlayerChats()
 {
   echo("---chatted");
-  echo(format("test str: %s (%d)", "testgs2", random(0,20)));
+  echo(format("test str: %s (%s)", "testgs2", int(max(5, random(0,20)))));
+  echo("pos: " @ format("(%f, %f)", player.x, player.y));
+  echo("test: " @ (player.x - 5));
   echo("---done");
 }
 
@@ -19,6 +38,7 @@ function doSomething(test, val2) {
   echo(test @ ": " @ val2);
   return "test";
 }
+*/
 
 /*
 //this.istaff.eeeffg ;

@@ -2,10 +2,131 @@
 #include "GS2Compiler.h"
 #include "ast.h"
 
+struct BuiltInCmd
+{
+	std::string name;
+	opcode::Opcode op;
+	bool useArray;
+};
+
+const BuiltInCmd defaultCall = {
+	"", opcode::OP_CALL, true
+};
+
+const BuiltInCmd builtInCmds[] = {
+	{"makevar", opcode::OP_MAKEVAR, true},
+	{"format", opcode::OP_FORMAT, true},
+	{"abs", opcode::OP_ABS, false},
+	{"random", opcode::OP_RANDOM, false},
+	{"sin", opcode::OP_SIN, false},
+	{"cos", opcode::OP_COS, false},
+
+	{"arctan", opcode::OP_ARCTAN, false},
+	{"exp", opcode::OP_EXP, false},
+	{"log", opcode::OP_LOG, false},
+	{"min", opcode::OP_MIN, false},
+	{"max", opcode::OP_MAX, false},
+	{"getangle", opcode::OP_GETANGLE, false},
+	{"getdir", opcode::OP_GETDIR, false},
+	{"vecx", opcode::OP_VECX, false},
+	{"vecy", opcode::OP_VECY, false},
+};
+
+const BuiltInCmd builtInObjCmds[] = {
+	{"index", opcode::OP_OBJ_INDEX, false},
+	{"type", opcode::OP_OBJ_TYPE, false},
+
+	//
+	{"indices", opcode::OP_OBJ_INDICES, false},
+	{"link", opcode::OP_OBJ_LINK, false},
+	{"trim", opcode::OP_OBJ_TRIM, false},
+	{"length", opcode::OP_OBJ_LENGTH, false},
+	{"pos", opcode::OP_OBJ_POS, false},
+	{"charat", opcode::OP_OBJ_CHARAT, false},
+	{"substring", opcode::OP_OBJ_SUBSTR, false},
+	{"starts", opcode::OP_OBJ_STARTS, false},
+	{"ends", opcode::OP_OBJ_ENDS, false},
+	{"tokenize", opcode::OP_OBJ_TOKENIZE, false},
+	{"positions", opcode::OP_OBJ_POSITIONS, false},
+	{"size", opcode::OP_OBJ_SIZE, false},
+	{"subarray", opcode::OP_OBJ_SUBARRAY, false},
+	{"clear", opcode::OP_OBJ_CLEAR, false},
+};
+
+const std::unordered_map<std::string, BuiltInCmd>& getCommandList()
+{
+	static bool initialized = false;
+	static std::unordered_map<std::string, BuiltInCmd> builtInMap;
+
+	if (!initialized)
+	{
+		for (const auto& cmd : builtInCmds)
+			builtInMap.insert({ cmd.name, cmd });
+
+		initialized = true;
+	}
+
+	return builtInMap;
+}
+
+const std::unordered_map<std::string, BuiltInCmd>& getCommandListMethod()
+{
+	static bool initialized = false;
+	static std::unordered_map<std::string, BuiltInCmd> builtInMap;
+
+	if (!initialized)
+	{
+		for (const auto& cmd : builtInObjCmds)
+			builtInMap.insert({ cmd.name, cmd });
+
+		initialized = true;
+	}
+
+	return builtInMap;
+}
+
 void writeByteIntegerCode(GS2Bytecode& bc, char a)
 {
 	bc.emit(char(0xF3));
 	bc.emit(a);
+}
+
+void emitStringIdxNumber(GS2Bytecode& bc, size_t num)
+{
+	if (num <= 0xFF)
+	{
+		bc.emit(char(0xF0));
+		bc.emit(char(num));
+	}
+	else if (num <= 0xFFFF)
+	{
+		bc.emit(char(0xF1));
+		bc.emit(short(num));
+	}
+	else if (num <= 0xFFFFFFFF)
+	{
+		bc.emit(char(0xF2));
+		bc.emit(int(num));
+	}
+}
+
+void emitNumber(GS2Bytecode& bc, uint32_t num)
+{
+	if (num <= 0xFF)
+	{
+		bc.emit(char(0xF3));
+		bc.emit(char(num));
+	}
+	else if (num <= 0xFFFF)
+	{
+		bc.emit(char(0xF4));
+		bc.emit(short(num));
+	}
+	else if (num <= 0xFFFFFFFF)
+	{
+		bc.emit(char(0xF5));
+		bc.emit(int(num));
+	}
 }
 
 void GS2Compiler::Visit(Node *node)
@@ -31,7 +152,6 @@ void GS2Compiler::Visit(StatementFnDeclNode *node)
 	printf("Declare function: %s\n", node->ident.c_str());
 
 	byteCode.emit(opcode::OP_SET_INDEX);
-	//writeByteIntegerCode(byteCode, 0);
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0)); // replaced with jump index to last opcode
 	
@@ -100,7 +220,8 @@ void GS2Compiler::Visit(ExpressionBinaryOpNode *node)
 			"-",
 			"/",
 			"*",
-			"%"
+			"%",
+			"="
 		};
 
 		static opcode::Opcode opType[] = {
@@ -108,7 +229,8 @@ void GS2Compiler::Visit(ExpressionBinaryOpNode *node)
 			opcode::OP_SUB,
 			opcode::OP_DIV,
 			opcode::OP_MUL,
-			opcode::OP_MOD
+			opcode::OP_MOD,
+			opcode::OP_ASSIGN
 		};
 
 		bool valid = false;
@@ -126,6 +248,12 @@ void GS2Compiler::Visit(ExpressionBinaryOpNode *node)
 		if (valid)
 		{
 			node->left->visit(this);
+			if (opType[idx] != opcode::OP_ASSIGN)
+			{
+				if (node->left->expressionType() != ExpressionType::EXPR_INTEGER)
+					byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+			}
+
 			node->right->visit(this);
 			byteCode.emit(opType[idx]);
 			handled = true;
@@ -138,7 +266,34 @@ void GS2Compiler::Visit(ExpressionBinaryOpNode *node)
 	}
 }
 
+void GS2Compiler::Visit(ExpressionCastNode* node)
+{
+	node->expr->visit(this);
+
+	switch (node->type)
+	{
+		case ExpressionCastNode::CastType::INTEGER:
+			byteCode.emit(opcode::OP_INT);
+			break;
+
+		case ExpressionCastNode::CastType::FLOAT:
+			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+			break;
+	}
+}
+
 void GS2Compiler::Visit(ExpressionIdentifierNode *node)
+{
+	auto id = byteCode.getStringConst(node->val);
+
+	byteCode.emit(opcode::OP_TYPE_VAR);
+	byteCode.emit((char)0xF0);
+	byteCode.emit((char)id);
+
+	printf("Identifier Node: %s\n", node->val.c_str());
+}
+
+void GS2Compiler::Visit(ExpressionObjectAccessNode *node)
 {
 	// this -> 180
 	// thiso -> 181
@@ -147,139 +302,85 @@ void GS2Compiler::Visit(ExpressionIdentifierNode *node)
 	// level -> 184
 	// temp -> 189
 	// params[] -> 190
+	auto firstNode = node->left->toString();
+	if (firstNode == "this") {
+		byteCode.emit(opcode::OP_THIS);
+	}
+	else if (firstNode == "thiso") {
+		byteCode.emit(opcode::OP_THISO);
+	}
+	else if (firstNode == "player") {
+		byteCode.emit(opcode::OP_PLAYER);
+	}
+	else if (firstNode == "playero") {
+		byteCode.emit(opcode::OP_PLAYERO);
+	}
+	else if (firstNode == "level") {
+		byteCode.emit(opcode::OP_LEVEL);
+	}
+	else if (firstNode == "temp") {
+		byteCode.emit(opcode::OP_TEMP);
+	}
+	else {
+		node->left->visit(this);
+		if (node->left->expressionType() != ExpressionType::EXPR_OBJECT)
+			byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+	}
 
-	auto id = byteCode.getStringConst(node->val);
+	for (auto i = 0; i < node->nodes.size(); i++)
+	{
+		node->nodes[i]->visit(this);
+		byteCode.emit(opcode::OP_MEMBER_ACCESS);
+		if (i != (node->nodes.size() - 1))
+			byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+	}
 
-	byteCode.emit(opcode::OP_TYPE_VAR);
-	byteCode.emit((char)0xF0);
-	byteCode.emit((char)id);
+	if (node->right)
+	{
+		node->right->visit(this);
+		byteCode.emit(opcode::OP_MEMBER_ACCESS);
+	}
 
-	printf("Val: %s\n", node->val.c_str());
-}
+	//node->left->visit(this);
+	//node->right->visit(this);
 
-void GS2Compiler::Visit(ExpressionObjectAccessNode *node)
-{
-	node->left->visit(this);
-	node->right->visit(this);
-
-	byteCode.emit(opcode::OP_MEMBER_ACCESS);
-
-	printf("Test left: %s\n", node->left->toString().c_str());
-	printf("Test right: %s\n", node->right->toString().c_str());
+	//printf("Test left: %s\n", node->left->toString().c_str());
+	//printf("Test right: %s\n", node->right->toString().c_str());
 }
 
 void GS2Compiler::Visit(ExpressionIntegerNode *node)
 {
 	byteCode.emit(opcode::OP_TYPE_NUMBER);
-	byteCode.emit((char)0xF3);
-	byteCode.emit((char)node->val); // TODO
+
+	emitNumber(byteCode, node->val);
+	//byteCode.emit((char)0xF3);
+	//byteCode.emit((char)node->val); // TODO
 }
 
 void GS2Compiler::Visit(ExpressionStringConstNode *node)
 {
 	auto id = byteCode.getStringConst(node->val);
-	printf("String: %s\n", node->val.c_str());
-
+	
 	byteCode.emit(opcode::OP_TYPE_STRING);
-	byteCode.emit((char)0xF0);
-	byteCode.emit((char)id);
-}
-
-struct BuiltInCmd
-{
-	std::string name;
-	opcode::Opcode op;
-	bool useArray;
-};
-
-const BuiltInCmd defaultCall = {
-	"",
-	opcode::OP_CALL,
-	true
-};
-
-const BuiltInCmd builtInCmds[] = {
-	{"format", opcode::OP_FORMAT, true},
-	{"int", opcode::OP_INT, false},
-	{"abs", opcode::OP_ABS, false},
-	{"random", opcode::OP_RANDOM, false},
-	{"sin", opcode::OP_SIN, false},
-	{"cos", opcode::OP_COS, false},
-
-	{"arctan", opcode::OP_ARCTAN, false},
-	{"exp", opcode::OP_EXP, false},
-	{"log", opcode::OP_LOG, false},
-	{"min", opcode::OP_MIN, false},
-	{"max", opcode::OP_MAX, false},
-	{"getangle", opcode::OP_GETANGLE, false},
-	{"getdir", opcode::OP_GETDIR, false},
-	{"vecx", opcode::OP_VECX, false},
-	{"vecy", opcode::OP_VECY, false},
-};
-
-const BuiltInCmd builtInObjCmds[] = {
-	{"index", opcode::OP_OBJ_INDEX, false},
-	{"type", opcode::OP_OBJ_TYPE, false},
-
-	// no opcode yet
-	{"indices", opcode::OP_ABS, false},
-	{"link", opcode::OP_RANDOM, false},
-	{"trim", opcode::OP_SIN, false},
-	{"length", opcode::OP_COS, false},
-	{"pos", opcode::OP_COS, false},
-	{"charat", opcode::OP_COS, false},
-	{"substring", opcode::OP_COS, false},
-	{"starts", opcode::OP_COS, false},
-	{"ends", opcode::OP_COS, false},
-	{"tokenize", opcode::OP_COS, false},
-	{"positions", opcode::OP_COS, false},
-	{"size", opcode::OP_COS, false},
-	{"subarray", opcode::OP_COS, false},
-	{"clear", opcode::OP_COS, false},
-};
-
-const std::unordered_map<std::string, BuiltInCmd>& getCommandList()
-{
-	static bool initialized = false;
-	static std::unordered_map<std::string, BuiltInCmd> builtInMap;
-
-	if (!initialized)
-	{
-		for (const auto& cmd : builtInCmds)
-			builtInMap.insert({ cmd.name, cmd });
-
-		initialized = true;
-	}
-
-	return builtInMap;
-}
-
-const std::unordered_map<std::string, BuiltInCmd>& getCommandListMethod()
-{
-	static bool initialized = false;
-	static std::unordered_map<std::string, BuiltInCmd> builtInMap;
-
-	if (!initialized)
-	{
-		for (const auto& cmd : builtInObjCmds)
-			builtInMap.insert({ cmd.name, cmd });
-
-		initialized = true;
-	}
-
-	return builtInMap;
+	emitStringIdxNumber(byteCode, id);
+//	byteCode.emit((char)0xF0);
+//	byteCode.emit((char)id);
 }
 
 void GS2Compiler::Visit(ExpressionFnCallNode *node)
 {
-	printf("Call Function: %s\n", node->expr->toString().c_str());
-
 	// Build-in commands
-	auto& cmdList = (node->methodCall ? getCommandListMethod() : getCommandList());
+	auto& cmdList = (node->objExpr ? getCommandListMethod() : getCommandList());
+	std::string funcName = node->funcExpr->toString();
 
-	auto iter = cmdList.find(node->expr->toString());
+	printf("Call Function: %s\n", funcName.c_str());
+
+	auto iter = cmdList.find(funcName);
 	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : defaultCall);
 	
+	if (node->objExpr)
+		node->objExpr->visit(this);
+
 	{
 		if (cmd.useArray)
 			byteCode.emit(opcode::OP_TYPE_ARRAY);
@@ -295,7 +396,7 @@ void GS2Compiler::Visit(ExpressionFnCallNode *node)
 		}
 
 		if (cmd.op == opcode::OP_CALL)
-			node->expr->visit(this);
+			node->funcExpr->visit(this);
 
 		byteCode.emit(cmd.op);
 	}

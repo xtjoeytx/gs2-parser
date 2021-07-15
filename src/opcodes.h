@@ -50,6 +50,7 @@ namespace opcode
 		OP_MEMBER_ACCESS = 35,
 		OP_CONV_TO_OBJECT = 36,
 		OP_INLINE_NEW = 40,
+		OP_MAKEVAR = 41,
 		OP_NEW_OBJECT = 42,
 		OP_ASSIGN = 50, //  S(1) = S(0)
 		OP_FUNC_PARAMS_END = 51,
@@ -116,6 +117,10 @@ namespace opcode
 		OP_WITHEND = 151,
 		OP_THIS = 180,
 		OP_THISO = 181,
+		OP_PLAYER = 182,
+		OP_PLAYERO = 183,
+		OP_LEVEL = 184,
+		OP_TEMP = 189,
 		OP_NUM_OPS //  This is to get the number of operations
 
 		// @formatter:on
@@ -169,6 +174,9 @@ namespace opcode
 			case OP_TYPE_NUMBER:
 				return "OP_TYPE_NUMBER";
 
+			case OP_FORMAT:
+				return "OP_FORMAT";
+
 			case OP_TYPE_STRING:
 				return "OP_TYPE_STRING";
 
@@ -177,6 +185,18 @@ namespace opcode
 
 			case OP_TYPE_ARRAY:
 				return "OP_TYPE_ARRAY";
+
+			case OP_CONV_TO_FLOAT:
+				return "OP_CONV_TO_FLOAT";
+
+			case OP_CONV_TO_STRING:
+				return "OP_CONV_TO_STRING";
+
+			case OP_MEMBER_ACCESS:
+				return "OP_MEMBER_ACCESS";
+
+			case OP_CONV_TO_OBJECT:
+				return "OP_CONV_TO_OBJECT";
 
 	//		case OP_DECPUSH:
 	//			return "OP_DECPUSH";
@@ -240,6 +260,24 @@ namespace opcode
 
 			case OP_JOIN:
 				return "OP_JOIN";
+
+			case OP_THIS:
+				return "OP_THIS";
+
+			case OP_THISO:
+				return "OP_THISO";
+
+			case OP_PLAYER:
+				return "OP_PLAYER";
+
+			case OP_PLAYERO:
+				return "OP_PLAYERO";
+
+			case OP_LEVEL:
+				return "OP_LEVEL";
+
+			case OP_TEMP:
+				return "OP_TEMP";
 
 			default:
 				return std::string("OP ").append(std::to_string((int)opcode));

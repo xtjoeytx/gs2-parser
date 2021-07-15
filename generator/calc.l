@@ -99,6 +99,9 @@ string_const (\"(\\.|[^"])*\")
 "switch"	{return T_KWSWITCH;}
 "case"		{return T_KWCASE;}
 "default"	{return T_KWDEFAULT;}
+"enum"		{return T_KWENUM;}
+"int"		{return T_KWCAST_INT;}
+"float"		{return T_KWCAST_FLOAT;}
 
 	/*
 		Comments
@@ -139,6 +142,9 @@ string_const (\"(\\.|[^"])*\")
 
 void setLexBuffer(const char *s) {
 	yy_switch_to_buffer(yy_scan_string(s));
+
+	//yyscan_t scanner;
+	//yylex_init(&scanner);
 }
 
 const char * saveString(const char *s) {

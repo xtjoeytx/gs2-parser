@@ -38,6 +38,7 @@ class GS2Compiler : public NodeVisitor
         virtual void Visit(StatementWhileNode *node);
         virtual void Visit(StatementWithNode *node);
         virtual void Visit(ExpressionNode *node);
+        virtual void Visit(ExpressionCastNode* node);
         virtual void Visit(ExpressionIdentifierNode *node);
         virtual void Visit(ExpressionStringConstNode *node);
         virtual void Visit(ExpressionIntegerNode *node);

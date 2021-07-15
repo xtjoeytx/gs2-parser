@@ -12,9 +12,9 @@ Buffer::Buffer(Buffer&& o) noexcept
     : buf(std::move(o.buf)), buflen(o.buflen), readpos(o.readpos), writepos(o.writepos)
 {
     o.buf = nullptr;
-    //o.buflen = 0;
-    //o.readpos = 0;
-    //o.writepos = 0;
+    o.buflen = 0;
+    o.readpos = 0;
+    o.writepos = 0;
 }
 
 Buffer::~Buffer()
@@ -36,7 +36,7 @@ void Buffer::read(char *dst, size_t len, size_t pos)
 
 void Buffer::write(const char *src, size_t len)
 {
-    if (buflen < writepos + len)
+    while (buflen < writepos + len)
         resize();
 
     memcpy(buf + writepos, src, len);

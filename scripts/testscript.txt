@@ -782,3 +782,24 @@ function testLoop()
     echo("T: " @ temp.v);
   }
 }
+
+
+
+function onCreated() {
+/*
+         7,         5: type(array) (23)
+         8,         6: type(string) (21) (Opcode: 0xF0)  - variable[0](test: ) (byte)
+        11,         7: player. (182)
+        12,         8: type(variable) (22) (Opcode: 0xF0)  - variable[1](x) (byte)
+        15,         9: member access (35)
+        16,        10: Convert to float (33)
+        17,        11: type(number) (20) (Opcode: 0xF3)  - double(5) (byte)
+        20,        12: - binary (61)
+        21,        13: Convert to string (34)
+        22,        14: @ (113)
+        23,        15: type(variable) (22) (Opcode: 0xF0)  - variable[2](echo) (byte)
+        26,        16: Call function (6)
+        27,        17: Decrease last operand index by 1 (32)
+*/
+  echo("test: " @ (player.x - 5));
+}

@@ -18,6 +18,7 @@ class StatementSwitchNode;
 class StatementWhileNode;
 class StatementWithNode;
 class ExpressionNode;
+class ExpressionCastNode;
 class ExpressionFnCallNode;
 class ExpressionIdentifierNode;
 class ExpressionIntegerNode;
@@ -46,6 +47,7 @@ class NodeVisitor
         virtual void Visit(StatementWhileNode *node) = 0;
         virtual void Visit(StatementWithNode *node) = 0;
         virtual void Visit(ExpressionNode *node) = 0;
+        virtual void Visit(ExpressionCastNode* node) = 0;
         virtual void Visit(ExpressionIdentifierNode *node) = 0;
         virtual void Visit(ExpressionStringConstNode *node) = 0;
         virtual void Visit(ExpressionIntegerNode *node) = 0;

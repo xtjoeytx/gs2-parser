@@ -114,6 +114,10 @@ public:
 		print("Visit ExpressionNode");
 	}
 
+    virtual void Visit(ExpressionCastNode* node) {
+        print("Visit ExpressionCastNode");
+    }
+
     virtual void Visit(ExpressionIdentifierNode *node)  {
 		print("Visit ExpressionIdentifierNode");
 	}
@@ -136,7 +140,7 @@ public:
         
     }
 
-    virtual void Visit(ExpressionFnCallNode *node) {
+    virtual void Visit(ExpressionFnCallNode* node) {
         std::string argList;
         if (node->args)
         {
@@ -147,15 +151,28 @@ public:
             }
             argList.pop_back();
         }
-        
+
         tabc++;
-        print("%s(%s);", node->expr->toString().c_str(), argList.c_str());
+        std::string funcCmd;
+        if (node->objExpr != 0)
+        {
+            funcCmd.append(node->objExpr->toString());
+            funcCmd.append(".");
+        }
+        funcCmd.append(node->funcExpr->toString());
+        print("%s(%s);", funcCmd.c_str(), argList.c_str());
         tabc--;
     }
 
     virtual void Visit(ExpressionObjectAccessNode *node) {
         tabc++;
-        print("%s.%s", node->left->toString().c_str(), node->right->toString().c_str());
+
+        printf("%s", node->left->toString().c_str());
+        for (const auto& n : node->nodes)
+            printf(".%s", n->toString().c_str());
+        //printf(".%s", node->right->toString().c_str());
+
+        //print("%s.%s", node->left->toString().c_str(), node->right->toString().c_str());
         tabc--;
 		// print("Visit ExpressionObjectAccessNode");
 	}

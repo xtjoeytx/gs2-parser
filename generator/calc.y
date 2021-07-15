@@ -70,9 +70,9 @@ void yyerror(const char* s);
 
 %token T_KWPUBLIC
 %token T_KWIF T_KWELSE T_KWELSEIF T_KWFOR T_KWWHILE T_KWBREAK T_KWCONTINUE T_KWRETURN
-%token T_KWFUNCTION T_KWNEW T_KWWITH
+%token T_KWFUNCTION T_KWNEW T_KWWITH T_KWENUM
 %token T_KWSWITCH T_KWCASE T_KWDEFAULT
-%token T_QUIT
+%token T_KWCAST_INT T_KWCAST_FLOAT
 
 %right T_OPASSIGN
 %left '['
@@ -88,7 +88,9 @@ void yyerror(const char* s);
 %right T_OPNOT T_OPDECREMENT T_OPINCREMENT
 %left '.'
 
-%type<exprNode> constant expr primary_expression
+%type<exprNode> expr
+%type<exprNode> constant
+%type<exprNode> expr_cast
 %type<exprNode> expr_intconst
 %type<exprIdentNode> expr_ident
 %type<exprNode> expr_strconst
@@ -230,20 +232,10 @@ constant:
 	| expr_strconst
 	;
 
-primary_expression:
-	constant
-	| expr_ident					{ $$ = $1; }
-	| '(' expr ')'					{ $$ = $2; }
-	;
-
-// postfix_expression
-// 	: primary_expression
-// 	| postfix_expression '[' expr ']'
-// 	| postfix_expression '.' expr_ident
-// 	;
-
 expr:
-	primary_expression
+	constant						{ $$ = $1; }
+	| expr_ident					{ $$ = $1; }
+	| expr_cast						{ $$ = $1; }
 	| expr_fncall 					{ $$ = $1; }
 	| expr_objaccess 				{ $$ = $1; }
 	| expr_arraylist				{ $$ = $1; }
@@ -251,6 +243,7 @@ expr:
 	| expr_ops_unary				{ $$ = $1; }
 	| expr_ops_comparison			{ $$ = $1; }
 	| expr '[' expr ']'				{ $$ = $1; }
+	| '(' expr ')'					{ $$ = $2; }
 	;
 
 expr_ops_unary:
@@ -283,7 +276,6 @@ expr_ops_comparison:
 	| expr T_OPOR expr	 						{ $$ = new ExpressionBinaryOpNode($1, $3, "||"); }
 	;
 
-
 expr_intconst:
 	T_INT										{ $$ = new ExpressionIntegerNode($1); }
 	;
@@ -300,13 +292,20 @@ expr_arraylist:
 	'{' args_list '}' 							{ $$ = new ExpressionListNode($2); }
 	;
 
+expr_cast:
+	T_KWCAST_INT '(' expr ')'					{ $$ = new ExpressionCastNode($3, ExpressionCastNode::CastType::INTEGER); }
+	| T_KWCAST_FLOAT '(' expr ')'				{ $$ = new ExpressionCastNode($3, ExpressionCastNode::CastType::FLOAT); }
+	;
+
 expr_fncall:
-	expr_ident '(' args_list_decl ')' 			{ $$ = new ExpressionFnCallNode($1, $3, false); }
-	| expr_objaccess '(' args_list_decl ')' 	{ $$ = new ExpressionFnCallNode($1, $3, true); }
+	expr_ident '(' args_list_decl ')' 			{ $$ = new ExpressionFnCallNode($1, nullptr, $3); }
+	| expr_objaccess '(' args_list_decl ')' 	{ $$ = new ExpressionFnCallNode($1->right, $1, $3); }
 	;
 
 expr_objaccess:
-	expr '.' expr_ident							{ $$ = new ExpressionObjectAccessNode($1, $3); }
+	expr_objaccess '.' expr_ident				{ $1->nodes.push_back($1->right); $1->right = $3; }
+	| expr_ident '.' expr_ident					{ $$ = new ExpressionObjectAccessNode($1, $3); }
+	| expr_strconst '.' expr_ident				{ $$ = new ExpressionObjectAccessNode($1, $3); }
 	;
 
 %%
@@ -414,6 +413,11 @@ int main(int argc, const char *argv[]) {
 
 void yyerror(const char* s) {
 	fprintf(stderr, "Parse error (line %d): %s\n", g_LineNumber, s);
+	
+	#ifdef _WIN32
+	system("pause");
+	#endif
+
 	exit(1);
 }
 

@@ -49,7 +49,8 @@ enum class ExpressionType
 	EXPR_ANY,
 	EXPR_INTEGER,
 	EXPR_NUMBER,
-	EXPR_STRING
+	EXPR_STRING,
+	EXPR_OBJECT
 };
 
 class ExpressionNode : public StatementNode
@@ -60,6 +61,7 @@ public:
 	ExpressionNode() : StatementNode() { }
 
 	virtual std::string toString() const = 0;
+
 	virtual ExpressionType expressionType() const {
 		return ExpressionType::EXPR_ANY;
 	}
@@ -70,7 +72,8 @@ class ExpressionIntegerNode : public ExpressionNode
 public:
 	_NodeName("ExpressionIntegerNode")
 
-	ExpressionIntegerNode(int num) : ExpressionNode()
+	ExpressionIntegerNode(int num)
+		: ExpressionNode()
 	{
 		val = num;
 	}
@@ -91,7 +94,8 @@ class ExpressionIdentifierNode : public ExpressionNode
 public:
 	_NodeName("ExpressionIdentifierNode")
 
-	ExpressionIdentifierNode(const char *str) : ExpressionNode()
+	ExpressionIdentifierNode(const char *str)
+		: ExpressionNode()
 	{
 		val = std::string(str);
 	}
@@ -108,7 +112,8 @@ class ExpressionStringConstNode : public ExpressionNode
 public:
 	_NodeName("ExpressionStringConstNode")
 
-	ExpressionStringConstNode(const char *str) : ExpressionNode()
+	ExpressionStringConstNode(const char *str)
+		: ExpressionNode()
 	{
 		val = std::string(str);
 	}
@@ -122,6 +127,31 @@ public:
 	}
 
 	std::string val;
+};
+
+class ExpressionCastNode : public ExpressionNode
+{
+public:
+	enum class CastType
+	{
+		INTEGER,
+		FLOAT
+	};
+
+public:
+	_NodeName("ExpressionCastNode")
+
+	ExpressionCastNode(ExpressionNode* expr, CastType type)
+		: ExpressionNode(), expr(expr), type(type)
+	{
+	}
+
+	virtual std::string toString() const {
+		return expr->toString();
+	}
+
+	ExpressionNode* expr;
+	CastType type;
 };
 
 class ExpressionBinaryOpNode : public ExpressionNode
@@ -182,7 +212,8 @@ class ExpressionObjectAccessNode : public ExpressionNode
 		ExpressionObjectAccessNode(ExpressionNode *l, ExpressionNode *r)
 			: ExpressionNode(), left(l), right(r)
 		{
-
+			//nodes.push_back(reinterpret_cast<ExpressionIdentifierNode *>(l));
+			//nodes.push_back(reinterpret_cast<ExpressionIdentifierNode *>(r));
 		}
 
 		virtual std::string toString() const {
@@ -191,19 +222,23 @@ class ExpressionObjectAccessNode : public ExpressionNode
 
 		ExpressionNode* left;
 		ExpressionNode* right;
+		std::vector<ExpressionNode*> nodes;
 };
-
 
 class ExpressionFnCallNode : public ExpressionNode
 {
 public:
 	_NodeName("ExpressionFnCallNode")
 
-	ExpressionFnCallNode(ExpressionNode *e, std::vector<ExpressionNode *> *a = 0, bool methodCall = false)
-		: ExpressionNode(), expr(e), args(a), methodCall(methodCall), discardReturnValue(false)
+	ExpressionFnCallNode(ExpressionNode *funcExpr, ExpressionObjectAccessNode *objExpr, std::vector<ExpressionNode *> *args = 0)
+		: ExpressionNode(), funcExpr(funcExpr), objExpr(objExpr), args(args), discardReturnValue(false)
 	{
+		if (objExpr && funcExpr == objExpr->right) {
+			objExpr->right = nullptr;
+			printf("unset\n");
+		}
 	}
-	
+
 	virtual std::string toString() const {
 		std::string argList;
 		if (args)
@@ -216,14 +251,13 @@ public:
 			argList.pop_back();
 		}
 
-		return std::string(expr->toString()) + "(" + argList + ")";
+		return std::string(funcExpr->toString()) + "(" + argList + ")";
 	}
 
-	bool discardReturnValue;
-	bool methodCall;
-	ExpressionNode* expr;
+	ExpressionNode* funcExpr;
+	ExpressionObjectAccessNode * objExpr;
 	std::vector<ExpressionNode*>* args;
-
+	bool discardReturnValue;
 };
 
 class ExpressionListNode : public ExpressionNode
