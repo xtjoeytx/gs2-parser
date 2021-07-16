@@ -179,6 +179,10 @@ stmt_expr:
 	| expr ';'				{ $$ = $1; }
 	;
 
+	/*
+		todo(joey): new should be an expression, not statement
+	*/
+
 stmt_new:
 	T_KWNEW T_IDENTIFIER '(' args_list_decl ')' stmt_block	{ $$ = new StatementNewNode($2, $4, $6); }
 	;
@@ -273,25 +277,25 @@ expr_ops_unary:
 	;
 
 expr_ops_binary:
-	expr '+' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "+"); }
-	| expr '-' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "-"); }
-	| expr '*' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "*"); }
-	| expr '/' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "/"); }
-	| expr '%' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "%"); }
-	| expr '^' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "^"); }
-	| expr '=' expr		 	{ $$ = new ExpressionBinaryOpNode($1, $3, "=", true); }
-	| expr '@' expr		 			{ $$ = new ExpressionBinaryOpNode($1, $3, "@"); }
+	expr '+' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Plus); }
+	| expr '-' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Minus); }
+	| expr '*' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Multiply); }
+	| expr '/' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Divide); }
+	| expr '%' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Mod); }
+	| expr '^' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Pow); }
+	| expr '=' expr		 			{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Assign, true); }
+	| expr '@' expr		 			{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Concat); }
 	;
 
 expr_ops_comparison:
-	expr T_OPEQUALS expr	 					{ $$ = new ExpressionBinaryOpNode($1, $3, "=="); }
-	| expr T_OPNOTEQUALS expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "!="); }
-	| expr T_OPLESSTHAN expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "<"); }
-	| expr T_OPGREATERTHAN expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ">"); }
-	| expr T_OPLESSTHANEQUAL expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, "<="); }
-	| expr T_OPGREATERTHANEQUAL expr			{ $$ = new ExpressionBinaryOpNode($1, $3, ">="); }
-	| expr T_OPAND expr	 						{ $$ = new ExpressionBinaryOpNode($1, $3, "&&"); }
-	| expr T_OPOR expr	 						{ $$ = new ExpressionBinaryOpNode($1, $3, "||"); }
+	expr T_OPEQUALS expr	 					{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Equal); }
+	| expr T_OPNOTEQUALS expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::NotEqual); }
+	| expr T_OPLESSTHAN expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::LessThan); }
+	| expr T_OPGREATERTHAN expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::GreaterThan); }
+	| expr T_OPLESSTHANEQUAL expr	 			{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::LessThanOrEqual); }
+	| expr T_OPGREATERTHANEQUAL expr			{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::GreaterThanOrEqual); }
+	| expr T_OPAND expr	 						{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::LogicalAnd); }
+	| expr T_OPOR expr	 						{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::LogicalOr); }
 	;
 
 expr_ident:

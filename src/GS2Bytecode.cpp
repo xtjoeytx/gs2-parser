@@ -27,7 +27,8 @@
 size_t GS2Bytecode::getStringConst(const std::string& str)
 {
 	auto it = std::find(stringTable.begin(), stringTable.end(), str);
-	if (it == stringTable.end()) {
+	if (it == stringTable.end())
+	{
 		stringTable.push_back(str);
 		return stringTable.size() - 1;
 	}
@@ -100,12 +101,14 @@ Buffer GS2Bytecode::getByteCode()
 	return byteCode;
 }
 
-void GS2Bytecode::addFunction(FunctionEntry entry) {
-	auto it = std::find_if(functionTable.begin(), functionTable.end(), [entry](FunctionEntry& e) {
+void GS2Bytecode::addFunction(FunctionEntry entry)
+{
+	auto it = std::find_if(functionTable.begin(), functionTable.end(), [entry](const FunctionEntry& e) {
 		return (entry.functionName == e.functionName);
 	});
 
-	if (it == functionTable.end()) {
+	if (it == functionTable.end())
+	{
 		functionTable.push_back(entry);
 	}
 	else
@@ -116,7 +119,7 @@ void GS2Bytecode::addFunction(FunctionEntry entry) {
 
 void GS2Bytecode::emit(opcode::Opcode op)
 {
-	printf("%5zu EMIT OPER: %s (%d)\n", bytecode.length(), opcode::OpcodeToString(op).c_str(), op);
+	printf("%5zu EMIT OPER: %s (%d) loc: %zu\n", bytecode.length(), opcode::OpcodeToString(op).c_str(), op, opcodePos);
 	
 	bytecode.write((char)op);
 	lastOp = op;
@@ -176,13 +179,26 @@ void GS2Bytecode::emit(const std::string& v)
 	bytecode.write('\0');
 }
 
- void GS2Bytecode::emitDynamicNumber(uint32_t val)
- {
-	 // Strings use 0xF0 -> 0xF2, numbers use 0xF3 -> 0xF5
-	 // 0xF6 is used for null-terminated strings converted to doubles
-	 char offset = 0;
-	 if (getLastOp() != opcode::OP_TYPE_STRING)
-		offset = 3;
+void GS2Bytecode::emitDynamicNumber(uint32_t val)
+{
+	// Strings use 0xF0 -> 0xF2, numbers use 0xF3 -> 0xF5
+	// 0xF6 is used for null-terminated strings converted to doubles
+	char offset = 0;
+	
+	switch (getLastOp())
+	{
+		case opcode::OP_TYPE_NUMBER:
+			offset = 3;
+			break;
+
+		case opcode::OP_TYPE_STRING:
+			//offset = 0;
+			break;
+
+		default:
+			printf("Previous opcode should be a number or string!!\n");
+			return;
+	}
 
 	if (val <= 0xFF)
 	{

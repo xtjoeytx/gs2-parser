@@ -16,7 +16,91 @@
 	virtual void visit(NodeVisitor *v) { v->Visit(this); }
 
 
-#include <stdio.h>
+enum class ExpressionType
+{
+	EXPR_ANY,
+	EXPR_INTEGER,
+	EXPR_NUMBER,
+	EXPR_STRING,
+	EXPR_OBJECT
+};
+
+
+enum class ExpressionOp {
+	Plus,
+	Minus,
+	Multiply,
+	Divide,
+	Mod,
+	Pow,
+	Assign,
+	Concat,
+	Equal,
+	NotEqual,
+	LessThan,
+	GreaterThan,
+	LessThanOrEqual,
+	GreaterThanOrEqual,
+	LogicalAnd,
+	LogicalOr
+};
+
+inline const char* ExpressionOpToString(ExpressionOp op)
+{
+	switch (op)
+	{
+		case ExpressionOp::Plus:
+			return "+";
+
+		case ExpressionOp::Minus:
+			return "-";
+
+		case ExpressionOp::Multiply:
+			return "*";
+
+		case ExpressionOp::Divide:
+			return "/";
+
+		case ExpressionOp::Mod:
+			return "%";
+
+		case ExpressionOp::Pow:
+			return "^";
+
+		case ExpressionOp::Assign:
+			return "^";
+
+		case ExpressionOp::Concat:
+			return "@";
+
+		case ExpressionOp::Equal:
+			return "==";
+
+		case ExpressionOp::NotEqual:
+			return "!=";
+
+		case ExpressionOp::LessThan:
+			return "<";
+
+		case ExpressionOp::GreaterThan:
+			return ">";
+
+		case ExpressionOp::LessThanOrEqual:
+			return "<=";
+
+		case ExpressionOp::GreaterThanOrEqual:
+			return ">=";
+
+		case ExpressionOp::LogicalAnd:
+			return "&&";
+
+		case ExpressionOp::LogicalOr:
+			return "||";
+
+		default:
+			return "Unknown";
+	}
+}
 
 #ifdef DBGALLOCATIONS
 static int count = 0;
@@ -58,15 +142,6 @@ public:
 
 	StatementNode() : Node() { }
 	virtual ~StatementNode() = default;
-};
-
-enum class ExpressionType
-{
-	EXPR_ANY,
-	EXPR_INTEGER,
-	EXPR_NUMBER,
-	EXPR_STRING,
-	EXPR_OBJECT
 };
 
 class ExpressionNode : public StatementNode
@@ -194,7 +269,7 @@ class ExpressionBinaryOpNode : public ExpressionNode
 	public:
 		_NodeName("ExpressionBinaryOpNode");
 
-		ExpressionBinaryOpNode(ExpressionNode *l, ExpressionNode *r, std::string op, bool assign = false)
+		ExpressionBinaryOpNode(ExpressionNode *l, ExpressionNode *r, ExpressionOp op, bool assign = false)
 			: ExpressionNode(), left(l), right(r), op(op), assignment(assign)
 		{
 
@@ -204,7 +279,7 @@ class ExpressionBinaryOpNode : public ExpressionNode
 
 		ExpressionNode *left;
 		ExpressionNode *right;
-		std::string op;
+		ExpressionOp op;
 		bool assignment;
 
 		virtual std::string toString() const {
@@ -213,7 +288,7 @@ class ExpressionBinaryOpNode : public ExpressionNode
 			if (!assignment)
 				ret += "(";
 			
-			ret += left->toString() + " " + op.c_str() + " " + right->toString();
+			ret += left->toString() + " " + ExpressionOpToString(op) + " " + right->toString();
 
 			if (!assignment)
 				ret += ")";

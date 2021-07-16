@@ -2,23 +2,17 @@
 %option reentrant bison-bridge bison-locations
 %option extra-type="class ParserData *"
 
-%{
-#include <stdio.h>
-#include <string>
-#include <set>
+%top{
+#include <cstdint>
+}
 
+%{
 #include "Parser.h"
 #include "ast.h"
 
 #define YY_DECL int yylex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param, YY_EXTRA_TYPE parser, yyscan_t yyscanner)
 
 #include "calc.tab.hh"
-
-/*
-	{DIGIT}+"."{DIGIT}*     {yylval.fval = atof(yytext); return T_FLOAT;}
-	[0-9]+\.[0-9]+  {yylval.fval = atof(yytext); return T_FLOAT;}
-	[0-9]+          {yylval.ival = atoi(yytext); return T_INT;}
-*/
 
 %}
 
@@ -130,12 +124,9 @@ string_const (\"(\\.|[^"])*\")
 			break;
 		}
 	}
-
-	/*
-		{DIGIT}+\.{DIGIT}+	{yylval->fval = atof(yytext); return T_FLOAT;}
-	*/
-{DIGIT}+\.{DIGIT}+	{yytext[yyleng] = 0; yylval->sval = yyextra->saveString(yytext); return T_FLOAT;}
+	
+{DIGIT}*\.{DIGIT}+	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_FLOAT;}
 {DIGIT}+			{yylval->ival = atoi(yytext); return T_INT;}
-{ALPHANUM}+			{yytext[yyleng] = 0; yylval->sval = yyextra->saveString(yytext); return T_IDENTIFIER;}
-{string_const}		{yytext[yyleng - 1] = 0; yylval->sval = yyextra->saveString(yytext+1); return T_STRCONSTANT;}
+{ALPHANUM}+			{yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
+{string_const}		{yylval->sval = yyextra->saveString(yytext+1, yyleng - 2); return T_STRCONSTANT;}
 %%

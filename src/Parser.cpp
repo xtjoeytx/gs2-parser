@@ -1,3 +1,4 @@
+#include <cassert>
 #include "Parser.h"
 #include "ast.h"
 
@@ -5,7 +6,7 @@
 #include "lex.yy.h"
 
 ParserData::ParserData()
-	: lineNumber(0)
+	: lineNumber(0), prog(nullptr)
 {
 	yylex_init_extra(this, &scanner);
 }
@@ -16,9 +17,10 @@ ParserData::~ParserData()
 	delete prog;
 }
 
-const char * ParserData::saveString(const char *s)
+const char * ParserData::saveString(const char* str, int length)
 {
-	auto ins = stable.insert(s);
+	assert(length > 0);
+	auto ins = stable.insert(std::string(str, length));
 	return ins.first->c_str();
 }
 

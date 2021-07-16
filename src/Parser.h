@@ -3,14 +3,15 @@
 #ifndef MYPARSER_H
 #define MYPARSER_H
 
-#include <unordered_map>
 #include <optional>
 #include <string>
 #include <set>
+#include <unordered_map>
 #include <vector>
-#include "ast.h"
+//#include "ast.h"
 
 typedef void* yyscan_t;
+
 class StatementBlock;
 class EnumList;
 
@@ -20,7 +21,7 @@ class ParserData
 		ParserData();
 		~ParserData();
 
-		const char * saveString(const char *s);
+		const char * saveString(const char *str, int length);
 
 		void addEnum(EnumList *enumList);
 		std::optional<int> getEnumConstant(const std::string& key);

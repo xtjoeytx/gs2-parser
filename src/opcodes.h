@@ -7,10 +7,6 @@
 
 namespace opcode
 {
-	enum class ExpressionOp {
-
-	};
-
 	enum Opcode {
 
 		// @formatter:off
@@ -18,7 +14,7 @@ namespace opcode
 		/*  NAME            SEMANTIC                        */
 		/* ------------------------------------------------ */
 		OP_PUSH = 0, //  PUSH N(0, sizeof(PackedValue))
-		OP_SET_INDEX = 1, //  S(1) =
+		OP_SET_INDEX = 1, //  S(1) =			// likely JMP to opIndex
 		OP_ARR_GET = 2, //  S(1) =
 
 		OP_OR = 3, //  PUSH (S(1) || S(0))
@@ -143,6 +139,9 @@ namespace opcode
 
 			case OP_ARR_GET:
 				return "OP_ARR_GET";
+
+			case OP_IF:
+				return "OP_IF";
 
 			case OP_ADD:
 				return "OP_ADD";

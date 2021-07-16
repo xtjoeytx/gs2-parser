@@ -1,3 +1,4 @@
+#include <cassert>
 #include <unordered_map>
 #include "GS2CompilerVisitor.h"
 #include "ast.h"
@@ -113,7 +114,6 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 	byteCode.emit(short(0)); // replaced with jump index to last opcode
 	
 	byteCode.addFunction({node->ident, byteCode.getBytecodePos(), byteCode.getOpcodePos()});
-	//size_t jumpIdx = byteCode.getBytecodePos() - 2;
 	
 	{
 		byteCode.emit(opcode::OP_TYPE_ARRAY);
@@ -140,24 +140,34 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 	// return statement at the end of the function
 	if (byteCode.getLastOp() != opcode::OP_RET)
 	{
-		// TODO: unsure if this is needed
 		byteCode.emit(opcode::OP_TYPE_NUMBER);
-		byteCode.emit(char(0xF3));
-		byteCode.emit(char(0));
-
+		byteCode.emitDynamicNumber(0);
 		byteCode.emit(opcode::OP_RET);
 	}
+}
 
-	// this code would jump over the function definition block,
-	// but it seems graal jumps to the last possible opcode+1
-	// byteCode.emit(short(byteCode.getBytecodePos()), jumpIdx);
+opcode::Opcode getExpressionOpCode(ExpressionOp op)
+{
+	switch (op)
+	{
+		case ExpressionOp::Plus: return opcode::Opcode::OP_ADD;
+		case ExpressionOp::Minus: return opcode::Opcode::OP_SUB;
+		case ExpressionOp::Multiply: return opcode::Opcode::OP_MUL;
+		case ExpressionOp::Divide: return opcode::Opcode::OP_DIV;
+		case ExpressionOp::Mod: return opcode::Opcode::OP_MOD;
+		case ExpressionOp::Pow: return opcode::Opcode::OP_POW;
+		case ExpressionOp::Assign: return opcode::Opcode::OP_ASSIGN;
+		case ExpressionOp::Equal: return opcode::Opcode::OP_EQ;
+
+		default: return opcode::Opcode::OP_NUM_OPS;
+	}
 }
 
 void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 {
 	bool handled = false;
 
-	if (node->op == "@")
+	if (node->op == ExpressionOp::Concat)
 	{
 		node->left->visit(this);
 		if (node->left->expressionType() != ExpressionType::EXPR_STRING)
@@ -168,55 +178,48 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			byteCode.emit(opcode::OP_CONV_TO_STRING);
 
 		byteCode.emit(opcode::OP_JOIN);
-		handled = true;
+		return;
 	}
-	else
+
+
+	switch (node->op)
 	{
-		static const char* validOps[] = {
-			"+",
-			"-",
-			"/",
-			"*",
-			"%",
-			"="
-		};
-
-		static opcode::Opcode opType[] = {
-			opcode::OP_ADD,
-			opcode::OP_SUB,
-			opcode::OP_DIV,
-			opcode::OP_MUL,
-			opcode::OP_MOD,
-			opcode::OP_ASSIGN
-		};
-
-		bool valid = false;
-		int idx = 0;
-		for (const auto& opTest : validOps)
-		{
-			if (node->op == opTest)
-			{
-				valid = true;
-				break;
-			}
-			idx++;
-		}
-
-		if (valid)
+		case ExpressionOp::Plus:
+		case ExpressionOp::Minus:
+		case ExpressionOp::Multiply:
+		case ExpressionOp::Divide:
+		case ExpressionOp::Mod:
+		case ExpressionOp::Pow:
 		{
 			node->left->visit(this);
-			if (opType[idx] != opcode::OP_ASSIGN)
-			{
-				if (node->left->expressionType() != ExpressionType::EXPR_INTEGER)
-					byteCode.emit(opcode::OP_CONV_TO_FLOAT);
-			}
-
+			if (node->left->expressionType() != ExpressionType::EXPR_INTEGER)
+				byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 			node->right->visit(this);
-			byteCode.emit(opType[idx]);
+
+			auto opCode = getExpressionOpCode(node->op);
+			assert(opCode != opcode::Opcode::OP_NUM_OPS);
+
+			byteCode.emit(opCode);
 			handled = true;
+			break;
+		}
+
+		case ExpressionOp::Assign:
+		case ExpressionOp::Equal:
+		{
+			node->left->visit(this);
+			node->right->visit(this);
+
+			auto opCode = getExpressionOpCode(node->op);
+			assert(opCode != opcode::Opcode::OP_NUM_OPS);
+
+			byteCode.emit(opCode);
+			handled = true;
+			break;
 		}
 	}
 
+	////////
 	if (!handled)
 	{
 		Visit((Node*)node);
@@ -383,9 +386,43 @@ void GS2CompilerVisitor::Visit(StatementReturnNode *node)
 	byteCode.emit(opcode::OP_RET);
 }
 
+void GS2CompilerVisitor::Visit(StatementIfNode* node)
+{
+	node->expr->visit(this);
+	if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
+		byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+
+	byteCode.emit(opcode::OP_IF);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+	auto ifLoc = byteCode.getBytecodePos() - 2;
+
+	node->thenBlock->visit(this);
+
+	// OP_IF jumps to this location if the condition is false, so we jump
+	// over the next op which is a JMP to the end of the if-else-blocks
+	byteCode.emit(short(byteCode.getOpcodePos() + 1), ifLoc);
+
+	if (node->elseBlock)
+	{
+		// emit a jump to the end of this else block for the previous if-block
+		byteCode.emit(opcode::OP_SET_INDEX);
+		byteCode.emit(char(0xF4));
+		byteCode.emit(short(0));
+
+		auto elseLoc = byteCode.getBytecodePos() - 2;
+
+		node->elseBlock->visit(this);
+		byteCode.emit(short(byteCode.getOpcodePos()), elseLoc);
+	}
+}
+
+void GS2CompilerVisitor::Visit(StatementNewNode* node)
+{
+	Visit((Node*)node);
+}
+
 void GS2CompilerVisitor::Visit(StatementNode *node) { Visit((Node *)node); }
-void GS2CompilerVisitor::Visit(StatementIfNode *node) { Visit((Node *)node); }
-void GS2CompilerVisitor::Visit(StatementNewNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementBreakNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementContinueNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementForNode *node) { Visit((Node *)node); }
