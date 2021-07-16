@@ -32,18 +32,14 @@ class GS2Bytecode
         void emit(char v, size_t pos = SIZE_MAX);
         void emit(short v, size_t pos = SIZE_MAX);
         void emit(int v, size_t pos = SIZE_MAX);
+        void emit(const std::string& v);
+        
+        void emitDynamicNumber(uint32_t val);
+        void emitDoubleNumber(const std::string& num);
 
-        opcode::Opcode getLastOp() const {
-            return lastOp;
-        }
-
-        size_t getOpcodePos() const {
-            return opcodePos;
-        }
-
-        size_t getBytecodePos() const {
-            return bytecode.length();
-        }
+        opcode::Opcode getLastOp() const;
+        size_t getOpcodePos() const;
+        size_t getBytecodePos() const;
 
     private:
         Buffer bytecode;
@@ -53,6 +49,18 @@ class GS2Bytecode
         opcode::Opcode lastOp;
         size_t opcodePos;
 };
+
+inline opcode::Opcode GS2Bytecode::getLastOp() const {
+    return lastOp;
+}
+
+inline size_t GS2Bytecode::getOpcodePos() const {
+    return opcodePos;
+}
+
+inline size_t GS2Bytecode::getBytecodePos() const {
+    return bytecode.length();
+}
 
 // Format:
 // {GINT2(LENGTH_OF_STARTSECTION)}{STARTSECTION}{SEGMENTS}

@@ -16,11 +16,25 @@
 	virtual void visit(NodeVisitor *v) { v->Visit(this); }
 
 
+#include <stdio.h>
+
+#ifdef DBGALLOCATIONS
+static int count = 0;
+#endif
+
 class Node
 {
 public:
-	Node() {}
-	virtual ~Node() { }
+	Node() {
+#ifdef DBGALLOCATIONS
+		printf("Count: %d\n", ++count);
+#endif
+	}
+	virtual ~Node() { 
+#ifdef DBGALLOCATIONS
+		printf("Count: %d\n", --count);
+#endif
+	}
 
 	virtual const char * NodeType() const = 0;
 	virtual void visit(NodeVisitor *v) { v->Visit(this); }
@@ -32,6 +46,7 @@ public:
 	_NodeName("ProgramNode")
 
 	ProgramNode() : Node() { }
+	virtual ~ProgramNode();
 
 	std::vector<StatementNode *> nodes;
 };
@@ -42,6 +57,7 @@ public:
 	_NodeName("StatementNode")
 
 	StatementNode() : Node() { }
+	virtual ~StatementNode() = default;
 };
 
 enum class ExpressionType
@@ -87,6 +103,24 @@ public:
 	}
 
 	int val;
+};
+
+class ExpressionNumberNode : public ExpressionNode
+{
+public:
+	_NodeName("ExpressionNumberNode")
+
+	ExpressionNumberNode(const char *str)
+		: ExpressionNode()
+	{
+		val = std::string(str);
+	}
+
+	virtual std::string toString() const {
+		return val;
+	}
+
+	std::string val;
 };
 
 class ExpressionIdentifierNode : public ExpressionNode
@@ -145,6 +179,7 @@ public:
 		: ExpressionNode(), expr(expr), type(type)
 	{
 	}
+	virtual ~ExpressionCastNode();
 
 	virtual std::string toString() const {
 		return expr->toString();
@@ -164,6 +199,8 @@ class ExpressionBinaryOpNode : public ExpressionNode
 		{
 
 		}
+
+		virtual ~ExpressionBinaryOpNode();
 
 		ExpressionNode *left;
 		ExpressionNode *right;
@@ -196,6 +233,8 @@ class ExpressionUnaryOpNode : public ExpressionNode
 
 		}
 
+		virtual ~ExpressionUnaryOpNode();
+
 		ExpressionNode *expr;
 		std::string op;
 
@@ -216,8 +255,17 @@ class ExpressionObjectAccessNode : public ExpressionNode
 			//nodes.push_back(reinterpret_cast<ExpressionIdentifierNode *>(r));
 		}
 
+		virtual ~ExpressionObjectAccessNode();
+
 		virtual std::string toString() const {
-			return std::string(left->toString()) + "." + std::string(right->toString());
+			std::string str(left->toString());
+			for (const auto& n : nodes)
+				str.append(".").append(n->toString());
+
+			if (right)
+				str.append(".").append(right->toString());
+
+			return str;
 		}
 
 		ExpressionNode* left;
@@ -238,6 +286,8 @@ public:
 			printf("unset\n");
 		}
 	}
+
+	virtual ~ExpressionFnCallNode();
 
 	virtual std::string toString() const {
 		std::string argList;
@@ -269,6 +319,8 @@ public:
 
 	}
 
+	virtual ~ExpressionListNode();
+
 	virtual std::string toString() const {
 		std::string argList;
 		if (args)
@@ -293,22 +345,15 @@ class StatementBlock : public StatementNode
 public:
 	_NodeName("StatementBlock")
 
-	StatementBlock(StatementNode *node = 0) : StatementNode() {
+	StatementBlock(StatementNode *node = 0)
+		: StatementNode()
+	{
 		append(node);
 	}
 
-	virtual ~StatementBlock() { }
+	virtual ~StatementBlock();
 
-	void append(StatementNode *node) {
-		if (node) {
-			if (strcmp(node->NodeType(), ExpressionFnCallNode::NodeName) == 0) {
-				auto fnNode = reinterpret_cast<ExpressionFnCallNode*>(node);
-				fnNode->discardReturnValue = true;
-			}
-
-			statements.push_back(node);
-		}
-	}
+	void append(StatementNode *node);
 
 	std::vector<StatementNode *> statements;
 };
@@ -323,7 +368,8 @@ public:
 	{
 
 	}
-	virtual ~StatementIfNode() { }
+
+	virtual ~StatementIfNode();
 
 	ExpressionNode *expr;
 	StatementNode *thenBlock;
@@ -340,7 +386,8 @@ public:
 	{
 		ident = std::string(id);
 	}
-	virtual ~StatementFnDeclNode() { }
+	
+	virtual ~StatementFnDeclNode();
 
 	void setPublic(bool r) {
 		pub = r;
@@ -362,7 +409,7 @@ public:
 	{
 		ident = std::string(objname);
 	}
-	virtual ~StatementNewNode() { }
+	virtual ~StatementNewNode();
 
 	std::string ident;
 	StatementBlock *stmtBlock;
@@ -403,6 +450,8 @@ public:
 	{
 
 	}
+
+	virtual ~StatementReturnNode();
 	
 	ExpressionNode *expr;
 };
@@ -417,7 +466,7 @@ public:
 	{
 
 	}
-	virtual ~StatementWhileNode() { }
+	virtual ~StatementWhileNode();
 
 	ExpressionNode *expr;
 	StatementNode *block;
@@ -434,6 +483,8 @@ public:
 
 	}
 
+	virtual ~StatementWithNode();
+
 	ExpressionNode *expr;
 	StatementNode *block;
 };
@@ -448,6 +499,8 @@ public:
 	{
 
 	}
+
+	virtual ~StatementForNode();
 	
 	ExpressionNode *init;
 	ExpressionNode *cond;
@@ -465,6 +518,8 @@ public:
 	{
 
 	}
+
+	virtual ~StatementForEachNode();
 	
 	ExpressionNode *name;
 	ExpressionNode *expr;
@@ -479,6 +534,8 @@ public:
 	{
 
 	}
+
+	virtual ~CaseNode();
 
 	ExpressionNode *expr;
 	StatementNode *stmt;
@@ -495,8 +552,55 @@ public:
 
 	}
 
+	virtual ~StatementSwitchNode();
+
 	ExpressionNode *expr;
 	std::vector<CaseNode *> *cases;
+};
+
+struct EnumMember
+{
+	std::string node;
+	bool hasIndex;
+	int idx;
+
+	EnumMember(std::string node)
+		: node(std::move(node)), idx(0), hasIndex(false)
+	{
+		
+	}
+
+	EnumMember(std::string node, int idx)
+		: node(std::move(node)), idx(idx), hasIndex(true)
+	{
+
+	}
+};
+
+class EnumList
+{
+	public:
+		EnumList(EnumMember *member)
+			: curIdx(0)
+		{
+			addMember(member);
+		}
+
+		~EnumList()
+		{
+			for (const auto& n : members)
+				delete n;
+		}
+
+		void addMember(EnumMember *member);
+
+		const std::vector<EnumMember *>& getMembers() const {
+			return members;
+		}
+
+	private:
+		int curIdx;
+		std::vector<EnumMember *> members;
 };
 
 #endif

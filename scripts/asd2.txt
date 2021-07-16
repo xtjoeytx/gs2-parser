@@ -1,4 +1,10 @@
 //#CLIENTSIDE
+enum {
+  EIDLE,
+  EWALK = -5,
+  ESLASH
+};
+
 function onCreated() {
   //echo("--start--");
   //echo("test".length());
@@ -11,7 +17,9 @@ function onCreated() {
 
 function onPlayerChats()
 {
-  player.chat = "no";
+  player.chat = "no: " @ EIDLE @ EWALK @ ESLASH;
+
+  player.chat = 27.5;
 }
 
 /*

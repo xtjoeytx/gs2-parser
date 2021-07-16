@@ -6,13 +6,16 @@
 #include "astvisitor.h"
 #include "GS2Bytecode.h"
 
-class GS2Compiler : public NodeVisitor
+class ParserData;
+
+class GS2CompilerVisitor : public NodeVisitor
 {
     GS2Bytecode byteCode;
+    ParserData *parserData;
 
     public:
-        GS2Compiler() : NodeVisitor() { }
-        virtual ~GS2Compiler() = default;
+        GS2CompilerVisitor(ParserData *data) : NodeVisitor(), parserData(data) { }
+        virtual ~GS2CompilerVisitor() = default;
 
         void Reset() {
             byteCode.Reset();
@@ -42,6 +45,7 @@ class GS2Compiler : public NodeVisitor
         virtual void Visit(ExpressionIdentifierNode *node);
         virtual void Visit(ExpressionStringConstNode *node);
         virtual void Visit(ExpressionIntegerNode *node);
+        virtual void Visit(ExpressionNumberNode *node);
         virtual void Visit(ExpressionBinaryOpNode *node);
         virtual void Visit(ExpressionUnaryOpNode *node);
         virtual void Visit(ExpressionObjectAccessNode *node);

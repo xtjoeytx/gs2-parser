@@ -1,24 +1,22 @@
+%define api.pure full
+%locations
+%param { class ParserData *parser }
+%param { yyscan_t scanner }
+
+%code {
+  int yylex(YYSTYPE* yylvalp, YYLTYPE* yyllocp, class ParserData *parser, yyscan_t scanner);
+  void yyerror(YYLTYPE* yyllocp, class ParserData *parser, yyscan_t unused, const char* msg);
+}
+
 %{
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string>
 #include "ast.h"
-#include "GS2SourceVisitor.h"
-#include "GS2Compiler.h"
 
-#include <fstream>
-#include <streambuf>
+#include "Parser.h"
 
-extern int yylex();
-extern int yyparse();
-extern FILE* yyin;
-extern void setLexBuffer(const char *s);
+typedef void* yyscan_t;
 
-extern int g_LineNumber;
-StatementBlock *stmtBlock = nullptr;
-
-void yyerror(const char* s);
 %}
 
 %union {
@@ -44,10 +42,13 @@ void yyerror(const char* s);
 	StatementSwitchNode *stmtSwitchNode;
 	CaseNode *caseNode;
 	std::vector<CaseNode *> *caseNodeList;
+
+	EnumList *enumList;
+	EnumMember *enumMember;
 }
 
 %token<ival> T_INT
-%token<fval> T_FLOAT
+%token<sval> T_FLOAT
 %token<sval> T_IDENTIFIER
 %token<sval> T_STRCONSTANT
 %token '.' ',' ':' ';' '|' '@'
@@ -64,7 +65,7 @@ void yyerror(const char* s);
 %token T_OPGREATERTHAN T_OPGREATERTHANEQUAL
 
 %token '+' '-' '*' '/' '^' '%'
-%token T_OPASSIGN
+%token '='
 %token T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN
 %token T_OPDECREMENT T_OPINCREMENT
 
@@ -74,7 +75,7 @@ void yyerror(const char* s);
 %token T_KWSWITCH T_KWCASE T_KWDEFAULT
 %token T_KWCAST_INT T_KWCAST_FLOAT
 
-%right T_OPASSIGN
+%right '='
 %left '['
 %left T_OPOR
 %left T_OPAND
@@ -91,7 +92,7 @@ void yyerror(const char* s);
 %type<exprNode> expr
 %type<exprNode> constant
 %type<exprNode> expr_cast
-%type<exprNode> expr_intconst
+%type<exprNode> expr_intconst expr_numberconst
 %type<exprIdentNode> expr_ident
 %type<exprNode> expr_strconst
 %type<exprUnaryNode> expr_ops_unary
@@ -115,14 +116,15 @@ void yyerror(const char* s);
 %type<stmtSwitchNode> stmt_switch
 %type<caseNode> stmt_caseblock
 %type<caseNodeList> stmt_caseblock_list
-
+%type<enumList> enum_list
+%type<enumMember> enum_item
 
 %start program
 
 %%
 
 program:
-	decl_list				{ stmtBlock = (StatementBlock *)$1; }
+	decl_list				{ parser->prog = (StatementBlock *)$1; }
 	;
 
 decl_list: 					{ $$ = new StatementBlock(); }
@@ -132,6 +134,21 @@ decl_list: 					{ $$ = new StatementBlock(); }
 decl:
 	stmt 					{ $$ = $1; }
 	| stmt_fndecl 			{ $$ = $1; }
+	| stmt_enum				{ $$ = 0; }
+	;
+
+stmt_enum:
+	T_KWENUM '{' enum_list '}' ';'	{ parser->addEnum($3); }
+
+enum_list:
+	enum_item						{ $$ = new EnumList($1); }
+	| enum_list ',' enum_item		{ $1->addMember($3); }
+	;
+
+enum_item:
+	T_IDENTIFIER					{ $$ = new EnumMember($1); }
+	| T_IDENTIFIER '=' T_INT		{ $$ = new EnumMember($1, $3); }
+	| T_IDENTIFIER '=' '-' T_INT	{ $$ = new EnumMember($1, -$4); }
 	;
 
 stmt_list:
@@ -229,6 +246,7 @@ args_list:
 
 constant:
 	expr_intconst
+	| expr_numberconst
 	| expr_strconst
 	;
 
@@ -261,7 +279,7 @@ expr_ops_binary:
 	| expr '/' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "/"); }
 	| expr '%' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "%"); }
 	| expr '^' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, "^"); }
-	| expr T_OPASSIGN expr		 	{ $$ = new ExpressionBinaryOpNode($1, $3, "=", true); }
+	| expr '=' expr		 	{ $$ = new ExpressionBinaryOpNode($1, $3, "=", true); }
 	| expr '@' expr		 			{ $$ = new ExpressionBinaryOpNode($1, $3, "@"); }
 	;
 
@@ -276,12 +294,16 @@ expr_ops_comparison:
 	| expr T_OPOR expr	 						{ $$ = new ExpressionBinaryOpNode($1, $3, "||"); }
 	;
 
+expr_ident:
+	T_IDENTIFIER								{ $$ = new ExpressionIdentifierNode($1); }
+	;
+
 expr_intconst:
 	T_INT										{ $$ = new ExpressionIntegerNode($1); }
 	;
 
-expr_ident:
-	T_IDENTIFIER								{ $$ = new ExpressionIdentifierNode($1); }
+expr_numberconst:
+	T_FLOAT										{ $$ = new ExpressionNumberNode($1); }
 	;
 
 expr_strconst:
@@ -310,109 +332,10 @@ expr_objaccess:
 
 %%
 
-int main(int argc, const char *argv[]) {
-#ifdef YYDEBUG
-  yydebug = 1;
-#endif
-	// yyin = stdin;
-	// do {
-	// 	yyparse();
-	// } while(!feof(yyin));
+#include "lex.yy.h"
 
-	std::string testStr;
-
-	if (argc > 1)
-	{
-		std::ifstream t(argv[1]);
-		std::string str((std::istreambuf_iterator<char>(t)),
-						std::istreambuf_iterator<char>());
-		
-		testStr = std::move(str);
-	}
-
-	if (testStr.empty())
-	{
-		testStr = ""
-			// "isstaff = 23;"
-			"this.isstaff.lol();"
-			"this.isstaff.lol2(abc);"
-			"this.isstaff.lol3(abc,def,ghi);"
-			"if (abcd) {"
-			"	if (12345) {"
-			"		return 3 + 2 * 6;"
-			"	} else {"
-			"		return 5 % 4;"
-			"	}"
-			"}"
-			"if (hehehe) {"
-			"	return hi;"
-			"}"
-			"function onCreated() {"
-			"  if (lol) {"
-			"    if (test)"
-			"      return 0;"
-			"	 else"
-			"	   return 5;"
-			"  }"
-			"}"
-			"public function onPlayerEnters(teee) {"
-			"  if (lol) {"
-			"    if (test)"
-			"      return 0;"
-			"  }"
-			"}"
-			"function onCreated() {"
-			"  this.isstaff = \"hello_world\";"
-			"  this.isstaff();"
-			"  requesttext(\"options\", \"\");"
-			"  sendtext(\"irc\", \"login\", player.nick);"
-			"  onShowGUI();"
-			"}";
-	}
-
-	// std::string testStr = "return 3 + 2 * 6;";
-	setLexBuffer(testStr.c_str());
-	yyparse();
-
-	if (stmtBlock != nullptr)
-	{
-		TestNodeVisitor visit;
-		printf("Children: %zu\n", stmtBlock->statements.size());
-		visit.Visit(stmtBlock);
-
-		GS2Compiler compilerVisitor;
-		compilerVisitor.Visit(stmtBlock);
-
-		auto byteCode = compilerVisitor.getByteCode();
-		printf("Total length of bytecode w/ headers: %5zu\n", byteCode.length());
-
-		auto buf = byteCode.buffer();
-
-		FILE *file;
-		if (argc > 2) {
-			file = fopen(argv[2], "wb");
-		}
-		else file = fopen("weaponTestCode.dump", "wb");
-
-		if (file)
-		{
-			uint8_t packetId = 140 + 32;
-			fwrite(&packetId, sizeof(uint8_t), 1, file);
-			fwrite(buf, sizeof(uint8_t), byteCode.length(), file);
-			fclose(file);
-		}
-		else printf("Couldn't open file\n");
-	}
-
-	#ifdef _WIN32
-	system("pause");
-	#endif
-
-	return 0;
-}
-
-void yyerror(const char* s) {
-	fprintf(stderr, "Parse error (line %d): %s\n", g_LineNumber, s);
+void yyerror(YYLTYPE* yyllocp, class ParserData *parser, yyscan_t unused, const char* s) {
+	fprintf(stderr, "Parse error (line %d): %s\n", parser->lineNumber, s);
 	
 	#ifdef _WIN32
 	system("pause");
@@ -420,4 +343,3 @@ void yyerror(const char* s) {
 
 	exit(1);
 }
-

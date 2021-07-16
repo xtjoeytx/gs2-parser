@@ -22,6 +22,7 @@ class ExpressionCastNode;
 class ExpressionFnCallNode;
 class ExpressionIdentifierNode;
 class ExpressionIntegerNode;
+class ExpressionNumberNode;
 class ExpressionStringConstNode;
 class ExpressionBinaryOpNode;
 class ExpressionUnaryOpNode;
@@ -51,6 +52,7 @@ class NodeVisitor
         virtual void Visit(ExpressionIdentifierNode *node) = 0;
         virtual void Visit(ExpressionStringConstNode *node) = 0;
         virtual void Visit(ExpressionIntegerNode *node) = 0;
+        virtual void Visit(ExpressionNumberNode *node) = 0;
         virtual void Visit(ExpressionBinaryOpNode *node) = 0;
         virtual void Visit(ExpressionUnaryOpNode *node) = 0;
         virtual void Visit(ExpressionObjectAccessNode *node) = 0;

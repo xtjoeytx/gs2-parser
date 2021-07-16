@@ -6,7 +6,7 @@
 #include <cstdarg>
 #include "ast.h"
 
-std::string getArgList(std::vector<ExpressionNode *> *args) {
+inline std::string getArgList(std::vector<ExpressionNode *> *args) {
     std::string argList;
     if (args)
     {
@@ -128,6 +128,10 @@ public:
 
     virtual void Visit(ExpressionIntegerNode *node)  {
 		print("Visit ExpressionIntegerNode");
+	}
+
+    virtual void Visit(ExpressionNumberNode *node)  {
+		print("Visit ExpressionNumberNode");
 	}
 
     virtual void Visit(ExpressionBinaryOpNode *node) {

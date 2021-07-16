@@ -1,6 +1,28 @@
 #include "GS2Bytecode.h"
 #include "encoding/graalencoding.h"
 
+// enum
+// {
+//     GS1EventFlags = 1,
+//     FunctionNames = 2,
+//     Strings = 3,
+//     Bytecode = 4
+// };
+
+// Format:
+// {GINT2(LENGTH_OF_STARTSECTION)}{STARTSECTION}{SEGMENTS}
+
+// Start Section:
+// weapon,npcName,saveToDisk[0,1],GINT5(HASH1)GINT5(HASH2)
+
+// Segments: GS1EventFlags:1, FunctionNames:2, Strings:3, Bytecode:4
+// {INT4(SEGMENT_TYPE)}{INT4(SEGMENT_LEN)}
+
+// GS1EventFlags: {INT4(0)} - bitflags
+// FunctionNames: {INT4(INSTRUCT_ID)}{CSTR-NULL-TERMINATED}...
+// StringTable: {CSTR-NULL-TERMINATED}...
+// Bytecode: ...
+
 size_t GS2Bytecode::getStringConst(const std::string& str)
 {
 	auto it = std::find(stringTable.begin(), stringTable.end(), str);
@@ -11,15 +33,6 @@ size_t GS2Bytecode::getStringConst(const std::string& str)
 
 	return std::distance(stringTable.begin(), it);
 }
-
-// Segments: GS1EventFlags:1, FunctionNames:2, Strings:3, Bytecode:4
-// enum
-// {
-//     GS1EventFlags = 1,
-//     FunctionNames = 2,
-//     Strings = 3,
-//     Bytecode = 4
-// };
 
 Buffer GS2Bytecode::getByteCode()
 {
@@ -111,7 +124,7 @@ void GS2Bytecode::emit(opcode::Opcode op)
 
 void GS2Bytecode::emit(char v, size_t pos)
 {
-	printf("%5zu EMIT byte: %d\n", (pos == SIZE_MAX ? bytecode.length() : pos), v);
+	printf("%5zu EMIT byte: %d\n", (pos == SIZE_MAX ? bytecode.length() : pos), (uint8_t)v);
 
 	if (pos != SIZE_MAX)
 	{
@@ -154,16 +167,43 @@ void GS2Bytecode::emit(int v, size_t pos)
 	}
  }
 
-// Format:
-// {GINT2(LENGTH_OF_STARTSECTION)}{STARTSECTION}{SEGMENTS}
+void GS2Bytecode::emit(const std::string& v)
+{
+	printf("%5zu EMIT null-terminated str: %s (len: %zu)\n", bytecode.length(), v.c_str(), v.length()+1);
 
-// Start Section:
-// weapon,npcName,saveToDisk[0,1],GINT5(HASH1)GINT5(HASH2)
+	bytecode.write(v.c_str(), v.length());
+	bytecode.write('\0');
+}
 
-// Segments: GS1EventFlags:1, FunctionNames:2, Strings:3, Bytecode:4
-// {INT4(SEGMENT_TYPE)}{INT4(SEGMENT_LEN)}
+ void GS2Bytecode::emitDynamicNumber(uint32_t val)
+ {
+	 // Strings use 0xF0 -> 0xF2, numbers use 0xF3 -> 0xF5
+	 // 0xF6 is used for null-terminated strings converted to doubles
+	 char offset = 0;
+	 if (getLastOp() != opcode::OP_TYPE_STRING)
+		offset = 3;
 
-// GS1EventFlags: {INT4(0)} - bitflags
-// FunctionNames: {INT4(INSTRUCT_ID)}{CSTR-NULL-TERMINATED}...
-// StringTable: {CSTR-NULL-TERMINATED}...
-// Bytecode: ...
+	if (val <= 0xFF)
+	{
+		emit(char(0xF0 + offset));
+		emit(char(val));
+	}
+	else if (val <= 0xFFFF)
+	{
+		emit(char(0xF1 + offset));
+		emit(short(val));
+	}
+	else if (val <= 0xFFFFFFFF)
+	{
+		emit(char(0xF2 + offset));
+		emit(int(val));
+	}
+}
+
+void GS2Bytecode::emitDoubleNumber(const std::string& num)
+{
+	assert(getLastOp() == opcode::OP_TYPE_NUMBER);
+
+	emit(char(0xF6));
+	emit(num);
+}

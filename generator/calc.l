@@ -1,21 +1,18 @@
-%option noyywrap
+%option nounput noyywrap 8bit nodefault  
+%option reentrant bison-bridge bison-locations
+%option extra-type="class ParserData *"
 
 %{
 #include <stdio.h>
 #include <string>
 #include <set>
 
+#include "Parser.h"
 #include "ast.h"
 
-#define YY_DECL int yylex()
+#define YY_DECL int yylex(YYSTYPE * yylval_param, YYLTYPE * yylloc_param, YY_EXTRA_TYPE parser, yyscan_t yyscanner)
 
 #include "calc.tab.hh"
-
-int g_LineNumber = 0;
-std::set<std::string> stable;
-const char * saveString(const char *s);
-
-void setLexBuffer(const char *s);
 
 /*
 	{DIGIT}+"."{DIGIT}*     {yylval.fval = atof(yytext); return T_FLOAT;}
@@ -33,7 +30,7 @@ string_const (\"(\\.|[^"])*\")
 %%
 
 [ \t]	; // ignore all whitespace
-\n		{g_LineNumber++;};
+\n		{yyextra->lineNumber++;};
 "."		{return '.';}
 ","		{return ',';}
 ":"		{return ':';}
@@ -65,8 +62,8 @@ string_const (\"(\\.|[^"])*\")
 "/"		{return '/';}
 "^"		{return '^';}
 "%"		{return '%';}
+"="		{return '=';}
 
-"="		{return T_OPASSIGN;}
 "+="	{return T_OPADDASSIGN;}
 "-="	{return T_OPSUBASSIGN;}
 "*="	{return T_OPMULASSIGN;}
@@ -81,9 +78,9 @@ string_const (\"(\\.|[^"])*\")
 		Reserved Keywords
 	*/
 
-"null"		{yylval.ival = 0; return T_INT;}
-"false"		{yylval.ival = 0; return T_INT;}
-"true"		{yylval.ival = 1; return T_INT;}
+"null"		{yylval->ival = 0; return T_INT;}
+"false"		{yylval->ival = 0; return T_INT;}
+"true"		{yylval->ival = 1; return T_INT;}
 "public"	{return T_KWPUBLIC;}
 "if"		{return T_KWIF;}
 "else"		{return T_KWELSE;}
@@ -107,7 +104,7 @@ string_const (\"(\\.|[^"])*\")
 		Comments
 	*/
 "//".*"\n" {
-	g_LineNumber++;
+	yyextra->lineNumber++;
 }
 
 "/*" {
@@ -115,7 +112,7 @@ string_const (\"(\\.|[^"])*\")
 		for ( ; ; )
 		{
 		l = c;
-		c = yyinput();
+		c = yyinput(yyscanner);
 
 		// Is this an open comment?
 		if ( c == EOF )
@@ -126,7 +123,7 @@ string_const (\"(\\.|[^"])*\")
 
 		// Increment line numbers.
 		else if ( c == '\n' )
-			g_LineNumber++;
+			yyextra->lineNumber++;
 
 		// Did we find the end of the comment?
 		else if ( l == '*' && c == '/' )
@@ -134,20 +131,11 @@ string_const (\"(\\.|[^"])*\")
 		}
 	}
 
-{DIGIT}+\.{DIGIT}+	{yylval.fval = atof(yytext); return T_FLOAT;}
-{DIGIT}+			{yylval.ival = atoi(yytext); return T_INT;}
-{ALPHANUM}+			{yytext[yyleng] = 0; yylval.sval = saveString(yytext); return T_IDENTIFIER;}
-{string_const}		{yytext[yyleng - 1] = 0; yylval.sval = saveString(yytext+1); return T_STRCONSTANT;}
+	/*
+		{DIGIT}+\.{DIGIT}+	{yylval->fval = atof(yytext); return T_FLOAT;}
+	*/
+{DIGIT}+\.{DIGIT}+	{yytext[yyleng] = 0; yylval->sval = yyextra->saveString(yytext); return T_FLOAT;}
+{DIGIT}+			{yylval->ival = atoi(yytext); return T_INT;}
+{ALPHANUM}+			{yytext[yyleng] = 0; yylval->sval = yyextra->saveString(yytext); return T_IDENTIFIER;}
+{string_const}		{yytext[yyleng - 1] = 0; yylval->sval = yyextra->saveString(yytext+1); return T_STRCONSTANT;}
 %%
-
-void setLexBuffer(const char *s) {
-	yy_switch_to_buffer(yy_scan_string(s));
-
-	//yyscan_t scanner;
-	//yylex_init(&scanner);
-}
-
-const char * saveString(const char *s) {
-	auto ins = stable.insert(s);
-	return ins.first->c_str();
-}

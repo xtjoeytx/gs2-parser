@@ -1,6 +1,7 @@
 #include <unordered_map>
-#include "GS2Compiler.h"
+#include "GS2CompilerVisitor.h"
 #include "ast.h"
+#include "Parser.h"
 
 struct BuiltInCmd
 {
@@ -85,51 +86,7 @@ const std::unordered_map<std::string, BuiltInCmd>& getCommandListMethod()
 	return builtInMap;
 }
 
-void writeByteIntegerCode(GS2Bytecode& bc, char a)
-{
-	bc.emit(char(0xF3));
-	bc.emit(a);
-}
-
-void emitStringIdxNumber(GS2Bytecode& bc, size_t num)
-{
-	if (num <= 0xFF)
-	{
-		bc.emit(char(0xF0));
-		bc.emit(char(num));
-	}
-	else if (num <= 0xFFFF)
-	{
-		bc.emit(char(0xF1));
-		bc.emit(short(num));
-	}
-	else if (num <= 0xFFFFFFFF)
-	{
-		bc.emit(char(0xF2));
-		bc.emit(int(num));
-	}
-}
-
-void emitNumber(GS2Bytecode& bc, uint32_t num)
-{
-	if (num <= 0xFF)
-	{
-		bc.emit(char(0xF3));
-		bc.emit(char(num));
-	}
-	else if (num <= 0xFFFF)
-	{
-		bc.emit(char(0xF4));
-		bc.emit(short(num));
-	}
-	else if (num <= 0xFFFFFFFF)
-	{
-		bc.emit(char(0xF5));
-		bc.emit(int(num));
-	}
-}
-
-void GS2Compiler::Visit(Node *node)
+void GS2CompilerVisitor::Visit(Node *node)
 {
 	fprintf(stderr, "Unimplemented node type: %s\n", node->NodeType());
 #ifdef _WIN32
@@ -138,7 +95,7 @@ void GS2Compiler::Visit(Node *node)
 	exit(1);
 }
 
-void GS2Compiler::Visit(StatementBlock *node)
+void GS2CompilerVisitor::Visit(StatementBlock *node)
 {
    for (const auto& n : node->statements)
 	{
@@ -147,7 +104,7 @@ void GS2Compiler::Visit(StatementBlock *node)
 	}
 }
 
-void GS2Compiler::Visit(StatementFnDeclNode *node)
+void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 {
 	printf("Declare function: %s\n", node->ident.c_str());
 
@@ -196,7 +153,7 @@ void GS2Compiler::Visit(StatementFnDeclNode *node)
 	// byteCode.emit(short(byteCode.getBytecodePos()), jumpIdx);
 }
 
-void GS2Compiler::Visit(ExpressionBinaryOpNode *node)
+void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 {
 	bool handled = false;
 
@@ -266,7 +223,7 @@ void GS2Compiler::Visit(ExpressionBinaryOpNode *node)
 	}
 }
 
-void GS2Compiler::Visit(ExpressionCastNode* node)
+void GS2CompilerVisitor::Visit(ExpressionCastNode* node)
 {
 	node->expr->visit(this);
 
@@ -282,8 +239,16 @@ void GS2Compiler::Visit(ExpressionCastNode* node)
 	}
 }
 
-void GS2Compiler::Visit(ExpressionIdentifierNode *node)
+void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 {
+	auto enumConstant = parserData->getEnumConstant(node->val);
+	if (enumConstant)
+	{
+		byteCode.emit(opcode::OP_TYPE_NUMBER);
+		byteCode.emitDynamicNumber(enumConstant.value());
+		return;
+	}
+
 	auto id = byteCode.getStringConst(node->val);
 
 	byteCode.emit(opcode::OP_TYPE_VAR);
@@ -293,7 +258,7 @@ void GS2Compiler::Visit(ExpressionIdentifierNode *node)
 	printf("Identifier Node: %s\n", node->val.c_str());
 }
 
-void GS2Compiler::Visit(ExpressionObjectAccessNode *node)
+void GS2CompilerVisitor::Visit(ExpressionObjectAccessNode *node)
 {
 	// this -> 180
 	// thiso -> 181
@@ -348,26 +313,29 @@ void GS2Compiler::Visit(ExpressionObjectAccessNode *node)
 	//printf("Test right: %s\n", node->right->toString().c_str());
 }
 
-void GS2Compiler::Visit(ExpressionIntegerNode *node)
+void GS2CompilerVisitor::Visit(ExpressionIntegerNode *node)
 {
 	byteCode.emit(opcode::OP_TYPE_NUMBER);
-
-	emitNumber(byteCode, node->val);
-	//byteCode.emit((char)0xF3);
-	//byteCode.emit((char)node->val); // TODO
+	byteCode.emitDynamicNumber(node->val);
 }
 
-void GS2Compiler::Visit(ExpressionStringConstNode *node)
+void GS2CompilerVisitor::Visit(ExpressionNumberNode *node)
+{
+	byteCode.emit(opcode::OP_TYPE_NUMBER);
+	byteCode.emitDoubleNumber(node->val);
+}
+
+void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 {
 	auto id = byteCode.getStringConst(node->val);
 	
 	byteCode.emit(opcode::OP_TYPE_STRING);
-	emitStringIdxNumber(byteCode, id);
+	byteCode.emitDynamicNumber(id);
 //	byteCode.emit((char)0xF0);
 //	byteCode.emit((char)id);
 }
 
-void GS2Compiler::Visit(ExpressionFnCallNode *node)
+void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 {
 	// Build-in commands
 	auto& cmdList = (node->objExpr ? getCommandListMethod() : getCommandList());
@@ -405,7 +373,7 @@ void GS2Compiler::Visit(ExpressionFnCallNode *node)
 		byteCode.emit(opcode::OP_INDEX_DEC);
 }
 
-void GS2Compiler::Visit(StatementReturnNode *node)
+void GS2CompilerVisitor::Visit(StatementReturnNode *node)
 {
 	// pretty sure it goes on top
 	if (node->expr)
@@ -415,16 +383,16 @@ void GS2Compiler::Visit(StatementReturnNode *node)
 	byteCode.emit(opcode::OP_RET);
 }
 
-void GS2Compiler::Visit(StatementNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(StatementIfNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(StatementNewNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(StatementBreakNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(StatementContinueNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(StatementForNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(StatementForEachNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(StatementSwitchNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(StatementWhileNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(StatementWithNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(ExpressionNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(ExpressionUnaryOpNode *node) { Visit((Node *)node); }
-void GS2Compiler::Visit(ExpressionListNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(StatementNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(StatementIfNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(StatementNewNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(StatementBreakNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(StatementContinueNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(StatementForNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(StatementForEachNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(StatementSwitchNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(StatementWhileNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(StatementWithNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(ExpressionNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode *node) { Visit((Node *)node); }
+void GS2CompilerVisitor::Visit(ExpressionListNode *node) { Visit((Node *)node); }
