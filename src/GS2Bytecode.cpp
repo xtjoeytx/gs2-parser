@@ -1,3 +1,4 @@
+#include <cassert>
 #include "GS2Bytecode.h"
 #include "encoding/graalencoding.h"
 
