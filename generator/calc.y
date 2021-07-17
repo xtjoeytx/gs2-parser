@@ -271,11 +271,12 @@ expr:
 	;
 
 expr_ops_unary:
-	'-' expr 						{ $$ = new ExpressionUnaryOpNode($2, "-"); }
-	| T_OPNOT expr 					{ $$ = new ExpressionUnaryOpNode($2, "!"); }
-	| T_OPDECREMENT expr 			{ $$ = new ExpressionUnaryOpNode($2, "--"); }
-	| T_OPINCREMENT expr 			{ $$ = new ExpressionUnaryOpNode($2, "++"); }
-	| expr T_OPINCREMENT			{ $$ = new ExpressionUnaryOpNode($1, "++"); }
+	'-' expr 						{ $$ = new ExpressionUnaryOpNode($2, ExpressionOp::UnaryMinus, true); }
+	| T_OPNOT expr 					{ $$ = new ExpressionUnaryOpNode($2, ExpressionOp::UnaryNot, true); }
+	| T_OPDECREMENT expr 			{ $$ = new ExpressionUnaryOpNode($2, ExpressionOp::Decrement, true); }
+	| T_OPINCREMENT expr 			{ $$ = new ExpressionUnaryOpNode($2, ExpressionOp::Increment, true); }
+	| expr T_OPINCREMENT			{ $$ = new ExpressionUnaryOpNode($1, ExpressionOp::Increment, false); }
+	| expr T_OPDECREMENT			{ $$ = new ExpressionUnaryOpNode($1, ExpressionOp::Decrement, false); }
 	;
 
 expr_ops_binary:

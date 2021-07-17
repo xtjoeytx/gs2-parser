@@ -42,7 +42,12 @@ enum class ExpressionOp {
 	LessThanOrEqual,
 	GreaterThanOrEqual,
 	LogicalAnd,
-	LogicalOr
+	LogicalOr,
+
+	UnaryNot,
+	UnaryMinus,
+	Increment,
+	Decrement
 };
 
 inline const char* ExpressionOpToString(ExpressionOp op)
@@ -96,6 +101,18 @@ inline const char* ExpressionOpToString(ExpressionOp op)
 
 		case ExpressionOp::LogicalOr:
 			return "||";
+
+		case ExpressionOp::UnaryNot:
+			return "!";
+
+		case ExpressionOp::UnaryMinus:
+			return "-";
+
+		case ExpressionOp::Increment:
+			return "++";
+
+		case ExpressionOp::Decrement:
+			return "--";
 
 		default:
 			return "Unknown";
@@ -302,8 +319,8 @@ class ExpressionUnaryOpNode : public ExpressionNode
 	public:
 		_NodeName("ExpressionUnaryOpNode");
 
-		ExpressionUnaryOpNode(ExpressionNode *e, std::string op)
-			: ExpressionNode(), expr(e), op(op)
+		ExpressionUnaryOpNode(ExpressionNode *e, ExpressionOp op, bool opFirst)
+			: ExpressionNode(), expr(e), op(op), opFirst(opFirst)
 		{
 
 		}
@@ -311,10 +328,15 @@ class ExpressionUnaryOpNode : public ExpressionNode
 		virtual ~ExpressionUnaryOpNode();
 
 		ExpressionNode *expr;
-		std::string op;
+		ExpressionOp op;
+		bool opFirst;
 
-		virtual std::string toString() const {
-			return std::string(op) + expr->toString();
+		virtual std::string toString() const
+		{
+			if (opFirst)
+				return std::string(ExpressionOpToString(op)) + expr->toString();
+			
+			return expr->toString() + std::string(ExpressionOpToString(op));
 		}
 };
 

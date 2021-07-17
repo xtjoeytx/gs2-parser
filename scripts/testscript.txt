@@ -929,3 +929,193 @@ function onCreated()
 */
   echo("Test: " @ temp.g);
 }
+
+
+function onCreated() {
+/*
+         7,         5: type(array) (23)
+         8,         6: type(string) (21) (Opcode: 0xF0)  - variable[0](--start) (byte)
+        11,         7: type(variable) (22) (Opcode: 0xF0)  - variable[1](echo) (byte)
+        14,         8: Call function (6)
+        15,         9: Decrease last operand index by 1 (32)
+*/
+    echo("--start");
+
+
+/*
+        16,        10: type(variable) (22) (Opcode: 0xF0)  - variable[2](ObjName) (byte)
+        19,        11: inline new? (40)
+        20,        12: Copy last operand (30)
+        21,        13: Copy last operand (30)
+        22,        14: Copy last operand (30)
+        23,        15: type(string) (21) (Opcode: 0xF0)  - variable[3](GuiButtonCtrl) (byte)
+        26,        16: Convert to string (34)
+        27,        17: new Object? (42)
+        28,        18: "=" (50)
+*/
+    new GuiButtonCtrl(ObjName)
+    {
+/*
+        29,        19: Convert to object (36)
+        30,        20: with (150) (Opcode: 0xF3)  - double(43) (byte)
+        33,        21: type(variable) (22) (Opcode: 0xF0)  - variable[4](profile) (byte)
+        36,        22: type(variable) (22) (Opcode: 0xF0)  - variable[5](GuiBlueButtonProfile) (byte)
+        39,        23: "=" (50)
+        40,        24: type(variable) (22) (Opcode: 0xF0)  - variable[6](text) (byte)
+        43,        25: type(string) (21) (Opcode: 0xF0)  - variable[7](button) (byte)
+        46,        26: "=" (50)
+        47,        27: type(variable) (22) (Opcode: 0xF0)  - variable[8](x) (byte)
+        50,        28: type(number) (20) (Opcode: 0xF3)  - double(30) (byte)
+        53,        29: "=" (50)
+        54,        30: type(variable) (22) (Opcode: 0xF0)  - variable[9](y) (byte)
+        57,        31: type(number) (20) (Opcode: 0xF3)  - double(30) (byte)
+        60,        32: "=" (50)
+        61,        33: type(variable) (22) (Opcode: 0xF0)  - variable[10](width) (byte)
+        64,        34: type(number) (20) (Opcode: 0xF4)  - double(150) (word)
+        68,        35: "=" (50)
+        69,        36: type(variable) (22) (Opcode: 0xF0)  - variable[11](height) (byte)
+        72,        37: type(number) (20) (Opcode: 0xF4)  - double(150) (word)
+        76,        38: "=" (50)
+        77,        39: type(variable) (22) (Opcode: 0xF0)  - variable[12](visible) (byte)
+        80,        40: type(number) (20) (Opcode: 0xF3)  - double(1) (byte)
+        83,        41: "=" (50)
+        84,        42: End of with (151)
+*/
+      profile = GuiBlueButtonProfile;
+      text = "button";
+      x = 30;
+      y = 30;
+      width = 150;
+      height = 150;
+      visible = 1;
+    };
+
+/*
+        85,        43: type(array) (23)
+        86,        44: Swap last two operands (31)
+        87,        45: type(variable) (22) (Opcode: 0xF0)  - variable[13](addcontrol) (byte)
+        90,        46: Call function (6)
+        91,        47: Decrease last operand index by 1 (32)
+*/
+
+/*
+        92,        48: type(array) (23)
+        93,        49: type(string) (21) (Opcode: 0xF0)  - variable[14](--end) (byte)
+        96,        50: type(variable) (22) (Opcode: 0xF0)  - variable[1](echo) (byte)
+        99,        51: Call function (6)
+       100,        52: Decrease last operand index by 1 (32)
+*/
+    echo("--end");
+}
+
+
+/*
+output:
+Test 1: 4
+Test 2: 4
+Test 3: 4
+Test 4: 4
+Test 5: -5
+Test 6: 1
+Test 7: 0
+Test 8: 0
+*/
+function onCreated()
+{
+  temp.i = 5;
+/*
+        32,        18: type(array) (23)
+        33,        19: type(string) (21) (Opcode: 0xF0)  - variable[2](Test 1: ) (byte)
+        36,        20: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
+        39,        21: Decrement by 1 (53)
+        40,        22: Convert to string (34)
+        41,        23: @ (113)
+        42,        24: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+        45,        25: Call function (6)
+        46,        26: Decrease last operand index by 1 (32)
+*/
+  echo("Test 1: " @ --temp.i);
+
+  /*
+        47,        27: type(array) (23)
+        48,        28: type(string) (21) (Opcode: 0xF0)  - variable[3](Test 2: ) (byte)
+        51,        29: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
+        54,        30: Copy last operand (30)
+        55,        31: Convert to float (33)
+        56,        32: Swap last two operands (31)
+        57,        33: Decrement by 1 (53)
+        58,        34: Decrease last operand index by 1 (32)
+        59,        35: Convert to string (34)
+        60,        36: @ (113)
+        61,        37: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+        64,        38: Call function (6)
+        65,        39: Decrease last operand index by 1 (32)
+  */
+  echo("Test 2: " @ temp.i--);
+
+/*
+        66,        40: type(array) (23)
+        67,        41: type(string) (21) (Opcode: 0xF0)  - variable[4](Test 3: ) (byte)
+        70,        42: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
+        73,        43: Increment by 1 (52)
+        74,        44: Convert to string (34)
+        75,        45: @ (113)
+        76,        46: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+        79,        47: Call function (6)
+        80,        48: Decrease last operand index by 1 (32)
+*/
+  echo("Test 3: " @ ++temp.i);
+
+/*
+        81,        49: type(array) (23)
+        82,        50: type(string) (21) (Opcode: 0xF0)  - variable[5](Test 4: ) (byte)
+        85,        51: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
+        88,        52: Copy last operand (30)
+        89,        53: Convert to float (33)
+        90,        54: Swap last two operands (31)
+        91,        55: Increment by 1 (52)
+        92,        56: Decrease last operand index by 1 (32)
+        93,        57: Convert to string (34)
+        94,        58: @ (113)
+        95,        59: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+        98,        60: Call function (6)
+        99,        61: Decrease last operand index by 1 (32)
+*/
+  echo("Test 4: " @ temp.i++);
+
+/*
+       100,        62: type(array) (23)
+       101,        63: type(string) (21) (Opcode: 0xF0)  - variable[6](Test 5: ) (byte)
+       104,        64: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
+       107,        65: Convert to float (33)
+       108,        66: - unary (69)
+       109,        67: Convert to string (34)
+       110,        68: @ (113)
+       111,        69: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+       114,        70: Call function (6)
+       115,        71: Decrease last operand index by 1 (32)
+*/
+  echo("Test 5: " @ -temp.i);
+
+  temp.i = 0;
+
+/*
+       123,        75: type(array) (23)
+       124,        76: type(string) (21) (Opcode: 0xF0)  - variable[7](Test 6: ) (byte)
+       127,        77: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
+       130,        78: Convert to float (33)
+       131,        79: ! (68)
+       132,        80: Convert to string (34)
+       133,        81: @ (113)
+       134,        82: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+       137,        83: Call function (6)
+       138,        84: Decrease last operand index by 1 (32)
+*/
+  echo("Test 6: " @ !temp.i);
+
+  temp.i = 1;
+  echo("Test 7: " @ !temp.i);
+  
+  temp.i = 2;
+  echo("Test 8: " @ !temp.i);
+}

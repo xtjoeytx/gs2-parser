@@ -40,6 +40,7 @@ namespace opcode
 		OP_TYPE_NULL = 26,
 		OP_PI = 27,
 		OP_COPY_LAST_OP = 30,
+		OP_SWAP_LAST_OPS = 31,
 		OP_INDEX_DEC = 32,
 		OP_CONV_TO_FLOAT = 33,
 		OP_CONV_TO_STRING = 34,
@@ -62,6 +63,7 @@ namespace opcode
 		OP_POW = 65, //  PUSH (S(1) ^ S(0))
 
 		OP_NOT = 68, //  PUSH (!S(0))
+		OP_UNARYSUB = 69,
 
 		OP_EQ = 70, //  PUSH (S(1) == S(0))
 		OP_LT = 72, //  PUSH (S(1) < S(0))

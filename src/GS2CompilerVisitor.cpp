@@ -163,6 +163,11 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 		case ExpressionOp::GreaterThan: return opcode::Opcode::OP_GT;
 		case ExpressionOp::GreaterThanOrEqual: return opcode::Opcode::OP_GTE;
 
+		case ExpressionOp::UnaryMinus: return opcode::Opcode::OP_UNARYSUB;
+		case ExpressionOp::UnaryNot: return opcode::Opcode::OP_NOT;
+		case ExpressionOp::Increment: return opcode::Opcode::OP_INC;
+		case ExpressionOp::Decrement: return opcode::Opcode::OP_DEC;
+
 		default: return opcode::Opcode::OP_NUM_OPS;
 	}
 }
@@ -228,6 +233,67 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 	}
 
 	////////
+	if (!handled)
+	{
+		Visit((Node*)node);
+	}
+}
+
+void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
+{
+	bool handled = false;
+	
+	node->expr->visit(this);
+
+	if (node->opFirst)
+	{
+		switch (node->op)
+		{
+			case ExpressionOp::Increment:
+			case ExpressionOp::Decrement:
+			{
+				auto opCode = getExpressionOpCode(node->op);
+				assert(opCode != opcode::Opcode::OP_NUM_OPS);
+
+				byteCode.emit(opCode);
+				handled = true;
+				break;
+			}
+
+			case ExpressionOp::UnaryMinus:
+			case ExpressionOp::UnaryNot:
+			{
+				auto opCode = getExpressionOpCode(node->op);
+				assert(opCode != opcode::Opcode::OP_NUM_OPS);
+
+				byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+				byteCode.emit(opCode);
+				handled = true;
+				break;
+			}
+		}
+	}
+	else
+	{
+		switch (node->op)
+		{
+			case ExpressionOp::Increment:
+			case ExpressionOp::Decrement:
+			{
+				auto opCode = getExpressionOpCode(node->op);
+				assert(opCode != opcode::Opcode::OP_NUM_OPS);
+
+				byteCode.emit(opcode::OP_COPY_LAST_OP);
+				byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+				byteCode.emit(opcode::OP_SWAP_LAST_OPS);
+				byteCode.emit(opCode);
+				byteCode.emit(opcode::OP_INDEX_DEC);
+				handled = true;
+				break;
+			}
+		}
+	}
+
 	if (!handled)
 	{
 		Visit((Node*)node);
@@ -585,5 +651,4 @@ void GS2CompilerVisitor::Visit(StatementForEachNode *node) { Visit((Node *)node)
 void GS2CompilerVisitor::Visit(StatementSwitchNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementWithNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(ExpressionNode *node) { Visit((Node *)node); }
-void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(ExpressionListNode *node) { Visit((Node *)node); }
