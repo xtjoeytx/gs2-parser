@@ -1,8 +1,16 @@
 //#CLIENTSIDE
+
+function onCreated() {
+    echo("--start");
+    temp.t = new GuiButtonCtrl();
+    echo("--end");
+}
+
+/*
 function onCreated() {
   echo("--start--");
 
-  /*
+  //
   temp.i = 0;
   for (; temp.i < 10; temp.i = temp.i + 1) {
     echo("A: " @ temp.i);
@@ -17,7 +25,7 @@ function onCreated() {
     if (temp.i == 7)
       break;
   }
-  */
+  //
 
   for (temp.i = 0; temp.i < 5; temp.i = temp.i + 1) {
     if (temp.i % 2 == 0)
@@ -33,6 +41,7 @@ function onCreated() {
 
   echo("--end--");
 }
+*/
 
 /*
 function onCreated() {

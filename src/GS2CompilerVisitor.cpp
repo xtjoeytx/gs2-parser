@@ -439,6 +439,27 @@ void GS2CompilerVisitor::Visit(ExpressionNewNode *node)
 	// TODO(joey): more testing needed
 	// temp.a = new TStaticVar("str") will return a regular string,
 	// but if there is additional args it has no effect on the output.
+
+
+	if (node->args)
+	{
+		for (const auto& n : *node->args)
+			n->visit(this);
+	}
+
+	byteCode.emit(opcode::OP_INLINE_NEW);
+
+	// TODO(joey): fix
+
+	auto identNode = reinterpret_cast<ExpressionIdentifierNode*>(node->newExpr);
+	auto id = byteCode.getStringConst(identNode->val);
+
+	byteCode.emit(opcode::OP_TYPE_STRING);
+	byteCode.emitDynamicNumber(id);
+
+	//node->newExpr->visit(this);
+
+	byteCode.emit(opcode::OP_NEW_OBJECT);
 }
 
 void GS2CompilerVisitor::Visit(StatementWhileNode *node)
