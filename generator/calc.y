@@ -167,7 +167,7 @@ stmt: stmt_if				{ $$ = $1;}
 	| stmt_continue
 	| stmt_expr
 	| stmt_block 			{ $$ = $1; }
-	| stmt_new 				{ $$ = $1; }
+	/* | stmt_new 				{ $$ = $1; } */
 	| stmt_for				{ $$ = $1; }
 	| stmt_while			{ $$ = $1; }
 	| stmt_with				{ $$ = $1; }

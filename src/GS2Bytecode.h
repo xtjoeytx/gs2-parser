@@ -34,7 +34,7 @@ class GS2Bytecode
         void emit(int v, size_t pos = SIZE_MAX);
         void emit(const std::string& v);
         
-        void emitDynamicNumber(uint32_t val);
+        void emitDynamicNumber(int32_t val);
         void emitDoubleNumber(const std::string& num);
 
         opcode::Opcode getLastOp() const;

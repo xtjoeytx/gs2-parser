@@ -307,7 +307,7 @@ void GS2CompilerVisitor::Visit(ExpressionObjectAccessNode *node)
 	{
 		node->nodes[i]->visit(this);
 		byteCode.emit(opcode::OP_MEMBER_ACCESS);
-		if (i != (node->nodes.size() - 1))
+		//if (i != (node->nodes.size() - 1))
 			byteCode.emit(opcode::OP_CONV_TO_OBJECT);
 	}
 

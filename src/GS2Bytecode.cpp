@@ -179,8 +179,10 @@ void GS2Bytecode::emit(const std::string& v)
 	bytecode.write('\0');
 }
 
-void GS2Bytecode::emitDynamicNumber(uint32_t val)
+void GS2Bytecode::emitDynamicNumber(int32_t val)
 {
+	assert(val == std::abs(val));
+
 	// Strings use 0xF0 -> 0xF2, numbers use 0xF3 -> 0xF5
 	// 0xF6 is used for null-terminated strings converted to doubles
 	char offset = 0;
@@ -201,17 +203,17 @@ void GS2Bytecode::emitDynamicNumber(uint32_t val)
 			return;
 	}
 
-	if (val <= 0xFF)
+	if (val <= std::numeric_limits<int8_t>::max())
 	{
 		emit(char(0xF0 + offset));
 		emit(char(val));
 	}
-	else if (val <= 0xFFFF)
+	else if (val <= std::numeric_limits<int16_t>::max())
 	{
 		emit(char(0xF1 + offset));
 		emit(short(val));
 	}
-	else if (val <= 0xFFFFFFFF)
+	else if (val <= std::numeric_limits<int32_t>::max())
 	{
 		emit(char(0xF2 + offset));
 		emit(int(val));
