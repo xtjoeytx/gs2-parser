@@ -18,7 +18,7 @@ namespace opcode
 		OP_ARR_GET = 2, //  S(1) =
 
 		OP_OR = 3, //  PUSH (S(1) || S(0))
-		OP_IF = 4,
+		OP_IF = 4,								// likely JMPIFNOT
 		OP_AND = 5, //  PUSH (S(1) && S(0))
 		OP_CALL = 6, //  Pushes # of args, followed by args
 		OP_RET = 7, //  Return to location on top of on jump stack

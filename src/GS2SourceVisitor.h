@@ -168,6 +168,10 @@ public:
         tabc--;
     }
 
+    virtual void Visit(ExpressionNewNode* node) {
+
+    }
+
     virtual void Visit(ExpressionObjectAccessNode *node) {
         tabc++;
 
@@ -189,7 +193,21 @@ public:
 
     virtual void Visit(StatementForNode *node) {
         tabc++;
-        print("for (%s; %s; %s) {", node->init->toString().c_str(), node->cond->toString().c_str(), node->postop->toString().c_str());
+
+        std::string forStmt("for (");
+        if (node->init)
+            forStmt.append(node->init->toString());
+        forStmt.append(";");
+
+        if (node->cond)
+            forStmt.append(node->cond->toString());
+        forStmt.append(";");
+
+        if (node->postop)
+            forStmt.append(node->postop->toString());
+        forStmt.append(") {");
+
+        print("%s", forStmt.c_str());
         node->block->visit(this);
         print("}");
         tabc--;

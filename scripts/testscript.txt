@@ -803,3 +803,129 @@ function onCreated() {
 */
   echo("test: " @ (player.x - 5));
 }
+
+
+//#CLIENTSIDE
+function onCreated()
+{
+/*
+         7,         5: temp. (189)
+         8,         6: type(variable) (22) (Opcode: 0xF0)  - variable[0](g) (byte)
+        11,         7: member access (35)
+        12,         8: Mark as loop variable (47)
+        13,         9: Assign loop variable index (45) (Opcode: 0xF3)  - double(0) (byte)
+        16,        10: Decrease last operand index by 1 (32)
+*/
+
+
+
+/*
+        17,        11: temp. (189)
+        18,        12: type(variable) (22) (Opcode: 0xF0)  - variable[1](b) (byte)
+        21,        13: member access (35)
+        22,        14: type(variable) (22) (Opcode: 0xF0)  - variable[2](unknown_object) (byte)
+        25,        15: type(string) (21) (Opcode: 0xF0)  - variable[3](TStaticVar) (byte)
+        28,        16: new Object? (42)
+        29,        17: "=" (50)
+*/
+  temp.b = new TStaticVar();
+
+/*
+        30,        18: temp. (189)
+        31,        19: type(variable) (22) (Opcode: 0xF0)  - variable[1](b) (byte)
+        34,        20: member access (35)
+        35,        21: Convert to object (36)
+        36,        22: type(variable) (22) (Opcode: 0xF0)  - variable[4](c) (byte)
+        39,        23: member access (35)
+        40,        24: type(string) (21) (Opcode: 0xF0)  - variable[5](hi) (byte)
+        43,        25: "=" (50)
+*/
+  temp.b.c = "hi";
+
+/*
+        44,        26: temp. (189)
+        45,        27: type(variable) (22) (Opcode: 0xF0)  - variable[6](a) (byte)
+        48,        28: member access (35)
+        49,        29: type(variable) (22) (Opcode: 0xF0)  - variable[2](unknown_object) (byte)
+        52,        30: type(string) (21) (Opcode: 0xF0)  - variable[3](TStaticVar) (byte)
+        55,        31: new Object? (42)
+        56,        32: "=" (50)
+*/
+  temp.a = new TStaticVar("test", "djer", temp.b);
+
+/*
+        57,        33: temp. (189)
+        58,        34: type(variable) (22) (Opcode: 0xF0)  - variable[6](a) (byte)
+        61,        35: member access (35)
+        62,        36: Convert to object (36)
+        63,        37: type(variable) (22) (Opcode: 0xF0)  - variable[7](ekjf) (byte)
+        66,        38: member access (35)
+        67,        39: type(string) (21) (Opcode: 0xF0)  - variable[8](ee) (byte)
+        70,        40: "=" (50)
+*/
+  temp.a.ekjf = "ee";
+
+/*
+        71,        41: temp. (189)
+        72,        42: type(variable) (22) (Opcode: 0xF0)  - variable[9](d) (byte)
+        75,        43: member access (35)
+        76,        44: type(variable) (22) (Opcode: 0xF0)  - variable[10](Something) (byte)
+        79,        45: inline new? (40)
+        80,        46: type(string) (21) (Opcode: 0xF0)  - variable[11](GuiButtonCtrl) (byte)
+        83,        47: new Object? (42)
+        84,        48: "=" (50)
+*/
+  temp.d = new GuiButtonCtrl(Something);
+
+/*
+        85,        49: temp. (189)
+        86,        50: type(variable) (22) (Opcode: 0xF0)  - variable[9](d) (byte)
+        89,        51: member access (35)
+        90,        52: Convert to object (36)
+        91,        53: type(variable) (22) (Opcode: 0xF0)  - variable[12](text) (byte)
+        94,        54: member access (35)
+        95,        55: type(string) (21) (Opcode: 0xF0)  - variable[13](test btn: ) (byte)
+        98,        56: temp. (189)
+        99,        57: type(variable) (22) (Opcode: 0xF0)  - variable[6](a) (byte)
+       102,        58: member access (35)
+       103,        59: Convert to object (36)
+       104,        60: type(variable) (22) (Opcode: 0xF0)  - variable[7](ekjf) (byte)
+       107,        61: member access (35)
+       108,        62: Convert to string (34)
+       109,        63: @ (113)
+       110,        64: "=" (50)
+*/
+  temp.d.text = "test btn: " @ temp.a.ekjf;
+
+/*
+       111,        65: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+       114,        66: type(number) (20) (Opcode: 0xF3)  - double(0) (byte)
+       117,        67: "=" (50)
+       118,        68: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+       121,        69: Convert to float (33)
+       122,        70: type(number) (20) (Opcode: 0xF3)  - double(5) (byte)
+       125,        71: < (72)
+       126,        72: if (4) (Opcode: 0xF3)  - double(78) (byte)
+       129,        73: Start of function call? (9)
+       130,        74: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+       133,        75: Increment by 1 (52)
+       134,        76: Decrease last operand index by 1 (32)
+       135,        77: Set operation index (1) (Opcode: 0xF3)  - double(68) (byte)
+*/
+  temp.g = 0;
+  while (temp.g < 5) {
+    temp.g++;
+  }
+
+/*
+       138,        78: type(array) (23)
+       139,        79: type(string) (21) (Opcode: 0xF0)  - variable[14](Test: ) (byte)
+       142,        80: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+       145,        81: Convert to string (34)
+       146,        82: @ (113)
+       147,        83: type(variable) (22) (Opcode: 0xF0)  - variable[15](echo) (byte)
+       150,        84: Call function (6)
+       151,        85: Decrease last operand index by 1 (32)
+*/
+  echo("Test: " @ temp.g);
+}

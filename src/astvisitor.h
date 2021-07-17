@@ -3,61 +3,35 @@
 #ifndef ASTVISITOR_H
 #define ASTVISITOR_H
 
-class Node;
-class StatementNode;
-class StatementBlock;
-class StatementIfNode;
-class StatementFnDeclNode;
-class StatementContinueNode;
-class StatementBreakNode;
-class StatementReturnNode;
-class StatementNewNode;
-class StatementForNode;
-class StatementForEachNode;
-class StatementSwitchNode;
-class StatementWhileNode;
-class StatementWithNode;
-class ExpressionNode;
-class ExpressionCastNode;
-class ExpressionFnCallNode;
-class ExpressionIdentifierNode;
-class ExpressionIntegerNode;
-class ExpressionNumberNode;
-class ExpressionStringConstNode;
-class ExpressionBinaryOpNode;
-class ExpressionUnaryOpNode;
-class ExpressionObjectAccessNode;
-class ExpressionListNode;
-
 class NodeVisitor
 {
     public:
-        virtual void Visit(Node *node) = 0;
-        virtual void Visit(StatementNode *node) = 0;
-        virtual void Visit(StatementBlock *node) = 0;
-        virtual void Visit(StatementIfNode *node) = 0;
-        virtual void Visit(ExpressionFnCallNode *node) = 0;
-        virtual void Visit(StatementFnDeclNode *node) = 0;
-        virtual void Visit(StatementNewNode *node) = 0;
-        virtual void Visit(StatementBreakNode *node) = 0;
-        virtual void Visit(StatementContinueNode *node) = 0;
-        virtual void Visit(StatementReturnNode *node) = 0;
-        virtual void Visit(StatementForNode *node) = 0;
-        virtual void Visit(StatementForEachNode *node) = 0;
-        virtual void Visit(StatementSwitchNode *node) = 0;
-        virtual void Visit(StatementWhileNode *node) = 0;
-        virtual void Visit(StatementWithNode *node) = 0;
-        virtual void Visit(ExpressionNode *node) = 0;
-        virtual void Visit(ExpressionCastNode* node) = 0;
-        virtual void Visit(ExpressionIdentifierNode *node) = 0;
-        virtual void Visit(ExpressionStringConstNode *node) = 0;
-        virtual void Visit(ExpressionIntegerNode *node) = 0;
-        virtual void Visit(ExpressionNumberNode *node) = 0;
-        virtual void Visit(ExpressionBinaryOpNode *node) = 0;
-        virtual void Visit(ExpressionUnaryOpNode *node) = 0;
-        virtual void Visit(ExpressionObjectAccessNode *node) = 0;
-        virtual void Visit(ExpressionListNode *node) = 0;
+        virtual void Visit(class Node *node) = 0;
+        virtual void Visit(class StatementNode *node) = 0;
+        virtual void Visit(class StatementBlock *node) = 0;
+        virtual void Visit(class StatementIfNode *node) = 0;
+        virtual void Visit(class StatementFnDeclNode *node) = 0;
+        virtual void Visit(class StatementNewNode *node) = 0;
+        virtual void Visit(class StatementBreakNode *node) = 0;
+        virtual void Visit(class StatementContinueNode *node) = 0;
+        virtual void Visit(class StatementReturnNode *node) = 0;
+        virtual void Visit(class StatementForNode *node) = 0;
+        virtual void Visit(class StatementForEachNode *node) = 0;
+        virtual void Visit(class StatementSwitchNode *node) = 0;
+        virtual void Visit(class StatementWhileNode *node) = 0;
+        virtual void Visit(class StatementWithNode *node) = 0;
+        virtual void Visit(class ExpressionNode *node) = 0;
+        virtual void Visit(class ExpressionIdentifierNode *node) = 0;
+        virtual void Visit(class ExpressionStringConstNode *node) = 0;
+        virtual void Visit(class ExpressionIntegerNode *node) = 0;
+        virtual void Visit(class ExpressionNumberNode *node) = 0;
+        virtual void Visit(class ExpressionCastNode *node) = 0;
+        virtual void Visit(class ExpressionFnCallNode *node) = 0;
+        virtual void Visit(class ExpressionNewNode *node) = 0;
+        virtual void Visit(class ExpressionBinaryOpNode *node) = 0;
+        virtual void Visit(class ExpressionUnaryOpNode *node) = 0;
+        virtual void Visit(class ExpressionObjectAccessNode *node) = 0;
+        virtual void Visit(class ExpressionListNode *node) = 0;
 };
-
 
 #endif

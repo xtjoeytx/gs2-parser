@@ -1,4 +1,122 @@
 //#CLIENTSIDE
+function onCreated() {
+  echo("--start--");
+
+  /*
+  temp.i = 0;
+  for (; temp.i < 10; temp.i = temp.i + 1) {
+    echo("A: " @ temp.i);
+
+    if (temp.i == 3)
+    {
+        temp.i = 4;
+        echo("C: " @ temp.i);
+        continue;
+    }
+
+    if (temp.i == 7)
+      break;
+  }
+  */
+
+  for (temp.i = 0; temp.i < 5; temp.i = temp.i + 1) {
+    if (temp.i % 2 == 0)
+        echo("even: " @ temp.i);
+    echo("Test: " @ temp.i);
+  }
+
+  echo("Players: " @ players.length());
+
+  for (temp. i = 0; i < players.length(); temp.i = temp.i + 1) {
+    echo("Player: " @ player.account);
+  }
+
+  echo("--end--");
+}
+
+/*
+function onCreated() {
+  temp.b = new TStaticVar();
+  temp.b.c = "hi";
+  temp.a = new TStaticVar("test", "djer", temp.b);
+  temp.a.ekjf = "ee";
+
+  temp.d = new GuiButtonCtrl(Something);
+}
+*/
+
+/*
+function onCreated() {
+  echo("--start--");
+
+  temp.g = 3;
+  if (temp.g > 1) {
+    echo("test1");
+    if (temp.g > 2) {
+      echo("test2");
+      if (temp.g > 3) {
+        echo("test3");
+      } else {
+        echo("no match");
+      }
+    }
+  }
+
+  echo("LOOP");
+
+  temp.g = 0;
+  while (temp.g <= 10) {
+    echo("T: " @ temp.g);
+
+    if (temp.g == 4) {
+      temp.g = 6;
+      continue;
+    }
+
+    if (temp.g == 8) {
+      break;
+    }
+
+    temp.g = temp.g + 1;
+  }
+
+  echo("--end--");
+}
+*/
+
+/*
+//#CLIENTSIDE
+function onCreated() {
+  temp.b = new TStaticVar();
+  temp.b.c = "hi";
+  temp.a = new TStaticVar("test", "djer", temp.b);
+  temp.a.ekjf = "ee";
+
+  temp.d = new GuiButtonCtrl(Something);
+  temp.d.text = "test btn: " @ temp.a.ekjf;
+
+  temp.g = 0;
+  while (temp.g < 5) {
+    temp.g++;
+  }
+
+  echo("Test: " @ temp.g);
+}
+*/
+
+/*
+function onPlayerChats() {
+  if (player.chat == "hi") {
+    player.chat = "hello";
+  } else if (player.chat == "yo") {
+    player.chat = "sup";
+  } else {
+    player.chat = "unknown";
+  }
+}
+*/
+
+/*
 enum {
   EIDLE,
   EWALK = -5,
@@ -9,18 +127,30 @@ function onCreated() {
   //echo("--start--");
   //echo("test".length());
   //echo("pos: " @ format("(%f, %f)", player.x, player.y));
-//  temp.a = player.x - 5;
-//  player.x = player.x - 5;
-  echo("test: " @ temp.a);
-  //echo("--end--");
-}
+  //temp.a = player.x - 3.3;
+  //temp.b = 3.1 + .6;
+  //echo("test1: " @ temp.a);
+  //echo("test2: " @ temp.b);
 
+  temp.c = 1;
+  if (temp.c) {
+    echo("matched");
+  } else {
+    echo("no match");
+  }
+  
+  echo("--end--");
+}
+*/
+
+/*
 function onPlayerChats()
 {
-  player.chat = "no: " @ EIDLE @ EWALK @ ESLASH;
+  echo("no: " @ EIDLE @ EWALK @ ESLASH);
 
   player.chat = 27.5;
 }
+*/
 
 /*
 function onCreated() {

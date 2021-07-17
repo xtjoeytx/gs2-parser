@@ -158,6 +158,10 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 		case ExpressionOp::Pow: return opcode::Opcode::OP_POW;
 		case ExpressionOp::Assign: return opcode::Opcode::OP_ASSIGN;
 		case ExpressionOp::Equal: return opcode::Opcode::OP_EQ;
+		case ExpressionOp::LessThan: return opcode::Opcode::OP_LT;
+		case ExpressionOp::LessThanOrEqual: return opcode::Opcode::OP_LTE;
+		case ExpressionOp::GreaterThan: return opcode::Opcode::OP_GT;
+		case ExpressionOp::GreaterThanOrEqual: return opcode::Opcode::OP_GTE;
 
 		default: return opcode::Opcode::OP_NUM_OPS;
 	}
@@ -190,6 +194,10 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::Divide:
 		case ExpressionOp::Mod:
 		case ExpressionOp::Pow:
+		case ExpressionOp::LessThan:
+		case ExpressionOp::LessThanOrEqual:
+		case ExpressionOp::GreaterThan:
+		case ExpressionOp::GreaterThanOrEqual:
 		{
 			node->left->visit(this);
 			if (node->left->expressionType() != ExpressionType::EXPR_INTEGER)
@@ -330,6 +338,8 @@ void GS2CompilerVisitor::Visit(ExpressionNumberNode *node)
 
 void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 {
+	printf("String: %s\n", node->val.c_str());
+
 	auto id = byteCode.getStringConst(node->val);
 	
 	byteCode.emit(opcode::OP_TYPE_STRING);
@@ -399,9 +409,11 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 
 	node->thenBlock->visit(this);
 
-	// OP_IF jumps to this location if the condition is false, so we jump
-	// over the next op which is a JMP to the end of the if-else-blocks
-	byteCode.emit(short(byteCode.getOpcodePos() + 1), ifLoc);
+	// OP_IF jumps to this location if the condition is false, so we
+	// continue to the next instruction, but if their is an else-block we must
+	// skip the next instruction since its a jmp to the end of the if-else chain
+	auto nextOpcode = byteCode.getOpcodePos() + (node->elseBlock ? 1 : 0);
+	byteCode.emit(short(nextOpcode), ifLoc);
 
 	if (node->elseBlock)
 	{
@@ -417,18 +429,139 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 	}
 }
 
-void GS2CompilerVisitor::Visit(StatementNewNode* node)
+void GS2CompilerVisitor::Visit(StatementNewNode *node)
 {
 	Visit((Node*)node);
 }
 
+void GS2CompilerVisitor::Visit(ExpressionNewNode *node)
+{
+	// TODO(joey): more testing needed
+	// temp.a = new TStaticVar("str") will return a regular string,
+	// but if there is additional args it has no effect on the output.
+}
+
+void GS2CompilerVisitor::Visit(StatementWhileNode *node)
+{
+	auto whileCondStart = byteCode.getOpcodePos();
+
+	node->expr->visit(this);
+	if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
+		byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+
+	byteCode.emit(opcode::OP_IF);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+
+	auto whileLoc = byteCode.getBytecodePos() - 2;
+
+	breakPoints.push(LoopBreakPoint{ whileCondStart });
+	node->block->visit(this);
+	
+	// Jump back to condition
+	byteCode.emit(opcode::OP_SET_INDEX);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(whileCondStart));
+
+	// Emit jump out of the while-loop
+	auto breakPointLoc = byteCode.getOpcodePos();
+	byteCode.emit(short(breakPointLoc), whileLoc);
+
+	// Write out the breakpoint jumps
+	auto& breakPoint = breakPoints.top();
+	for (const auto& loc : breakPoint.breakPointLocs) {
+		byteCode.emit(short(breakPointLoc), loc);
+	}
+	breakPoints.pop();
+}
+
+void GS2CompilerVisitor::Visit(StatementBreakNode* node)
+{
+	if (breakPoints.empty()) {
+		printf("Error, no loops to break from.\n");
+		return;
+	}
+
+	// Emit jump out of loop
+	byteCode.emit(opcode::OP_SET_INDEX);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+
+	// Add the location of the jmp so we can write the calculated opcode index
+	auto& breakPoint = breakPoints.top();
+	breakPoint.breakPointLocs.push_back(byteCode.getBytecodePos() - 2);
+}
+
+void GS2CompilerVisitor::Visit(StatementContinueNode* node)
+{
+	if (breakPoints.empty()) {
+		printf("Error, no loops to continue.\n");
+		return;
+	}
+
+	// Emit jump back to the loop-condition
+	byteCode.emit(opcode::OP_SET_INDEX);
+	byteCode.emitDynamicNumber(breakPoints.top().continuepoint);
+}
+
+void GS2CompilerVisitor::Visit(StatementForNode* node)
+{
+	// Emit init expression
+	if (node->init) {
+		node->init->visit(this);
+	}
+
+	// Emit for-loop condition
+	auto condStart = byteCode.getOpcodePos();
+	if (node->cond)
+	{
+		node->cond->visit(this);
+		if (node->cond->expressionType() != ExpressionType::EXPR_INTEGER)
+			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+	}
+	else
+	{
+		// Just emit 1 for the condition
+		byteCode.emit(opcode::OP_TYPE_NUMBER);
+		byteCode.emitDynamicNumber(0);
+	}
+
+	// Emit if-loop on conditional expression, with a failed jump to the end-block
+	byteCode.emit(opcode::OP_IF);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+
+	auto elseLoc = byteCode.getBytecodePos() - 2;
+
+	breakPoints.push(LoopBreakPoint{ condStart });
+
+	// Emit block
+	if (node->block)
+		node->block->visit(this);
+
+	// Emit post-op
+	if (node->postop)
+		node->postop->visit(this);
+
+	// Emit jump back to condition
+	byteCode.emit(opcode::OP_SET_INDEX);
+	byteCode.emitDynamicNumber(condStart);
+
+	// Emit jump out of the loop
+	auto breakPointLoc = byteCode.getOpcodePos();
+	byteCode.emit(short(breakPointLoc), elseLoc);
+
+	// Write out the breakpoint jumps
+	auto& breakPoint = breakPoints.top();
+	for (const auto& loc : breakPoint.breakPointLocs) {
+		byteCode.emit(short(breakPointLoc), loc);
+	}
+	breakPoints.pop();
+}
+
 void GS2CompilerVisitor::Visit(StatementNode *node) { Visit((Node *)node); }
-void GS2CompilerVisitor::Visit(StatementBreakNode *node) { Visit((Node *)node); }
-void GS2CompilerVisitor::Visit(StatementContinueNode *node) { Visit((Node *)node); }
-void GS2CompilerVisitor::Visit(StatementForNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementForEachNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementSwitchNode *node) { Visit((Node *)node); }
-void GS2CompilerVisitor::Visit(StatementWhileNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementWithNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(ExpressionNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode *node) { Visit((Node *)node); }

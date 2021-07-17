@@ -68,7 +68,7 @@ inline const char* ExpressionOpToString(ExpressionOp op)
 			return "^";
 
 		case ExpressionOp::Assign:
-			return "^";
+			return "=";
 
 		case ExpressionOp::Concat:
 			return "@";
@@ -383,6 +383,28 @@ public:
 	ExpressionObjectAccessNode * objExpr;
 	std::vector<ExpressionNode*>* args;
 	bool discardReturnValue;
+};
+
+class ExpressionNewNode : public ExpressionNode
+{
+public:
+	_NodeName("ExpressionNewNode");
+
+	ExpressionNewNode(ExpressionNode *newExpr, std::vector<ExpressionNode*>* args = 0)
+		: ExpressionNode(), newExpr(newExpr), args(args)
+	{
+
+	}
+
+	virtual ~ExpressionNewNode();
+
+	virtual std::string toString() const {
+		std::string str = "new ";
+		return str + newExpr->toString();
+	}
+
+	ExpressionNode* newExpr;
+	std::vector<ExpressionNode*>* args;
 };
 
 class ExpressionListNode : public ExpressionNode

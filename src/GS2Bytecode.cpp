@@ -187,6 +187,7 @@ void GS2Bytecode::emitDynamicNumber(uint32_t val)
 	
 	switch (getLastOp())
 	{
+		case opcode::OP_SET_INDEX:
 		case opcode::OP_TYPE_NUMBER:
 			offset = 3;
 			break;

@@ -131,6 +131,16 @@ ExpressionListNode::~ExpressionListNode()
 	}
 }
 
+ExpressionNewNode::~ExpressionNewNode()
+{
+	if (args)
+	{
+		for (const auto& node : *args)
+			delete node;
+	}
+	delete newExpr;
+}
+
 ExpressionObjectAccessNode::~ExpressionObjectAccessNode()
 {
 	delete left;

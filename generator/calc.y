@@ -92,12 +92,12 @@ typedef void* yyscan_t;
 %type<exprNode> expr
 %type<exprNode> constant
 %type<exprNode> expr_cast
-%type<exprNode> expr_intconst expr_numberconst
+%type<exprNode> expr_intconst expr_numberconst expr_strconst
 %type<exprIdentNode> expr_ident
-%type<exprNode> expr_strconst
 %type<exprUnaryNode> expr_ops_unary
 %type<exprBinaryNode> expr_ops_binary expr_ops_comparison
 %type<exprCallNode> expr_fncall
+%type<exprNode> expr_new
 %type<exprListNode> expr_arraylist
 %type<exprObjectAccessNode> expr_objaccess
 %type<stmtIfNode> stmt_if
@@ -194,6 +194,7 @@ stmt_if:
 
 stmt_for:
 	T_KWFOR '(' expr ';' expr ';' expr ')' stmt 			{ $$ = new StatementForNode($3, $5, $7, $9); }
+	| T_KWFOR '(' ';' expr ';' expr ')' stmt 				{ $$ = new StatementForNode(0, $4, $6, $8); }
 	| T_KWFOR '(' expr ':' expr ')' stmt					{ $$ = new StatementForEachNode($3, $5, $7); }
 	;
 
@@ -259,6 +260,7 @@ expr:
 	| expr_ident					{ $$ = $1; }
 	| expr_cast						{ $$ = $1; }
 	| expr_fncall 					{ $$ = $1; }
+	| expr_new						{ $$ = $1; }
 	| expr_objaccess 				{ $$ = $1; }
 	| expr_arraylist				{ $$ = $1; }
 	| expr_ops_binary 				{ $$ = $1; }
@@ -326,6 +328,10 @@ expr_cast:
 expr_fncall:
 	expr_ident '(' args_list_decl ')' 			{ $$ = new ExpressionFnCallNode($1, nullptr, $3); }
 	| expr_objaccess '(' args_list_decl ')' 	{ $$ = new ExpressionFnCallNode($1->right, $1, $3); }
+	;
+
+expr_new:
+	T_KWNEW expr_ident '(' args_list_decl ')'	{ $$ = new ExpressionNewNode($2, $4); }
 	;
 
 expr_objaccess:
