@@ -230,6 +230,10 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			handled = true;
 			break;
 		}
+
+		default:
+			handled = false;
+			break;
 	}
 
 	////////
@@ -271,6 +275,10 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 				handled = true;
 				break;
 			}
+
+			default:
+				handled = false;
+				break;
 		}
 	}
 	else
@@ -291,6 +299,10 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 				handled = true;
 				break;
 			}
+			
+			default:
+				handled = false;
+				break;
 		}
 	}
 

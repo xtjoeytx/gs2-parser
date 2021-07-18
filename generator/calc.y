@@ -167,7 +167,7 @@ stmt: stmt_if				{ $$ = $1;}
 	| stmt_continue
 	| stmt_expr
 	| stmt_block 			{ $$ = $1; }
-	/* | stmt_new 				{ $$ = $1; } */
+	| stmt_new 				{ $$ = $1; }
 	| stmt_for				{ $$ = $1; }
 	| stmt_while			{ $$ = $1; }
 	| stmt_with				{ $$ = $1; }
@@ -178,10 +178,6 @@ stmt_expr:
 	';'						{ $$ = 0; }
 	| expr ';'				{ $$ = $1; }
 	;
-
-	/*
-		todo(joey): new should be an expression, not statement
-	*/
 
 stmt_new:
 	T_KWNEW T_IDENTIFIER '(' args_list_decl ')' stmt_block	{ $$ = new StatementNewNode($2, $4, $6); }
@@ -260,7 +256,6 @@ expr:
 	| expr_ident					{ $$ = $1; }
 	| expr_cast						{ $$ = $1; }
 	| expr_fncall 					{ $$ = $1; }
-	| expr_new						{ $$ = $1; }
 	| expr_objaccess 				{ $$ = $1; }
 	| expr_arraylist				{ $$ = $1; }
 	| expr_ops_binary 				{ $$ = $1; }
@@ -286,10 +281,11 @@ expr_ops_binary:
 	| expr '/' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Divide); }
 	| expr '%' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Mod); }
 	| expr '^' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Pow); }
-	| expr '=' expr		 			{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Assign, true); }
+	| expr '=' expr				 	{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Assign, true); }
+	| expr '=' expr_new			 	{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Assign, true); }
 	| expr '@' expr		 			{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Concat); }
 	;
-
+	
 expr_ops_comparison:
 	expr T_OPEQUALS expr	 					{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Equal); }
 	| expr T_OPNOTEQUALS expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::NotEqual); }
