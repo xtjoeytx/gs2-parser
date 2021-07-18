@@ -19,7 +19,6 @@ ParserData::~ParserData()
 
 const char * ParserData::saveString(const char* str, int length)
 {
-	assert(length > 0);
 	auto ins = stable.insert(std::string(str, length));
 	return ins.first->c_str();
 }

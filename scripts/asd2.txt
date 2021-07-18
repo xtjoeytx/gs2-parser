@@ -1,8 +1,18 @@
 //#CLIENTSIDE
-
 function onCreated() {
     echo("--start");
     temp.t = new GuiButtonCtrl();
+    temp.t.eklek = "abc";
+//    new GuiButtonCtrl() {
+  //    profile = "ee";
+    //}
+
+    temp.asd.func().func2();
+
+
+    temp.v = "test1";
+    (@temp.v)();
+
     echo("--end");
 }
 

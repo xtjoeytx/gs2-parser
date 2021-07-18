@@ -158,6 +158,7 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 		case ExpressionOp::Pow: return opcode::Opcode::OP_POW;
 		case ExpressionOp::Assign: return opcode::Opcode::OP_ASSIGN;
 		case ExpressionOp::Equal: return opcode::Opcode::OP_EQ;
+		case ExpressionOp::NotEqual: return opcode::Opcode::OP_NEQ;
 		case ExpressionOp::LessThan: return opcode::Opcode::OP_LT;
 		case ExpressionOp::LessThanOrEqual: return opcode::Opcode::OP_LTE;
 		case ExpressionOp::GreaterThan: return opcode::Opcode::OP_GT;
@@ -219,6 +220,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 
 		case ExpressionOp::Assign:
 		case ExpressionOp::Equal:
+		case ExpressionOp::NotEqual:
 		{
 			node->left->visit(this);
 			node->right->visit(this);
@@ -239,6 +241,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 	////////
 	if (!handled)
 	{
+		printf("Undefined opcode: %s (%d)\n", ExpressionOpToString(node->op), node->op);
 		Visit((Node*)node);
 	}
 }
@@ -276,6 +279,13 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 				break;
 			}
 
+			case ExpressionOp::UnaryStringCast:
+			{
+				byteCode.emit(opcode::OP_CONV_TO_STRING);
+				handled = true;
+				break;
+			}
+
 			default:
 				handled = false;
 				break;
@@ -299,7 +309,7 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 				handled = true;
 				break;
 			}
-			
+
 			default:
 				handled = false;
 				break;
@@ -324,6 +334,10 @@ void GS2CompilerVisitor::Visit(ExpressionCastNode* node)
 
 		case ExpressionCastNode::CastType::FLOAT:
 			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+			break;
+
+		case ExpressionCastNode::CastType::STRING:
+			byteCode.emit(opcode::OP_CONV_TO_STRING);
 			break;
 	}
 }
@@ -509,7 +523,13 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 
 void GS2CompilerVisitor::Visit(StatementNewNode *node)
 {
+
 	Visit((Node*)node);
+}
+
+void GS2CompilerVisitor::Visit(StatementWithNode *node)
+{
+	Visit((Node *)node);
 }
 
 void GS2CompilerVisitor::Visit(ExpressionNewNode *node)
@@ -661,6 +681,5 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 void GS2CompilerVisitor::Visit(StatementNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementForEachNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementSwitchNode *node) { Visit((Node *)node); }
-void GS2CompilerVisitor::Visit(StatementWithNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(ExpressionNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(ExpressionListNode *node) { Visit((Node *)node); }

@@ -58,7 +58,7 @@ typedef void* yyscan_t;
 %token T_TRUE T_FALSE
 
 %token T_OPTERNARY
-%token T_OPNOT
+%token '!'
 %token T_OPAND T_OPOR
 %token T_OPEQUALS T_OPNOTEQUALS
 %token T_OPLESSTHAN T_OPLESSTHANEQUAL
@@ -86,11 +86,11 @@ typedef void* yyscan_t;
 %left T_OPEQUALS T_OPNOTEQUALS
 %left '+' '-'
 %left '*' '/' '%'
-%right T_OPNOT T_OPDECREMENT T_OPINCREMENT
+%right '!' T_OPDECREMENT T_OPINCREMENT
 %left '.'
 
 %type<exprNode> expr
-%type<exprNode> constant
+%type<exprNode> constant primary postfix
 %type<exprNode> expr_cast
 %type<exprNode> expr_intconst expr_numberconst expr_strconst
 %type<exprIdentNode> expr_ident
@@ -251,23 +251,33 @@ constant:
 	| expr_strconst
 	;
 
+primary:
+	constant			{ $$ = $1;}
+	| expr_ident		{ $$ = $1; }
+	| '(' expr ')'		{ $$ = $2; }
+	;
+
+postfix:
+	primary
+	| postfix '[' expr ']'
+	| postfix '(' args_list_decl ')'					{ $$ = new ExpressionFnCallNode($1, nullptr, $3); }
+	// | postfix '.'  expr_ident '(' args_list_decl ')'	{ $$ = new ExpressionFnCallNode($3, nullptr, $5); }
+	| postfix '.' expr_ident							{ $$ = new ExpressionObjectAccessNode($1, $3); }
+	;
+
 expr:
-	constant						{ $$ = $1; }
-	| expr_ident					{ $$ = $1; }
+	postfix							{ $$ = $1; }
 	| expr_cast						{ $$ = $1; }
-	| expr_fncall 					{ $$ = $1; }
-	| expr_objaccess 				{ $$ = $1; }
 	| expr_arraylist				{ $$ = $1; }
 	| expr_ops_binary 				{ $$ = $1; }
 	| expr_ops_unary				{ $$ = $1; }
 	| expr_ops_comparison			{ $$ = $1; }
-	| expr '[' expr ']'				{ $$ = $1; }
-	| '(' expr ')'					{ $$ = $2; }
 	;
 
 expr_ops_unary:
 	'-' expr 						{ $$ = new ExpressionUnaryOpNode($2, ExpressionOp::UnaryMinus, true); }
-	| T_OPNOT expr 					{ $$ = new ExpressionUnaryOpNode($2, ExpressionOp::UnaryNot, true); }
+	| '@' expr						{ $$ = new ExpressionUnaryOpNode($2, ExpressionOp::UnaryStringCast, true); }
+	| '!' expr 						{ $$ = new ExpressionUnaryOpNode($2, ExpressionOp::UnaryNot, true); }
 	| T_OPDECREMENT expr 			{ $$ = new ExpressionUnaryOpNode($2, ExpressionOp::Decrement, true); }
 	| T_OPINCREMENT expr 			{ $$ = new ExpressionUnaryOpNode($2, ExpressionOp::Increment, true); }
 	| expr T_OPINCREMENT			{ $$ = new ExpressionUnaryOpNode($1, ExpressionOp::Increment, false); }

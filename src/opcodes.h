@@ -66,6 +66,7 @@ namespace opcode
 		OP_UNARYSUB = 69,
 
 		OP_EQ = 70, //  PUSH (S(1) == S(0))
+		OP_NEQ = 71,
 		OP_LT = 72, //  PUSH (S(1) < S(0))
 		OP_GT = 73, //  PUSH (S(1) > S(0))
 		OP_LTE = 74, //  PUSH (S(1) <= S(0))
@@ -225,6 +226,9 @@ namespace opcode
 
 			case OP_EQ:
 				return "OP_EQ";
+
+			case OP_NEQ:
+				return "OP_NEQ";
 
 			case OP_LT:
 				return "OP_LT";

@@ -24,7 +24,7 @@ string_const (\"(\\.|[^"])*\")
 %%
 
 [ \t]	; // ignore all whitespace
-\n		{yyextra->lineNumber++;};
+\n		{yyextra->lineNumber++; 	printf("line: %d\n", yyextra->lineNumber);};
 "."		{return '.';}
 ","		{return ',';}
 ":"		{return ':';}
@@ -40,7 +40,7 @@ string_const (\"(\\.|[^"])*\")
 "]"		{return ']';}
 
 "?"		{return T_OPTERNARY;}
-"!"		{return T_OPNOT;}
+"!"		{return '!';}
 "&&"	{return T_OPAND;}
 "||"	{return T_OPOR;}
 "=="	{return T_OPEQUALS;}

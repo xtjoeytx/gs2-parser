@@ -44,6 +44,7 @@ enum class ExpressionOp {
 	LogicalAnd,
 	LogicalOr,
 
+	UnaryStringCast,
 	UnaryNot,
 	UnaryMinus,
 	Increment,
@@ -76,6 +77,7 @@ inline const char* ExpressionOpToString(ExpressionOp op)
 			return "=";
 
 		case ExpressionOp::Concat:
+		case ExpressionOp::UnaryStringCast:
 			return "@";
 
 		case ExpressionOp::Equal:
@@ -261,7 +263,8 @@ public:
 	enum class CastType
 	{
 		INTEGER,
-		FLOAT
+		FLOAT,
+		STRING
 	};
 
 public:
