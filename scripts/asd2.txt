@@ -1,4 +1,127 @@
 //#CLIENTSIDE
+function onCreated()
+{
+  echo("--start");
+
+    temp.obj = new GuiButtonCtrl(ObjName);
+    temp.obj.profile = GuiBlueButtonProfile;
+    temp.obj.text = "button";
+    temp.obj.x = 30;
+    temp.obj.y = 30;
+    temp.obj.width = 150;
+    temp.obj.height = 150;
+    temp.obj.visible = 1;
+    ObjName.text = "override?";
+    addControl(temp.obj);
+
+    for (temp.i = 0; temp.i < 5; temp.i++) {
+      echo("T: " @ temp.i);
+    }
+
+  temp.tst = new TStaticVar();
+  echo("1.1: " @ temp.tst.type());
+  temp.tst.asd = new TStaticVar();
+  echo("1.2");
+  temp.tst.asd.hi = "tes";
+  echo("1.3");
+  temp.tst.end = "t2";
+  echo("1.4: " @ temp.tst.asd.hi @ " : " @ temp.tst.end);
+
+  temp.dd = new TStaticVar();
+  temp.dd.test.eee = "test2";
+  echo("1.5: " @ temp.dd.test.eee);
+
+
+  temp.test = "string" ;
+  echo("T: " @ temp.test);
+
+  echo("--end");
+}
+/*
+function onCreated() {
+
+  echo("start");
+
+  temp.tst = new TStaticVar();
+  echo("1.1");
+  temp.tst.asd = new TStaticVar();
+  echo("1.2");
+  temp.tst.asd.hi = "tes";
+  echo("1.3");
+  temp.tst.end = "t2";
+  
+  echo("1.4: " @ temp.tst.asd.hi);
+
+  temp.dd = new TStaticVar();
+  temp.dd.hi new TStaticVar();
+  temp.dd.test = "test2";
+  echo("1.5: " @ temp.dd.test);
+
+
+  temp.test = "string" ;
+  echo("T: " @ temp.test);
+  //temp.test2 = "2";
+  (@temp.tst.asd.hi @ temp.tst.end)();
+
+
+  echo("end");
+}
+
+function test1() {
+  echo("test func 1");
+  return "dat";
+}
+
+function test2() {
+  echo("test func 2");
+}
+
+function testFunction()
+{
+    echo("testfunc");
+}
+*/
+
+/*
+function onCreated() {
+    echo("--start");
+    new GuiButtonCtrl(ObjName)
+    {
+      profile = GuiBlueButtonProfile;
+      text = "button";
+      x = 30;
+      y = 30;
+      width = 150;
+      height = 150;
+      visible = 1;
+    };
+
+    echo("--end");
+}
+*/
+
+/*
+function onCreated()
+{
+  temp.i = 5;
+  echo("Test 1: " @ --temp.i);
+  echo("Test 2: " @ temp.i--);
+  echo("Test 3: " @ ++temp.i);
+  echo("Test 4: " @ temp.i++);
+  echo("Test 5: " @ -temp.i);
+
+  temp.i = 0;
+  echo("Test 6: " @ !temp.i);
+
+  temp.i = 1;
+  echo("Test 7: " @ !temp.i);
+  
+  temp.i = 2;
+  echo("Test 8: " @ !temp.i);
+}
+*/
+
+/*
 function onCreated() {
     echo("--start");
     temp.t = new GuiButtonCtrl();
@@ -12,9 +135,31 @@ function onCreated() {
 
     temp.v = "test1";
     (@temp.v)();
+    temp.obj = new GuiButtonCtrl(ObjName);
+    temp.obj.profile = GuiBlueButtonProfile;
+    temp.obj.text = "button";
+    temp.obj.x = 30;
+    temp.obj.y = 30;
+    temp.obj.width = 150;
+    temp.obj.height = 150;
+    temp.obj.visible = 1;
+    ObjName.text = "override?";
+    
+    temp.obj.catchevent(temp.obj.name, "onAction", "onActionButton");
+    addcontrol(temp.obj);
+
+    //temp.pp = findweapon("-Shared").pmswaiting();
+    //temp.p = ("-Shared").pmswaiting();
+    echo("Pms: " @ temp.p);
 
     echo("--end");
 }
+
+function onActionButton(obj)
+{
+  echo("received click from " @ obj);
+}
+*/
 
 /*
 function onCreated() {

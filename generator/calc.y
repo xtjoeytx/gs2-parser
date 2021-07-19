@@ -37,6 +37,7 @@ typedef void* yyscan_t;
 	ExpressionBinaryOpNode *exprBinaryNode;
 	ExpressionUnaryOpNode *exprUnaryNode;
 	ExpressionListNode *exprListNode;
+	ExpressionNewNode *exprNewNode;
 	std::vector<ExpressionNode *> *argList;
 
 	StatementSwitchNode *stmtSwitchNode;
@@ -96,10 +97,10 @@ typedef void* yyscan_t;
 %type<exprIdentNode> expr_ident
 %type<exprUnaryNode> expr_ops_unary
 %type<exprBinaryNode> expr_ops_binary expr_ops_comparison
-%type<exprCallNode> expr_fncall
-%type<exprNode> expr_new
+	/* %type<exprCallNode> expr_fncall */
+%type<exprNewNode> expr_new
 %type<exprListNode> expr_arraylist
-%type<exprObjectAccessNode> expr_objaccess
+	/*	%type<exprObjectAccessNode> expr_objaccess*/
 %type<stmtIfNode> stmt_if
 %type<stmtBlock> stmt_list
 %type<stmtNode> stmt
@@ -259,9 +260,9 @@ primary:
 
 postfix:
 	primary
-	| postfix '[' expr ']'
+	| postfix '[' expr ']'								{ $$ = new ExpressionArrayIndexNode($1, $3); }
 	| postfix '(' args_list_decl ')'					{ $$ = new ExpressionFnCallNode($1, nullptr, $3); }
-	// | postfix '.'  expr_ident '(' args_list_decl ')'	{ $$ = new ExpressionFnCallNode($3, nullptr, $5); }
+	//| postfix '.'  expr_ident '(' args_list_decl ')'	{ $$ = new ExpressionFnCallNode($3, nullptr, $5); }
 	| postfix '.' expr_ident							{ $$ = new ExpressionObjectAccessNode($1, $3); }
 	;
 
@@ -331,14 +332,15 @@ expr_cast:
 	T_KWCAST_INT '(' expr ')'					{ $$ = new ExpressionCastNode($3, ExpressionCastNode::CastType::INTEGER); }
 	| T_KWCAST_FLOAT '(' expr ')'				{ $$ = new ExpressionCastNode($3, ExpressionCastNode::CastType::FLOAT); }
 	;
+	
+expr_new:
+	T_KWNEW expr_ident '(' args_list_decl ')'	{ $$ = new ExpressionNewNode($2, $4); }
+	;
 
+	/*
 expr_fncall:
 	expr_ident '(' args_list_decl ')' 			{ $$ = new ExpressionFnCallNode($1, nullptr, $3); }
 	| expr_objaccess '(' args_list_decl ')' 	{ $$ = new ExpressionFnCallNode($1->right, $1, $3); }
-	;
-
-expr_new:
-	T_KWNEW expr_ident '(' args_list_decl ')'	{ $$ = new ExpressionNewNode($2, $4); }
 	;
 
 expr_objaccess:
@@ -346,6 +348,7 @@ expr_objaccess:
 	| expr_ident '.' expr_ident					{ $$ = new ExpressionObjectAccessNode($1, $3); }
 	| expr_strconst '.' expr_ident				{ $$ = new ExpressionObjectAccessNode($1, $3); }
 	;
+	*/
 
 %%
 

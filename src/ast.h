@@ -175,6 +175,8 @@ public:
 	virtual ExpressionType expressionType() const {
 		return ExpressionType::EXPR_ANY;
 	}
+
+	std::vector<ExpressionNode *> nodes;
 };
 
 class ExpressionIntegerNode : public ExpressionNode
@@ -255,6 +257,25 @@ public:
 	}
 
 	std::string val;
+};
+
+class ExpressionArrayIndexNode : public ExpressionNode
+{
+public:
+	_NodeName("ExpressionArrayIndexNode")
+
+	ExpressionArrayIndexNode(ExpressionNode *expr, ExpressionNode *idx)
+	: ExpressionNode(), expr(expr), idx(idx)
+	{
+	}
+	virtual ~ExpressionArrayIndexNode() {}
+
+	virtual std::string toString() const {
+		return expr->toString().append("[").append(idx->toString()).append("]");;
+	}
+
+	ExpressionNode* expr;
+	ExpressionNode* idx;
 };
 
 class ExpressionCastNode : public ExpressionNode

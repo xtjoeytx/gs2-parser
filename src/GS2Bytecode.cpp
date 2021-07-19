@@ -194,6 +194,7 @@ void GS2Bytecode::emitDynamicNumber(int32_t val)
 			offset = 3;
 			break;
 
+		case opcode::OP_TYPE_VAR:
 		case opcode::OP_TYPE_STRING:
 			//offset = 0;
 			break;

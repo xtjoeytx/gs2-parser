@@ -200,8 +200,8 @@ namespace opcode
 			case OP_CONV_TO_OBJECT:
 				return "OP_CONV_TO_OBJECT";
 
-	//		case OP_DECPUSH:
-	//			return "OP_DECPUSH";
+			case OP_NEW_OBJECT:
+				return "OP_NEW_OBJECT";
 
 			case OP_FUNC_PARAMS_END:
 				return "OP_FUNC_PARAMS_END";

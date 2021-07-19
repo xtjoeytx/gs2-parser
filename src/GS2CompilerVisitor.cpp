@@ -442,6 +442,7 @@ void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 
 void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 {
+
 	// Build-in commands
 	auto& cmdList = (node->objExpr ? getCommandListMethod() : getCommandList());
 	std::string funcName = node->funcExpr->toString();
@@ -545,12 +546,21 @@ void GS2CompilerVisitor::Visit(ExpressionNewNode *node)
 			n->visit(this);
 	}
 
-	byteCode.emit(opcode::OP_INLINE_NEW);
+	//byteCode.emit(opcode::OP_INLINE_NEW);
 
 	// TODO(joey): fix
 
 	auto identNode = reinterpret_cast<ExpressionIdentifierNode*>(node->newExpr);
 	auto id = byteCode.getStringConst(identNode->val);
+
+	if (identNode->val == "TStaticVar") {
+		byteCode.emit(opcode::OP_TYPE_VAR);
+		byteCode.emitDynamicNumber(byteCode.getStringConst("unknown_object"));
+	}
+	else
+	{
+		byteCode.emit(opcode::OP_INLINE_NEW);
+	}
 
 	byteCode.emit(opcode::OP_TYPE_STRING);
 	byteCode.emitDynamicNumber(id);
