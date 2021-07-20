@@ -33,7 +33,7 @@ typedef void* yyscan_t;
 	ExpressionNode *exprNode;
 	ExpressionIdentifierNode *exprIdentNode;
 	ExpressionFnCallNode *exprCallNode;
-	ExpressionObjectAccessNode *exprObjectAccessNode;
+	ExpressionInOpNode *exprInNode;
 	ExpressionBinaryOpNode *exprBinaryNode;
 	ExpressionUnaryOpNode *exprUnaryNode;
 	ExpressionListNode *exprListNode;
@@ -73,7 +73,7 @@ typedef void* yyscan_t;
 %token T_OPDECREMENT T_OPINCREMENT
 
 %token T_KWPUBLIC
-%token T_KWIF T_KWELSE T_KWELSEIF T_KWFOR T_KWWHILE T_KWBREAK T_KWCONTINUE T_KWRETURN
+%token T_KWIF T_KWELSE T_KWELSEIF T_KWFOR T_KWWHILE T_KWBREAK T_KWCONTINUE T_KWRETURN T_KWIN
 %token T_KWFUNCTION T_KWNEW T_KWWITH T_KWENUM
 %token T_KWSWITCH T_KWCASE T_KWDEFAULT
 %token T_KWCAST_INT T_KWCAST_FLOAT
@@ -86,7 +86,7 @@ typedef void* yyscan_t;
 %left '@'
 %left T_OPLESSTHAN T_OPLESSTHANEQUAL
 %left T_OPGREATERTHAN T_OPGREATERTHANEQUAL
-%left T_OPEQUALS T_OPNOTEQUALS
+%left T_OPEQUALS T_OPNOTEQUALS T_KWIN
 %left '+' '-'
 %left '*' '/' '%'
 %right '!' T_OPDECREMENT T_OPINCREMENT
@@ -100,10 +100,9 @@ typedef void* yyscan_t;
 %type<exprIdentNode> expr_ident
 %type<exprUnaryNode> expr_ops_unary
 %type<exprBinaryNode> expr_ops_binary expr_ops_comparison
-	/* %type<exprCallNode> expr_fncall */
+%type<exprInNode> expr_ops_in
 %type<exprNewNode> expr_new
 %type<exprListNode> expr_arraylist
-	/*	%type<exprObjectAccessNode> expr_objaccess*/
 %type<stmtIfNode> stmt_if
 %type<stmtBlock> stmt_list
 %type<stmtNode> stmt
@@ -264,19 +263,20 @@ primary:
 postfix:
 	primary												{ $$ = new ExpressionPostfixNode($1); }
 	| postfix '[' expr ']'								{ $1->nodes.push_back(new ExpressionArrayIndexNode($1, $3)); }
-	| postfix '(' args_list_decl ')'					{ auto n = $1->nodes.back(); $1->nodes.pop_back(); $1->nodes.push_back(new ExpressionFnCallNode(n, nullptr, $3)); }
+	| postfix '(' args_list_decl ')'					{
+			
+			// remove last element, to be used as function ident
+			auto tmp = $1->nodes.back();
+			$1->nodes.pop_back();
+
+			// create function node
+			auto n = new ExpressionFnCallNode(tmp, $1->nodes.empty() ? nullptr : $1, $3);
+
+			$$ = new ExpressionPostfixNode(n);
+	}
+
 	| postfix '.' expr_ident							{ $1->nodes.push_back($3); }
 	;
-
-	/*
-postfix:
-	primary	
-	| postfix '[' expr ']'								{ $$ = new ExpressionArrayIndexNode($1, $3); }
-	| postfix '(' args_list_decl ')'					{ $$ = new ExpressionFnCallNode($1, nullptr, $3); }
-	//| postfix '.'  expr_ident '(' args_list_decl ')'	{ $$ = new ExpressionFnCallNode($3, nullptr, $5); }
-	| postfix '.' expr_ident							{ $$ = new ExpressionObjectAccessNode($1, $3); }
-	;
-	*/
 
 expr:
 	postfix							{ $$ = $1; }
@@ -285,6 +285,7 @@ expr:
 	| expr_ops_binary 				{ $$ = $1; }
 	| expr_ops_unary				{ $$ = $1; }
 	| expr_ops_comparison			{ $$ = $1; }
+	| expr_ops_in					{ $$ = $1; }
 	;
 
 expr_ops_unary:
@@ -320,6 +321,11 @@ expr_ops_comparison:
 	| expr T_OPOR expr	 						{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::LogicalOr); }
 	;
 
+expr_ops_in:
+	expr T_KWIN '|' expr ',' expr '|'			{ $$ = new ExpressionInOpNode($1, $4, $6); }
+	| expr T_KWIN expr							{ $$ = 0; }
+	;
+
 expr_ident:
 	T_IDENTIFIER								{ $$ = new ExpressionIdentifierNode($1); }
 	;
@@ -348,19 +354,6 @@ expr_cast:
 expr_new:
 	T_KWNEW expr_ident '(' args_list_decl ')'	{ $$ = new ExpressionNewNode($2, $4); }
 	;
-
-	/*
-expr_fncall:
-	expr_ident '(' args_list_decl ')' 			{ $$ = new ExpressionFnCallNode($1, nullptr, $3); }
-	| expr_objaccess '(' args_list_decl ')' 	{ $$ = new ExpressionFnCallNode($1->right, $1, $3); }
-	;
-
-expr_objaccess:
-	expr_objaccess '.' expr_ident				{ $1->nodes.push_back($1->right); $1->right = $3; }
-	| expr_ident '.' expr_ident					{ $$ = new ExpressionObjectAccessNode($1, $3); }
-	| expr_strconst '.' expr_ident				{ $$ = new ExpressionObjectAccessNode($1, $3); }
-	;
-	*/
 
 %%
 

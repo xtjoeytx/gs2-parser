@@ -66,39 +66,41 @@ int main(int argc, const char *argv[]) {
 			"}";
 	}
 
-	ParserData parserStruct;
-	parserStruct.parse(testStr);
-
-	StatementBlock *stmtBlock = parserStruct.prog;
-
-	if (stmtBlock != nullptr)
 	{
-		TestNodeVisitor visit;
-		printf("Children: %zu\n", stmtBlock->statements.size());
-		visit.Visit(stmtBlock);
+		ParserData parserStruct;
+		parserStruct.parse(testStr);
 
-		GS2CompilerVisitor compilerVisitor(&parserStruct);
-		compilerVisitor.Visit(stmtBlock);
+		StatementBlock* stmtBlock = parserStruct.prog;
 
-		auto byteCode = compilerVisitor.getByteCode();
-		printf("Total length of bytecode w/ headers: %5zu\n", byteCode.length());
-
-		auto buf = byteCode.buffer();
-
-		FILE *file;
-		if (argc > 2) {
-			file = fopen(argv[2], "wb");
-		}
-		else file = fopen("weaponTestCode.dump", "wb");
-
-		if (file)
+		if (stmtBlock != nullptr)
 		{
-			uint8_t packetId = 140 + 32;
-			fwrite(&packetId, sizeof(uint8_t), 1, file);
-			fwrite(buf, sizeof(uint8_t), byteCode.length(), file);
-			fclose(file);
+			TestNodeVisitor visit;
+			printf("Children: %zu\n", stmtBlock->statements.size());
+			visit.Visit(stmtBlock);
+
+			GS2CompilerVisitor compilerVisitor(&parserStruct);
+			compilerVisitor.Visit(stmtBlock);
+
+			auto byteCode = compilerVisitor.getByteCode();
+			printf("Total length of bytecode w/ headers: %5zu\n", byteCode.length());
+
+			auto buf = byteCode.buffer();
+
+			FILE* file;
+			if (argc > 2) {
+				file = fopen(argv[2], "wb");
+			}
+			else file = fopen("weaponTestCode.dump", "wb");
+
+			if (file)
+			{
+				uint8_t packetId = 140 + 32;
+				fwrite(&packetId, sizeof(uint8_t), 1, file);
+				fwrite(buf, sizeof(uint8_t), byteCode.length(), file);
+				fclose(file);
+			}
+			else printf("Couldn't open file\n");
 		}
-		else printf("Couldn't open file\n");
 	}
 
 	#ifdef _WIN32

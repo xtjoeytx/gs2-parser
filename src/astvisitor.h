@@ -26,13 +26,13 @@ class NodeVisitor
         virtual void Visit(class ExpressionIntegerNode *node) = 0;
         virtual void Visit(class ExpressionNumberNode *node) = 0;
         virtual void Visit(class ExpressionPostfixNode *node) = 0;
+        virtual void Visit(class ExpressionInOpNode *node) = 0;
         virtual void Visit(class ExpressionCastNode *node) = 0;
         virtual void Visit(class ExpressionArrayIndexNode* node) = 0;
         virtual void Visit(class ExpressionFnCallNode *node) = 0;
         virtual void Visit(class ExpressionNewNode *node) = 0;
         virtual void Visit(class ExpressionBinaryOpNode *node) = 0;
         virtual void Visit(class ExpressionUnaryOpNode *node) = 0;
-        virtual void Visit(class ExpressionObjectAccessNode *node) = 0;
         virtual void Visit(class ExpressionListNode *node) = 0;
 };
 

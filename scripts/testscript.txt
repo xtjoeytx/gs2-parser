@@ -1119,3 +1119,82 @@ function onCreated()
   temp.i = 2;
   echo("Test 8: " @ !temp.i);
 }
+
+
+
+
+function onMouseDown(temp.mtype)
+{
+  if (temp.mtype == "left") {
+    this.pid = onFindPlayers();
+
+    if (this.pid >= 0)
+    {
+      if (this.pid == 0)
+      {
+        player.showProfile();
+      }
+        else
+      {
+        onShowMenu();
+      }
+    }
+  }
+}
+
+function onFindPlayers()
+{
+  // Method 1 - UNTESTED -
+  /*temp.found = testplayer(mousex, mousey);
+  
+  if (temp.found)
+  {
+    return temp.found;
+  }
+    else
+  {
+    return -1;
+  }*/
+  
+  // Method 2
+  echo("searching");
+  for (temp.I = 0; temp.I < players.size(); temp.I++)
+  {
+    echo("t: " @ players[temp.I].x @ ", " @ players[temp.I].y @ " vs " @ mousex @ "," @ mousey);
+    if (mousex in |players[temp.I].x, players[temp.I].x + 3|) {
+      if (mousey in |players[temp.I].y, players[temp.I].y + 3|) {
+        echo("found");
+        return temp.I;
+      }
+    }
+  }
+  
+  return -1;
+}
+
+function onMouseDown(temp.mtype)
+{
+/*
+        12,         8: type(variable) (22) (Opcode: 0xF0)  - variable[1](mousex) (byte)
+        15,         9: player. (182)
+        16,        10: type(variable) (22) (Opcode: 0xF0)  - variable[2](x) (byte)
+        19,        11: member access (35)
+        20,        12: Convert to float (33)
+        21,        13: player. (182)
+        22,        14: type(variable) (22) (Opcode: 0xF0)  - variable[2](x) (byte)
+        25,        15: member access (35)
+        26,        16: Convert to float (33)
+        27,        17: type(number) (20) (Opcode: 0xF3)  - double(3) (byte)
+        30,        18: + (60)
+        31,        19: in <> (80) (Opcode: 0xF3)  - double(0) (byte)
+        34,        20: if (4) (Opcode: 0xF3)  - double(26) (byte)
+        37,        21: type(array) (23)
+        38,        22: type(string) (21) (Opcode: 0xF0)  - variable[3](in range) (byte)
+        41,        23: type(variable) (22) (Opcode: 0xF0)  - variable[4](echo) (byte)
+        44,        24: Call function (6)
+        45,        25: Decrease last operand index by 1 (32)
+*/
+  if (mousex in |player.x, player.x + 3|) {
+    echo("in range");
+  }
+}

@@ -1,5 +1,21 @@
 #include "ast.h"
 
+#ifdef DBGALLOCATIONS
+int alloc_count = 0;
+#endif
+
+Node::Node() {
+#ifdef DBGALLOCATIONS
+	printf("Count: %d\n", ++alloc_count);
+#endif
+}
+
+Node::~Node() {
+#ifdef DBGALLOCATIONS
+	printf("Count: %d\n", --alloc_count);
+#endif
+}
+
 ProgramNode::~ProgramNode()
 {
 	for (const auto& node : nodes)
@@ -147,13 +163,18 @@ ExpressionNewNode::~ExpressionNewNode()
 	delete newExpr;
 }
 
-ExpressionObjectAccessNode::~ExpressionObjectAccessNode()
+ExpressionPostfixNode::~ExpressionPostfixNode()
 {
-	delete left;
-	delete right;
-
 	for (const auto& node : nodes)
 		delete node;
+}
+
+ExpressionArrayIndexNode::~ExpressionArrayIndexNode()
+{
+	// NOTE: we are not the only ones with access to expr
+	// should likely be removed from the constructor
+	// delete expr;
+	delete idx;
 }
 
 ExpressionBinaryOpNode::~ExpressionBinaryOpNode()
@@ -180,4 +201,11 @@ void EnumList::addMember(EnumMember *member)
 	}
 
 	members.push_back(member);
+}
+
+ExpressionInOpNode::~ExpressionInOpNode()
+{
+	delete expr;
+	delete lower;
+	delete higher;
 }

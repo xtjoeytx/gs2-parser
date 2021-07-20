@@ -1,355 +1,91 @@
 //#CLIENTSIDE
-function onCreated()
-{
-  echo("--start");
-
-    temp.obj = new GuiButtonCtrl(ObjName);
-    temp.obj.profile = GuiBlueButtonProfile;
-    temp.obj.text = "button";
-    temp.obj.x = 30;
-    temp.obj.y = 30;
-    temp.obj.width = 150;
-    temp.obj.height = 150;
-    temp.obj.visible = 1;
-    ObjName.text = "override?";
-    addControl(temp.obj);
-
-    for (temp.i = 0; temp.i < 5; temp.i++) {
-      echo("T: " @ temp.i);
-    }
-
-  temp.tst = new TStaticVar();
-  echo("1.1: " @ temp.tst.type());
-  temp.tst.asd = new TStaticVar();
-  echo("1.2");
-  temp.tst.asd.hi = "tes";
-  echo("1.3");
-  temp.tst.end = "t2";
-  echo("1.4: " @ temp.tst.asd.hi @ " : " @ temp.tst.end);
-
-  temp.dd = new TStaticVar();
-  temp.dd.test.eee = "test2";
-  echo("1.5: " @ temp.dd.test.eee);
-
-
-  temp.test = "string" ;
-  echo("T: " @ temp.test);
-
-  echo("--end");
-}
 /*
 function onCreated() {
 
-  echo("start");
+  temp.t = "eee";
+  echo("str length: " @ temp.t.length());
 
-  temp.tst = new TStaticVar();
-  echo("1.1");
-  temp.tst.asd = new TStaticVar();
-  echo("1.2");
-  temp.tst.asd.hi = "tes";
-  echo("1.3");
-  temp.tst.end = "t2";
-  
-  echo("1.4: " @ temp.tst.asd.hi);
-
-  temp.dd = new TStaticVar();
-  temp.dd.hi new TStaticVar();
-  temp.dd.test = "test2";
-  echo("1.5: " @ temp.dd.test);
-
-
-  temp.test = "string" ;
-  echo("T: " @ temp.test);
-  //temp.test2 = "2";
-  (@temp.tst.asd.hi @ temp.tst.end)();
-
-
-  echo("end");
-}
-
-function test1() {
-  echo("test func 1");
-  return "dat";
-}
-
-function test2() {
-  echo("test func 2");
-}
-
-function testFunction()
-{
-    echo("testfunc");
 }
 */
 
-/*
 function onCreated() {
-    echo("--start");
-    new GuiButtonCtrl(ObjName)
+  player.chat = "tst";
+  onTimeout();
+}
+
+function onTimeout() {
+  //player.chat = "Playercount: " @ players.size(); // @ "/" @ allplayers.size() @ ": " @ players[0].account @ ", " @ mousex;
+  player.chat = "Playercount: " @ players.size() @ "/" @ allplayers.size() @ ": " @ players[0].account @ ", " @ mousex;
+  setTimer(0.05);
+}
+
+function onMouseDown(temp.mtype)
+{
+  if (temp.mtype == "left") {
+    this.pid = onFindPlayers();
+
+    echo("Test: " @ this.pid);
+    if (this.pid >= 0)
     {
-      profile = GuiBlueButtonProfile;
-      text = "button";
-      x = 30;
-      y = 30;
-      width = 150;
-      height = 150;
-      visible = 1;
-    };
-
-    echo("--end");
-}
-*/
-
-/*
-function onCreated()
-{
-  temp.i = 5;
-  echo("Test 1: " @ --temp.i);
-  echo("Test 2: " @ temp.i--);
-  echo("Test 3: " @ ++temp.i);
-  echo("Test 4: " @ temp.i++);
-  echo("Test 5: " @ -temp.i);
-
-  temp.i = 0;
-  echo("Test 6: " @ !temp.i);
-
-  temp.i = 1;
-  echo("Test 7: " @ !temp.i);
-  
-  temp.i = 2;
-  echo("Test 8: " @ !temp.i);
-}
-*/
-
-/*
-function onCreated() {
-    echo("--start");
-    temp.t = new GuiButtonCtrl();
-    temp.t.eklek = "abc";
-//    new GuiButtonCtrl() {
-  //    profile = "ee";
-    //}
-
-    temp.asd.func().func2();
-
-
-    temp.v = "test1";
-    (@temp.v)();
-    temp.obj = new GuiButtonCtrl(ObjName);
-    temp.obj.profile = GuiBlueButtonProfile;
-    temp.obj.text = "button";
-    temp.obj.x = 30;
-    temp.obj.y = 30;
-    temp.obj.width = 150;
-    temp.obj.height = 150;
-    temp.obj.visible = 1;
-    ObjName.text = "override?";
-    
-    temp.obj.catchevent(temp.obj.name, "onAction", "onActionButton");
-    addcontrol(temp.obj);
-
-    //temp.pp = findweapon("-Shared").pmswaiting();
-    //temp.p = ("-Shared").pmswaiting();
-    echo("Pms: " @ temp.p);
-
-    echo("--end");
-}
-
-function onActionButton(obj)
-{
-  echo("received click from " @ obj);
-}
-*/
-
-/*
-function onCreated() {
-  echo("--start--");
-
-  //
-  temp.i = 0;
-  for (; temp.i < 10; temp.i = temp.i + 1) {
-    echo("A: " @ temp.i);
-
-    if (temp.i == 3)
-    {
-        temp.i = 4;
-        echo("C: " @ temp.i);
-        continue;
-    }
-
-    if (temp.i == 7)
-      break;
-  }
-  //
-
-  for (temp.i = 0; temp.i < 5; temp.i = temp.i + 1) {
-    if (temp.i % 2 == 0)
-        echo("even: " @ temp.i);
-    echo("Test: " @ temp.i);
-  }
-
-  echo("Players: " @ players.length());
-
-  for (temp. i = 0; i < players.length(); temp.i = temp.i + 1) {
-    echo("Player: " @ player.account);
-  }
-
-  echo("--end--");
-}
-*/
-
-/*
-function onCreated() {
-  temp.b = new TStaticVar();
-  temp.b.c = "hi";
-  temp.a = new TStaticVar("test", "djer", temp.b);
-  temp.a.ekjf = "ee";
-
-  temp.d = new GuiButtonCtrl(Something);
-}
-*/
-
-/*
-function onCreated() {
-  echo("--start--");
-
-  temp.g = 3;
-  if (temp.g > 1) {
-    echo("test1");
-    if (temp.g > 2) {
-      echo("test2");
-      if (temp.g > 3) {
-        echo("test3");
-      } else {
-        echo("no match");
+      if (this.pid == 0)
+      {
+       // player.showProfile();
+        onShowMenu();
+      }
+        else
+      {
+        onShowMenu();
       }
     }
   }
+}
 
-  echo("LOOP");
-
-  temp.g = 0;
-  while (temp.g <= 10) {
-    echo("T: " @ temp.g);
-
-    if (temp.g == 4) {
-      temp.g = 6;
-      continue;
+function onFindPlayers()
+{
+  // Method 2
+  echo("searching: " @ players.size());
+  for (temp.I = 0; temp.I < players.size(); temp.I++) {
+    echo(format("test: %d in |%d, %d| and %d in |%d, %d|", mousex, players[temp.I].x, players[temp.I].x + 3, mousey, players[temp.I].y, players[temp.I].y + 3));
+    if (mousex in |player.x, player.x + 3|) {
+      if (mousey in |players[temp.I].y, players[temp.I].y + 3|) {
+        echo("Found: " @ temp.valid);
+        return temp.I;
+      }
     }
-
-    if (temp.g == 8) {
-      break;
-    }
-
-    temp.g = temp.g + 1;
-  }
-
-  echo("--end--");
-}
-*/
-
-/*
-//#CLIENTSIDE
-function onCreated() {
-  temp.b = new TStaticVar();
-  temp.b.c = "hi";
-  temp.a = new TStaticVar("test", "djer", temp.b);
-  temp.a.ekjf = "ee";
-
-  temp.d = new GuiButtonCtrl(Something);
-  temp.d.text = "test btn: " @ temp.a.ekjf;
-
-  temp.g = 0;
-  while (temp.g < 5) {
-    temp.g++;
-  }
-
-  echo("Test: " @ temp.g);
-}
-*/
-
-/*
-function onPlayerChats() {
-  if (player.chat == "hi") {
-    player.chat = "hello";
-  } else if (player.chat == "yo") {
-    player.chat = "sup";
-  } else {
-    player.chat = "unknown";
-  }
-}
-*/
-
-/*
-enum {
-  EIDLE,
-  EWALK = -5,
-  ESLASH
-};
-
-function onCreated() {
-  //echo("--start--");
-  //echo("test".length());
-  //echo("pos: " @ format("(%f, %f)", player.x, player.y));
-  //temp.a = player.x - 3.3;
-  //temp.b = 3.1 + .6;
-  //echo("test1: " @ temp.a);
-  //echo("test2: " @ temp.b);
-
-  temp.c = 1;
-  if (temp.c) {
-    echo("matched");
-  } else {
-    echo("no match");
   }
   
-  echo("--end--");
+  return -1;
 }
-*/
 
-/*
-function onPlayerChats()
+function onShowMenu()
+{ 
+    Profile_Menu = new GuiContextMenuCtrl(Profile_Menu);
+    Profile_Menu.profile     = "GuiBluePopUpMenuProfile";
+    Profile_Menu.textprofile = "GuiBlueTextListProfile";
+    Profile_Menu.text        = players[thiso.pid].account;
+    Profile_Menu.width       = 20;
+    addcontrol(Profile_Menu);
+    
+    catchevent(Profile_Menu.name, "onSelect", "selectFunction");
+    Profile_Menu.clearRows();
+    
+    Profile_Menu.addrow(0, players[thiso.pid].account);
+    Profile_Menu.addRow(-1, "-");
+    Profile_Menu.addRow(1, "Profile");
+    //for (temp.I = 0; temp.I < thiso.commands.size(); temp.I++)
+    {
+    //  temp.obj.addRow(temp.I + 1, thiso.commands[temp.I]);
+    }
+    
+    Profile_Menu.open(mousescreenx, mousescreeny);
+}
+
+function selectFunction(obj, entryid, entrytext, entryindex)
 {
-  echo("no: " @ EIDLE @ EWALK @ ESLASH);
-
-  player.chat = 27.5;
-}
-*/
-
-/*
-function onCreated() {
-  echo("testgs2compiler23");
-
-//  echo(doSomething("lol " @ 3, "yess" @ 2*(6*3+90/((5+2*10)/5))));
- // echo(doSomething("test" @ 1, random(0, 10)));
-  echo(format("test str: %s (%d)", "testgs2", 3+3));
-  echo("done");
-}
-
-function onPlayerChats()
-{
-  echo("---chatted");
-  echo(format("test str: %s (%s)", "testgs2", int(max(5, random(0,20)))));
-  echo("pos: " @ format("(%f, %f)", player.x, player.y));
-  echo("test: " @ (player.x - 5));
-  echo("---done");
-}
-
-function doSomething(test, val2) {
-  echo("dosomething");
-  echo(test @ ": " @ val2);
-  return "test";
-}
-*/
-
-/*
-//this.istaff.eeeffg ;
-function onCreated()
-{
-  this.isstaff = false;
-  requesttext("options", "");
+  //echo("Text sel: " @ entryid @ "," @ entrytext @ "," @ entryindex);
+  if (entrytext == "Profile") {
+    players[this.pid].showProfile();
+  }
   
-  sendtext("irc", "login", player.nick);
-  onShowGUI();
+  Profile_Menu.destroy();
 }
-*/

@@ -93,6 +93,7 @@ string_const (\"(\\.|[^"])*\")
 "enum"		{return T_KWENUM;}
 "int"		{return T_KWCAST_INT;}
 "float"		{return T_KWCAST_FLOAT;}
+"in"		{return T_KWIN;}
 
 	/*
 		Comments

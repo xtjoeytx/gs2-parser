@@ -352,6 +352,21 @@ void GS2CompilerVisitor::Visit(ExpressionArrayIndexNode* node)
 	byteCode.emit(opcode::OP_ARRAY);
 }
 
+void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)
+{
+	node->expr->visit(this);
+
+	node->lower->visit(this);
+	if (node->lower->expressionType() != ExpressionType::EXPR_NUMBER)
+		byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+
+	node->higher->visit(this);
+
+	byteCode.emit(opcode::OP_IN_RANGE);
+	byteCode.emit(char(0xF3));
+	byteCode.emit(char(0));
+}
+
 void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 {
 	auto enumConstant = parserData->getEnumConstant(node->val);
@@ -369,61 +384,6 @@ void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 	byteCode.emit((char)id);
 
 	printf("Identifier Node: %s\n", node->val.c_str());
-}
-
-void GS2CompilerVisitor::Visit(ExpressionObjectAccessNode *node)
-{
-	// this -> 180
-	// thiso -> 181
-	// player -> 182
-	// playero -> 183
-	// level -> 184
-	// temp -> 189
-	// params[] -> 190
-	auto firstNode = node->left->toString();
-	if (firstNode == "this") {
-		byteCode.emit(opcode::OP_THIS);
-	}
-	else if (firstNode == "thiso") {
-		byteCode.emit(opcode::OP_THISO);
-	}
-	else if (firstNode == "player") {
-		byteCode.emit(opcode::OP_PLAYER);
-	}
-	else if (firstNode == "playero") {
-		byteCode.emit(opcode::OP_PLAYERO);
-	}
-	else if (firstNode == "level") {
-		byteCode.emit(opcode::OP_LEVEL);
-	}
-	else if (firstNode == "temp") {
-		byteCode.emit(opcode::OP_TEMP);
-	}
-	else {
-		node->left->visit(this);
-		if (node->left->expressionType() != ExpressionType::EXPR_OBJECT)
-			byteCode.emit(opcode::OP_CONV_TO_OBJECT);
-	}
-
-	for (auto i = 0; i < node->nodes.size(); i++)
-	{
-		node->nodes[i]->visit(this);
-		byteCode.emit(opcode::OP_MEMBER_ACCESS);
-		//if (i != (node->nodes.size() - 1))
-			byteCode.emit(opcode::OP_CONV_TO_OBJECT);
-	}
-
-	if (node->right)
-	{
-		node->right->visit(this);
-		byteCode.emit(opcode::OP_MEMBER_ACCESS);
-	}
-
-	//node->left->visit(this);
-	//node->right->visit(this);
-
-	//printf("Test left: %s\n", node->left->toString().c_str());
-	//printf("Test right: %s\n", node->right->toString().c_str());
 }
 
 void GS2CompilerVisitor::Visit(ExpressionIntegerNode *node)
@@ -467,7 +427,8 @@ void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
 		}
 		else {
 			identNode->visit(this);
-			byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+			if (node->nodes.size() > 1)
+				byteCode.emit(opcode::OP_CONV_TO_OBJECT);
 		}
 		i++;
 	}
@@ -498,7 +459,7 @@ void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 
 void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 {
-	auto isObjectCall = byteCode.getLastOp() == opcode::OP_CONV_TO_OBJECT;
+	auto isObjectCall = node->objExpr != nullptr; // byteCode.getLastOp() == opcode::OP_CONV_TO_OBJECT;
 
 	// Build-in commands
 	auto& cmdList = (isObjectCall ? getCommandListMethod() : getCommandList());
@@ -510,12 +471,9 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : defaultCall);
 	
 	// Overwrite the convert operator, used for strings afaik
-	if (isObjectCall && cmd.convert_op != byteCode.getLastOp()) {
-		byteCode.emit(char(cmd.convert_op), byteCode.getBytecodePos() - 1);
-	}
-
-	if (node->objExpr)
-		node->objExpr->visit(this);
+	//if (isObjectCall && cmd.convert_op != byteCode.getLastOp()) {
+	//	byteCode.emit(char(cmd.convert_op), byteCode.getBytecodePos() - 1);
+	//}
 
 	{
 		if (cmd.useArray)
@@ -531,8 +489,21 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 			}
 		}
 
+		if (isObjectCall) {
+			node->objExpr->visit(this);
+			byteCode.emit(cmd.convert_op);
+			//if (cmd.convert_op != byteCode.getLastOp()) {
+			//	byteCode.emit(char(cmd.convert_op), byteCode.getBytecodePos() - 1);
+			//}
+		}
+
 		if (cmd.op == opcode::OP_CALL)
+		{
 			node->funcExpr->visit(this);
+
+			if (isObjectCall)
+				byteCode.emit(opcode::OP_MEMBER_ACCESS);
+		}
 
 		byteCode.emit(cmd.op);
 	}

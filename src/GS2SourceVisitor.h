@@ -182,18 +182,10 @@ public:
 
     }
 
-    virtual void Visit(ExpressionObjectAccessNode *node) {
-        tabc++;
+    virtual void Visit(ExpressionInOpNode *node)
+    {
 
-        printf("%s", node->left->toString().c_str());
-        for (const auto& n : node->nodes)
-            printf(".%s", n->toString().c_str());
-        //printf(".%s", node->right->toString().c_str());
-
-        //print("%s.%s", node->left->toString().c_str(), node->right->toString().c_str());
-        tabc--;
-		// print("Visit ExpressionObjectAccessNode");
-	}
+    }
 
     virtual void Visit(ExpressionListNode *node) {
         tabc++;

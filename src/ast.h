@@ -15,6 +15,7 @@
 	} \
 	virtual void visit(NodeVisitor *v) { v->Visit(this); }
 
+#define DBGALLOCATIONS 1
 
 enum class ExpressionType
 {
@@ -26,7 +27,6 @@ enum class ExpressionType
 	EXPR_OBJECT,
 	EXPR_FUNCTION
 };
-
 
 enum class ExpressionOp {
 	Plus,
@@ -123,23 +123,12 @@ inline const char* ExpressionOpToString(ExpressionOp op)
 	}
 }
 
-#ifdef DBGALLOCATIONS
-static int count = 0;
-#endif
-
 class Node
 {
 public:
-	Node() {
-#ifdef DBGALLOCATIONS
-		printf("Count: %d\n", ++count);
-#endif
-	}
-	virtual ~Node() { 
-#ifdef DBGALLOCATIONS
-		printf("Count: %d\n", --count);
-#endif
-	}
+	Node();
+
+	virtual ~Node();
 
 	virtual const char * NodeType() const = 0;
 	virtual void visit(NodeVisitor *v) { v->Visit(this); }
@@ -172,6 +161,8 @@ public:
 
 	ExpressionNode() : StatementNode() { }
 
+	virtual ~ExpressionNode() {}
+
 	virtual std::string toString() const = 0;
 
 	virtual ExpressionType expressionType() const {
@@ -189,6 +180,8 @@ public:
 	{
 		val = num;
 	}
+	
+	virtual ~ExpressionIntegerNode() { }
 
 	virtual std::string toString() const {
 		return std::to_string(val);
@@ -211,6 +204,8 @@ public:
 	{
 		val = std::string(str);
 	}
+
+	virtual ~ExpressionNumberNode() { }
 
 	virtual std::string toString() const {
 		return val;
@@ -274,6 +269,8 @@ public:
 		nodes.push_back(parent);
 	}
 
+	virtual ~ExpressionPostfixNode();
+
 	virtual std::string toString() const {
 		return "-";
 	}
@@ -294,7 +291,8 @@ public:
 	: ExpressionNode(), expr(expr), idx(idx)
 	{
 	}
-	virtual ~ExpressionArrayIndexNode() {}
+
+	virtual ~ExpressionArrayIndexNode();
 
 	virtual std::string toString() const {
 		return expr->toString().append("[").append(idx->toString()).append("]");;
@@ -329,6 +327,32 @@ public:
 
 	ExpressionNode* expr;
 	CastType type;
+};
+
+class ExpressionInOpNode : public ExpressionNode
+{
+public:
+	_NodeName("ExpressionInOpNode");
+
+	ExpressionInOpNode(ExpressionNode* expr, ExpressionNode* lower, ExpressionNode* higher)
+		: ExpressionNode(), expr(expr), lower(lower), higher(higher)
+	{
+
+	}
+
+	virtual ~ExpressionInOpNode();
+
+	virtual std::string toString() const {
+		return "in op";
+	}
+
+	virtual ExpressionType expressionType() const {
+		return ExpressionType::EXPR_INTEGER;
+	}
+
+	ExpressionNode* expr;
+	ExpressionNode* lower;
+	ExpressionNode* higher;
 };
 
 class ExpressionBinaryOpNode : public ExpressionNode
@@ -390,48 +414,14 @@ class ExpressionUnaryOpNode : public ExpressionNode
 		}
 };
 
-class ExpressionObjectAccessNode : public ExpressionNode
-{
-	public:
-		_NodeName("ExpressionObjectAccessNode")
-
-		ExpressionObjectAccessNode(ExpressionNode *l, ExpressionNode *r)
-			: ExpressionNode(), left(l), right(r)
-		{
-			//nodes.push_back(reinterpret_cast<ExpressionIdentifierNode *>(l));
-			//nodes.push_back(reinterpret_cast<ExpressionIdentifierNode *>(r));
-		}
-
-		virtual ~ExpressionObjectAccessNode();
-
-		virtual std::string toString() const {
-			std::string str(left->toString());
-			for (const auto& n : nodes)
-				str.append(".").append(n->toString());
-
-			if (right)
-				str.append(".").append(right->toString());
-
-			return str;
-		}
-
-		ExpressionNode* left;
-		ExpressionNode* right;
-		std::vector<ExpressionNode*> nodes;
-};
-
 class ExpressionFnCallNode : public ExpressionNode
 {
 public:
 	_NodeName("ExpressionFnCallNode")
 
-	ExpressionFnCallNode(ExpressionNode *funcExpr, ExpressionObjectAccessNode *objExpr, std::vector<ExpressionNode *> *args = 0)
+	ExpressionFnCallNode(ExpressionNode *funcExpr, ExpressionNode*objExpr, std::vector<ExpressionNode *> *args = 0)
 		: ExpressionNode(), funcExpr(funcExpr), objExpr(objExpr), args(args), discardReturnValue(false)
 	{
-		if (objExpr && funcExpr == objExpr->right) {
-			objExpr->right = nullptr;
-			printf("unset\n");
-		}
 	}
 
 	virtual ~ExpressionFnCallNode();
@@ -456,7 +446,7 @@ public:
 	}
 
 	ExpressionNode* funcExpr;
-	ExpressionObjectAccessNode * objExpr;
+	ExpressionNode* objExpr;
 	std::vector<ExpressionNode*>* args;
 	bool discardReturnValue;
 };

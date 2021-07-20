@@ -56,11 +56,11 @@ class GS2CompilerVisitor : public NodeVisitor
         virtual void Visit(ExpressionPostfixNode *node);
         virtual void Visit(ExpressionCastNode *node);
         virtual void Visit(ExpressionArrayIndexNode *node);
+        virtual void Visit(ExpressionInOpNode *node);
         virtual void Visit(ExpressionFnCallNode *node);
         virtual void Visit(ExpressionNewNode *node);
         virtual void Visit(ExpressionBinaryOpNode *node);
         virtual void Visit(ExpressionUnaryOpNode *node);
-        virtual void Visit(ExpressionObjectAccessNode *node);
         virtual void Visit(ExpressionListNode *node);
 };
 
@@ -101,7 +101,6 @@ public:
     virtual void Visit(ExpressionNewNode* node);
     virtual void Visit(ExpressionBinaryOpNode* node);
     virtual void Visit(ExpressionUnaryOpNode* node);
-    virtual void Visit(ExpressionObjectAccessNode* node);
     virtual void Visit(ExpressionListNode* node);
 };
 */

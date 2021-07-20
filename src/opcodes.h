@@ -78,6 +78,8 @@ namespace opcode
 		OP_STOP, // Stops execution
 
 		OP_DBG_OUT, //  Debug output
+		OP_IN_RANGE = 80,
+		OP_IN_OBJ = 81,
 		OP_OBJ_INDEX = 82,
 		OP_OBJ_TYPE = 83,	// gets the type of the var (float 0, string 1, object 2, array 3)
 		OP_FORMAT = 84,
@@ -262,6 +264,54 @@ namespace opcode
 
 			case OP_DBG_OUT:
 				return "OP_DBG_OUT";
+
+			case OP_OBJ_CHARAT:
+				return "OP_OBJ_CHARAT";
+
+			case OP_OBJ_CLEAR:
+				return "OP_OBJ_CLEAR";
+
+			case OP_OBJ_ENDS:
+				return "OP_OBJ_ENDS";
+
+			case OP_OBJ_INDEX:
+				return "OP_OBJ_INDEX";
+
+			case OP_OBJ_INDICES:
+				return "OP_OBJ_INDICES";
+
+			case OP_OBJ_LENGTH:
+				return "OP_OBJ_LENGTH";
+
+			case OP_OBJ_LINK:
+				return "OP_OBJ_LINK";
+
+			case OP_OBJ_POS:
+				return "OP_OBJ_POS";
+
+			case OP_OBJ_POSITIONS:
+				return "OP_OBJ_POSITIONS";
+
+			case OP_OBJ_SIZE:
+				return "OP_OBJ_SIZE";
+
+			case OP_OBJ_STARTS:
+				return "OP_OBJ_STARTS";
+
+			case OP_OBJ_SUBARRAY:
+				return "OP_OBJ_SUBARRAY";
+
+			case OP_OBJ_SUBSTR:
+				return "OP_OBJ_SUBSTR";
+
+			case OP_OBJ_TOKENIZE:
+				return "OP_OBJ_TOKENIZE";
+
+			case OP_OBJ_TRIM:
+				return "OP_OBJ_TRIM";
+
+			case OP_OBJ_TYPE:
+				return "OP_OBJ_TYPE";
 
 			case OP_JOIN:
 				return "OP_JOIN";
