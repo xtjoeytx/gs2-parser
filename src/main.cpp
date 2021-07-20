@@ -103,6 +103,10 @@ int main(int argc, const char *argv[]) {
 		}
 	}
 
+#ifdef DBGALLOCATIONS
+	checkForNodeLeaks();
+#endif
+
 	#ifdef _WIN32
 	system("pause");
 	#endif

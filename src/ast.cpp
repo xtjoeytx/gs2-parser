@@ -2,16 +2,26 @@
 
 #ifdef DBGALLOCATIONS
 int alloc_count = 0;
+std::vector<Node*> n;
+
+void checkForNodeLeaks()
+{
+	for (const auto& v : n) {
+		printf("Nodes alive: %s\n", v->NodeType());
+	}
+}
 #endif
 
 Node::Node() {
 #ifdef DBGALLOCATIONS
+	n.push_back(this);
 	printf("Count: %d\n", ++alloc_count);
 #endif
 }
 
 Node::~Node() {
 #ifdef DBGALLOCATIONS
+	n.erase(std::remove(n.begin(), n.end(), this), n.end());
 	printf("Count: %d\n", --alloc_count);
 #endif
 }

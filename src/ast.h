@@ -17,6 +17,10 @@
 
 #define DBGALLOCATIONS 1
 
+#ifdef DBGALLOCATIONS
+void checkForNodeLeaks();
+#endif
+
 enum class ExpressionType
 {
 	EXPR_ANY,

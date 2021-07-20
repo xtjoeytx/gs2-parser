@@ -269,8 +269,15 @@ postfix:
 			auto tmp = $1->nodes.back();
 			$1->nodes.pop_back();
 
+			// if we still have nodes, this is used as the object parameter
+			// for the function call
+			if ($1->nodes.empty()) {
+				delete $1;
+				$1 = nullptr;
+			}
+
 			// create function node
-			auto n = new ExpressionFnCallNode(tmp, $1->nodes.empty() ? nullptr : $1, $3);
+			auto n = new ExpressionFnCallNode(tmp, $1, $3);
 
 			$$ = new ExpressionPostfixNode(n);
 	}
