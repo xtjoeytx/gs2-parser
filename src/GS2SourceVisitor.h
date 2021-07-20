@@ -20,11 +20,11 @@ inline std::string getArgList(std::vector<ExpressionNode *> *args) {
     return argList;
 }
 
-class TestNodeVisitor : public NodeVisitor
+class GS2SourceVisitor : public NodeVisitor
 {
 public:
     int tabc;
-    TestNodeVisitor() : tabc(0) { }
+    GS2SourceVisitor() : tabc(0) { }
 
     void printSpaces() {
         for (int i = 0; i < tabc; i++)

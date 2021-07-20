@@ -26,46 +26,6 @@ int main(int argc, const char *argv[]) {
 		testStr = std::move(str);
 	}
 
-	if (testStr.empty())
-	{
-		testStr = ""
-			// "isstaff = 23;"
-			"this.isstaff.lol();"
-			"this.isstaff.lol2(abc);"
-			"this.isstaff.lol3(abc,def,ghi);"
-			"if (abcd) {"
-			"	if (12345) {"
-			"		return 3 + 2 * 6;"
-			"	} else {"
-			"		return 5 % 4;"
-			"	}"
-			"}"
-			"if (hehehe) {"
-			"	return hi;"
-			"}"
-			"function onCreated() {"
-			"  if (lol) {"
-			"    if (test)"
-			"      return 0;"
-			"	 else"
-			"	   return 5;"
-			"  }"
-			"}"
-			"public function onPlayerEnters(teee) {"
-			"  if (lol) {"
-			"    if (test)"
-			"      return 0;"
-			"  }"
-			"}"
-			"function onCreated() {"
-			"  this.isstaff = \"hello_world\";"
-			"  this.isstaff();"
-			"  requesttext(\"options\", \"\");"
-			"  sendtext(\"irc\", \"login\", player.nick);"
-			"  onShowGUI();"
-			"}";
-	}
-
 	{
 		ParserData parserStruct;
 		parserStruct.parse(testStr);
@@ -74,7 +34,7 @@ int main(int argc, const char *argv[]) {
 
 		if (stmtBlock != nullptr)
 		{
-			TestNodeVisitor visit;
+			GS2SourceVisitor visit;
 			printf("Children: %zu\n", stmtBlock->statements.size());
 			visit.Visit(stmtBlock);
 

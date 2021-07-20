@@ -1198,3 +1198,58 @@ function onMouseDown(temp.mtype)
     echo("in range");
   }
 }
+
+function onCreated() {
+
+/*
+         7,         5: player. (182)
+         8,         6: type(variable) (22) (Opcode: 0xF0)  - variable[0](x) (byte)
+        11,         7: member access (35)
+        12,         8: Convert to float (33)
+        13,         9: type(number) (20) (Opcode: 0xF3)  - double(15) (byte)
+        16,        10: > (73)
+        17,        11: if (4) (Opcode: 0xF3)  - double(24) (byte)
+        20,        12: player. (182)
+        21,        13: type(variable) (22) (Opcode: 0xF0)  - variable[1](y) (byte)
+        24,        14: member access (35)
+        25,        15: Convert to float (33)
+        26,        16: type(number) (20) (Opcode: 0xF3)  - double(30) (byte)
+        29,        17: < (72)
+        30,        18: if (4) (Opcode: 0xF3)  - double(24) (byte)
+        33,        19: type(array) (23)
+        34,        20: type(string) (21) (Opcode: 0xF0)  - variable[2](and op) (byte)
+        37,        21: type(variable) (22) (Opcode: 0xF0)  - variable[3](echo) (byte)
+        40,        22: Call function (6)
+        41,        23: Decrease last operand index by 1 (32)
+*/
+
+  if (player.x > 15 && player.y < 30) {
+    echo("and op");
+  }
+
+/*
+        42,        24: player. (182)
+        43,        25: type(variable) (22) (Opcode: 0xF0)  - variable[0](x) (byte)
+        46,        26: member access (35)
+        47,        27: Convert to float (33)
+        48,        28: type(number) (20) (Opcode: 0xF3)  - double(15) (byte)
+        51,        29: > (73)
+        52,        30: || (3) (Opcode: 0xF3)  - double(37) (byte)
+        55,        31: player. (182)
+        56,        32: type(variable) (22) (Opcode: 0xF0)  - variable[1](y) (byte)
+        59,        33: member access (35)
+        60,        34: Convert to float (33)
+        61,        35: type(number) (20) (Opcode: 0xF3)  - double(30) (byte)
+        64,        36: < (72)
+        65,        37: if (4) (Opcode: 0xF3)  - double(43) (byte)
+        68,        38: type(array) (23)
+        69,        39: type(string) (21) (Opcode: 0xF0)  - variable[4](or op) (byte)
+        72,        40: type(variable) (22) (Opcode: 0xF0)  - variable[3](echo) (byte)
+        75,        41: Call function (6)
+        76,        42: Decrease last operand index by 1 (32)
+*/
+
+  if (player.x > 15 || player.y < 30) {
+    echo("or op");
+  }
+}

@@ -15,7 +15,7 @@
 	} \
 	virtual void visit(NodeVisitor *v) { v->Visit(this); }
 
-#define DBGALLOCATIONS 1
+//#define DBGALLOCATIONS
 
 #ifdef DBGALLOCATIONS
 void checkForNodeLeaks();
@@ -390,6 +390,10 @@ class ExpressionBinaryOpNode : public ExpressionNode
 
 			return ret;
 		}
+
+		//virtual ExpressionType expressionType() const {
+		//	return ExpressionType::EXPR_INTEGER;
+		//}
 };
 
 class ExpressionUnaryOpNode : public ExpressionNode

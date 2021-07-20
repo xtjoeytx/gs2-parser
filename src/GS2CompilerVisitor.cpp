@@ -192,6 +192,35 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		return;
 	}
 
+	if (node->op == ExpressionOp::LogicalAnd || node->op == ExpressionOp::LogicalOr)
+	{
+		node->left->visit(this);
+
+		if (node->op == ExpressionOp::LogicalAnd)
+		{
+			byteCode.emit(opcode::OP_IF);
+			byteCode.emit(char(0xF4));
+			byteCode.emit(short(0));
+
+			// TODO(joey): This is not going to work when using logical-and in expressions
+			// that aren't if-statements, so back to the drawing board
+			if (!logicalBreakpoints.empty()) {
+				logicalBreakpoints.top().breakPointLocs.push_back(byteCode.getBytecodePos() - 2);
+			}
+
+			node->right->visit(this);
+			return;
+		}
+		else if (node->op == ExpressionOp::LogicalOr)
+		{
+			//byteCode.emit(opcode::OP_OR);
+			//byteCode.emit(char(0xF4));
+			//byteCode.emit(short(0));
+
+			//node->right->visit(this);
+			handled = false;
+		}
+	}
 
 	switch (node->op)
 	{
@@ -453,13 +482,11 @@ void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 	
 	byteCode.emit(opcode::OP_TYPE_STRING);
 	byteCode.emitDynamicNumber(id);
-//	byteCode.emit((char)0xF0);
-//	byteCode.emit((char)id);
 }
 
 void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 {
-	auto isObjectCall = node->objExpr != nullptr; // byteCode.getLastOp() == opcode::OP_CONV_TO_OBJECT;
+	auto isObjectCall = (node->objExpr != nullptr);
 
 	// Build-in commands
 	auto& cmdList = (isObjectCall ? getCommandListMethod() : getCommandList());
@@ -470,11 +497,6 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 	auto iter = cmdList.find(funcName);
 	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : defaultCall);
 	
-	// Overwrite the convert operator, used for strings afaik
-	//if (isObjectCall && cmd.convert_op != byteCode.getLastOp()) {
-	//	byteCode.emit(char(cmd.convert_op), byteCode.getBytecodePos() - 1);
-	//}
-
 	{
 		if (cmd.useArray)
 			byteCode.emit(opcode::OP_TYPE_ARRAY);
@@ -492,9 +514,6 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 		if (isObjectCall) {
 			node->objExpr->visit(this);
 			byteCode.emit(cmd.convert_op);
-			//if (cmd.convert_op != byteCode.getLastOp()) {
-			//	byteCode.emit(char(cmd.convert_op), byteCode.getBytecodePos() - 1);
-			//}
 		}
 
 		if (cmd.op == opcode::OP_CALL)
@@ -528,18 +547,26 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 	if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
 		byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 
+	logicalBreakpoints.push(LogicalBreakPoint{ byteCode.getOpcodePos() });
+
 	byteCode.emit(opcode::OP_IF);
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0));
-	auto ifLoc = byteCode.getBytecodePos() - 2;
 
+	logicalBreakpoints.top().breakPointLocs.push_back(byteCode.getBytecodePos() - 2);
+	
 	node->thenBlock->visit(this);
 
 	// OP_IF jumps to this location if the condition is false, so we
 	// continue to the next instruction, but if their is an else-block we must
 	// skip the next instruction since its a jmp to the end of the if-else chain
 	auto nextOpcode = byteCode.getOpcodePos() + (node->elseBlock ? 1 : 0);
-	byteCode.emit(short(nextOpcode), ifLoc);
+	
+	auto& breakPoint = logicalBreakpoints.top();
+	for (const auto& loc : breakPoint.breakPointLocs) {
+		byteCode.emit(short(nextOpcode), loc);
+	}
+	logicalBreakpoints.pop();
 
 	if (node->elseBlock)
 	{
@@ -553,17 +580,6 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 		node->elseBlock->visit(this);
 		byteCode.emit(short(byteCode.getOpcodePos()), elseLoc);
 	}
-}
-
-void GS2CompilerVisitor::Visit(StatementNewNode *node)
-{
-
-	Visit((Node*)node);
-}
-
-void GS2CompilerVisitor::Visit(StatementWithNode *node)
-{
-	Visit((Node *)node);
 }
 
 void GS2CompilerVisitor::Visit(ExpressionNewNode *node)
@@ -719,6 +735,18 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 		byteCode.emit(short(breakPointLoc), loc);
 	}
 	breakPoints.pop();
+}
+
+//////////// not implemented yet
+
+void GS2CompilerVisitor::Visit(StatementNewNode* node)
+{
+	Visit((Node*)node);
+}
+
+void GS2CompilerVisitor::Visit(StatementWithNode* node)
+{
+	Visit((Node*)node);
 }
 
 void GS2CompilerVisitor::Visit(StatementNode *node) { Visit((Node *)node); }

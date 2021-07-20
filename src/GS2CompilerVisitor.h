@@ -15,12 +15,19 @@ struct LoopBreakPoint
     std::vector<size_t> breakPointLocs;
 };
 
+struct LogicalBreakPoint
+{
+    size_t opstart;
+    std::vector<size_t> breakPointLocs;
+};
+
 class GS2CompilerVisitor : public NodeVisitor
 {
     GS2Bytecode byteCode;
     ParserData *parserData;
 
     std::stack<LoopBreakPoint> breakPoints;
+    std::stack<LogicalBreakPoint> logicalBreakpoints;
 
     public:
         GS2CompilerVisitor(ParserData *data) : NodeVisitor(), parserData(data) { }

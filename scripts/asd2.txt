@@ -8,14 +8,21 @@ function onCreated() {
 }
 */
 
+/*
+function onCreated() {
+  if (player.x > 15 && player.y < 30) {
+    echo("and op");
+  }
+}
+*/
+
 function onCreated() {
   player.chat = "tst";
   onTimeout();
 }
 
 function onTimeout() {
-  //player.chat = "Playercount: " @ players.size(); // @ "/" @ allplayers.size() @ ": " @ players[0].account @ ", " @ mousex;
-  player.chat = "Playercount: " @ players.size() @ "/" @ allplayers.size() @ ": " @ players[0].account @ ", " @ mousex;
+  //player.chat = "Playercount: " @ players.size() @ "/" @ allplayers.size() @ ": " @ players[0].account;
   setTimer(0.05);
 }
 
@@ -46,11 +53,9 @@ function onFindPlayers()
   echo("searching: " @ players.size());
   for (temp.I = 0; temp.I < players.size(); temp.I++) {
     echo(format("test: %d in |%d, %d| and %d in |%d, %d|", mousex, players[temp.I].x, players[temp.I].x + 3, mousey, players[temp.I].y, players[temp.I].y + 3));
-    if (mousex in |player.x, player.x + 3|) {
-      if (mousey in |players[temp.I].y, players[temp.I].y + 3|) {
-        echo("Found: " @ temp.valid);
-        return temp.I;
-      }
+    if (mousex in |player.x, player.x + 3| && mousey in |players[temp.I].y, players[temp.I].y + 3|) {
+      echo("Found: " @ temp.valid);
+      return temp.I;
     }
   }
   
