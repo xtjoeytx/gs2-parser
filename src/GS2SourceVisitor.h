@@ -134,6 +134,10 @@ public:
 		print("Visit ExpressionNumberNode");
 	}
 
+    virtual void Visit(ExpressionPostfixNode *node) {
+        print("Visit ExpressionPostfixNode");
+    }
+
     virtual void Visit(ExpressionBinaryOpNode *node) {
         tabc++;
         print("%s;", node->toString().c_str());
@@ -168,7 +172,13 @@ public:
         tabc--;
     }
 
-    virtual void Visit(ExpressionNewNode* node) {
+    virtual void Visit(ExpressionArrayIndexNode* node)
+    {
+
+    }
+
+    virtual void Visit(ExpressionNewNode* node)
+    {
 
     }
 

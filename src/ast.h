@@ -22,7 +22,9 @@ enum class ExpressionType
 	EXPR_INTEGER,
 	EXPR_NUMBER,
 	EXPR_STRING,
-	EXPR_OBJECT
+	EXPR_IDENT,
+	EXPR_OBJECT,
+	EXPR_FUNCTION
 };
 
 
@@ -175,8 +177,6 @@ public:
 	virtual ExpressionType expressionType() const {
 		return ExpressionType::EXPR_ANY;
 	}
-
-	std::vector<ExpressionNode *> nodes;
 };
 
 class ExpressionIntegerNode : public ExpressionNode
@@ -234,6 +234,10 @@ public:
 		return val;
 	}
 
+	virtual ExpressionType expressionType() const {
+		return ExpressionType::EXPR_IDENT;
+	}
+
 	std::string val;
 };
 
@@ -257,6 +261,28 @@ public:
 	}
 
 	std::string val;
+};
+
+class ExpressionPostfixNode : public ExpressionNode
+{
+public:
+	_NodeName("ExpressionPostfixNode")
+
+	ExpressionPostfixNode(ExpressionNode *parent)
+		: ExpressionNode()
+	{
+		nodes.push_back(parent);
+	}
+
+	virtual std::string toString() const {
+		return "-";
+	}
+
+	virtual ExpressionType expressionType() const {
+		return nodes.back()->expressionType();
+	}
+
+	std::vector<ExpressionNode*> nodes;
 };
 
 class ExpressionArrayIndexNode : public ExpressionNode
@@ -423,6 +449,10 @@ public:
 		}
 
 		return std::string(funcExpr->toString()) + "(" + argList + ")";
+	}
+
+	virtual ExpressionType expressionType() const {
+		return ExpressionType::EXPR_FUNCTION;
 	}
 
 	ExpressionNode* funcExpr;

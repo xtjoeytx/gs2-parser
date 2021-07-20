@@ -9,6 +9,7 @@ struct BuiltInCmd
 	std::string name;
 	opcode::Opcode op;
 	bool useArray;
+	opcode::Opcode convert_op{ opcode::OP_CONV_TO_OBJECT };
 };
 
 const BuiltInCmd defaultCall = {
@@ -42,7 +43,7 @@ const BuiltInCmd builtInObjCmds[] = {
 	{"indices", opcode::OP_OBJ_INDICES, false},
 	{"link", opcode::OP_OBJ_LINK, false},
 	{"trim", opcode::OP_OBJ_TRIM, false},
-	{"length", opcode::OP_OBJ_LENGTH, false},
+	{"length", opcode::OP_OBJ_LENGTH, false, opcode::OP_CONV_TO_STRING},
 	{"pos", opcode::OP_OBJ_POS, false},
 	{"charat", opcode::OP_OBJ_CHARAT, false},
 	{"substring", opcode::OP_OBJ_SUBSTR, false},
@@ -342,6 +343,15 @@ void GS2CompilerVisitor::Visit(ExpressionCastNode* node)
 	}
 }
 
+void GS2CompilerVisitor::Visit(ExpressionArrayIndexNode* node)
+{
+	node->idx->visit(this);
+	if (node->idx->expressionType() != ExpressionType::EXPR_NUMBER)
+		byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+	
+	byteCode.emit(opcode::OP_ARRAY);
+}
+
 void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 {
 	auto enumConstant = parserData->getEnumConstant(node->val);
@@ -428,6 +438,52 @@ void GS2CompilerVisitor::Visit(ExpressionNumberNode *node)
 	byteCode.emitDoubleNumber(node->val);
 }
 
+void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
+{
+	assert(!node->nodes.empty());
+
+	size_t i = 0;
+
+	if (node->nodes[0]->expressionType() == ExpressionType::EXPR_IDENT)
+	{
+		auto identNode = reinterpret_cast<ExpressionIdentifierNode*>(node->nodes[0]);
+		if (identNode->val == "this") {
+			byteCode.emit(opcode::OP_THIS);
+		}
+		else if (identNode->val == "thiso") {
+			byteCode.emit(opcode::OP_THISO);
+		}
+		else if (identNode->val == "player") {
+			byteCode.emit(opcode::OP_PLAYER);
+		}
+		else if (identNode->val == "playero") {
+			byteCode.emit(opcode::OP_PLAYERO);
+		}
+		else if (identNode->val == "level") {
+			byteCode.emit(opcode::OP_LEVEL);
+		}
+		else if (identNode->val == "temp") {
+			byteCode.emit(opcode::OP_TEMP);
+		}
+		else {
+			identNode->visit(this);
+			byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+		}
+		i++;
+	}
+
+	for (; i < node->nodes.size(); i++)
+	{
+		node->nodes[i]->visit(this);
+		if (i >= 1 && node->nodes[i]->expressionType() == ExpressionType::EXPR_IDENT)
+		{
+			byteCode.emit(opcode::OP_MEMBER_ACCESS);
+			if (i != node->nodes.size() - 1)
+				byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+		}
+	}
+}
+
 void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 {
 	printf("String: %s\n", node->val.c_str());
@@ -442,16 +498,22 @@ void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 
 void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 {
+	auto isObjectCall = byteCode.getLastOp() == opcode::OP_CONV_TO_OBJECT;
 
 	// Build-in commands
-	auto& cmdList = (node->objExpr ? getCommandListMethod() : getCommandList());
+	auto& cmdList = (isObjectCall ? getCommandListMethod() : getCommandList());
 	std::string funcName = node->funcExpr->toString();
 
-	printf("Call Function: %s\n", funcName.c_str());
+	printf("Call Function: %s (obj call: %d)\n", funcName.c_str(), isObjectCall ? 1 : 0);
 
 	auto iter = cmdList.find(funcName);
 	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : defaultCall);
 	
+	// Overwrite the convert operator, used for strings afaik
+	if (isObjectCall && cmd.convert_op != byteCode.getLastOp()) {
+		byteCode.emit(char(cmd.convert_op), byteCode.getBytecodePos() - 1);
+	}
+
 	if (node->objExpr)
 		node->objExpr->visit(this);
 

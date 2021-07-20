@@ -20,6 +20,8 @@ class GS2CompilerVisitor : public NodeVisitor
     GS2Bytecode byteCode;
     ParserData *parserData;
 
+    std::stack<LoopBreakPoint> breakPoints;
+
     public:
         GS2CompilerVisitor(ParserData *data) : NodeVisitor(), parserData(data) { }
         virtual ~GS2CompilerVisitor() = default;
@@ -51,15 +53,15 @@ class GS2CompilerVisitor : public NodeVisitor
         virtual void Visit(ExpressionStringConstNode *node);
         virtual void Visit(ExpressionIntegerNode *node);
         virtual void Visit(ExpressionNumberNode *node);
+        virtual void Visit(ExpressionPostfixNode *node);
         virtual void Visit(ExpressionCastNode *node);
+        virtual void Visit(ExpressionArrayIndexNode *node);
         virtual void Visit(ExpressionFnCallNode *node);
         virtual void Visit(ExpressionNewNode *node);
         virtual void Visit(ExpressionBinaryOpNode *node);
         virtual void Visit(ExpressionUnaryOpNode *node);
         virtual void Visit(ExpressionObjectAccessNode *node);
         virtual void Visit(ExpressionListNode *node);
-
-        std::stack<LoopBreakPoint> breakPoints;
 };
 
 /*

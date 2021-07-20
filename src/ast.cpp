@@ -14,13 +14,19 @@ StatementBlock::~StatementBlock()
 	statements.clear();
 }
 
-void StatementBlock::append(StatementNode *node) {
+void StatementBlock::append(StatementNode *node)
+{
 	if (node)
 	{
-		if (strcmp(node->NodeType(), ExpressionFnCallNode::NodeName) == 0)
+		// TODO(joey): come back to this
+		if (strcmp(node->NodeType(), ExpressionPostfixNode::NodeName) == 0)
 		{
-			auto fnNode = reinterpret_cast<ExpressionFnCallNode*>(node);
-			fnNode->discardReturnValue = true;
+			auto pfNode = reinterpret_cast<ExpressionPostfixNode*>(node);
+			if (pfNode->expressionType() == ExpressionType::EXPR_FUNCTION)
+			{
+				auto fnNode = reinterpret_cast<ExpressionFnCallNode*>(pfNode->nodes.back());
+				fnNode->discardReturnValue = true;
+			}
 		}
 
 		statements.push_back(node);

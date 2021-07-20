@@ -44,6 +44,8 @@ typedef void* yyscan_t;
 	CaseNode *caseNode;
 	std::vector<CaseNode *> *caseNodeList;
 
+	ExpressionPostfixNode *exprPostfix;
+
 	EnumList *enumList;
 	EnumMember *enumMember;
 }
@@ -91,7 +93,8 @@ typedef void* yyscan_t;
 %left '.'
 
 %type<exprNode> expr
-%type<exprNode> constant primary postfix
+%type<exprNode> constant primary
+%type<exprPostfix> postfix
 %type<exprNode> expr_cast
 %type<exprNode> expr_intconst expr_numberconst expr_strconst
 %type<exprIdentNode> expr_ident
@@ -259,12 +262,21 @@ primary:
 	;
 
 postfix:
-	primary
+	primary												{ $$ = new ExpressionPostfixNode($1); }
+	| postfix '[' expr ']'								{ $1->nodes.push_back(new ExpressionArrayIndexNode($1, $3)); }
+	| postfix '(' args_list_decl ')'					{ auto n = $1->nodes.back(); $1->nodes.pop_back(); $1->nodes.push_back(new ExpressionFnCallNode(n, nullptr, $3)); }
+	| postfix '.' expr_ident							{ $1->nodes.push_back($3); }
+	;
+
+	/*
+postfix:
+	primary	
 	| postfix '[' expr ']'								{ $$ = new ExpressionArrayIndexNode($1, $3); }
 	| postfix '(' args_list_decl ')'					{ $$ = new ExpressionFnCallNode($1, nullptr, $3); }
 	//| postfix '.'  expr_ident '(' args_list_decl ')'	{ $$ = new ExpressionFnCallNode($3, nullptr, $5); }
 	| postfix '.' expr_ident							{ $$ = new ExpressionObjectAccessNode($1, $3); }
 	;
+	*/
 
 expr:
 	postfix							{ $$ = $1; }
