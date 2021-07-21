@@ -146,14 +146,11 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 	{
 		byteCode.emit(opcode::OP_TYPE_ARRAY);
 
-		if (node->args)
+		std::reverse(node->args.begin(), node->args.end());
+		for (const auto& arg : node->args)
 		{
-			std::reverse(node->args->begin(), node->args->end());
-			for (auto& arg : *node->args)
-			{
-				if (arg)
-					arg->visit(this);
-			}
+			if (arg)
+				arg->visit(this);
 		}
 
 		byteCode.emit(opcode::OP_FUNC_PARAMS_END);
@@ -815,12 +812,9 @@ void GS2CompilerVisitor::Visit(ExpressionListNode* node)
 {
 	byteCode.emit(opcode::OP_TYPE_ARRAY);
 
-	if (node->args)
-	{
-		for (const auto& arg : *node->args)
-			arg->visit(this);
-	}
-
+	for (const auto& arg : node->args)
+		arg->visit(this);
+	
 	byteCode.emit(opcode::OP_ARRAY_END);
 }
 

@@ -486,17 +486,22 @@ class ExpressionListNode : public ExpressionNode
 public:
 	_NodeName("ExpressionListNode")
 
-	ExpressionListNode(std::vector<ExpressionNode *> *a) : args(a) {
-
+	ExpressionListNode(std::vector<ExpressionNode *> *argList)
+	{
+		if (argList)
+		{
+			args = std::move(*argList);
+			delete argList;
+		}
 	}
 
 	virtual ~ExpressionListNode();
 
 	virtual std::string toString() const {
 		std::string argList;
-		if (args)
+		if (!args.empty())
 		{
-			for (const auto& s : *args)
+			for (const auto& s : args)
 			{
 				argList += s->toString();
 				argList += ",";
@@ -508,7 +513,7 @@ public:
 
 	}
 
-	std::vector<ExpressionNode *> *args;
+	std::vector<ExpressionNode *> args;
 };
 
 class StatementBlock : public StatementNode
@@ -552,9 +557,15 @@ class StatementFnDeclNode : public StatementNode
 public:
 	_NodeName("StatementFnDeclNode")
 
-	StatementFnDeclNode(const char *id, std::vector<ExpressionNode *> *a, StatementBlock *block)
-		: StatementNode(), stmtBlock(block), args(a), pub(false)
+	StatementFnDeclNode(const char *id, std::vector<ExpressionNode *> *argList, StatementBlock *block)
+		: StatementNode(), stmtBlock(block), pub(false)
 	{
+		if (argList)
+		{
+			args = std::move(*argList);
+			delete argList;
+		}
+
 		ident = std::string(id);
 	}
 	
@@ -567,7 +578,7 @@ public:
 	bool pub;
 	std::string ident;
 	StatementBlock *stmtBlock;
-	std::vector<ExpressionNode *> *args;
+	std::vector<ExpressionNode *> args;
 };
 
 class StatementNewNode : public StatementNode
@@ -718,15 +729,19 @@ public:
 	_NodeName("StatementSwitchNode")
 
 	StatementSwitchNode(ExpressionNode *expr, std::vector<CaseNode *> *caseNodes)
-		: StatementNode(), expr(expr), cases(caseNodes)
+		: StatementNode(), expr(expr)
 	{
-
+		if (caseNodes)
+		{
+			cases = std::move(*caseNodes);
+			delete caseNodes;
+		}
 	}
 
 	virtual ~StatementSwitchNode();
 
 	ExpressionNode *expr;
-	std::vector<CaseNode *> *cases;
+	std::vector<CaseNode *> cases;
 };
 
 struct EnumMember

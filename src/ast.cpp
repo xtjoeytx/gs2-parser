@@ -69,18 +69,15 @@ StatementIfNode::~StatementIfNode()
 StatementFnDeclNode::~StatementFnDeclNode()
 {
 	delete stmtBlock;
-	if (args)
-	{
-		for (const auto& node : *args)
-			delete node;
-		args->clear();
-		args = nullptr;
-	}
+
+	for (auto& node : args)
+		delete node;
 }
 
 StatementNewNode::~StatementNewNode()
 {
 	delete stmtBlock;
+
 	if (args)
 	{
 		for (const auto& node : *args)
@@ -122,13 +119,9 @@ StatementForEachNode::~StatementForEachNode()
 
 StatementSwitchNode::~StatementSwitchNode()
 {
-	if (cases)
-	{
-		for (const auto& node : *cases)
-			delete node;
-	}
-
-	delete cases;
+	for (const auto& node : cases)
+		delete node;
+	
 	delete expr;
 }
 
@@ -156,11 +149,8 @@ ExpressionFnCallNode::~ExpressionFnCallNode()
 
 ExpressionListNode::~ExpressionListNode()
 {
-	if (args)
-	{
-		for (const auto& node : *args)
-			delete node;
-	}
+	for (const auto& node : args)
+		delete node;
 }
 
 ExpressionNewNode::~ExpressionNewNode()

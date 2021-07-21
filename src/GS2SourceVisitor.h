@@ -65,15 +65,15 @@ public:
         tabc++;
 
         std::string argList;
-        if (node->args)
+
+        for (const auto& s : node->args)
         {
-            for (const auto& s : *node->args)
-            {
-                argList += s->toString();
-                argList += ",";
-            }
-            argList.pop_back();
+            argList += s->toString();
+            argList += ",";
         }
+
+        if (!argList.empty())
+            argList.pop_back();
 
         std::string accessor;
         if (node->pub)
@@ -242,24 +242,23 @@ public:
     virtual void Visit(StatementSwitchNode *node) {
         print("switch (%s) {", node->expr->toString().c_str());
         tabc++;
-        if (node->cases)
+
+        for (const auto& s : node->cases)
         {
-            for (const auto& s : *node->cases)
+            if (s->expr)
             {
-                if (s->expr)
-                {
-                    print("case %s: {", s->expr->toString().c_str());
-                    s->stmt->visit(this);
-                    print("}");
-                }
-                else
-                {
-                    print("default: {");
-                    s->stmt->visit(this);
-                    print("}");
-                }
+                print("case %s: {", s->expr->toString().c_str());
+                s->stmt->visit(this);
+                print("}");
+            }
+            else
+            {
+                print("default: {");
+                s->stmt->visit(this);
+                print("}");
             }
         }
+
         tabc--;
         print("}");
     }
@@ -277,11 +276,10 @@ public:
 	}
 
     virtual void Visit(StatementReturnNode *node)  {
-		// print("Visit StatementReturnNode");
         tabc++;
 
         if (!node->expr)
-            print("return ;");
+            print("return;");
         else
         {
             print("return %s;", node->expr->toString().c_str());

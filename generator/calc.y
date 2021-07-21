@@ -30,6 +30,7 @@ typedef void* yyscan_t;
 	StatementNewNode *stmtNewNode;
 	StatementWhileNode *stmtWhileNode;
 	StatementWithNode *stmtWithNode;
+	StatementSwitchNode *stmtSwitchNode;
 	ExpressionNode *exprNode;
 	ExpressionIdentifierNode *exprIdentNode;
 	ExpressionFnCallNode *exprCallNode;
@@ -38,13 +39,12 @@ typedef void* yyscan_t;
 	ExpressionUnaryOpNode *exprUnaryNode;
 	ExpressionListNode *exprListNode;
 	ExpressionNewNode *exprNewNode;
+	ExpressionPostfixNode *exprPostfix;
+
 	std::vector<ExpressionNode *> *argList;
 
-	StatementSwitchNode *stmtSwitchNode;
 	CaseNode *caseNode;
 	std::vector<CaseNode *> *caseNodeList;
-
-	ExpressionPostfixNode *exprPostfix;
 
 	EnumList *enumList;
 	EnumMember *enumMember;
