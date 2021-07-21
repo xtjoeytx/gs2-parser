@@ -8,8 +8,12 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 find_package(BISON REQUIRED)
 find_package(FLEX REQUIRED)
 
+if(WIN32)
+  set(FLEX_FLAGS "--wincompat")
+endif(WIN32)
+
 BISON_TARGET(MyParser generator/calc.y ${CMAKE_CURRENT_BINARY_DIR}/calc.tab.cc)
-FLEX_TARGET(MyScanner generator/calc.l ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.cc DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.h)
+FLEX_TARGET(MyScanner generator/calc.l ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.cc DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.h COMPILE_FLAGS "${FLEX_FLAGS}")
 ADD_FLEX_BISON_DEPENDENCY(MyScanner MyParser)
 
 include_directories(
