@@ -811,8 +811,20 @@ void GS2CompilerVisitor::Visit(StatementWithNode* node)
 	byteCode.emit(short(byteCode.getOpcodePos()), withLoc);
 }
 
+void GS2CompilerVisitor::Visit(ExpressionListNode* node)
+{
+	byteCode.emit(opcode::OP_TYPE_ARRAY);
+
+	if (node->args)
+	{
+		for (const auto& arg : *node->args)
+			arg->visit(this);
+	}
+
+	byteCode.emit(opcode::OP_ARRAY_END);
+}
+
 void GS2CompilerVisitor::Visit(StatementNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementForEachNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementSwitchNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(ExpressionNode *node) { Visit((Node *)node); }
-void GS2CompilerVisitor::Visit(ExpressionListNode *node) { Visit((Node *)node); }

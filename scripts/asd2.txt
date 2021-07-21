@@ -17,7 +17,8 @@ function onCreated() {
 */
 
 function onCreated() {
-  player.chat = "tst";
+  this.commands = {"Profile"};
+  player.chat = "tst: " @ this.commands[0];
   onTimeout();
 }
 
