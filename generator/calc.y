@@ -162,8 +162,7 @@ stmt_list:
 	;
 
 stmt_block:
-	'{' '}' 				{ $$ = new StatementBlock(); }
-	| '{' stmt_list '}'		{ $$ = $2; }
+	'{' stmt_list '}'		{ $$ = $2; }
 	;
 
 stmt: stmt_if				{ $$ = $1;}
@@ -352,7 +351,7 @@ expr_strconst:
 	;
 
 expr_arraylist:
-	'{' args_list '}' 							{ $$ = new ExpressionListNode($2); }
+	'{' args_list_decl '}' 						{ $$ = new ExpressionListNode($2); }
 	;
 
 expr_cast:
