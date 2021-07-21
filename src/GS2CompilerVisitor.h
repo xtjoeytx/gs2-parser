@@ -11,7 +11,7 @@ class ParserData;
 
 struct LoopBreakPoint
 {
-    size_t continuepoint;
+    std::vector<size_t> continuePointLocs;
     std::vector<size_t> breakPointLocs;
 };
 

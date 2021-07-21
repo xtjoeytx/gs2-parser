@@ -631,7 +631,7 @@ void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 
 	auto whileLoc = byteCode.getBytecodePos() - 2;
 
-	breakPoints.push(LoopBreakPoint{ whileCondStart });
+	breakPoints.push(LoopBreakPoint{ });
 	node->block->visit(this);
 	
 	// Jump back to condition
@@ -645,9 +645,12 @@ void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 
 	// Write out the breakpoint jumps
 	auto& breakPoint = breakPoints.top();
-	for (const auto& loc : breakPoint.breakPointLocs) {
+	for (const auto& loc : breakPoint.breakPointLocs)
 		byteCode.emit(short(breakPointLoc), loc);
-	}
+
+	for (const auto& loc : breakPoint.continuePointLocs)
+		byteCode.emit(short(whileCondStart), loc);
+
 	breakPoints.pop();
 }
 
@@ -677,7 +680,12 @@ void GS2CompilerVisitor::Visit(StatementContinueNode* node)
 
 	// Emit jump back to the loop-condition
 	byteCode.emit(opcode::OP_SET_INDEX);
-	byteCode.emitDynamicNumber(breakPoints.top().continuepoint);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+
+	// Add the location of the jmp so we can write the calculated opcode index
+	auto& breakPoint = breakPoints.top();
+	breakPoint.continuePointLocs.push_back(byteCode.getBytecodePos() - 2);
 }
 
 void GS2CompilerVisitor::Visit(StatementForNode* node)
@@ -709,7 +717,7 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 
 	auto elseLoc = byteCode.getBytecodePos() - 2;
 
-	breakPoints.push(LoopBreakPoint{ condStart });
+	breakPoints.push(LoopBreakPoint{ });
 
 	// Emit block
 	if (node->block)
@@ -729,9 +737,12 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 
 	// Write out the breakpoint jumps
 	auto& breakPoint = breakPoints.top();
-	for (const auto& loc : breakPoint.breakPointLocs) {
+	for (const auto& loc : breakPoint.breakPointLocs)
 		byteCode.emit(short(breakPointLoc), loc);
-	}
+	
+	for (const auto& loc : breakPoint.continuePointLocs)
+		byteCode.emit(short(condStart), loc);
+
 	breakPoints.pop();
 }
 
@@ -822,7 +833,7 @@ void GS2CompilerVisitor::Visit(ExpressionListNode* node)
 
 void GS2CompilerVisitor::Visit(StatementForEachNode *node)
 {
-	// push name expressi
+	// push name / expression
 	node->name->visit(this);
 	node->expr->visit(this);
 	byteCode.emit(opcode::OP_CONV_TO_OBJECT);
@@ -837,24 +848,60 @@ void GS2CompilerVisitor::Visit(StatementForEachNode *node)
 	byteCode.emit(short(0));
 
 	auto endLoc = byteCode.getBytecodePos() - 2;
+	breakPoints.push(LoopBreakPoint{ });
 
 	byteCode.emit(opcode::OP_CMD_CALL);
 	node->block->visit(this);
 
 	// increase idx
+	auto continueLoopOp = byteCode.getOpcodePos();
 	byteCode.emit(opcode::OP_INC);
 
-	// jump to for-each loop
+	// jump to beginning of the for-each loop
 	byteCode.emit(opcode::OP_SET_INDEX);
 	byteCode.emitDynamicNumber(startLoopOp);
 
-	// write end-location for loop
-	byteCode.emit(short(byteCode.getOpcodePos()), endLoc);
+	// Emit jump out of the loop
+	auto endLoopOp = byteCode.getOpcodePos();
+	byteCode.emit(short(endLoopOp), endLoc);
+
+	// Write out the breakpoint jumps
+	auto& breakPoint = breakPoints.top();
+	for (const auto& loc : breakPoint.breakPointLocs)
+		byteCode.emit(short(endLoopOp), loc);
+	
+	for (const auto& loc : breakPoint.continuePointLocs)
+		byteCode.emit(short(continueLoopOp), loc);
+	
+	breakPoints.pop();
 
 	// pop index
-	byteCode.emit(opcode::OP_DEC);
+	byteCode.emit(opcode::OP_INDEX_DEC);
+}
+
+void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
+{
+	// emit jump to case-test
+	// record case-block start
+	// emit case-block
+	// emit jump to endloc
+	// ...repeat..
+
+	// push switch-expr
+	// copy last operand
+	// push case-expr
+	// push ==
+	// opcode 2 if equal, jmp to corresponding case-block
+
+	// endloc:
+	// ....
+
+	for (const auto& caseNode : node->cases) {
+	//	caseNode->
+	}
+
+	Visit((Node*)node);
 }
 
 void GS2CompilerVisitor::Visit(StatementNode *node) { Visit((Node *)node); }
-void GS2CompilerVisitor::Visit(StatementSwitchNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(ExpressionNode *node) { Visit((Node *)node); }
