@@ -7,9 +7,6 @@
 #include "GS2SourceVisitor.h"
 #include "GS2CompilerVisitor.h"
 
-#include "calc.tab.hh"
-#include "lex.yy.h"
-
 int main(int argc, const char *argv[]) {
 #ifdef YYDEBUG
 //  yydebug = 1;

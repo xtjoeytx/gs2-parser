@@ -142,6 +142,8 @@ decl:
 
 stmt_enum:
 	T_KWENUM '{' enum_list '}' ';'	{ parser->addEnum($3); }
+	| T_KWENUM T_IDENTIFIER '{' enum_list '}' ';'	{ parser->addEnum($4, $2); }
+	;
 
 enum_list:
 	enum_item						{ $$ = new EnumList($1); }

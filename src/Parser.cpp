@@ -23,7 +23,7 @@ const char * ParserData::saveString(const char* str, int length)
 	return ins.first->c_str();
 }
 
-void ParserData::addEnum(EnumList *enumList)
+void ParserData::addEnum(EnumList *enumList, const std::string& name)
 {
 	for (const auto& en : enumList->getMembers())
 		enumConstants[en->node] = en->idx;

@@ -23,7 +23,7 @@ class ParserData
 
 		const char * saveString(const char *str, int length);
 
-		void addEnum(EnumList *enumList);
+		void addEnum(EnumList *enumList, const std::string& name = "");
 		std::optional<int> getEnumConstant(const std::string& key);
 		
 		void parse(const std::string& input);

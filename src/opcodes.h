@@ -7,8 +7,8 @@
 
 namespace opcode
 {
-	enum Opcode {
-
+	enum Opcode
+	{
 		// @formatter:off
 
 		/*  NAME            SEMANTIC                        */
@@ -22,15 +22,11 @@ namespace opcode
 		OP_AND = 5, //  PUSH (S(1) && S(0))
 		OP_CALL = 6, //  Pushes # of args, followed by args
 		OP_RET = 7, //  Return to location on top of on jump stack
-
-		OP_INCPUSH, //  PUSH (S(0)), SET (S(0) = S(0) + 1)
-		OP_DECPUSH, //  PUSH (S(0)), SET (S(0) = S(0) - 1)
-
-
+		OP_SLEEP = 8,
+		
 		OP_CMD_CALL = 9, //  Pushes # of args, followed by args
 		OP_JMP = 10, //  JUMP to N(0, 4) by byte offset unconditionally
 
-		OP_JAL, //  JUMP as per prior semantic and pass last location to jump stack
 		OP_TYPE_NUMBER = 20,
 		OP_TYPE_STRING = 21,
 		OP_TYPE_VAR = 22,
@@ -46,9 +42,12 @@ namespace opcode
 		OP_CONV_TO_STRING = 34,
 		OP_MEMBER_ACCESS = 35,
 		OP_CONV_TO_OBJECT = 36,
-		OP_INLINE_NEW = 40,
-		OP_MAKEVAR = 41,
-		OP_NEW_OBJECT = 42,
+		OP_ARRAY_END	  = 37,
+		OP_NEW			  = 38,
+		OP_SETARRAY		  = 39,
+		OP_INLINE_NEW 	  = 40,
+		OP_MAKEVAR		  = 41,
+		OP_NEW_OBJECT 	  = 42,
 		OP_ASSIGN = 50, //  S(1) = S(0)
 		OP_FUNC_PARAMS_END = 51,
 
@@ -71,13 +70,7 @@ namespace opcode
 		OP_GT = 73, //  PUSH (S(1) > S(0))
 		OP_LTE = 74, //  PUSH (S(1) <= S(0))
 		OP_GTE = 75, //  PUSH (S(1) >= S(0))
-
-		OP_JEZ, //  JUMP to N(0, 4) if S(0) == 0
-		OP_JNZ, //  JUMP to N(0, 4) if S(0) != 0
-
-		OP_STOP, // Stops execution
-
-		OP_DBG_OUT, //  Debug output
+		
 		OP_IN_RANGE = 80,
 		OP_IN_OBJ = 81,
 		OP_OBJ_INDEX = 82,
@@ -114,25 +107,26 @@ namespace opcode
 		OP_ARRAY = 131,
 		OP_OBJ_SUBARRAY = 135,
 		OP_OBJ_CLEAR = 141,
+		OP_ARRAY_NEW = 142,
 		OP_WITH = 150,
 		OP_WITHEND = 151,
+		OP_FOREACH = 163,
 		OP_THIS = 180,
 		OP_THISO = 181,
 		OP_PLAYER = 182,
 		OP_PLAYERO = 183,
 		OP_LEVEL = 184,
 		OP_TEMP = 189,
+		OP_PARAMS = 190,
 		OP_NUM_OPS //  This is to get the number of operations
 
 		// @formatter:on
 	};
 
-	//inline ExpressionOp OpcodeToString(const std::string& token) {
-		
-	//}
-
-	inline std::string OpcodeToString(Opcode opcode) {
-		switch ( opcode ) {
+	inline std::string OpcodeToString(Opcode opcode)
+	{
+		switch (opcode)
+		{
 			case OP_PUSH:
 				return "OP_PUSH";
 
@@ -168,9 +162,6 @@ namespace opcode
 
 			case OP_INC:
 				return "OP_INC";
-
-			case OP_INCPUSH:
-				return "OP_INCPUSH";
 
 			case OP_DEC:
 				return "OP_DEC";
@@ -217,9 +208,6 @@ namespace opcode
 			case OP_JMP:
 				return "OP_JMP";
 
-			case OP_JAL:
-				return "OP_JAL";
-
 			case OP_INDEX_DEC:
 				return "OP_INDEX_DEC";
 
@@ -252,18 +240,6 @@ namespace opcode
 
 			case OP_OR:
 				return "OP_OR";
-
-			case OP_JEZ:
-				return "OP_JEZ";
-
-			case OP_JNZ:
-				return "OP_JNZ";
-
-			case OP_STOP:
-				return "OP_STOP";
-
-			case OP_DBG_OUT:
-				return "OP_DBG_OUT";
 
 			case OP_OBJ_CHARAT:
 				return "OP_OBJ_CHARAT";
