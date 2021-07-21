@@ -742,7 +742,56 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 
 void GS2CompilerVisitor::Visit(StatementNewNode* node)
 {
-	Visit((Node*)node);
+	assert(node->args && node->args->size() == 1);
+
+	// emit args
+	if (node->args)
+	{
+		for (const auto& n : *node->args)
+			n->visit(this);
+	}
+
+	byteCode.emit(opcode::OP_INLINE_NEW);
+
+	byteCode.emit(opcode::OP_COPY_LAST_OP);
+	byteCode.emit(opcode::OP_COPY_LAST_OP);
+	byteCode.emit(opcode::OP_COPY_LAST_OP);
+
+	// emit object type
+	auto id = byteCode.getStringConst(node->ident);
+	byteCode.emit(opcode::OP_TYPE_STRING);
+	byteCode.emitDynamicNumber(id);
+
+	//byteCode.emit(opcode::OP_CONV_TO_STRING);
+
+	byteCode.emit(opcode::OP_NEW_OBJECT);
+	byteCode.emit(opcode::OP_ASSIGN);
+
+	// with statement
+	byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+
+	byteCode.emit(opcode::OP_WITH);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+
+	auto withLoc = byteCode.getBytecodePos() - 2;
+	if (node->stmtBlock)
+		node->stmtBlock->visit(this);
+
+	byteCode.emit(opcode::OP_WITHEND);
+	byteCode.emit(short(byteCode.getOpcodePos()), withLoc);
+
+	///////
+	// call addcontrol
+
+	byteCode.emit(opcode::OP_TYPE_ARRAY);
+	byteCode.emit(opcode::OP_SWAP_LAST_OPS);
+
+	auto addControlId = byteCode.getStringConst("addcontrol");
+	byteCode.emit(opcode::OP_TYPE_VAR);
+	byteCode.emitDynamicNumber(addControlId);
+	byteCode.emit(opcode::OP_CALL);
+	byteCode.emit(opcode::OP_INDEX_DEC);
 }
 
 void GS2CompilerVisitor::Visit(StatementWithNode* node)

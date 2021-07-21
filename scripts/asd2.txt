@@ -63,10 +63,8 @@ function onFindPlayers()
 }
 
 function onShowMenu()
-{ 
-    Profile_Menu = new GuiContextMenuCtrl(Profile_Menu);
-
-    with (Profile_Menu)
+{
+    new GuiContextMenuCtrl(Profile_Menu)
     {
         profile     = "GuiBluePopUpMenuProfile";
         textprofile = "GuiBlueTextListProfile";
@@ -77,12 +75,10 @@ function onShowMenu()
         addrow(0, players[thiso.pid].account);
         addRow(-1, "-");
         addRow(1, "Profile");
-    }
 
-    addcontrol(Profile_Menu);
-    
-    catchevent(Profile_Menu.name, "onSelect", "selectFunction");
-    Profile_Menu.open(mousescreenx, mousescreeny);
+        thiso.catchevent(Profile_Menu.name, "onSelect", "selectFunction");
+        open(mousescreenx, mousescreeny);
+    }
 }
 
 function selectFunction(obj, entryid, entrytext, entryindex)
