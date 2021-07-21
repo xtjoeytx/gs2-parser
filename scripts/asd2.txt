@@ -17,8 +17,20 @@ function onCreated() {
 */
 
 function onCreated() {
-  this.commands = {"Profile"};
-  player.chat = "tst: " @ this.commands[0];
+  this.commands = {"Profile", "rr"};
+  this.commands2 = {};
+  temp.tst = {3, 5, 7, "ee"};
+
+  echo("Test 1: " @ this.commands[0]);
+
+  if (this.commands[0] == "Profile")
+    echo("EE");
+
+  for (temp.v : temp.tst) {
+    echo("T: " @ temp.v);
+  }
+
+  player.chat = "tst: " @ this.commands[0] @ " - " @ this.commands.size();
   onTimeout();
 }
 

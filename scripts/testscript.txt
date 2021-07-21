@@ -732,6 +732,10 @@ function arrayInit()
 }
 
 /*
+    // loop var 0: temp.v
+    // loop var 1: echo
+    // loop var 2: this.obj
+
       452,       274: Set operation index (1) (Opcode: 0xF4)  - double(316) (word)
        456,       275: type(array) (23)
        457,       276: End of function definition parameters (51)

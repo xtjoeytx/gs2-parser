@@ -812,13 +812,49 @@ void GS2CompilerVisitor::Visit(ExpressionListNode* node)
 {
 	byteCode.emit(opcode::OP_TYPE_ARRAY);
 
+	std::reverse(node->args.begin(), node->args.end());
 	for (const auto& arg : node->args)
 		arg->visit(this);
 	
 	byteCode.emit(opcode::OP_ARRAY_END);
 }
 
+
+void GS2CompilerVisitor::Visit(StatementForEachNode *node)
+{
+	// push name expressi
+	node->name->visit(this);
+	node->expr->visit(this);
+	byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+
+	// push index to stack
+	byteCode.emit(opcode::OP_TYPE_NUMBER);
+	byteCode.emitDynamicNumber(0);
+
+	auto startLoopOp = byteCode.getOpcodePos();
+	byteCode.emit(opcode::OP_FOREACH);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+
+	auto endLoc = byteCode.getBytecodePos() - 2;
+
+	byteCode.emit(opcode::OP_CMD_CALL);
+	node->block->visit(this);
+
+	// increase idx
+	byteCode.emit(opcode::OP_INC);
+
+	// jump to for-each loop
+	byteCode.emit(opcode::OP_SET_INDEX);
+	byteCode.emitDynamicNumber(startLoopOp);
+
+	// write end-location for loop
+	byteCode.emit(short(byteCode.getOpcodePos()), endLoc);
+
+	// pop index
+	byteCode.emit(opcode::OP_DEC);
+}
+
 void GS2CompilerVisitor::Visit(StatementNode *node) { Visit((Node *)node); }
-void GS2CompilerVisitor::Visit(StatementForEachNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(StatementSwitchNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(ExpressionNode *node) { Visit((Node *)node); }
