@@ -54,7 +54,7 @@ function onFindPlayers()
   for (temp.I = 0; temp.I < players.size(); temp.I++) {
     echo(format("test: %d in |%d, %d| and %d in |%d, %d|", mousex, players[temp.I].x, players[temp.I].x + 3, mousey, players[temp.I].y, players[temp.I].y + 3));
     if (mousex in |player.x, player.x + 3| && mousey in |players[temp.I].y, players[temp.I].y + 3|) {
-      echo("Found: " @ temp.valid);
+      echo("Found: " @ temp.I);
       return temp.I;
     }
   }
@@ -65,23 +65,23 @@ function onFindPlayers()
 function onShowMenu()
 { 
     Profile_Menu = new GuiContextMenuCtrl(Profile_Menu);
-    Profile_Menu.profile     = "GuiBluePopUpMenuProfile";
-    Profile_Menu.textprofile = "GuiBlueTextListProfile";
-    Profile_Menu.text        = players[thiso.pid].account;
-    Profile_Menu.width       = 20;
+
+    with (Profile_Menu)
+    {
+        profile     = "GuiBluePopUpMenuProfile";
+        textprofile = "GuiBlueTextListProfile";
+        text        = players[thiso.pid].account;
+        width       = 20;
+
+        clearRows();
+        addrow(0, players[thiso.pid].account);
+        addRow(-1, "-");
+        addRow(1, "Profile");
+    }
+
     addcontrol(Profile_Menu);
     
     catchevent(Profile_Menu.name, "onSelect", "selectFunction");
-    Profile_Menu.clearRows();
-    
-    Profile_Menu.addrow(0, players[thiso.pid].account);
-    Profile_Menu.addRow(-1, "-");
-    Profile_Menu.addRow(1, "Profile");
-    //for (temp.I = 0; temp.I < thiso.commands.size(); temp.I++)
-    {
-    //  temp.obj.addRow(temp.I + 1, thiso.commands[temp.I]);
-    }
-    
     Profile_Menu.open(mousescreenx, mousescreeny);
 }
 

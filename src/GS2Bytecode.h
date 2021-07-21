@@ -20,7 +20,7 @@ struct FunctionEntry
 class GS2Bytecode
 {
     public:
-        GS2Bytecode() : opcodePos(0) {}
+        GS2Bytecode() : opcodePos(0), lastOp(opcode::Opcode::OP_NONE) {}
         void Reset() { opcodePos = 0; }
         
         Buffer getByteCode();

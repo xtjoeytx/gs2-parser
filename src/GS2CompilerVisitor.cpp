@@ -88,6 +88,33 @@ const std::unordered_map<std::string, BuiltInCmd>& getCommandListMethod()
 	return builtInMap;
 }
 
+opcode::Opcode getExpressionOpCode(ExpressionOp op)
+{
+	switch (op)
+	{
+		case ExpressionOp::Plus: return opcode::Opcode::OP_ADD;
+		case ExpressionOp::Minus: return opcode::Opcode::OP_SUB;
+		case ExpressionOp::Multiply: return opcode::Opcode::OP_MUL;
+		case ExpressionOp::Divide: return opcode::Opcode::OP_DIV;
+		case ExpressionOp::Mod: return opcode::Opcode::OP_MOD;
+		case ExpressionOp::Pow: return opcode::Opcode::OP_POW;
+		case ExpressionOp::Assign: return opcode::Opcode::OP_ASSIGN;
+		case ExpressionOp::Equal: return opcode::Opcode::OP_EQ;
+		case ExpressionOp::NotEqual: return opcode::Opcode::OP_NEQ;
+		case ExpressionOp::LessThan: return opcode::Opcode::OP_LT;
+		case ExpressionOp::LessThanOrEqual: return opcode::Opcode::OP_LTE;
+		case ExpressionOp::GreaterThan: return opcode::Opcode::OP_GT;
+		case ExpressionOp::GreaterThanOrEqual: return opcode::Opcode::OP_GTE;
+
+		case ExpressionOp::UnaryMinus: return opcode::Opcode::OP_UNARYSUB;
+		case ExpressionOp::UnaryNot: return opcode::Opcode::OP_NOT;
+		case ExpressionOp::Increment: return opcode::Opcode::OP_INC;
+		case ExpressionOp::Decrement: return opcode::Opcode::OP_DEC;
+
+		default: return opcode::Opcode::OP_NONE;
+	}
+}
+
 void GS2CompilerVisitor::Visit(Node *node)
 {
 	fprintf(stderr, "Unimplemented node type: %s\n", node->NodeType());
@@ -144,33 +171,6 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 		byteCode.emit(opcode::OP_TYPE_NUMBER);
 		byteCode.emitDynamicNumber(0);
 		byteCode.emit(opcode::OP_RET);
-	}
-}
-
-opcode::Opcode getExpressionOpCode(ExpressionOp op)
-{
-	switch (op)
-	{
-		case ExpressionOp::Plus: return opcode::Opcode::OP_ADD;
-		case ExpressionOp::Minus: return opcode::Opcode::OP_SUB;
-		case ExpressionOp::Multiply: return opcode::Opcode::OP_MUL;
-		case ExpressionOp::Divide: return opcode::Opcode::OP_DIV;
-		case ExpressionOp::Mod: return opcode::Opcode::OP_MOD;
-		case ExpressionOp::Pow: return opcode::Opcode::OP_POW;
-		case ExpressionOp::Assign: return opcode::Opcode::OP_ASSIGN;
-		case ExpressionOp::Equal: return opcode::Opcode::OP_EQ;
-		case ExpressionOp::NotEqual: return opcode::Opcode::OP_NEQ;
-		case ExpressionOp::LessThan: return opcode::Opcode::OP_LT;
-		case ExpressionOp::LessThanOrEqual: return opcode::Opcode::OP_LTE;
-		case ExpressionOp::GreaterThan: return opcode::Opcode::OP_GT;
-		case ExpressionOp::GreaterThanOrEqual: return opcode::Opcode::OP_GTE;
-
-		case ExpressionOp::UnaryMinus: return opcode::Opcode::OP_UNARYSUB;
-		case ExpressionOp::UnaryNot: return opcode::Opcode::OP_NOT;
-		case ExpressionOp::Increment: return opcode::Opcode::OP_INC;
-		case ExpressionOp::Decrement: return opcode::Opcode::OP_DEC;
-
-		default: return opcode::Opcode::OP_NUM_OPS;
 	}
 }
 
@@ -241,7 +241,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			node->right->visit(this);
 
 			auto opCode = getExpressionOpCode(node->op);
-			assert(opCode != opcode::Opcode::OP_NUM_OPS);
+			assert(opCode != opcode::Opcode::OP_NONE);
 
 			byteCode.emit(opCode);
 			handled = true;
@@ -256,7 +256,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			node->right->visit(this);
 
 			auto opCode = getExpressionOpCode(node->op);
-			assert(opCode != opcode::Opcode::OP_NUM_OPS);
+			assert(opCode != opcode::Opcode::OP_NONE);
 
 			byteCode.emit(opCode);
 			handled = true;
@@ -290,7 +290,7 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 			case ExpressionOp::Decrement:
 			{
 				auto opCode = getExpressionOpCode(node->op);
-				assert(opCode != opcode::Opcode::OP_NUM_OPS);
+				assert(opCode != opcode::Opcode::OP_NONE);
 
 				byteCode.emit(opCode);
 				handled = true;
@@ -301,7 +301,7 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 			case ExpressionOp::UnaryNot:
 			{
 				auto opCode = getExpressionOpCode(node->op);
-				assert(opCode != opcode::Opcode::OP_NUM_OPS);
+				assert(opCode != opcode::Opcode::OP_NONE);
 
 				byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 				byteCode.emit(opCode);
@@ -329,7 +329,7 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 			case ExpressionOp::Decrement:
 			{
 				auto opCode = getExpressionOpCode(node->op);
-				assert(opCode != opcode::Opcode::OP_NUM_OPS);
+				assert(opCode != opcode::Opcode::OP_NONE);
 
 				byteCode.emit(opcode::OP_COPY_LAST_OP);
 				byteCode.emit(opcode::OP_CONV_TO_FLOAT);
@@ -533,11 +533,14 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 
 void GS2CompilerVisitor::Visit(StatementReturnNode *node)
 {
-	// pretty sure it goes on top
 	if (node->expr)
 		node->expr->visit(this);
+	else
+	{
+		byteCode.emit(opcode::OP_TYPE_NUMBER);
+		byteCode.emitDynamicNumber(0);
+	}
 
-	//byteCode.emit(opcode::OP_CONV_TO_STRING);
 	byteCode.emit(opcode::OP_RET);
 }
 
@@ -594,8 +597,6 @@ void GS2CompilerVisitor::Visit(ExpressionNewNode *node)
 		for (const auto& n : *node->args)
 			n->visit(this);
 	}
-
-	//byteCode.emit(opcode::OP_INLINE_NEW);
 
 	// TODO(joey): fix
 
@@ -746,7 +747,19 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 
 void GS2CompilerVisitor::Visit(StatementWithNode* node)
 {
-	Visit((Node*)node);
+	node->expr->visit(this);
+	byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+
+	byteCode.emit(opcode::OP_WITH);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+
+	auto withLoc = byteCode.getBytecodePos() - 2;
+	if (node->block)
+		node->block->visit(this);
+
+	byteCode.emit(opcode::OP_WITHEND);
+	byteCode.emit(short(byteCode.getOpcodePos()), withLoc);
 }
 
 void GS2CompilerVisitor::Visit(StatementNode *node) { Visit((Node *)node); }

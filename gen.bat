@@ -1,3 +1,6 @@
 
-bin\win_bison --debug -d generator/calc.y -o src/calc.tab.cc
-bin\win_flex --wincompat -o src/lex.yy.cc --header-file=src/lex.yy.h generator/calc.l
+rmdir /S /Q build
+mkdir build
+cd build
+cmake .. -G "Visual Studio 16 2019" -A x64
+cd ..

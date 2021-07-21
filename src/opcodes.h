@@ -13,19 +13,19 @@ namespace opcode
 
 		/*  NAME            SEMANTIC                        */
 		/* ------------------------------------------------ */
-		OP_PUSH = 0, //  PUSH N(0, sizeof(PackedValue))
-		OP_SET_INDEX = 1, //  S(1) =			// likely JMP to opIndex
-		OP_ARR_GET = 2, //  S(1) =
+		OP_NONE = 0,
+		OP_SET_INDEX = 1,	//  S(1) =			// likely JMP to opIndex
+		OP_ARR_GET = 2,		
 
-		OP_OR = 3, //  PUSH (S(1) || S(0))
-		OP_IF = 4,								// likely JMPIFNOT
-		OP_AND = 5, //  PUSH (S(1) && S(0))
-		OP_CALL = 6, //  Pushes # of args, followed by args
-		OP_RET = 7, //  Return to location on top of on jump stack
+		OP_OR = 3,
+		OP_IF = 4,			// likely JMPIFNOT
+		OP_AND = 5,
+		OP_CALL = 6,		
+		OP_RET = 7,			//  Return to location on top of on jump stack
 		OP_SLEEP = 8,
 		
-		OP_CMD_CALL = 9, //  Pushes # of args, followed by args
-		OP_JMP = 10, //  JUMP to N(0, 4) by byte offset unconditionally
+		OP_CMD_CALL = 9,	//  Pushes # of args, followed by args
+		OP_JMP = 10,		//  JUMP to N(0, 4) by byte offset unconditionally
 
 		OP_TYPE_NUMBER = 20,
 		OP_TYPE_STRING = 21,
@@ -127,8 +127,8 @@ namespace opcode
 	{
 		switch (opcode)
 		{
-			case OP_PUSH:
-				return "OP_PUSH";
+			case OP_NONE:
+				return "OP_NONE";
 
 			case OP_ASSIGN:
 				return "OP_ASSIGN";

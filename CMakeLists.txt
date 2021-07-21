@@ -28,6 +28,19 @@ add_executable(gs2test
 	src/GS2CompilerVisitor.cpp
 	src/main.cpp
 	src/Parser.cpp
+
+	src/encoding/buffer.h
+	src/encoding/graalencoding.h
+	src/ast.h
+	src/astvisitor.h
+	src/GS2Bytecode.h
+	src/GS2CompilerVisitor.h
+	src/GS2SourceVisitor.h
+	src/opcodes.h
+	src/Parser.h
+
+    ${BISON_MyParser_INPUT}
+    ${FLEX_MyScanner_INPUT}
     ${BISON_MyParser_OUTPUTS}
     ${FLEX_MyScanner_OUTPUTS}
  )
