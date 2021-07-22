@@ -37,19 +37,25 @@ size_t GS2Bytecode::getStringConst(const std::string& str)
 	return std::distance(stringTable.begin(), it);
 }
 
-Buffer GS2Bytecode::getByteCode(const std::string& weaponName)
+Buffer GS2Bytecode::getByteCode(const std::string& scriptType, const std::string& scriptName, bool saveToDisk)
 {
 	Buffer byteCode;
 
 	// Start section
 	{
-		Buffer startSection;
-		char packetHeader[10 + weaponName.length()];
-		sprintf(packetHeader, "weapon,%s,1,", weaponName.c_str());
-		startSection.write(packetHeader, strlen(packetHeader));
+		auto headerLength = scriptType.length() + scriptName.length() + 4 + 10;
+		Buffer startSection(headerLength);
+
+		startSection.write(scriptType.c_str(), scriptType.length());
+		startSection.write(',');
+		startSection.write(scriptName.c_str(), scriptName.length());
+		startSection.write(',');
+		startSection.write(saveToDisk ? '1' : '0');
+		startSection.write(',');
+
 		for (int i = 0; i < 10; i++)
 			startSection.Write<GraalByte>(0);
-
+		
 		byteCode.Write<GraalShort>(startSection.length());
 		byteCode.write(startSection);
 	}
