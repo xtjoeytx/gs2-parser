@@ -141,7 +141,12 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0)); // replaced with jump index to last opcode
 	
-	byteCode.addFunction({node->ident, byteCode.getBytecodePos(), byteCode.getOpcodePos()});
+	std::string funcName = node->objectName;
+	if (!funcName.empty())
+		funcName.append(".");
+	funcName.append(node->ident);
+
+	byteCode.addFunction({funcName, byteCode.getBytecodePos(), byteCode.getOpcodePos()});
 	
 	{
 		byteCode.emit(opcode::OP_TYPE_ARRAY);
@@ -290,6 +295,9 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 				assert(opCode != opcode::Opcode::OP_NONE);
 
 				byteCode.emit(opCode);
+				if (node->opUnused)
+					byteCode.emit(opcode::OP_INDEX_DEC);
+
 				handled = true;
 				break;
 			}
@@ -328,6 +336,7 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 				auto opCode = getExpressionOpCode(node->op);
 				assert(opCode != opcode::Opcode::OP_NONE);
 
+				// TODO(joey): need to fix
 				byteCode.emit(opcode::OP_COPY_LAST_OP);
 				byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 				byteCode.emit(opcode::OP_SWAP_LAST_OPS);
@@ -386,9 +395,17 @@ void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)
 	if (node->lower->expressionType() != ExpressionType::EXPR_NUMBER)
 		byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 
-	node->higher->visit(this);
+	if (node->higher)
+	{
+		node->higher->visit(this);
 
-	byteCode.emit(opcode::OP_IN_RANGE);
+		byteCode.emit(opcode::OP_IN_RANGE);
+	}
+	else
+	{
+		byteCode.emit(opcode::OP_IN_OBJ);
+	}
+
 	byteCode.emit(char(0xF3));
 	byteCode.emit(char(0));
 }
@@ -882,11 +899,13 @@ void GS2CompilerVisitor::Visit(StatementForEachNode *node)
 void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 {
 	// emit jump to case-test
+	// case-list:
 	// record case-block start
 	// emit case-block
-	// emit jump to endloc
+	// emit jump to endloc // actually no
 	// ...repeat..
 
+	// case-test:
 	// push switch-expr
 	// copy last operand
 	// push case-expr
@@ -896,11 +915,48 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 	// endloc:
 	// ....
 
-	for (const auto& caseNode : node->cases) {
-	//	caseNode->
+	std::vector<size_t> caseStartOp;
+	breakPoints.push(LoopBreakPoint{ });
+
+	// jump to case-test
+	byteCode.emit(opcode::OP_SET_INDEX);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+	auto caseTestLoc = byteCode.getBytecodePos() - 2;
+
+	// case-list:
+	for (const auto& caseNode : node->cases)
+	{
+		caseStartOp.push_back(byteCode.getOpcodePos());
+		caseNode->stmt->visit(this);
+	}
+	
+	// case-test:
+	byteCode.emit(short(byteCode.getOpcodePos()), caseTestLoc);
+	node->expr->visit(this);
+
+	size_t i = 0;
+	for (const auto& caseNode : node->cases)
+	{
+		byteCode.emit(opcode::OP_COPY_LAST_OP);
+		caseNode->expr->visit(this);
+		byteCode.emit(opcode::OP_EQ);
+
+		byteCode.emit(opcode::OP_SET_INDEX_TRUE);
+		byteCode.emitDynamicNumber(caseStartOp[i++]);
 	}
 
-	Visit((Node*)node);
+	auto endLoopOp = byteCode.getOpcodePos();
+
+	// Write out the breakpoint jumps
+	auto& breakPoint = breakPoints.top();
+	for (const auto& loc : breakPoint.breakPointLocs)
+		byteCode.emit(short(endLoopOp), loc);
+
+	for (const auto& loc : breakPoint.continuePointLocs)
+		byteCode.emit(short(endLoopOp), loc);
+
+	breakPoints.pop();
 }
 
 void GS2CompilerVisitor::Visit(StatementNode *node) { Visit((Node *)node); }

@@ -15,7 +15,7 @@ namespace opcode
 		/* ------------------------------------------------ */
 		OP_NONE = 0,
 		OP_SET_INDEX = 1,	//  S(1) =			// likely JMP to opIndex
-		OP_ARR_GET = 2,		
+		OP_SET_INDEX_TRUE = 2,		
 
 		OP_OR = 3,
 		OP_IF = 4,			// likely JMPIFNOT
@@ -136,8 +136,8 @@ namespace opcode
 			case OP_SET_INDEX:
 				return "OP_SET_INDEX";
 
-			case OP_ARR_GET:
-				return "OP_ARR_GET";
+			case OP_SET_INDEX_TRUE:
+				return "OP_SET_INDEX_TRUE";
 
 			case OP_IF:
 				return "OP_IF";

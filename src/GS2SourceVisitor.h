@@ -90,7 +90,10 @@ public:
 
         tabc++;
 
-        std::string exprStr =  node->expr->toString();
+        std::string exprStr;
+        if (node->expr)
+            exprStr = node->expr->toString();
+
         print("if (%s) {", exprStr.c_str());
         
         node->thenBlock->visit(this);

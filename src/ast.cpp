@@ -54,6 +54,15 @@ void StatementBlock::append(StatementNode *node)
 				fnNode->discardReturnValue = true;
 			}
 		}
+		else if (strcmp(node->NodeType(), ExpressionUnaryOpNode::NodeName) == 0)
+		{
+			// doesn't utilize the value, so we emit the operator the same way
+			// we do operator-first unary ops. involves just a single inc operator
+			// rather than pushing the node back to the stack
+			auto unaryNode = reinterpret_cast<ExpressionUnaryOpNode *>(node);
+			unaryNode->opFirst = true;
+			unaryNode->opUnused = true;
+		}
 
 		statements.push_back(node);
 	}

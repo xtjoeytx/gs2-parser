@@ -402,7 +402,7 @@ class ExpressionUnaryOpNode : public ExpressionNode
 		_NodeName("ExpressionUnaryOpNode");
 
 		ExpressionUnaryOpNode(ExpressionNode *e, ExpressionOp op, bool opFirst)
-			: ExpressionNode(), expr(e), op(op), opFirst(opFirst)
+			: ExpressionNode(), expr(e), op(op), opFirst(opFirst), opUnused(false)
 		{
 
 		}
@@ -412,6 +412,7 @@ class ExpressionUnaryOpNode : public ExpressionNode
 		ExpressionNode *expr;
 		ExpressionOp op;
 		bool opFirst;
+		bool opUnused;
 
 		virtual std::string toString() const
 		{
@@ -557,8 +558,8 @@ class StatementFnDeclNode : public StatementNode
 public:
 	_NodeName("StatementFnDeclNode")
 
-	StatementFnDeclNode(const char *id, std::vector<ExpressionNode *> *argList, StatementBlock *block)
-		: StatementNode(), stmtBlock(block), pub(false)
+	StatementFnDeclNode(const char *id, std::vector<ExpressionNode *> *argList, StatementBlock *block, std::string objName = "")
+		: StatementNode(), stmtBlock(block), pub(false), objectName(std::move(objName))
 	{
 		if (argList)
 		{
@@ -576,7 +577,7 @@ public:
 	}
 
 	bool pub;
-	std::string ident;
+	std::string ident, objectName;
 	StatementBlock *stmtBlock;
 	std::vector<ExpressionNode *> args;
 };

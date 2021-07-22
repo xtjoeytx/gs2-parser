@@ -95,6 +95,8 @@ string_const (\"(\\.|[^"])*\")
 "float"		{return T_KWCAST_FLOAT;}
 "in"		{return T_KWIN;}
 
+"SPC"		{return T_KWCONCAT_SPACE;}
+
 	/*
 		Comments
 	*/

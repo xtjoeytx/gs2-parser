@@ -189,6 +189,7 @@ stmt_new:
 
 stmt_if:
 	T_KWIF '(' expr ')' stmt 								{ $$ = new StatementIfNode($3, $5); }
+	// | T_KWIF '(' expr ')' stmt T_KWELSEIF '(' expr ')' stmt	{ $$ = new StatementIfNode($3, $5, new StatementIfNode($8, $10, nullptr)); }
 	| T_KWIF '(' expr ')' stmt T_KWELSE stmt 				{ $$ = new StatementIfNode($3, $5, $7); }
 	;
 
@@ -235,7 +236,7 @@ stmt_caseblock:
 
 stmt_fndecl:
 	T_KWFUNCTION T_IDENTIFIER '(' args_list_decl ')' stmt_block						{ $$ = new StatementFnDeclNode($2, $4, $6); }
-	| T_KWFUNCTION T_IDENTIFIER '.' T_IDENTIFIER '(' args_list_decl ')' stmt_block	{ $$ = new StatementFnDeclNode($4, $6, $8); }
+	| T_KWFUNCTION T_IDENTIFIER '.' T_IDENTIFIER '(' args_list_decl ')' stmt_block	{ $$ = new StatementFnDeclNode($4, $6, $8, $2); }
 	| T_KWPUBLIC stmt_fndecl														{ $$ = $2; $$->setPublic(true); }
 	;
 
@@ -331,7 +332,7 @@ expr_ops_comparison:
 
 expr_ops_in:
 	expr T_KWIN '|' expr ',' expr '|'			{ $$ = new ExpressionInOpNode($1, $4, $6); }
-	| expr T_KWIN expr							{ $$ = 0; }
+	| expr T_KWIN expr							{ $$ = new ExpressionInOpNode($1, $3, nullptr); }
 	;
 
 expr_ident:
