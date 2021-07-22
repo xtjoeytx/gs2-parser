@@ -20,6 +20,7 @@ typedef void* yyscan_t;
 %}
 
 %union {
+	char cval;
 	int ival;
 	float fval;
 	const char *sval;
@@ -54,7 +55,8 @@ typedef void* yyscan_t;
 %token<sval> T_FLOAT
 %token<sval> T_IDENTIFIER
 %token<sval> T_STRCONSTANT
-%token '.' ',' ':' ';' '|' '@'
+%token<cval> '@'
+%token '.' ',' ':' ';' '|'
 %token '(' ')'
 %token '{' '}'
 %token '[' ']'
@@ -76,7 +78,7 @@ typedef void* yyscan_t;
 %token T_KWIF T_KWELSE T_KWELSEIF T_KWFOR T_KWWHILE T_KWBREAK T_KWCONTINUE T_KWRETURN T_KWIN
 %token T_KWFUNCTION T_KWNEW T_KWWITH T_KWENUM
 %token T_KWSWITCH T_KWCASE T_KWDEFAULT
-%token T_KWCAST_INT T_KWCAST_FLOAT T_KWCONCAT_SPACE
+%token T_KWCAST_INT T_KWCAST_FLOAT
 
 %right '='
 %left '['
@@ -97,6 +99,7 @@ typedef void* yyscan_t;
 %type<exprPostfix> postfix
 %type<exprNode> expr_cast
 %type<exprNode> expr_intconst expr_numberconst expr_strconst
+%type<exprNode> expr_assignment
 %type<exprIdentNode> expr_ident
 %type<exprUnaryNode> expr_ops_unary
 %type<exprBinaryNode> expr_ops_binary expr_ops_comparison
@@ -112,7 +115,7 @@ typedef void* yyscan_t;
 %type<stmtNode> stmt_for
 %type<stmtWhileNode> stmt_while
 %type<stmtWithNode> stmt_with
-%type<argList> args_list_decl args_list
+%type<argList> args_list_decl args_list array_list
 %type<stmtNode> decl_list decl
 %type<fnStmtNode> stmt_fndecl
 
@@ -163,6 +166,7 @@ stmt_list:
 
 stmt_block:
 	'{' stmt_list '}'		{ $$ = $2; }
+	| '{' '}'				{ $$ = new StatementBlock(); }
 	;
 
 stmt: stmt_if				{ $$ = $1;}
@@ -240,6 +244,11 @@ stmt_fndecl:
 	| T_KWPUBLIC stmt_fndecl														{ $$ = $2; $$->setPublic(true); }
 	;
 
+array_list:
+	array_list ',' expr				{ $1->push_back($3); }
+	| expr  						{ $$ = new std::vector<ExpressionNode *>(); $$->push_back($1); }
+	;
+
 args_list_decl:
 	{ $$ = 0; }
 	| args_list						{ $$ = $1; }
@@ -315,8 +324,13 @@ expr_ops_binary:
 	| expr '%' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Mod); }
 	| expr '^' expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Pow); }
 	| expr '=' expr				 	{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Assign, true); }
-	| expr '=' expr_new			 	{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Assign, true); }
-	| expr '@' expr		 			{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Concat); }
+	| expr '=' expr_assignment		{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Assign, true); }
+	| expr '@' expr		 			{ $$ = new ExpressionStrConcatNode($1, $3, $2); }
+	;
+
+expr_assignment:
+	expr_new						{ $$ = $1; }
+	| '{' '}'						{ $$ = new ExpressionListNode(0); }
 	;
 
 expr_ops_comparison:
@@ -352,7 +366,8 @@ expr_strconst:
 	;
 
 expr_arraylist:
-	'{' args_list_decl '}' 						{ $$ = new ExpressionListNode($2); }
+	'{' array_list '}' 							{ $$ = new ExpressionListNode($2); }
+	| '{' array_list ',' '}' 					{ $$ = new ExpressionListNode($2); }
 	;
 
 expr_cast:

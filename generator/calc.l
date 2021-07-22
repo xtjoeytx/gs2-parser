@@ -30,7 +30,6 @@ string_const (\"(\\.|[^"])*\")
 ":"		{return ':';}
 ";"		{return ';';}
 "|"		{return '|';}
-"@"		{return '@';}
 
 "("		{return '(';}
 ")"		{return ')';}
@@ -78,7 +77,7 @@ string_const (\"(\\.|[^"])*\")
 "public"	{return T_KWPUBLIC;}
 "if"		{return T_KWIF;}
 "else"		{return T_KWELSE;}
-"elseif"	{return T_KWELSEIF;}
+	/*"elseif"	{return T_KWELSEIF;} */
 "for"		{return T_KWFOR;}
 "while"		{return T_KWWHILE;}
 "break"		{return T_KWBREAK;}
@@ -95,7 +94,10 @@ string_const (\"(\\.|[^"])*\")
 "float"		{return T_KWCAST_FLOAT;}
 "in"		{return T_KWIN;}
 
-"SPC"		{return T_KWCONCAT_SPACE;}
+"@"			{yylval->cval = 0; return '@';}
+"NL"		{yylval->cval = '\n'; return '@';}
+"SPC"		{yylval->cval = ' '; return '@';}
+"TAB"		{yylval->cval = '\t'; return '@';}
 
 	/*
 		Comments

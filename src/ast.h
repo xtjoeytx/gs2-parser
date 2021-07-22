@@ -397,6 +397,22 @@ class ExpressionBinaryOpNode : public ExpressionNode
 		//}
 };
 
+class ExpressionStrConcatNode : public ExpressionBinaryOpNode
+{
+public:
+	_NodeName("ExpressionStrConcatNode");
+
+	ExpressionStrConcatNode(ExpressionNode* l, ExpressionNode* r, char sep = 0)
+		: ExpressionBinaryOpNode(l, r, ExpressionOp::Concat), sep(sep)
+	{
+
+	}
+
+	virtual ~ExpressionStrConcatNode() {}
+
+	char sep;
+};
+
 class ExpressionUnaryOpNode : public ExpressionNode
 {
 	public:

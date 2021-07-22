@@ -182,20 +182,6 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 {
 	bool handled = false;
 
-	if (node->op == ExpressionOp::Concat)
-	{
-		node->left->visit(this);
-		if (node->left->expressionType() != ExpressionType::EXPR_STRING)
-			byteCode.emit(opcode::OP_CONV_TO_STRING);
-
-		node->right->visit(this);
-		if (node->right->expressionType() != ExpressionType::EXPR_STRING)
-			byteCode.emit(opcode::OP_CONV_TO_STRING);
-
-		byteCode.emit(opcode::OP_JOIN);
-		return;
-	}
-
 	if (node->op == ExpressionOp::LogicalAnd || node->op == ExpressionOp::LogicalOr)
 	{
 		node->left->visit(this);
@@ -358,6 +344,32 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 	{
 		Visit((Node*)node);
 	}
+}
+
+void GS2CompilerVisitor::Visit(ExpressionStrConcatNode *node)
+{
+	node->left->visit(this);
+	if (node->left->expressionType() != ExpressionType::EXPR_STRING)
+		byteCode.emit(opcode::OP_CONV_TO_STRING);
+
+	switch (node->sep)
+	{
+		case ' ':
+		case '\t':
+		case '\n':
+			auto id = byteCode.getStringConst(std::string(1, node->sep));
+			byteCode.emit(opcode::OP_TYPE_STRING);
+			byteCode.emitDynamicNumber(id);
+
+			byteCode.emit(opcode::OP_JOIN);
+			break;
+	}
+	
+	node->right->visit(this);
+	if (node->right->expressionType() != ExpressionType::EXPR_STRING)
+		byteCode.emit(opcode::OP_CONV_TO_STRING);
+
+	byteCode.emit(opcode::OP_JOIN);
 }
 
 void GS2CompilerVisitor::Visit(ExpressionCastNode* node)

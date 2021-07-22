@@ -33,6 +33,7 @@ class NodeVisitor
         virtual void Visit(class ExpressionNewNode *node) = 0;
         virtual void Visit(class ExpressionBinaryOpNode *node) = 0;
         virtual void Visit(class ExpressionUnaryOpNode *node) = 0;
+        virtual void Visit(class ExpressionStrConcatNode *node) = 0;
         virtual void Visit(class ExpressionListNode *node) = 0;
 };
 

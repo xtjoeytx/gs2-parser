@@ -38,7 +38,7 @@ int main(int argc, const char *argv[]) {
 			GS2CompilerVisitor compilerVisitor(&parserStruct);
 			compilerVisitor.Visit(stmtBlock);
 
-			auto byteCode = compilerVisitor.getByteCode();
+			auto byteCode = compilerVisitor.getByteCode("weapon", "TestCode");
 			printf("Total length of bytecode w/ headers: %5zu\n", byteCode.length());
 
 			auto buf = byteCode.buffer();

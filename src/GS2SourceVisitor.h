@@ -147,6 +147,12 @@ public:
         tabc--;
     }
 
+    virtual void Visit(ExpressionStrConcatNode* node) {
+        tabc++;
+        print("%s;", node->toString().c_str());
+        tabc--;
+    }
+
     virtual void Visit(ExpressionUnaryOpNode *node) {
         
     }

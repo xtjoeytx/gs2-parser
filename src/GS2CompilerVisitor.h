@@ -37,8 +37,8 @@ class GS2CompilerVisitor : public NodeVisitor
             byteCode.Reset();
         }
 
-        Buffer getByteCode(const std::string& weaponName = "TestCode") {
-            return byteCode.getByteCode(weaponName);
+        Buffer getByteCode(const std::string& scriptType, const std::string& scriptName, bool saveToDisk = true) {
+            return byteCode.getByteCode(scriptType, scriptName, saveToDisk);
         }
 
         virtual void Visit(Node *node);
@@ -68,6 +68,7 @@ class GS2CompilerVisitor : public NodeVisitor
         virtual void Visit(ExpressionNewNode *node);
         virtual void Visit(ExpressionBinaryOpNode *node);
         virtual void Visit(ExpressionUnaryOpNode *node);
+        virtual void Visit(ExpressionStrConcatNode *node);
         virtual void Visit(ExpressionListNode *node);
 };
 

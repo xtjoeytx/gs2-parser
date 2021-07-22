@@ -23,7 +23,7 @@ class GS2Bytecode
         GS2Bytecode() : opcodePos(0), lastOp(opcode::Opcode::OP_NONE) {}
         void Reset() { opcodePos = 0; }
 
-        Buffer getByteCode(const std::string& scriptType = "weapon", const std::string& scriptName = "TestCode", bool saveToDisk = true);
+        Buffer getByteCode(const std::string& scriptType, const std::string& scriptName, bool saveToDisk);
 
         size_t getStringConst(const std::string& str);
         void addFunction(FunctionEntry entry);
