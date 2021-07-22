@@ -20,11 +20,12 @@ DIGIT		[0-9]
 ALPHA		[a-zA-Z_]
 ALPHANUM	[a-zA-Z_0-9]
 string_const (\"(\\.|[^"])*\")
+%x C_COMMENT
 
 %%
 
 [ \t]	; // ignore all whitespace
-\n		{yyextra->lineNumber++; 	printf("line: %d\n", yyextra->lineNumber);};
+\n		{yyextra->lineNumber++;};
 "."		{return '.';}
 ","		{return ',';}
 ":"		{return ':';}
@@ -102,33 +103,12 @@ string_const (\"(\\.|[^"])*\")
 	/*
 		Comments
 	*/
-"//".*"\n" {
-	yyextra->lineNumber++;
-}
+"//".*"\n"			{ yyextra->lineNumber++; }
 
-"/*" {
-		int c = 0, l;
-		for ( ; ; )
-		{
-		l = c;
-		c = yyinput(yyscanner);
-
-		// Is this an open comment?
-		if ( c == EOF )
-		{
-			printf( "unexpected end of file found in comment" );
-			break;
-		}
-
-		// Increment line numbers.
-		else if ( c == '\n' )
-			yyextra->lineNumber++;
-
-		// Did we find the end of the comment?
-		else if ( l == '*' && c == '/' )
-			break;
-		}
-	}
+"/*"				{ BEGIN(C_COMMENT); }
+<C_COMMENT>"*/"		{ BEGIN(INITIAL); }
+<C_COMMENT>\n		{ yyextra->lineNumber++; }
+<C_COMMENT>.		{ }
 	
 {DIGIT}*\.{DIGIT}+	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_FLOAT;}
 {DIGIT}+			{yylval->ival = atoi(yytext); return T_INT;}

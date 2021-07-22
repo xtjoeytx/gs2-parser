@@ -6,13 +6,16 @@
 #include "lex.yy.h"
 
 ParserData::ParserData()
-	: lineNumber(0), prog(nullptr)
+	: lineNumber(0), prog(nullptr), buffer(nullptr)
 {
 	yylex_init_extra(this, &scanner);
 }
 
 ParserData::~ParserData()
 {
+	if (buffer)
+		yy_delete_buffer(buffer, scanner);
+
 	yylex_destroy(scanner);
 	delete prog;
 }
@@ -41,6 +44,16 @@ std::optional<int> ParserData::getEnumConstant(const std::string& key)
 
 void ParserData::parse(const std::string& input)
 {
-	yy_switch_to_buffer(yy_scan_string(input.c_str(), scanner), scanner);
+	if (buffer)
+		yy_delete_buffer(buffer, scanner);
+
+	if (prog)
+	{
+		delete prog;
+		prog = nullptr;
+	}
+
+	lineNumber = 1;
+	buffer = yy_scan_string(input.c_str(), scanner);
 	yyparse(this, scanner);
 }

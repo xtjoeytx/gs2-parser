@@ -11,6 +11,7 @@
 //#include "ast.h"
 
 typedef void* yyscan_t;
+typedef struct yy_buffer_state* YY_BUFFER_STATE;
 
 class StatementBlock;
 class EnumList;
@@ -33,6 +34,7 @@ class ParserData
 
 	private:
 		yyscan_t scanner;
+		YY_BUFFER_STATE buffer;
 
 		std::unordered_map<std::string, int> enumConstants;
 		std::set<std::string> stable;
