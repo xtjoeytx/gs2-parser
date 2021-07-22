@@ -47,8 +47,10 @@ string_const (\"(\\.|[^"])*\")
 "!="	{return T_OPNOTEQUALS;}
 "<"		{return T_OPLESSTHAN;}
 "<="	{return T_OPLESSTHANEQUAL;}
+"=<"	{return T_OPLESSTHANEQUAL;}
 ">"		{return T_OPGREATERTHAN;}
 ">="	{return T_OPGREATERTHANEQUAL;}
+"=>"	{return T_OPGREATERTHANEQUAL;}
 
 "+"		{return '+';}
 "-"		{return '-';}
@@ -64,6 +66,7 @@ string_const (\"(\\.|[^"])*\")
 "/="	{return T_OPDIVASSIGN;}
 "^="	{return T_OPPOWASSIGN;}
 "%="	{return T_OPMODASSIGN;}
+"@="	{return T_OPCATASSIGN;}
 
 "--"	{return T_OPDECREMENT;}
 "++"	{return T_OPINCREMENT;}

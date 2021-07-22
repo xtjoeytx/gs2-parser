@@ -71,7 +71,7 @@ typedef void* yyscan_t;
 
 %token '+' '-' '*' '/' '^' '%'
 %token '='
-%token T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN
+%token T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN T_OPCATASSIGN
 %token T_OPDECREMENT T_OPINCREMENT
 
 %token T_KWPUBLIC
@@ -80,7 +80,7 @@ typedef void* yyscan_t;
 %token T_KWSWITCH T_KWCASE T_KWDEFAULT
 %token T_KWCAST_INT T_KWCAST_FLOAT
 
-%right '='
+%right '=' T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN T_OPCATASSIGN
 %left '['
 %left T_OPOR
 %left T_OPAND
@@ -144,8 +144,8 @@ decl:
 	;
 
 stmt_enum:
-	T_KWENUM '{' enum_list '}' ';'	{ parser->addEnum($3); }
-	| T_KWENUM T_IDENTIFIER '{' enum_list '}' ';'	{ parser->addEnum($4, $2); }
+	T_KWENUM '{' enum_list '}'					{ parser->addEnum($3); }
+	| T_KWENUM T_IDENTIFIER '{' enum_list '}' 	{ parser->addEnum($4, $2); }
 	;
 
 enum_list:
@@ -326,6 +326,14 @@ expr_ops_binary:
 	| expr '=' expr				 	{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Assign, true); }
 	| expr '=' expr_assignment		{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Assign, true); }
 	| expr '@' expr		 			{ $$ = new ExpressionStrConcatNode($1, $3, $2); }
+
+	| expr T_OPADDASSIGN expr		{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::PlusAssign, true); }
+	| expr T_OPSUBASSIGN expr		{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::MinusAssign, true); }
+	| expr T_OPMULASSIGN expr		{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::MultiplyAssign, true); }
+	| expr T_OPDIVASSIGN expr		{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::DivideAssign, true); }
+	| expr T_OPPOWASSIGN expr		{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::PowAssign, true); }
+	| expr T_OPMODASSIGN expr		{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::ModAssign, true); }
+	| expr T_OPCATASSIGN expr		{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::ConcatAssign, true); }
 	;
 
 expr_assignment:

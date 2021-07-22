@@ -51,6 +51,14 @@ enum class ExpressionOp {
 	LogicalAnd,
 	LogicalOr,
 
+	PlusAssign,
+	MinusAssign,
+	MultiplyAssign,
+	DivideAssign,
+	PowAssign,
+	ModAssign,
+	ConcatAssign,
+
 	UnaryStringCast,
 	UnaryNot,
 	UnaryMinus,
