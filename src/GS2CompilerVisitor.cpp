@@ -140,14 +140,16 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 	byteCode.emit(opcode::OP_SET_INDEX);
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0)); // replaced with jump index to last opcode
-	
-	std::string funcName = node->objectName;
-	if (!funcName.empty())
-		funcName.append(".");
+
+	std::string funcName;
+	if (node->pub)
+		funcName.append("public.");
+	if (!node->objectName.empty())
+		funcName.append(node->objectName).append(".");
 	funcName.append(node->ident);
 
 	byteCode.addFunction({funcName, byteCode.getBytecodePos(), byteCode.getOpcodePos()});
-	
+
 	{
 		byteCode.emit(opcode::OP_TYPE_ARRAY);
 
@@ -281,7 +283,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 {
 	bool handled = false;
-	
+
 	node->expr->visit(this);
 
 	if (node->opFirst)
@@ -383,7 +385,7 @@ void GS2CompilerVisitor::Visit(ExpressionArrayIndexNode* node)
 	node->idx->visit(this);
 	if (node->idx->expressionType() != ExpressionType::EXPR_NUMBER)
 		byteCode.emit(opcode::OP_CONV_TO_FLOAT);
-	
+
 	byteCode.emit(opcode::OP_ARRAY);
 }
 
@@ -493,7 +495,7 @@ void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 	printf("String: %s\n", node->val.c_str());
 
 	auto id = byteCode.getStringConst(node->val);
-	
+
 	byteCode.emit(opcode::OP_TYPE_STRING);
 	byteCode.emitDynamicNumber(id);
 }
@@ -510,7 +512,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 
 	auto iter = cmdList.find(funcName);
 	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : defaultCall);
-	
+
 	{
 		if (cmd.useArray)
 			byteCode.emit(opcode::OP_TYPE_ARRAY);
@@ -571,14 +573,14 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 	byteCode.emit(short(0));
 
 	logicalBreakpoints.top().breakPointLocs.push_back(byteCode.getBytecodePos() - 2);
-	
+
 	node->thenBlock->visit(this);
 
 	// OP_IF jumps to this location if the condition is false, so we
 	// continue to the next instruction, but if their is an else-block we must
 	// skip the next instruction since its a jmp to the end of the if-else chain
 	auto nextOpcode = byteCode.getOpcodePos() + (node->elseBlock ? 1 : 0);
-	
+
 	auto& breakPoint = logicalBreakpoints.top();
 	for (const auto& loc : breakPoint.breakPointLocs) {
 		byteCode.emit(short(nextOpcode), loc);
@@ -650,7 +652,7 @@ void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 
 	breakPoints.push(LoopBreakPoint{ });
 	node->block->visit(this);
-	
+
 	// Jump back to condition
 	byteCode.emit(opcode::OP_SET_INDEX);
 	byteCode.emit(char(0xF4));
@@ -756,7 +758,7 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 	auto& breakPoint = breakPoints.top();
 	for (const auto& loc : breakPoint.breakPointLocs)
 		byteCode.emit(short(breakPointLoc), loc);
-	
+
 	for (const auto& loc : breakPoint.continuePointLocs)
 		byteCode.emit(short(condStart), loc);
 
@@ -843,7 +845,7 @@ void GS2CompilerVisitor::Visit(ExpressionListNode* node)
 	std::reverse(node->args.begin(), node->args.end());
 	for (const auto& arg : node->args)
 		arg->visit(this);
-	
+
 	byteCode.emit(opcode::OP_ARRAY_END);
 }
 
@@ -886,10 +888,10 @@ void GS2CompilerVisitor::Visit(StatementForEachNode *node)
 	auto& breakPoint = breakPoints.top();
 	for (const auto& loc : breakPoint.breakPointLocs)
 		byteCode.emit(short(endLoopOp), loc);
-	
+
 	for (const auto& loc : breakPoint.continuePointLocs)
 		byteCode.emit(short(continueLoopOp), loc);
-	
+
 	breakPoints.pop();
 
 	// pop index
@@ -930,7 +932,7 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 		caseStartOp.push_back(byteCode.getOpcodePos());
 		caseNode->stmt->visit(this);
 	}
-	
+
 	// case-test:
 	byteCode.emit(short(byteCode.getOpcodePos()), caseTestLoc);
 	node->expr->visit(this);
