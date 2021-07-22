@@ -44,7 +44,7 @@ Buffer GS2Bytecode::getByteCode(const std::string& weaponName)
 	// Start section
 	{
 		Buffer startSection;
-		char packetHeader[255];
+		char packetHeader[10 + weaponName.length()];
 		sprintf(packetHeader, "weapon,%s,1,", weaponName.c_str());
 		startSection.write(packetHeader, strlen(packetHeader));
 		for (int i = 0; i < 10; i++)
