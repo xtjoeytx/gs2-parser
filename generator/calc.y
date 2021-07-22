@@ -293,7 +293,7 @@ postfix:
 			$$ = new ExpressionPostfixNode(n);
 	}
 
-	| postfix '.' expr_ident							{ $1->nodes.push_back($3); }
+	| postfix '.' primary							{ $1->nodes.push_back($3); }
 	;
 
 expr:

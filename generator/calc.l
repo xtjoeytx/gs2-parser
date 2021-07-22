@@ -17,7 +17,7 @@
 %}
 
 DIGIT		[0-9]
-ALPHA		[a-zA-Z_]
+ALPHA		[a-zA-Z_$]
 ALPHANUM	[a-zA-Z_0-9]
 string_const (\"(\\.|[^"])*\")
 %x C_COMMENT
@@ -115,6 +115,6 @@ string_const (\"(\\.|[^"])*\")
 	
 {DIGIT}*\.{DIGIT}+	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_FLOAT;}
 {DIGIT}+			{yylval->ival = atoi(yytext); return T_INT;}
-{ALPHANUM}+			{yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
+{ALPHA}{ALPHANUM}*	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
 {string_const}		{yylval->sval = yyextra->saveString(yytext+1, yyleng - 2); return T_STRCONSTANT;}
 %%
