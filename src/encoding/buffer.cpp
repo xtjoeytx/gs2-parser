@@ -1,5 +1,7 @@
 #include <cassert>
 #include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include "buffer.h"
 
 Buffer::Buffer(size_t len)

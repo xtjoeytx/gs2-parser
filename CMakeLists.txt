@@ -21,27 +21,35 @@ include_directories(
 	src
 )
 
-add_executable(gs2test
-    src/encoding/buffer.cpp
-    src/ast.cpp
-	src/GS2Bytecode.cpp
-	src/GS2CompilerVisitor.cpp
-	src/main.cpp
-	src/Parser.cpp
+set(SOURCES_ALL
+		src/encoding/buffer.cpp
+		src/ast.cpp
+		src/GS2Bytecode.cpp
+		src/GS2CompilerVisitor.cpp
+		src/Parser.cpp
 
-	src/encoding/buffer.h
-	src/encoding/graalencoding.h
-	src/ast.h
-	src/astvisitor.h
-	src/GS2Bytecode.h
-	src/GS2CompilerVisitor.h
-	src/GS2SourceVisitor.h
-	src/opcodes.h
-	src/Parser.h
+		src/encoding/buffer.h
+		src/encoding/graalencoding.h
+		src/ast.h
+		src/astvisitor.h
+		src/GS2Bytecode.h
+		src/GS2CompilerVisitor.h
+		src/GS2SourceVisitor.h
+		src/opcodes.h
+		src/Parser.h
 
-    ${BISON_MyParser_INPUT}
-    ${FLEX_MyScanner_INPUT}
-    ${BISON_MyParser_OUTPUTS}
-    ${FLEX_MyScanner_OUTPUTS}
- )
- target_link_libraries(gs2test)
+		${BISON_MyParser_INPUT}
+		${FLEX_MyScanner_INPUT}
+		${BISON_MyParser_OUTPUTS}
+		${FLEX_MyScanner_OUTPUTS})
+
+add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
+add_library(gs2compiler ${SOURCES_ALL})
+target_link_libraries(gs2test)
+target_link_libraries(gs2compiler)
+
+set(GS2COMPILER_INCLUDE_DIRECTORY
+		"${PROJECT_SOURCE_DIR}/include"
+		"${PROJECT_BINARY_DIR}/include"
+		"${PROJECT_SOURCE_DIR}/src"
+		PARENT_SCOPE)

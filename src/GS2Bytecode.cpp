@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cstring>
 #include "GS2Bytecode.h"
 #include "encoding/graalencoding.h"
 
@@ -36,17 +37,19 @@ size_t GS2Bytecode::getStringConst(const std::string& str)
 	return std::distance(stringTable.begin(), it);
 }
 
-Buffer GS2Bytecode::getByteCode()
+Buffer GS2Bytecode::getByteCode(const std::string& weaponName)
 {
 	Buffer byteCode;
 
 	// Start section
 	{
 		Buffer startSection;
-		startSection.write("weapon,TestCode,1,", strlen("weapon,TestCode,1,"));
+		char packetHeader[255];
+		sprintf(packetHeader, "weapon,%s,1,", weaponName.c_str());
+		startSection.write(packetHeader, strlen(packetHeader));
 		for (int i = 0; i < 10; i++)
 			startSection.Write<GraalByte>(0);
-		
+
 		byteCode.Write<GraalShort>(startSection.length());
 		byteCode.write(startSection);
 	}
@@ -55,7 +58,7 @@ Buffer GS2Bytecode::getByteCode()
 	{
 		Buffer gs1flags;
 		gs1flags.Write<encoding::Int32>(0); // bitflag for gs1 events
-		
+
 		byteCode.Write<encoding::Int32>(1);
 		byteCode.Write<encoding::Int32>(gs1flags.length());
 		byteCode.write(gs1flags);
@@ -69,7 +72,7 @@ Buffer GS2Bytecode::getByteCode()
 			functionNames.Write<encoding::Int32>(func.opIndex);
 			functionNames.write(func.functionName.c_str(), func.functionName.length());
 			functionNames.write('\0');
-			
+
 			emit(short(opcodePos), func.functionIP - 2);
 		}
 
@@ -120,7 +123,7 @@ void GS2Bytecode::addFunction(FunctionEntry entry)
 void GS2Bytecode::emit(opcode::Opcode op)
 {
 	printf("%5zu EMIT OPER: %s (%d) loc: %zu\n", bytecode.length(), opcode::OpcodeToString(op).c_str(), op, opcodePos);
-	
+
 	bytecode.write((char)op);
 	lastOp = op;
 	++opcodePos;
@@ -186,7 +189,7 @@ void GS2Bytecode::emitDynamicNumber(int32_t val)
 	// Strings use 0xF0 -> 0xF2, numbers use 0xF3 -> 0xF5
 	// 0xF6 is used for null-terminated strings converted to doubles
 	char offset = 0;
-	
+
 	switch (getLastOp())
 	{
 		case opcode::OP_SET_INDEX:

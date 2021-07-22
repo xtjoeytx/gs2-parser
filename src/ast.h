@@ -3,6 +3,7 @@
 #ifndef AST_H
 #define AST_H
 
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -184,7 +185,7 @@ public:
 	{
 		val = num;
 	}
-	
+
 	virtual ~ExpressionIntegerNode() { }
 
 	virtual std::string toString() const {
@@ -382,7 +383,7 @@ class ExpressionBinaryOpNode : public ExpressionNode
 
 			if (!assignment)
 				ret += "(";
-			
+
 			ret += left->toString() + " " + ExpressionOpToString(op) + " " + right->toString();
 
 			if (!assignment)
@@ -418,7 +419,7 @@ class ExpressionUnaryOpNode : public ExpressionNode
 		{
 			if (opFirst)
 				return std::string(ExpressionOpToString(op)) + expr->toString();
-			
+
 			return expr->toString() + std::string(ExpressionOpToString(op));
 		}
 };
@@ -569,7 +570,7 @@ public:
 
 		ident = std::string(id);
 	}
-	
+
 	virtual ~StatementFnDeclNode();
 
 	void setPublic(bool r) {
@@ -635,7 +636,7 @@ public:
 	}
 
 	virtual ~StatementReturnNode();
-	
+
 	ExpressionNode *expr;
 };
 
@@ -684,7 +685,7 @@ public:
 	}
 
 	virtual ~StatementForNode();
-	
+
 	ExpressionNode *init;
 	ExpressionNode *cond;
 	ExpressionNode *postop;
@@ -703,7 +704,7 @@ public:
 	}
 
 	virtual ~StatementForEachNode();
-	
+
 	ExpressionNode *name;
 	ExpressionNode *expr;
 	StatementNode *block;
@@ -754,7 +755,7 @@ struct EnumMember
 	EnumMember(std::string node)
 		: node(std::move(node)), idx(0), hasIndex(false)
 	{
-		
+
 	}
 
 	EnumMember(std::string node, int idx)

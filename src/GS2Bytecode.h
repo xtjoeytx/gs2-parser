@@ -22,18 +22,18 @@ class GS2Bytecode
     public:
         GS2Bytecode() : opcodePos(0), lastOp(opcode::Opcode::OP_NONE) {}
         void Reset() { opcodePos = 0; }
-        
-        Buffer getByteCode();
+
+        Buffer getByteCode(const std::string& weaponName = "TestCode");
 
         size_t getStringConst(const std::string& str);
         void addFunction(FunctionEntry entry);
-        
+
         void emit(opcode::Opcode op);
         void emit(char v, size_t pos = SIZE_MAX);
         void emit(short v, size_t pos = SIZE_MAX);
         void emit(int v, size_t pos = SIZE_MAX);
         void emit(const std::string& v);
-        
+
         void emitDynamicNumber(int32_t val);
         void emitDoubleNumber(const std::string& num);
 

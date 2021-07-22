@@ -76,7 +76,7 @@ typedef void* yyscan_t;
 %token T_KWIF T_KWELSE T_KWELSEIF T_KWFOR T_KWWHILE T_KWBREAK T_KWCONTINUE T_KWRETURN T_KWIN
 %token T_KWFUNCTION T_KWNEW T_KWWITH T_KWENUM
 %token T_KWSWITCH T_KWCASE T_KWDEFAULT
-%token T_KWCAST_INT T_KWCAST_FLOAT
+%token T_KWCAST_INT T_KWCAST_FLOAT T_KWCONCAT_SPACE
 
 %right '='
 %left '['
@@ -177,7 +177,7 @@ stmt: stmt_if				{ $$ = $1;}
 	| stmt_with				{ $$ = $1; }
 	| stmt_switch 			{ $$ = $1; }
 	;
-	
+
 stmt_expr:
 	';'						{ $$ = 0; }
 	| expr ';'				{ $$ = $1; }
@@ -266,7 +266,7 @@ postfix:
 	primary												{ $$ = new ExpressionPostfixNode($1); }
 	| postfix '[' expr ']'								{ $1->nodes.push_back(new ExpressionArrayIndexNode($1, $3)); }
 	| postfix '(' args_list_decl ')'					{
-			
+
 			// remove last element, to be used as function ident
 			auto tmp = $1->nodes.back();
 			$1->nodes.pop_back();
@@ -318,7 +318,7 @@ expr_ops_binary:
 	| expr '=' expr_new			 	{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Assign, true); }
 	| expr '@' expr		 			{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Concat); }
 	;
-	
+
 expr_ops_comparison:
 	expr T_OPEQUALS expr	 					{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::Equal); }
 	| expr T_OPNOTEQUALS expr	 				{ $$ = new ExpressionBinaryOpNode($1, $3, ExpressionOp::NotEqual); }
@@ -359,7 +359,7 @@ expr_cast:
 	T_KWCAST_INT '(' expr ')'					{ $$ = new ExpressionCastNode($3, ExpressionCastNode::CastType::INTEGER); }
 	| T_KWCAST_FLOAT '(' expr ')'				{ $$ = new ExpressionCastNode($3, ExpressionCastNode::CastType::FLOAT); }
 	;
-	
+
 expr_new:
 	T_KWNEW expr_ident '(' args_list_decl ')'	{ $$ = new ExpressionNewNode($2, $4); }
 	;
@@ -370,7 +370,7 @@ expr_new:
 
 void yyerror(YYLTYPE* yyllocp, class ParserData *parser, yyscan_t unused, const char* s) {
 	fprintf(stderr, "Parse error (line %d): %s\n", parser->lineNumber, s);
-	
+
 	#ifdef _WIN32
 	system("pause");
 	#endif
