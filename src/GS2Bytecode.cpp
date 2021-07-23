@@ -133,6 +133,7 @@ void GS2Bytecode::emit(opcode::Opcode op)
 	bytecode.write((char)op);
 	lastOp = op;
 	++opcodePos;
+	opcodeWritePos = bytecode.length() - 1;
 }
 
 void GS2Bytecode::emit(char v, size_t pos)
@@ -237,4 +238,14 @@ void GS2Bytecode::emitDoubleNumber(const std::string& num)
 
 	emit(char(0xF6));
 	emit(num);
+}
+
+void GS2Bytecode::popOpcode()
+{
+	if (lastOp != opcode::Opcode::OP_NONE)
+	{
+		lastOp = opcode::Opcode::OP_NONE;
+		--opcodePos;
+		bytecode.setWritePos(opcodeWritePos);
+	}
 }

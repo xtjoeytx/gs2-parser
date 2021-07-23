@@ -20,7 +20,7 @@ struct FunctionEntry
 class GS2Bytecode
 {
     public:
-        GS2Bytecode() : opcodePos(0), lastOp(opcode::Opcode::OP_NONE) {}
+        GS2Bytecode() : opcodePos(0), opcodeWritePos(0), lastOp(opcode::Opcode::OP_NONE) {}
         void Reset() { opcodePos = 0; }
 
         Buffer getByteCode(const std::string& scriptType, const std::string& scriptName, bool saveToDisk);
@@ -37,6 +37,8 @@ class GS2Bytecode
         void emitDynamicNumber(int32_t val);
         void emitDoubleNumber(const std::string& num);
 
+        void popOpcode();
+
         opcode::Opcode getLastOp() const;
         size_t getOpcodePos() const;
         size_t getBytecodePos() const;
@@ -47,7 +49,7 @@ class GS2Bytecode
         std::vector<FunctionEntry> functionTable;
 
         opcode::Opcode lastOp;
-        size_t opcodePos;
+        size_t opcodePos, opcodeWritePos;
 };
 
 inline opcode::Opcode GS2Bytecode::getLastOp() const {

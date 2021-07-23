@@ -180,10 +180,8 @@ ExpressionPostfixNode::~ExpressionPostfixNode()
 
 ExpressionArrayIndexNode::~ExpressionArrayIndexNode()
 {
-	// NOTE: we are not the only ones with access to expr
-	// should likely be removed from the constructor
-	// delete expr;
-	delete idx;
+	for (const auto& expr : exprList)
+		delete expr;
 }
 
 ExpressionBinaryOpNode::~ExpressionBinaryOpNode()

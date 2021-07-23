@@ -105,6 +105,9 @@ namespace opcode
 		OP_OBJ_POSITIONS = 120, // array of positions of the substring in the string
 		OP_OBJ_SIZE = 130,
 		OP_ARRAY = 131,
+		OP_ARRAY_ASSIGN = 132,
+		OP_ARRAY_MULTIDIM = 133,
+		OP_ARRAY_MULTIDIM_ASSIGN = 134,
 		OP_OBJ_SUBARRAY = 135,
 		OP_OBJ_CLEAR = 141,
 		OP_ARRAY_NEW_MULTIDIM = 142,

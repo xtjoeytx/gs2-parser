@@ -238,7 +238,6 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			break;
 		}
 
-		case ExpressionOp::Assign:
 		case ExpressionOp::Equal:
 		case ExpressionOp::NotEqual:
 		{
@@ -248,6 +247,39 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			auto opCode = getExpressionOpCode(node->op);
 			assert(opCode != opcode::Opcode::OP_NONE);
 
+			byteCode.emit(opCode);
+			handled = true;
+			break;
+		}
+
+		case ExpressionOp::Assign:
+		{
+			node->left->visit(this);
+
+			// TODO(joey): move to ast-creation
+			// Assignment on arrays should not output the type
+			bool isArray = false;
+			if (byteCode.getLastOp() == opcode::Opcode::OP_ARRAY || byteCode.getLastOp() == opcode::Opcode::OP_ARRAY_MULTIDIM)
+			{
+				byteCode.popOpcode();
+				isArray = true;
+			}
+			
+			node->right->visit(this);
+
+			auto opCode = getExpressionOpCode(node->op);
+			assert(opCode != opcode::Opcode::OP_NONE);
+
+			// Special assignment operators for array/multi-dimensional arrays
+			if (isArray)
+			{
+				auto exprType = node->left->expressionType();
+				if (exprType == ExpressionType::EXPR_ARRAY)
+					opCode = opcode::Opcode::OP_ARRAY_ASSIGN;
+				else if (exprType == ExpressionType::EXPR_MULTIARRAY)
+					opCode = opcode::Opcode::OP_ARRAY_MULTIDIM_ASSIGN;
+			}
+			
 			byteCode.emit(opCode);
 			handled = true;
 			break;
@@ -394,11 +426,20 @@ void GS2CompilerVisitor::Visit(ExpressionCastNode* node)
 
 void GS2CompilerVisitor::Visit(ExpressionArrayIndexNode* node)
 {
-	node->idx->visit(this);
-	if (node->idx->expressionType() != ExpressionType::EXPR_NUMBER)
-		byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+	for (const auto& expr : node->exprList)
+	{
+		expr->visit(this);
+		if (expr->expressionType() != ExpressionType::EXPR_NUMBER
+			&& expr->expressionType() != ExpressionType::EXPR_INTEGER)
+		{
+			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+		}
+	}
 
-	byteCode.emit(opcode::OP_ARRAY);
+	if (node->expressionType() == ExpressionType::EXPR_MULTIARRAY)
+		byteCode.emit(opcode::OP_ARRAY_MULTIDIM);
+	else
+		byteCode.emit(opcode::OP_ARRAY);
 }
 
 void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)

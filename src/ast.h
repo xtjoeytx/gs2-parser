@@ -30,6 +30,8 @@ enum class ExpressionType
 	EXPR_STRING,
 	EXPR_IDENT,
 	EXPR_OBJECT,
+	EXPR_ARRAY,
+	EXPR_MULTIARRAY,
 	EXPR_FUNCTION
 };
 
@@ -300,19 +302,36 @@ class ExpressionArrayIndexNode : public ExpressionNode
 public:
 	_NodeName("ExpressionArrayIndexNode")
 
-	ExpressionArrayIndexNode(ExpressionNode *expr, ExpressionNode *idx)
-	: ExpressionNode(), expr(expr), idx(idx)
+	ExpressionArrayIndexNode(std::vector<ExpressionNode *> *list)
+		: ExpressionNode()
 	{
+		if (list)
+		{
+			exprList = std::move(*list);
+			delete list;
+		}
 	}
 
 	virtual ~ExpressionArrayIndexNode();
 
 	virtual std::string toString() const {
-		return expr->toString().append("[").append(idx->toString()).append("]");;
+		std::string str;
+		str.append("[");
+		for (const auto& ex : exprList)
+		{
+			str.append(ex->toString());
+			str.append(",");
+		}
+		str.pop_back();
+		str.append("]");
+		return str;
 	}
 
-	ExpressionNode* expr;
-	ExpressionNode* idx;
+	virtual ExpressionType expressionType() const {
+		return (exprList.size() > 1 ? ExpressionType::EXPR_MULTIARRAY : ExpressionType::EXPR_ARRAY);
+	}
+
+	std::vector<ExpressionNode *> exprList;
 };
 
 class ExpressionCastNode : public ExpressionNode
