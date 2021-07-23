@@ -255,30 +255,17 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::Assign:
 		{
 			node->left->visit(this);
-
-			// TODO(joey): move to ast-creation
-			// Assignment on arrays should not output the type
-			bool isArray = false;
-			if (byteCode.getLastOp() == opcode::Opcode::OP_ARRAY || byteCode.getLastOp() == opcode::Opcode::OP_ARRAY_MULTIDIM)
-			{
-				byteCode.popOpcode();
-				isArray = true;
-			}
-			
 			node->right->visit(this);
 
 			auto opCode = getExpressionOpCode(node->op);
 			assert(opCode != opcode::Opcode::OP_NONE);
 
 			// Special assignment operators for array/multi-dimensional arrays
-			if (isArray)
-			{
-				auto exprType = node->left->expressionType();
-				if (exprType == ExpressionType::EXPR_ARRAY)
-					opCode = opcode::Opcode::OP_ARRAY_ASSIGN;
-				else if (exprType == ExpressionType::EXPR_MULTIARRAY)
-					opCode = opcode::Opcode::OP_ARRAY_MULTIDIM_ASSIGN;
-			}
+			auto exprType = node->left->expressionType();
+			if (exprType == ExpressionType::EXPR_ARRAY)
+				opCode = opcode::Opcode::OP_ARRAY_ASSIGN;
+			else if (exprType == ExpressionType::EXPR_MULTIARRAY)
+				opCode = opcode::Opcode::OP_ARRAY_MULTIDIM_ASSIGN;
 			
 			byteCode.emit(opCode);
 			handled = true;
@@ -436,10 +423,13 @@ void GS2CompilerVisitor::Visit(ExpressionArrayIndexNode* node)
 		}
 	}
 
-	if (node->expressionType() == ExpressionType::EXPR_MULTIARRAY)
-		byteCode.emit(opcode::OP_ARRAY_MULTIDIM);
-	else
-		byteCode.emit(opcode::OP_ARRAY);
+	if (!node->isAssignment)
+	{
+		if (node->expressionType() == ExpressionType::EXPR_MULTIARRAY)
+			byteCode.emit(opcode::OP_ARRAY_MULTIDIM);
+		else
+			byteCode.emit(opcode::OP_ARRAY);
+	}
 }
 
 void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)
@@ -530,6 +520,10 @@ void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
 		}
 		i++;
 	}
+	
+	// mark our last node as an assignment
+	if (node->isAssignment)
+		node->nodes.back()->isAssignment = true;
 
 	for (; i < node->nodes.size(); i++)
 	{

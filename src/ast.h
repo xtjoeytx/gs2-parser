@@ -174,7 +174,7 @@ class ExpressionNode : public StatementNode
 public:
 	_NodeName("ExpressionNode")
 
-	ExpressionNode() : StatementNode() { }
+	ExpressionNode() : StatementNode(), isAssignment(false) { }
 
 	virtual ~ExpressionNode() {}
 
@@ -183,6 +183,8 @@ public:
 	virtual ExpressionType expressionType() const {
 		return ExpressionType::EXPR_ANY;
 	}
+
+	bool isAssignment;
 };
 
 class ExpressionIntegerNode : public ExpressionNode
@@ -395,7 +397,8 @@ class ExpressionBinaryOpNode : public ExpressionNode
 		ExpressionBinaryOpNode(ExpressionNode *l, ExpressionNode *r, ExpressionOp op, bool assign = false)
 			: ExpressionNode(), left(l), right(r), op(op), assignment(assign)
 		{
-
+			if (assign)
+				left->isAssignment = true;
 		}
 
 		virtual ~ExpressionBinaryOpNode();
