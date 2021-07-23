@@ -162,7 +162,7 @@ ExpressionListNode::~ExpressionListNode()
 		delete node;
 }
 
-ExpressionNewNode::~ExpressionNewNode()
+ExpressionNewObjectNode::~ExpressionNewObjectNode()
 {
 	if (args)
 	{

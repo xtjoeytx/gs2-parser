@@ -39,10 +39,10 @@ typedef void* yyscan_t;
 	ExpressionBinaryOpNode *exprBinaryNode;
 	ExpressionUnaryOpNode *exprUnaryNode;
 	ExpressionListNode *exprListNode;
-	ExpressionNewNode *exprNewNode;
 	ExpressionPostfixNode *exprPostfix;
 
-	std::vector<ExpressionNode *> *argList;
+	std::vector<ExpressionNode *> *exprList;
+	std::vector<int> *indexList;
 
 	CaseNode *caseNode;
 	std::vector<CaseNode *> *caseNodeList;
@@ -99,12 +99,11 @@ typedef void* yyscan_t;
 %type<exprPostfix> postfix
 %type<exprNode> expr_cast
 %type<exprNode> expr_intconst expr_numberconst expr_strconst
-%type<exprNode> expr_assignment
+%type<exprNode> expr_assignment expr_new
 %type<exprIdentNode> expr_ident
 %type<exprUnaryNode> expr_ops_unary
 %type<exprBinaryNode> expr_ops_binary expr_ops_comparison
 %type<exprInNode> expr_ops_in
-%type<exprNewNode> expr_new
 %type<exprListNode> expr_arraylist
 %type<stmtIfNode> stmt_if
 %type<stmtBlock> stmt_list
@@ -115,7 +114,7 @@ typedef void* yyscan_t;
 %type<stmtNode> stmt_for
 %type<stmtWhileNode> stmt_while
 %type<stmtWithNode> stmt_with
-%type<argList> args_list_decl args_list array_list
+%type<exprList> expr_list expr_list_with_empty
 %type<stmtNode> decl_list decl
 %type<fnStmtNode> stmt_fndecl
 
@@ -124,6 +123,9 @@ typedef void* yyscan_t;
 %type<caseNodeList> stmt_caseblock_list
 %type<enumList> enum_list
 %type<enumMember> enum_item
+
+%type<ival> array_idx
+%type<indexList> array_idx_list
 
 %start program
 
@@ -188,7 +190,7 @@ stmt_expr:
 	;
 
 stmt_new:
-	T_KWNEW T_IDENTIFIER '(' args_list_decl ')' stmt_block	{ $$ = new StatementNewNode($2, $4, $6); }
+	T_KWNEW T_IDENTIFIER '(' expr_list_with_empty ')' stmt_block	{ $$ = new StatementNewNode($2, $4, $6); }
 	;
 
 stmt_if:
@@ -233,29 +235,25 @@ stmt_caseblock_list:
 	| stmt_caseblock 										{ $$ = new std::vector<CaseNode *>(); $$->push_back($1); }
 	;
 
+	// todo(joey): multiple case-list in succession
 stmt_caseblock:
 	T_KWCASE expr ':' stmt_list 							{ $$ = new CaseNode($2, $4); }
 	| T_KWDEFAULT ':' stmt_list								{ $$ = new CaseNode(0, $3); }
 	;
 
 stmt_fndecl:
-	T_KWFUNCTION T_IDENTIFIER '(' args_list_decl ')' stmt_block						{ $$ = new StatementFnDeclNode($2, $4, $6); }
-	| T_KWFUNCTION T_IDENTIFIER '.' T_IDENTIFIER '(' args_list_decl ')' stmt_block	{ $$ = new StatementFnDeclNode($4, $6, $8, $2); }
+	T_KWFUNCTION T_IDENTIFIER '(' expr_list_with_empty ')' stmt_block						{ $$ = new StatementFnDeclNode($2, $4, $6); }
+	| T_KWFUNCTION T_IDENTIFIER '.' T_IDENTIFIER '(' expr_list_with_empty ')' stmt_block	{ $$ = new StatementFnDeclNode($4, $6, $8, $2); }
 	| T_KWPUBLIC stmt_fndecl														{ $$ = $2; $$->setPublic(true); }
 	;
 
-array_list:
-	array_list ',' expr				{ $1->push_back($3); }
-	| expr  						{ $$ = new std::vector<ExpressionNode *>(); $$->push_back($1); }
+expr_list_with_empty:
+									{ $$ = nullptr; }
+	| expr_list						{ $$ = $1; }
 	;
 
-args_list_decl:
-	{ $$ = 0; }
-	| args_list						{ $$ = $1; }
-	;
-
-args_list:
-	args_list ',' expr				{ $1->push_back($3); }
+expr_list:
+	expr_list ',' expr				{ $1->push_back($3); }
 	| expr							{ $$ = new std::vector<ExpressionNode *>(); $$->push_back($1); }
 	;
 
@@ -274,8 +272,7 @@ primary:
 postfix:
 	primary												{ $$ = new ExpressionPostfixNode($1); }
 	| postfix '[' expr ']'								{ $1->nodes.push_back(new ExpressionArrayIndexNode($1, $3)); }
-	| postfix '(' args_list_decl ')'					{
-
+	| postfix '(' expr_list_with_empty ')'					{
 			// remove last element, to be used as function ident
 			auto tmp = $1->nodes.back();
 			$1->nodes.pop_back();
@@ -374,8 +371,8 @@ expr_strconst:
 	;
 
 expr_arraylist:
-	'{' array_list '}' 							{ $$ = new ExpressionListNode($2); }
-	| '{' array_list ',' '}' 					{ $$ = new ExpressionListNode($2); }
+	'{' expr_list '}' 							{ $$ = new ExpressionListNode($2); }
+	| '{' expr_list ',' '}' 					{ $$ = new ExpressionListNode($2); }
 	;
 
 expr_cast:
@@ -383,8 +380,18 @@ expr_cast:
 	| T_KWCAST_FLOAT '(' expr ')'				{ $$ = new ExpressionCastNode($3, ExpressionCastNode::CastType::FLOAT); }
 	;
 
+array_idx:
+	'[' T_INT ']'								{ $$ = $2; }
+	;
+
+array_idx_list:
+	array_idx_list array_idx					{ $1->push_back($2); }
+	| array_idx									{ $$ = new std::vector<int>(); $$->push_back($1); }
+	;
+
 expr_new:
-	T_KWNEW expr_ident '(' args_list_decl ')'	{ $$ = new ExpressionNewNode($2, $4); }
+	T_KWNEW expr_ident '(' expr_list_with_empty ')'	{ $$ = new ExpressionNewObjectNode($2, $4); }
+	| T_KWNEW array_idx_list						{ $$ = new ExpressionNewArrayNode($2); }
 	;
 
 %%

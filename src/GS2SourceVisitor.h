@@ -181,12 +181,17 @@ public:
         tabc--;
     }
 
-    virtual void Visit(ExpressionArrayIndexNode* node)
+    virtual void Visit(ExpressionArrayIndexNode *node)
     {
 
     }
 
-    virtual void Visit(ExpressionNewNode* node)
+    virtual void Visit(ExpressionNewArrayNode *node)
+    {
+
+    }
+
+    virtual void Visit(ExpressionNewObjectNode *node)
     {
 
     }

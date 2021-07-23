@@ -613,13 +613,28 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 	}
 }
 
-void GS2CompilerVisitor::Visit(ExpressionNewNode *node)
+void GS2CompilerVisitor::Visit(ExpressionNewArrayNode *node)
+{
+	assert(!node->dimensions.empty());
+
+	byteCode.emit(opcode::OP_TYPE_NUMBER);
+	byteCode.emitDynamicNumber(node->dimensions[0]);
+	byteCode.emit(opcode::OP_ARRAY_NEW);
+
+	for (auto i = 1; i < node->dimensions.size(); i++)
+	{
+		byteCode.emit(opcode::OP_TYPE_NUMBER);
+		byteCode.emitDynamicNumber(node->dimensions[i]);
+		byteCode.emit(opcode::OP_ARRAY_NEW_MULTIDIM);
+	}
+}
+
+void GS2CompilerVisitor::Visit(ExpressionNewObjectNode *node)
 {
 	// TODO(joey): more testing needed
 	// temp.a = new TStaticVar("str") will return a regular string,
 	// but if there is additional args it has no effect on the output.
-
-
+	
 	if (node->args)
 	{
 		for (const auto& n : *node->args)

@@ -30,7 +30,8 @@ class NodeVisitor
         virtual void Visit(class ExpressionCastNode *node) = 0;
         virtual void Visit(class ExpressionArrayIndexNode* node) = 0;
         virtual void Visit(class ExpressionFnCallNode *node) = 0;
-        virtual void Visit(class ExpressionNewNode *node) = 0;
+        virtual void Visit(class ExpressionNewArrayNode *node) = 0;
+        virtual void Visit(class ExpressionNewObjectNode *node) = 0;
         virtual void Visit(class ExpressionBinaryOpNode *node) = 0;
         virtual void Visit(class ExpressionUnaryOpNode *node) = 0;
         virtual void Visit(class ExpressionStrConcatNode *node) = 0;

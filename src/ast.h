@@ -16,7 +16,7 @@
 	} \
 	virtual void visit(NodeVisitor *v) { v->Visit(this); }
 
-//#define DBGALLOCATIONS
+#define DBGALLOCATIONS
 
 #ifdef DBGALLOCATIONS
 void checkForNodeLeaks();
@@ -392,7 +392,8 @@ class ExpressionBinaryOpNode : public ExpressionNode
 			if (!assignment)
 				ret += "(";
 
-			ret += left->toString() + " " + ExpressionOpToString(op) + " " + right->toString();
+			if (right)
+				ret += left->toString() + " " + ExpressionOpToString(op) + " " + right->toString();
 
 			if (!assignment)
 				ret += ")";
@@ -485,18 +486,46 @@ public:
 	bool discardReturnValue;
 };
 
-class ExpressionNewNode : public ExpressionNode
+class ExpressionNewArrayNode : public ExpressionNode
+{
+public:
+	_NodeName("ExpressionNewArrayNode");
+
+	ExpressionNewArrayNode(std::vector<int> *dim = nullptr)
+		: ExpressionNode()
+	{
+		if (dim)
+		{
+			dimensions = std::move(*dim);
+			delete dim;
+		}
+	}
+
+	virtual ~ExpressionNewArrayNode() {}
+
+	virtual std::string toString() const {
+		std::string str;
+		for (const auto& dim : dimensions)
+			str.append("[").append(std::to_string(dim)).append("]");
+
+		return str;
+	}
+
+	std::vector<int> dimensions;
+};
+
+class ExpressionNewObjectNode : public ExpressionNode
 {
 public:
 	_NodeName("ExpressionNewNode");
 
-	ExpressionNewNode(ExpressionNode *newExpr, std::vector<ExpressionNode*>* args = 0)
+	ExpressionNewObjectNode(ExpressionNode *newExpr, std::vector<ExpressionNode*>* args = 0)
 		: ExpressionNode(), newExpr(newExpr), args(args)
 	{
 
 	}
 
-	virtual ~ExpressionNewNode();
+	virtual ~ExpressionNewObjectNode();
 
 	virtual std::string toString() const {
 		std::string str = "new ";
