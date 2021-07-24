@@ -1,10 +1,32 @@
 //#CLIENTSIDE
+
 /*
+// Switch test
 function onCreated() {
+  
+  switch (player.nick)
+  {
+        case 0:
+        case 1:
+        case 2:
+            echo("0, 1, 2");
+            break;
+            
+        case "joeyy":
+            echo("hi joey");
+            break;
 
-  temp.t = "eee";
-  echo("str length: " @ temp.t.length());
+        case 3:
+        case 4:
+            echo("3 or 4");
+            break;
 
+        default:
+            echo("default");
+            break;
+  }
+
+  player.chat = "test";
 }
 */
 
