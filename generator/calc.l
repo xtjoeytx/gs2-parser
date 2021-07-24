@@ -59,6 +59,7 @@ string_const (\"(\\.|[^"])*\")
 "^"		{return '^';}
 "%"		{return '%';}
 "="		{return '=';}
+":="	{return '=';}
 
 "+="	{return T_OPADDASSIGN;}
 "-="	{return T_OPSUBASSIGN;}
