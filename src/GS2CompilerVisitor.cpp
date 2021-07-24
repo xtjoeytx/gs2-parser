@@ -991,8 +991,9 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 	// case-list:
 	for (const auto& caseNode : node->cases)
 	{
-		caseStartOp.push_back(byteCode.getOpcodePos());
-		caseNode->stmt->visit(this);
+		for (const auto& caseExpr : caseNode.exprList)
+			caseStartOp.push_back(byteCode.getOpcodePos());
+		caseNode.block->visit(this);
 	}
 
 	// case-test:
@@ -1002,12 +1003,19 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 	size_t i = 0;
 	for (const auto& caseNode : node->cases)
 	{
-		byteCode.emit(opcode::OP_COPY_LAST_OP);
-		caseNode->expr->visit(this);
-		byteCode.emit(opcode::OP_EQ);
+		for (const auto& caseExpr : caseNode.exprList)
+		{
+			if (caseExpr)
+			{
+				byteCode.emit(opcode::OP_COPY_LAST_OP);
+				caseExpr->visit(this);
+				byteCode.emit(opcode::OP_EQ);
+				byteCode.emit(opcode::OP_SET_INDEX_TRUE);
+			}
+			else byteCode.emit(opcode::OP_SET_INDEX);
 
-		byteCode.emit(opcode::OP_SET_INDEX_TRUE);
-		byteCode.emitDynamicNumber(caseStartOp[i++]);
+			byteCode.emitDynamicNumber(caseStartOp[i++]);
+		}
 	}
 
 	auto endLoopOp = byteCode.getOpcodePos();

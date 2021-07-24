@@ -788,19 +788,23 @@ public:
 	StatementNode *block;
 };
 
-class CaseNode
+class SwitchCaseState
 {
 public:
-	CaseNode(ExpressionNode *expr, StatementNode *stmt)
-		: expr(expr), stmt(stmt)
-	{
+	SwitchCaseState(StatementBlock* stmtBlock) 
+		: block(stmtBlock) { }
 
+	SwitchCaseState(SwitchCaseState&& o) noexcept
+	{
+		block = o.block;
+		exprList = std::move(o.exprList);
 	}
 
-	virtual ~CaseNode();
+	SwitchCaseState(const SwitchCaseState&) = delete;
+	SwitchCaseState& operator=(const SwitchCaseState&) = delete;
 
-	ExpressionNode *expr;
-	StatementNode *stmt;
+	StatementBlock *block;
+	std::vector<ExpressionNode *> exprList;
 };
 
 class StatementSwitchNode : public StatementNode
@@ -808,7 +812,7 @@ class StatementSwitchNode : public StatementNode
 public:
 	_NodeName("StatementSwitchNode")
 
-	StatementSwitchNode(ExpressionNode *expr, std::vector<CaseNode *> *caseNodes)
+	StatementSwitchNode(ExpressionNode *expr, std::vector<SwitchCaseState> *caseNodes)
 		: StatementNode(), expr(expr)
 	{
 		if (caseNodes)
@@ -821,7 +825,7 @@ public:
 	virtual ~StatementSwitchNode();
 
 	ExpressionNode *expr;
-	std::vector<CaseNode *> cases;
+	std::vector<SwitchCaseState> cases;
 };
 
 struct EnumMember

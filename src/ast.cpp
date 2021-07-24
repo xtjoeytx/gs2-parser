@@ -128,16 +128,19 @@ StatementForEachNode::~StatementForEachNode()
 
 StatementSwitchNode::~StatementSwitchNode()
 {
-	for (const auto& node : cases)
-		delete node;
+	for (const auto& caseList : cases)
+	{
+		for (const auto& matchExpr : caseList.exprList)
+		{
+			// default case is nullptr
+			if (matchExpr)
+				delete matchExpr;
+		}
+
+		delete caseList.block;
+	}
 	
 	delete expr;
-}
-
-CaseNode::~CaseNode()
-{
-	delete expr;
-	delete stmt;
 }
 
 ExpressionCastNode::~ExpressionCastNode()

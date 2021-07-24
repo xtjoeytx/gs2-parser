@@ -259,18 +259,19 @@ public:
 
         for (const auto& s : node->cases)
         {
-            if (s->expr)
+            for (const auto& sn : s.exprList)
             {
-                print("case %s: {", s->expr->toString().c_str());
-                s->stmt->visit(this);
-                print("}");
+                if (sn)
+                {
+                    print("case %s:", sn->toString().c_str());
+                }
+                else
+                    print("default:");
             }
-            else
-            {
-                print("default: {");
-                s->stmt->visit(this);
-                print("}");
-            }
+
+            print("{");
+            s.block->visit(this);
+            print("}");
         }
 
         tabc--;

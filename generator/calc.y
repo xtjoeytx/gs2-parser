@@ -42,10 +42,8 @@ typedef void* yyscan_t;
 	ExpressionPostfixNode *exprPostfix;
 
 	std::vector<ExpressionNode *> *exprList;
+	std::vector<SwitchCaseState> *caseNodeList;
 	std::vector<int> *indexList;
-
-	CaseNode *caseNode;
-	std::vector<CaseNode *> *caseNodeList;
 
 	EnumList *enumList;
 	EnumMember *enumMember;
@@ -119,7 +117,6 @@ typedef void* yyscan_t;
 %type<fnStmtNode> stmt_fndecl
 
 %type<stmtSwitchNode> stmt_switch
-%type<caseNode> stmt_caseblock
 %type<caseNodeList> stmt_caseblock_list
 %type<enumList> enum_list
 %type<enumMember> enum_item
@@ -231,20 +228,24 @@ stmt_switch:
 	;
 
 stmt_caseblock_list:
-	stmt_caseblock_list stmt_caseblock 						{ $1->push_back($2); }
-	| stmt_caseblock 										{ $$ = new std::vector<CaseNode *>(); $$->push_back($1); }
+	stmt_caseblock_list stmt_caseblock 						{ $1->push_back(parser->popCaseExpr()); }
+	| stmt_caseblock 										{ $$ = new std::vector<SwitchCaseState>(); $$->push_back(parser->popCaseExpr()); }
 	;
 
-	// todo(joey): multiple case-list in succession
+stmt_case_options:
+	stmt_list												{ parser->setCaseStatement($1); }
+	| stmt_caseblock
+	;
+
 stmt_caseblock:
-	T_KWCASE expr ':' stmt_list 							{ $$ = new CaseNode($2, $4); }
-	| T_KWDEFAULT ':' stmt_list								{ $$ = new CaseNode(0, $3); }
+	T_KWCASE expr ':' stmt_case_options						{ parser->pushCaseExpr($2); }
+	| T_KWDEFAULT ':' stmt_case_options						{ parser->pushCaseExpr(nullptr); }
 	;
 
 stmt_fndecl:
 	T_KWFUNCTION T_IDENTIFIER '(' expr_list_with_empty ')' stmt_block						{ $$ = new StatementFnDeclNode($2, $4, $6); }
 	| T_KWFUNCTION T_IDENTIFIER '.' T_IDENTIFIER '(' expr_list_with_empty ')' stmt_block	{ $$ = new StatementFnDeclNode($4, $6, $8, $2); }
-	| T_KWPUBLIC stmt_fndecl														{ $$ = $2; $$->setPublic(true); }
+	| T_KWPUBLIC stmt_fndecl																{ $$ = $2; $$->setPublic(true); }
 	;
 
 expr_list_with_empty:
