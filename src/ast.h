@@ -289,7 +289,10 @@ public:
 	virtual ~ExpressionPostfixNode();
 
 	virtual std::string toString() const {
-		return "-";
+		std::string str;
+		for (const auto& n : nodes)
+			str.append(n->toString());
+		return str;
 	}
 
 	virtual ExpressionType expressionType() const {
@@ -526,7 +529,7 @@ public:
 	virtual ~ExpressionNewArrayNode() {}
 
 	virtual std::string toString() const {
-		std::string str;
+		std::string str("new");
 		for (const auto& dim : dimensions)
 			str.append("[").append(std::to_string(dim)).append("]");
 
