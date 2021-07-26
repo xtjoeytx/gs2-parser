@@ -42,7 +42,7 @@ const BuiltInCmd builtInCmds[] = {
 
 const BuiltInCmd builtInObjCmds[] = {
 	{"index", opcode::OP_OBJ_INDEX, false},
-	{"type", opcode::OP_OBJ_TYPE, false},
+	{"type", opcode::OP_OBJ_TYPE, false, opcode::OP_CONV_TO_OBJECT},
 
 	//
 	{"indices", opcode::OP_OBJ_INDICES, false},
@@ -56,7 +56,7 @@ const BuiltInCmd builtInObjCmds[] = {
 	{"ends", opcode::OP_OBJ_ENDS, false},
 	{"tokenize", opcode::OP_OBJ_TOKENIZE, false},
 	{"positions", opcode::OP_OBJ_POSITIONS, false},
-	{"size", opcode::OP_OBJ_SIZE, false},
+	{"size", opcode::OP_OBJ_SIZE, false, opcode::OP_CONV_TO_OBJECT},
 	{"subarray", opcode::OP_OBJ_SUBARRAY, false},
 	{"clear", opcode::OP_OBJ_CLEAR, false},
 };
@@ -643,8 +643,8 @@ void GS2CompilerVisitor::Visit(StatementReturnNode *node)
 void GS2CompilerVisitor::Visit(StatementIfNode* node)
 {
 	node->expr->visit(this);
-	if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
-		byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+	//if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
+	//	byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 
 	logicalBreakpoints.push(LogicalBreakPoint{ byteCode.getOpcodePos() });
 
@@ -1063,6 +1063,9 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 			byteCode.emitDynamicNumber(caseStartOp[i++]);
 		}
 	}
+
+	if (node->expr->expressionType() == ExpressionType::EXPR_FUNCTION)
+		byteCode.emit(opcode::OP_INDEX_DEC);
 
 	auto endLoopOp = byteCode.getOpcodePos();
 

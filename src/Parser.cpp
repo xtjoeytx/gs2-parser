@@ -5,6 +5,15 @@
 #include "calc.tab.hh"
 #include "lex.yy.h"
 
+void ReplaceStringInPlace(std::string& subject, const std::string& search,
+	const std::string& replace) {
+	size_t pos = 0;
+	while ((pos = subject.find(search, pos)) != std::string::npos) {
+		subject.replace(pos, search.length(), replace);
+		pos += replace.length();
+	}
+}
+
 ParserData::ParserData()
 	: lineNumber(0), prog(nullptr), buffer(nullptr), newObjCallCount(0)
 {
@@ -20,9 +29,16 @@ ParserData::~ParserData()
 	delete prog;
 }
 
-const char * ParserData::saveString(const char* str, int length)
+const char * ParserData::saveString(const char* str, int length, bool unquote)
 {
-	auto ins = stable.insert(std::string(str, length));
+	auto tmpStr = std::string(str, length);
+	if (unquote)
+	{
+		ReplaceStringInPlace(tmpStr, "\\\"", "\"");
+		ReplaceStringInPlace(tmpStr, "\\n", "\n");
+	}
+
+	auto ins = stable.insert(std::move(tmpStr));
 	return ins.first->c_str();
 }
 

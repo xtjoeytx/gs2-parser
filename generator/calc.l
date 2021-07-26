@@ -122,5 +122,5 @@ string_const (\"(\\.|[^"])*\")
 {DIGIT}*\.{DIGIT}+	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_FLOAT;}
 {DIGIT}+			{yylval->ival = atoi(yytext); return T_INT;}
 {ALPHA}{ALPHANUM}*	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
-{string_const}		{yylval->sval = yyextra->saveString(yytext+1, yyleng - 2); return T_STRCONSTANT;}
+{string_const}		{yylval->sval = yyextra->saveString(yytext+1, yyleng - 2, true); return T_STRCONSTANT;}
 %%

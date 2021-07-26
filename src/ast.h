@@ -395,6 +395,32 @@ public:
 	ExpressionNode* higher;
 };
 
+class ExpressionTernaryOpNode : public ExpressionNode
+{
+public:
+	_NodeName("ExpressionTernaryOpNode");
+
+	ExpressionTernaryOpNode(ExpressionNode *cond, ExpressionNode *left, ExpressionNode *right)
+		: ExpressionNode(), condition(cond), leftExpr(left), rightExpr(right)
+	{
+
+	}
+
+	virtual ~ExpressionTernaryOpNode() { }
+
+	virtual std::string toString() const {
+		std::string ret;
+		ret.append("(").append(condition->toString());
+		ret.append(" ? ").append(leftExpr->toString());
+		ret.append(" : ").append(rightExpr->toString());
+		ret.append(")");
+	}
+
+	ExpressionNode *condition;
+	ExpressionNode *leftExpr;
+	ExpressionNode *rightExpr;
+};
+
 class ExpressionBinaryOpNode : public ExpressionNode
 {
 	public:
@@ -432,9 +458,9 @@ class ExpressionBinaryOpNode : public ExpressionNode
 			return ret;
 		}
 
-		//virtual ExpressionType expressionType() const {
-		//	return ExpressionType::EXPR_INTEGER;
-		//}
+		virtual ExpressionType expressionType() const {
+			return left->expressionType();
+		}
 };
 
 class ExpressionStrConcatNode : public ExpressionBinaryOpNode

@@ -20,7 +20,7 @@ class ParserData
 		ParserData();
 		~ParserData();
 
-		const char * saveString(const char *str, int length);
+		const char * saveString(const char *str, int length, bool unquote = false);
 
 		// enums
 		void addEnum(EnumList *enumList, const std::string& name = "");
