@@ -951,8 +951,6 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 	{
 		byteCode.emit(opcode::OP_TYPE_ARRAY);
 		byteCode.emit(opcode::OP_SWAP_LAST_OPS);
-		//byteCode.emit(opcode::OP_TYPE_STRING);
-		//byteCode.emitDynamicNumber(id);
 
 		auto addControlId = byteCode.getStringConst("addcontrol");
 		byteCode.emit(opcode::OP_TYPE_VAR);
@@ -960,8 +958,6 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 		byteCode.emit(opcode::OP_CALL);
 		byteCode.emit(opcode::OP_INDEX_DEC);
 	}
-
-	printf("Called %d times\n", parserData->newObjCallCount - testc);
 
 	parserData->newObjCallCount--;
 }

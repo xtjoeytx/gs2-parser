@@ -73,6 +73,17 @@ HEXNUM		[a-fA-F0-9]
 "--"	{return T_OPDECREMENT;}
 "++"	{return T_OPINCREMENT;}
 
+"&"		{return T_BITWISE_AND;}
+"<<"	{return T_BITWISE_SHIFT_LEFT;}
+">>"	{return T_BITWISE_SHIFT_RIGHT;}
+"~"		{return T_BITWISE_INVERT;}
+"xor"	{return T_BITWISE_XOR;}
+
+"|="	{return T_BITWISE_OR_ASSIGN;}
+"&="	{return T_BITWISE_AND_ASSIGN;}
+"<<="	{return T_BITWISE_SHIFT_LEFT_ASSIGN;}
+">>="	{return T_BITWISE_SHIFT_RIGHT_ASSIGN;}
+
 	/*
 		Reserved Keywords
 	*/
