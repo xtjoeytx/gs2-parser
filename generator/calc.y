@@ -79,7 +79,7 @@ typedef void* yyscan_t;
 %token T_KWCAST_INT T_KWCAST_FLOAT
 
 %right '=' T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN T_OPCATASSIGN
-%left '['
+%left '[' T_OPTERNARY ':'
 %left T_OPOR
 %left T_OPAND
 %left '^'
@@ -302,6 +302,8 @@ expr:
 	| expr_ops_unary				{ $$ = $1; }
 	| expr_ops_comparison			{ $$ = $1; }
 	| expr_ops_in					{ $$ = $1; }
+	| expr T_OPTERNARY expr ':' expr	{ $$ = new ExpressionTernaryOpNode($1, $3, $5); }
+
 	;
 
 expr_ops_unary:

@@ -183,6 +183,43 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 	}
 }
 
+void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
+{
+	node->condition->visit(this);
+	
+	logicalBreakpoints.push(LogicalBreakPoint{ byteCode.getOpcodePos() });
+
+	byteCode.emit(opcode::OP_IF);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+
+	logicalBreakpoints.top().breakPointLocs.push_back(byteCode.getBytecodePos() - 2);
+
+	node->leftExpr->visit(this);
+
+	// OP_IF jumps to this location if the condition is false, so we
+	// continue to the next instruction, but if their is an else-block we must
+	// skip the next instruction since its a jmp to the end of the if-else chain
+	auto nextOpcode = byteCode.getOpcodePos() + 1;
+
+	auto& breakPoint = logicalBreakpoints.top();
+	for (const auto& loc : breakPoint.breakPointLocs) {
+		byteCode.emit(short(nextOpcode), loc);
+	}
+	logicalBreakpoints.pop();
+
+	// emit a jump to the end of this else block for the previous if-block
+	byteCode.emit(opcode::OP_SET_INDEX);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+
+	auto elseLoc = byteCode.getBytecodePos() - 2;
+
+	node->rightExpr->visit(this);
+	byteCode.emit(short(byteCode.getOpcodePos()), elseLoc);
+
+}
+
 void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 {
 	bool handled = false;

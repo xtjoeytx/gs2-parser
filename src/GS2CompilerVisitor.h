@@ -67,6 +67,7 @@ class GS2CompilerVisitor : public NodeVisitor
         virtual void Visit(ExpressionFnCallNode *node);
         virtual void Visit(ExpressionNewArrayNode *node);
         virtual void Visit(ExpressionNewObjectNode *node);
+        virtual void Visit(ExpressionTernaryOpNode *node);
         virtual void Visit(ExpressionBinaryOpNode *node);
         virtual void Visit(ExpressionUnaryOpNode *node);
         virtual void Visit(ExpressionStrConcatNode *node);

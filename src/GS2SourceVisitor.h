@@ -140,7 +140,11 @@ public:
     virtual void Visit(ExpressionPostfixNode *node) {
         print("Visit ExpressionPostfixNode");
     }
-
+    virtual void Visit(ExpressionTernaryOpNode* node) {
+        tabc++;
+        print("%s", node->toString().c_str());
+        tabc--;
+    }
     virtual void Visit(ExpressionBinaryOpNode *node) {
         tabc++;
         print("%s;", node->toString().c_str());

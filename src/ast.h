@@ -414,6 +414,7 @@ public:
 		ret.append(" ? ").append(leftExpr->toString());
 		ret.append(" : ").append(rightExpr->toString());
 		ret.append(")");
+		return ret;
 	}
 
 	ExpressionNode *condition;
