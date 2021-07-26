@@ -20,6 +20,7 @@ DIGIT		[0-9]
 ALPHA		[a-zA-Z_$]
 ALPHANUM	[a-zA-Z_0-9]
 string_const (\"(\\.|[^"])*\")
+HEXNUM		[a-fA-F0-9]
 %x C_COMMENT
 
 %%
@@ -118,7 +119,8 @@ string_const (\"(\\.|[^"])*\")
 <C_COMMENT>"*/"		{ BEGIN(INITIAL); }
 <C_COMMENT>\n		{ yyextra->lineNumber++; }
 <C_COMMENT>.		{ }
-	
+
+0x{HEXNUM}+			{yylval->ival = std::stoul(yytext, nullptr, 16); return T_INT;}
 {DIGIT}*\.{DIGIT}+	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_FLOAT;}
 {DIGIT}+			{yylval->ival = atoi(yytext); return T_INT;}
 {ALPHA}{ALPHANUM}*	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
