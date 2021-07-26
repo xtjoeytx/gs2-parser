@@ -271,7 +271,7 @@ primary:
 	;
 
 postfix:
-	primary												{ $$ = new ExpressionPostfixNode($1); }
+	primary													{ $$ = new ExpressionPostfixNode($1); }
 	| postfix '[' expr_list ']'								{ $1->nodes.push_back(new ExpressionArrayIndexNode($3)); }
 	| postfix '(' expr_list_with_empty ')'					{
 			// remove last element, to be used as function ident

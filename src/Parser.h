@@ -37,6 +37,10 @@ class ParserData
 		StatementBlock *prog;
 		int lineNumber;
 
+		// hacky stuff
+		int newObjCallCount;
+		std::stack<bool> lastAssign;
+
 	private:
 		yyscan_t scanner;
 		YY_BUFFER_STATE buffer;

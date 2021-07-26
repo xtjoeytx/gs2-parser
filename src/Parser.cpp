@@ -6,7 +6,7 @@
 #include "lex.yy.h"
 
 ParserData::ParserData()
-	: lineNumber(0), prog(nullptr), buffer(nullptr)
+	: lineNumber(0), prog(nullptr), buffer(nullptr), newObjCallCount(0)
 {
 	yylex_init_extra(this, &scanner);
 }

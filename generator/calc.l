@@ -76,9 +76,14 @@ string_const (\"(\\.|[^"])*\")
 		Reserved Keywords
 	*/
 
-"null"		{yylval->ival = 0; return T_INT;}
-"false"		{yylval->ival = 0; return T_INT;}
-"true"		{yylval->ival = 1; return T_INT;}
+	/*
+		these may not be reserved, but just handled by the first identifier. doing
+		something like temp.true seems to be valid
+	*/
+	/*"null"		{yylval->ival = 0; return T_INT;} */
+	/* "false"		{yylval->ival = 0; return T_INT;} */
+	/* "true"		{yylval->ival = 1; return T_INT;} */
+
 "public"	{return T_KWPUBLIC;}
 "if"		{return T_KWIF;}
 "else"		{return T_KWELSE;}

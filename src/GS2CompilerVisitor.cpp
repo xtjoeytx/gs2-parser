@@ -9,15 +9,20 @@ struct BuiltInCmd
 	std::string name;
 	opcode::Opcode op;
 	bool useArray;
-	opcode::Opcode convert_op{ opcode::OP_CONV_TO_OBJECT };
+	opcode::Opcode convert_op{ opcode::OP_NONE };
 };
 
 const BuiltInCmd defaultCall = {
 	"", opcode::OP_CALL, true
 };
 
+const BuiltInCmd defaultObjCall = {
+	"", opcode::OP_CALL, true, opcode::OP_CONV_TO_OBJECT
+};
+
 const BuiltInCmd builtInCmds[] = {
-	{"makevar", opcode::OP_MAKEVAR, true},
+	{"sleep", opcode::OP_SLEEP, false},
+	{"makevar", opcode::OP_MAKEVAR, false, opcode::OP_CONV_TO_STRING},
 	{"format", opcode::OP_FORMAT, true},
 	{"abs", opcode::OP_ABS, false},
 	{"random", opcode::OP_RANDOM, false},
@@ -42,7 +47,7 @@ const BuiltInCmd builtInObjCmds[] = {
 	//
 	{"indices", opcode::OP_OBJ_INDICES, false},
 	{"link", opcode::OP_OBJ_LINK, false},
-	{"trim", opcode::OP_OBJ_TRIM, false},
+	{"trim", opcode::OP_OBJ_TRIM, false, opcode::OP_CONV_TO_STRING},
 	{"length", opcode::OP_OBJ_LENGTH, false, opcode::OP_CONV_TO_STRING},
 	{"pos", opcode::OP_OBJ_POS, false},
 	{"charat", opcode::OP_OBJ_CHARAT, false},
@@ -255,6 +260,21 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::Assign:
 		{
 			node->left->visit(this);
+
+			// if the parent, and the next node are both assignments we need to
+			// copy the value on the top of the stack before the next assignment op
+			{
+				// may need to pass the calling node around to simplify this
+				if (!parserData->lastAssign.empty())
+				{
+					parserData->lastAssign.pop();
+					byteCode.emit(opcode::OP_COPY_LAST_OP);
+				}
+
+				if (node->right->isAssignment)
+					parserData->lastAssign.push(true);
+			}
+
 			node->right->visit(this);
 
 			auto opCode = getExpressionOpCode(node->op);
@@ -513,6 +533,15 @@ void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
 		else if (identNode->val == "temp") {
 			byteCode.emit(opcode::OP_TEMP);
 		}
+		else if (identNode->val == "true") {
+			byteCode.emit(opcode::OP_TYPE_TRUE);
+		}
+		else if (identNode->val == "false") {
+			byteCode.emit(opcode::OP_TYPE_FALSE);
+		}
+		else if (identNode->val == "null") {
+			byteCode.emit(opcode::OP_TYPE_NULL);
+		}
 		else {
 			identNode->visit(this);
 			if (node->nodes.size() > 1)
@@ -528,7 +557,7 @@ void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
 	for (; i < node->nodes.size(); i++)
 	{
 		node->nodes[i]->visit(this);
-		if (i >= 1 && node->nodes[i]->expressionType() == ExpressionType::EXPR_IDENT)
+		if (node->nodes[i]->expressionType() == ExpressionType::EXPR_IDENT)
 		{
 			byteCode.emit(opcode::OP_MEMBER_ACCESS);
 			if (i != node->nodes.size() - 1)
@@ -558,7 +587,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 	printf("Call Function: %s (obj call: %d)\n", funcName.c_str(), isObjectCall ? 1 : 0);
 
 	auto iter = cmdList.find(funcName);
-	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : defaultCall);
+	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : (isObjectCall ? defaultObjCall : defaultCall));
 
 	{
 		if (cmd.useArray)
@@ -574,9 +603,13 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 			}
 		}
 
-		if (isObjectCall) {
+		if (isObjectCall)
 			node->objExpr->visit(this);
-			byteCode.emit(cmd.convert_op);
+
+		if (cmd.convert_op != opcode::Opcode::OP_NONE)
+		{
+			if (byteCode.getLastOp() != cmd.convert_op && byteCode.getLastOp() != opcode::OP_THISO)
+				byteCode.emit(cmd.convert_op);
 		}
 
 		if (cmd.op == opcode::OP_CALL)
@@ -851,7 +884,8 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 	byteCode.emit(opcode::OP_TYPE_STRING);
 	byteCode.emitDynamicNumber(id);
 
-	//byteCode.emit(opcode::OP_CONV_TO_STRING);
+	// official emits this
+	byteCode.emit(opcode::OP_CONV_TO_STRING);
 
 	byteCode.emit(opcode::OP_NEW_OBJECT);
 	byteCode.emit(opcode::OP_ASSIGN);
@@ -863,6 +897,9 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0));
 
+	int testc = parserData->newObjCallCount;
+	parserData->newObjCallCount++;
+
 	auto withLoc = byteCode.getBytecodePos() - 2;
 	if (node->stmtBlock)
 		node->stmtBlock->visit(this);
@@ -872,15 +909,24 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 
 	///////
 	// call addcontrol
+	int count = parserData->newObjCallCount - testc;
+	for (int i = 0; i < count; i++)
+	{
+		byteCode.emit(opcode::OP_TYPE_ARRAY);
+		byteCode.emit(opcode::OP_SWAP_LAST_OPS);
+		//byteCode.emit(opcode::OP_TYPE_STRING);
+		//byteCode.emitDynamicNumber(id);
 
-	byteCode.emit(opcode::OP_TYPE_ARRAY);
-	byteCode.emit(opcode::OP_SWAP_LAST_OPS);
+		auto addControlId = byteCode.getStringConst("addcontrol");
+		byteCode.emit(opcode::OP_TYPE_VAR);
+		byteCode.emitDynamicNumber(addControlId);
+		byteCode.emit(opcode::OP_CALL);
+		byteCode.emit(opcode::OP_INDEX_DEC);
+	}
 
-	auto addControlId = byteCode.getStringConst("addcontrol");
-	byteCode.emit(opcode::OP_TYPE_VAR);
-	byteCode.emitDynamicNumber(addControlId);
-	byteCode.emit(opcode::OP_CALL);
-	byteCode.emit(opcode::OP_INDEX_DEC);
+	printf("Called %d times\n", parserData->newObjCallCount - testc);
+
+	parserData->newObjCallCount--;
 }
 
 void GS2CompilerVisitor::Visit(StatementWithNode* node)

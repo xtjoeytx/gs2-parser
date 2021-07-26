@@ -97,6 +97,9 @@ inline const char* ExpressionOpToString(ExpressionOp op)
 		case ExpressionOp::UnaryStringCast:
 			return "@";
 
+		case ExpressionOp::ConcatAssign:
+			return "@=";
+
 		case ExpressionOp::Equal:
 			return "==";
 
@@ -401,7 +404,10 @@ class ExpressionBinaryOpNode : public ExpressionNode
 			: ExpressionNode(), left(l), right(r), op(op), assignment(assign)
 		{
 			if (assign)
+			{
 				left->isAssignment = true;
+				isAssignment = true;
+			}
 		}
 
 		virtual ~ExpressionBinaryOpNode();
