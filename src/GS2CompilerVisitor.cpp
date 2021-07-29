@@ -126,7 +126,7 @@ void GS2CompilerVisitor::Visit(Node *node)
 #ifdef _WIN32
 	system("pause");
 #endif
-	exit(1);
+	//exit(1);
 }
 
 void GS2CompilerVisitor::Visit(StatementBlock *node)
@@ -157,14 +157,15 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 
 	{
 		byteCode.emit(opcode::OP_TYPE_ARRAY);
-
-		std::reverse(node->args.begin(), node->args.end());
-		for (const auto& arg : node->args)
+		
+		for (auto it = node->args.rbegin(); it != node->args.rend(); ++it)
 		{
-			if (arg)
-				arg->visit(this);
+			assert(*it);
+			
+			if (*it != nullptr)
+				(*it)->visit(this);
 		}
-
+		
 		byteCode.emit(opcode::OP_FUNC_PARAMS_END);
 	}
 
@@ -187,26 +188,20 @@ void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
 {
 	node->condition->visit(this);
 	
-	logicalBreakpoints.push(LogicalBreakPoint{ byteCode.getOpcodePos() });
+	pushLogicalBreakpoint(LogicalBreakPoint{ byteCode.getOpcodePos() });
+	{
+		byteCode.emit(opcode::OP_IF);
+		byteCode.emit(char(0xF4));
+		byteCode.emit(short(0));
+		addLocation(byteCode.getBytecodePos() - 2);
+		
+		node->leftExpr->visit(this);
 
-	byteCode.emit(opcode::OP_IF);
-	byteCode.emit(char(0xF4));
-	byteCode.emit(short(0));
-
-	logicalBreakpoints.top().breakPointLocs.push_back(byteCode.getBytecodePos() - 2);
-
-	node->leftExpr->visit(this);
-
-	// OP_IF jumps to this location if the condition is false, so we
-	// continue to the next instruction, but if their is an else-block we must
-	// skip the next instruction since its a jmp to the end of the if-else chain
-	auto nextOpcode = byteCode.getOpcodePos() + 1;
-
-	auto& breakPoint = logicalBreakpoints.top();
-	for (const auto& loc : breakPoint.breakPointLocs) {
-		byteCode.emit(short(nextOpcode), loc);
+		// set the continue position to the right-hand expression, skipping
+		// over the jump on the left-hand expression
+		logicalBreakpoints.top().opcontinue = byteCode.getOpcodePos() + 1;
 	}
-	logicalBreakpoints.pop();
+	popLogicalBreakpoint();
 
 	// emit a jump to the end of this else block for the previous if-block
 	byteCode.emit(opcode::OP_SET_INDEX);
@@ -217,7 +212,6 @@ void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
 
 	node->rightExpr->visit(this);
 	byteCode.emit(short(byteCode.getOpcodePos()), elseLoc);
-
 }
 
 void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
@@ -233,6 +227,8 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			byteCode.emit(opcode::OP_IF);
 			byteCode.emit(char(0xF4));
 			byteCode.emit(short(0));
+			
+			auto pos = byteCode.getBytecodePos() - 2;
 
 			// TODO(joey): This is not going to work when using logical-and in expressions
 			// that aren't if-statements, so back to the drawing board
@@ -297,6 +293,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::Assign:
 		{
 			node->left->visit(this);
+			node->right->visit(this);
 
 			// if the parent, and the next node are both assignments we need to
 			// copy the value on the top of the stack before the next assignment op
@@ -312,7 +309,6 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 					parserData->lastAssign.push(true);
 			}
 
-			node->right->visit(this);
 
 			auto opCode = getExpressionOpCode(node->op);
 			assert(opCode != opcode::Opcode::OP_NONE);
@@ -468,7 +464,7 @@ void GS2CompilerVisitor::Visit(ExpressionCastNode* node)
 	}
 }
 
-void GS2CompilerVisitor::Visit(ExpressionArrayIndexNode* node)
+void GS2CompilerVisitor::Visit(ExpressionArrayIndexNode *node)
 {
 	for (const auto& expr : node->exprList)
 	{
@@ -630,14 +626,11 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 		if (cmd.useArray)
 			byteCode.emit(opcode::OP_TYPE_ARRAY);
 
-		if (node->args)
+		for (auto it = node->args.rbegin(); it != node->args.rend(); ++it)
 		{
-			std::reverse(node->args->begin(), node->args->end());
-			for (auto& arg : *node->args)
-			{
-				if (arg)
-					arg->visit(this);
-			}
+			ExpressionNode *arg = *it;
+			if (arg)
+				arg->visit(this);
 		}
 
 		if (isObjectCall)
@@ -683,26 +676,22 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 	//if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
 	//	byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 
-	logicalBreakpoints.push(LogicalBreakPoint{ byteCode.getOpcodePos() });
+	pushLogicalBreakpoint(LogicalBreakPoint{ byteCode.getOpcodePos() });
+	{
+		byteCode.emit(opcode::OP_IF);
+		byteCode.emit(char(0xF4));
+		byteCode.emit(short(0));
+		addLocation(byteCode.getBytecodePos() - 2);
 
-	byteCode.emit(opcode::OP_IF);
-	byteCode.emit(char(0xF4));
-	byteCode.emit(short(0));
+		node->thenBlock->visit(this);
 
-	logicalBreakpoints.top().breakPointLocs.push_back(byteCode.getBytecodePos() - 2);
-
-	node->thenBlock->visit(this);
-
-	// OP_IF jumps to this location if the condition is false, so we
-	// continue to the next instruction, but if their is an else-block we must
-	// skip the next instruction since its a jmp to the end of the if-else chain
-	auto nextOpcode = byteCode.getOpcodePos() + (node->elseBlock ? 1 : 0);
-
-	auto& breakPoint = logicalBreakpoints.top();
-	for (const auto& loc : breakPoint.breakPointLocs) {
-		byteCode.emit(short(nextOpcode), loc);
+		// OP_IF jumps to this location if the condition is false, so we
+		// continue to the next instruction, but if their is an else-block we must
+		// skip the next instruction since its a jmp to the end of the if-else chain
+		auto nextOpcode = byteCode.getOpcodePos() + (node->elseBlock ? 1 : 0);
+		logicalBreakpoints.top().opcontinue = nextOpcode;
 	}
-	logicalBreakpoints.pop();
+	popLogicalBreakpoint();
 
 	if (node->elseBlock)
 	{
@@ -740,11 +729,8 @@ void GS2CompilerVisitor::Visit(ExpressionNewObjectNode *node)
 	// temp.a = new TStaticVar("str") will return a regular string,
 	// but if there is additional args it has no effect on the output.
 	
-	if (node->args)
-	{
-		for (const auto& n : *node->args)
-			n->visit(this);
-	}
+	for (const auto& n : node->args)
+		n->visit(this);
 
 	// TODO(joey): fix
 
@@ -901,14 +887,11 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 
 void GS2CompilerVisitor::Visit(StatementNewNode* node)
 {
-	assert(node->args && node->args->size() == 1);
+	assert(node->args.size() == 1);
 
 	// emit args
-	if (node->args)
-	{
-		for (const auto& n : *node->args)
-			n->visit(this);
-	}
+	for (const auto& n : node->args)
+		n->visit(this);
 
 	byteCode.emit(opcode::OP_INLINE_NEW);
 
@@ -983,9 +966,11 @@ void GS2CompilerVisitor::Visit(ExpressionListNode* node)
 {
 	byteCode.emit(opcode::OP_TYPE_ARRAY);
 
-	std::reverse(node->args.begin(), node->args.end());
-	for (const auto& arg : node->args)
-		arg->visit(this);
+	for (auto it = node->args.rbegin(); it != node->args.rend(); ++it)
+	{
+		assert(*it);
+		(*it)->visit(this);
+	}
 
 	byteCode.emit(opcode::OP_ARRAY_END);
 }

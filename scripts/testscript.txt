@@ -762,6 +762,7 @@ function arrayInit()
        494,       297: Convert to object (36)
        495,       298: type(number) (20) (Opcode: 0xF3)  - double(0) (byte)
        498,       299: for (a: b) (163) (Opcode: 0xF4)  - double(311) (word)
+
        502,       300: Start of function call? (9)
        503,       301: type(array) (23)
        504,       302: type(string) (21) (Opcode: 0xF0)  - variable[50](T: ) (byte)
@@ -770,6 +771,7 @@ function arrayInit()
        511,       305: @ (113)
        512,       306: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
        515,       307: Call function (6)
+
        516,       308: Decrease last operand index by 1 (32)
        517,       309: Increment by 1 (52)
        518,       310: Set operation index (1) (Opcode: 0xF4)  - double(299) (word)
@@ -1256,4 +1258,214 @@ function onCreated() {
   if (player.x > 15 || player.y < 30) {
     echo("or op");
   }
+}
+
+//#CLIENTSIDE
+function onCreated()
+{
+  this.commands = {"Profile"};
+  echo("EE");
+}
+
+function onMouseDown(temp.mtype)
+{
+      this.pid = onFindPlayers();
+      
+      if (this.pid >= 0)
+      {
+        //if (this.pid == 0)
+        {
+          //player.showProfile();
+        }
+        //  else
+        {
+          onShowMenu();
+        }
+      }
+}
+
+function onFindPlayers()
+{
+  // Method 1 - UNTESTED -
+  /*temp.found = testplayer(mousex, mousey);
+  
+  if (temp.found)
+  {
+    return temp.found;
+  }
+    else
+  {
+    return -1;
+  }*/
+  
+  // Method 2
+  for (temp.I = 0; temp.I < players.size(); temp.I++)
+  {
+    if (mousex in |players[temp.I].x, players[temp.I].x + 3| && mousey in |players[temp.I].y, players[temp.I].y + 3|)
+    {
+      return temp.I;
+    }
+  }
+  
+  return -1;
+}
+
+function onShowMenu()
+{ 
+  new GuiContextMenuCtrl(Profile_Menu)
+  {
+    profile     = "GuiBluePopUpMenuProfile";
+    textprofile = "GuiBlueTextListProfile";
+    text        = players[thiso.pid].account;
+    width       = 20;
+    
+    clearrows();
+    
+    addRow(0, players[thiso.pid].account);
+    addrow(-1, "-");
+    for (temp.I = 0; temp.I < thiso.commands.size(); temp.I++)
+    {
+      addRow(temp.I + 1, thiso.commands[temp.I]);
+    }
+    
+    open(mousescreenx, mousescreeny);
+  }
+}
+
+function Profile_Menu.onSelect(entryid, text)
+{
+  switch (text)
+  { 
+    case "Profile":
+    {
+      players[this.pid].showProfile();
+      
+      break;
+    }
+
+    case "test":
+    {
+      echo("test");
+      break;
+    }
+
+    case "kfkf":
+    {
+      echo("yes");
+      say2("hi");
+      break;
+    }
+
+    default:
+    {
+      echo("fallthrough");
+      break;
+    }
+  }
+  
+  Profile_Menu.destroy();
+}
+
+
+function onCreated() {
+  temp.tst = {3, 5, 7, "ee", "fkfk", 5, 143, 5839, 96, 819, 941};
+
+  echo("Test 1: " @ this.commands[0]);
+
+  if (this.commands[0] == "Profile")
+    echo("EE");
+
+  temp.idx = 0;
+  for (temp.v : temp.tst) {
+    temp.idx++;
+    echo("Loop index: " @ temp.idx @ " = " @ temp.v);
+
+    if (temp.v == 143)
+      break;
+    if (temp.v == 5)
+      continue;
+      
+    echo("Val: " @ temp.v);
+  }
+}
+
+//#CLIENTSIDE
+function onCreated() {
+    temp.z = random(1, 20);
+
+    temp.z++;
+    this.a = temp.z++;
+    this.b = ++temp.z;
+    this.c = temp.z--;
+    this.d = --temp.z;
+
+    echo(format("%d, %d, %d, %d", this.a, this.b, this.c, this.d));
+}
+
+
+//#CLIENTSIDE
+function onCreated() {
+  temp.a = player.nick @ player.account;
+  temp.b = player.nick NL player.account;
+  temp.c = player.nick TAB player.account;
+  temp.d = player.nick SPC player.account;
+
+  player.chat = temp.a @ temp.b @ temp.c @ temp.d;
+}
+
+function onCreated() {
+/*
+         6,         4: this. (180)
+         7,         5: type(variable) (22) (Opcode: 0xF0)  - variable[0](obj) (byte)
+        10,         6: member access (35)
+        11,         7: type(number) (20) (Opcode: 0xF3)  - double(3) (byte)
+        14,         8: new[] (38)
+        15,         9: type(number) (20) (Opcode: 0xF3)  - double(2) (byte)
+        18,        10: new[][] for each extra dimension (142)
+        19,        11: "=" (50)
+*/
+  this.obj = new[3][2];
+
+/*
+        20,        12: this. (180)
+        21,        13: type(variable) (22) (Opcode: 0xF0)  - variable[0](obj) (byte)
+        24,        14: member access (35)
+        25,        15: Convert to object (36)
+        26,        16: type(number) (20) (Opcode: 0xF3)  - double(1) (byte)
+        29,        17: type(number) (20) (Opcode: 0xF3)  - double(2) (byte)
+        32,        18: type(number) (20) (Opcode: 0xF3)  - double(3) (byte)
+        35,        19: [a,b] assignment (134)
+*/
+  this.obj[1,2] = 3;
+
+/*
+        36,        20: temp. (189)
+        37,        21: type(variable) (22) (Opcode: 0xF0)  - variable[1](v) (byte)
+        40,        22: member access (35)
+        41,        23: type(variable) (22) (Opcode: 0xF0)  - variable[2](tiles) (byte)
+        44,        24: Convert to object (36)
+        45,        25: type(number) (20) (Opcode: 0xF3)  - double(17) (byte)
+        48,        26: type(number) (20) (Opcode: 0xF3)  - double(16) (byte)
+        51,        27: [a,b] (133)
+        52,        28: "=" (50)
+*/
+  temp.v = tiles[17,16];
+
+/*
+        53,        29: player. (182)
+        54,        30: type(variable) (22) (Opcode: 0xF0)  - variable[3](chat) (byte)
+        57,        31: member access (35)
+        58,        32: type(string) (21) (Opcode: 0xF0)  - variable[4](T: ) (byte)
+        61,        33: temp. (189)
+        62,        34: type(variable) (22) (Opcode: 0xF0)  - variable[1](v) (byte)
+        65,        35: member access (35)
+        66,        36: Convert to string (34)
+        67,        37: @ (113)
+        68,        38: "=" (50)
+*/
+  player.chat = "T: " @ temp.v;
+}
+
+public function test() {
+  player.chat = this.obj;
 }

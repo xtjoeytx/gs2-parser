@@ -192,9 +192,8 @@ stmt_new:
 	;
 
 stmt_if:
-	T_KWIF '(' expr ')' stmt 								{ $$ = new StatementIfNode($3, $5); }
-	// | T_KWIF '(' expr ')' stmt T_KWELSEIF '(' expr ')' stmt	{ $$ = new StatementIfNode($3, $5, new StatementIfNode($8, $10, nullptr)); }
-	| T_KWIF '(' expr ')' stmt T_KWELSE stmt 				{ $$ = new StatementIfNode($3, $5, $7); }
+	T_KWIF '(' expr ')' stmt 										{ $$ = new StatementIfNode($3, $5); }
+	| T_KWIF '(' expr ')' stmt T_KWELSE stmt 						{ $$ = new StatementIfNode($3, $5, $7); }
 	;
 
 stmt_for:
@@ -273,7 +272,7 @@ primary:
 
 postfix:
 	primary													{ $$ = new ExpressionPostfixNode($1); }
-	| postfix '[' expr_list ']'								{ $1->nodes.push_back(new ExpressionArrayIndexNode($3)); }
+	| postfix '[' expr_list ']'								{ $1->addNode(new ExpressionArrayIndexNode($3)); }
 	| postfix '(' expr_list_with_empty ')'					{
 			// remove last element, to be used as function ident
 			auto tmp = $1->nodes.back();
@@ -292,17 +291,17 @@ postfix:
 			$$ = new ExpressionPostfixNode(n);
 	}
 
-	| postfix '.' primary							{ $1->nodes.push_back($3); }
+	| postfix '.' primary							{ $1->addNode($3); }
 	;
 
 expr:
-	postfix							{ $$ = $1; }
-	| expr_cast						{ $$ = $1; }
-	| expr_arraylist				{ $$ = $1; }
-	| expr_ops_binary 				{ $$ = $1; }
-	| expr_ops_unary				{ $$ = $1; }
-	| expr_ops_comparison			{ $$ = $1; }
-	| expr_ops_in					{ $$ = $1; }
+	postfix								{ $$ = $1; }
+	| expr_cast							{ $$ = $1; }
+	| expr_arraylist					{ $$ = $1; }
+	| expr_ops_binary 					{ $$ = $1; }
+	| expr_ops_unary					{ $$ = $1; }
+	| expr_ops_comparison				{ $$ = $1; }
+	| expr_ops_in						{ $$ = $1; }
 	| expr T_OPTERNARY expr ':' expr	{ $$ = new ExpressionTernaryOpNode($1, $3, $5); }
 
 	;
@@ -339,7 +338,7 @@ expr_ops_binary:
 
 expr_assignment:
 	expr_new						{ $$ = $1; }
-	| '{' '}'						{ $$ = new ExpressionListNode(0); }
+	| '{' '}'						{ $$ = new ExpressionListNode(nullptr); }
 	;
 
 expr_ops_comparison:
@@ -385,12 +384,12 @@ expr_cast:
 	;
 
 array_idx:
-	'[' T_INT ']'								{ $$ = $2; }
+	'[' T_INT ']'									{ $$ = $2; }
 	;
 
 array_idx_list:
-	array_idx_list array_idx					{ $1->push_back($2); }
-	| array_idx									{ $$ = new std::vector<int>(); $$->push_back($1); }
+	array_idx_list array_idx						{ $1->push_back($2); }
+	| array_idx										{ $$ = new std::vector<int>(); $$->push_back($1); }
 	;
 
 expr_new:

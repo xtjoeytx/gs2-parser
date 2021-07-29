@@ -17,7 +17,7 @@ struct LoopBreakPoint
 
 struct LogicalBreakPoint
 {
-    size_t opstart;
+    size_t opcontinue;
     std::vector<size_t> breakPointLocs;
 };
 
@@ -30,7 +30,7 @@ class GS2CompilerVisitor : public NodeVisitor
     std::stack<LogicalBreakPoint> logicalBreakpoints;
 
     public:
-        GS2CompilerVisitor(ParserData *data) : NodeVisitor(), parserData(data) { }
+        GS2CompilerVisitor(ParserData *data) : parserData(data) { }
         virtual ~GS2CompilerVisitor() = default;
 
         void Reset() {
@@ -39,6 +39,26 @@ class GS2CompilerVisitor : public NodeVisitor
 
         Buffer getByteCode(const std::string& scriptType, const std::string& scriptName, bool saveToDisk = true) {
             return byteCode.getByteCode(scriptType, scriptName, saveToDisk);
+        }
+
+        void pushLogicalBreakpoint(LogicalBreakPoint bp)
+        {
+            logicalBreakpoints.push(bp);
+        }
+
+        void popLogicalBreakpoint()
+        {
+            auto& breakPoint = logicalBreakpoints.top();
+            for (const auto& loc : breakPoint.breakPointLocs)
+                byteCode.emit(short(breakPoint.opcontinue), loc);
+
+            logicalBreakpoints.pop();
+        }
+
+        void addLocation(size_t location)
+        {
+            if (!logicalBreakpoints.empty())
+                logicalBreakpoints.top().breakPointLocs.push_back(location);
         }
 
         virtual void Visit(Node *node);

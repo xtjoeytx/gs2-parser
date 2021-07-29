@@ -3,6 +3,7 @@
 #ifndef AST_H
 #define AST_H
 
+#include <cassert>
 #include <cstring>
 #include <string>
 #include <vector>
@@ -20,6 +21,7 @@
 
 #ifdef DBGALLOCATIONS
 void checkForNodeLeaks();
+void checkNodeOwnership();
 #endif
 
 enum class ExpressionType
@@ -145,22 +147,27 @@ class Node
 {
 public:
 	Node();
-
 	virtual ~Node();
 
 	virtual const char * NodeType() const = 0;
 	virtual void visit(NodeVisitor *v) { v->Visit(this); }
-};
 
-class ProgramNode : public Node
-{
-public:
-	_NodeName("ProgramNode")
+	Node *parent;
 
-	ProgramNode() : Node() { }
-	virtual ~ProgramNode();
+	void takeOwnership(Node* child)
+	{
+		//assert(child);
 
-	std::vector<StatementNode *> nodes;
+		if (child != nullptr)
+			child->parent = this;
+	}
+
+	template<typename ...Nodes>
+	void takeOwnership(Node* child, Nodes&&... node)
+	{
+		takeOwnership(child);
+		(takeOwnership(node), ...);
+	}
 };
 
 class StatementNode : public Node
@@ -283,10 +290,11 @@ class ExpressionPostfixNode : public ExpressionNode
 public:
 	_NodeName("ExpressionPostfixNode")
 
-	ExpressionPostfixNode(ExpressionNode *parent)
+	ExpressionPostfixNode(ExpressionNode *firstNode)
 		: ExpressionNode()
 	{
-		nodes.push_back(parent);
+		assert(firstNode);
+		addNode(firstNode);
 	}
 
 	virtual ~ExpressionPostfixNode();
@@ -302,6 +310,17 @@ public:
 		return nodes.back()->expressionType();
 	}
 
+	void addNode(ExpressionNode* node)
+	{
+		node->parent = this;
+		nodes.push_back(node);
+	}
+
+	ExpressionNode * lastNode() const {
+		return nodes.back();
+	}
+	
+//protected:
 	std::vector<ExpressionNode*> nodes;
 };
 
@@ -318,6 +337,9 @@ public:
 			exprList = std::move(*list);
 			delete list;
 		}
+
+		for (const auto& expr : exprList)
+			takeOwnership(expr);
 	}
 
 	virtual ~ExpressionArrayIndexNode();
@@ -358,6 +380,7 @@ public:
 	ExpressionCastNode(ExpressionNode* expr, CastType type)
 		: ExpressionNode(), expr(expr), type(type)
 	{
+		takeOwnership(expr);
 	}
 	virtual ~ExpressionCastNode();
 
@@ -377,7 +400,9 @@ public:
 	ExpressionInOpNode(ExpressionNode* expr, ExpressionNode* lower, ExpressionNode* higher)
 		: ExpressionNode(), expr(expr), lower(lower), higher(higher)
 	{
-
+		takeOwnership(expr);
+		takeOwnership(lower);
+		takeOwnership(higher);
 	}
 
 	virtual ~ExpressionInOpNode();
@@ -403,7 +428,7 @@ public:
 	ExpressionTernaryOpNode(ExpressionNode *cond, ExpressionNode *left, ExpressionNode *right)
 		: ExpressionNode(), condition(cond), leftExpr(left), rightExpr(right)
 	{
-
+		takeOwnership(cond, left, right);
 	}
 
 	virtual ~ExpressionTernaryOpNode() { }
@@ -430,6 +455,8 @@ class ExpressionBinaryOpNode : public ExpressionNode
 		ExpressionBinaryOpNode(ExpressionNode *l, ExpressionNode *r, ExpressionOp op, bool assign = false)
 			: ExpressionNode(), left(l), right(r), op(op), assignment(assign)
 		{
+			takeOwnership(left, right);
+
 			if (assign)
 			{
 				left->isAssignment = true;
@@ -472,7 +499,6 @@ public:
 	ExpressionStrConcatNode(ExpressionNode* l, ExpressionNode* r, char sep = 0)
 		: ExpressionBinaryOpNode(l, r, ExpressionOp::Concat), sep(sep)
 	{
-
 	}
 
 	virtual ~ExpressionStrConcatNode() {}
@@ -488,7 +514,7 @@ class ExpressionUnaryOpNode : public ExpressionNode
 		ExpressionUnaryOpNode(ExpressionNode *e, ExpressionOp op, bool opFirst)
 			: ExpressionNode(), expr(e), op(op), opFirst(opFirst), opUnused(false)
 		{
-
+			takeOwnership(e);
 		}
 
 		virtual ~ExpressionUnaryOpNode();
@@ -512,25 +538,34 @@ class ExpressionFnCallNode : public ExpressionNode
 public:
 	_NodeName("ExpressionFnCallNode")
 
-	ExpressionFnCallNode(ExpressionNode *funcExpr, ExpressionNode*objExpr, std::vector<ExpressionNode *> *args = 0)
-		: ExpressionNode(), funcExpr(funcExpr), objExpr(objExpr), args(args), discardReturnValue(false)
+	ExpressionFnCallNode(ExpressionNode *funcExpr, ExpressionNode *objExpr, std::vector<ExpressionNode *> *argList = nullptr)
+		: ExpressionNode(), funcExpr(funcExpr), objExpr(objExpr), discardReturnValue(false)
 	{
+		if (argList)
+		{
+			args = std::move(*argList);
+			delete argList;
+		}
+
+		takeOwnership(funcExpr, objExpr);
+		for (const auto& node : args)
+			takeOwnership(node);
 	}
 
 	virtual ~ExpressionFnCallNode();
 
-	virtual std::string toString() const {
+	virtual std::string toString() const
+	{
 		std::string argList;
-		if (args)
+		for (const auto& arg : args)
 		{
-			for (const auto& s : *args)
-			{
-				argList += s->toString();
-				argList += ",";
-			}
-			argList.pop_back();
+			argList += arg->toString();
+			argList += ",";
 		}
 
+		if (!argList.empty())
+			argList.pop_back();
+		
 		return std::string(funcExpr->toString()) + "(" + argList + ")";
 	}
 
@@ -540,7 +575,7 @@ public:
 
 	ExpressionNode* funcExpr;
 	ExpressionNode* objExpr;
-	std::vector<ExpressionNode*>* args;
+	std::vector<ExpressionNode*> args;
 	bool discardReturnValue;
 };
 
@@ -577,10 +612,18 @@ class ExpressionNewObjectNode : public ExpressionNode
 public:
 	_NodeName("ExpressionNewNode");
 
-	ExpressionNewObjectNode(ExpressionNode *newExpr, std::vector<ExpressionNode*>* args = 0)
-		: ExpressionNode(), newExpr(newExpr), args(args)
+	ExpressionNewObjectNode(ExpressionNode *newExpr, std::vector<ExpressionNode*> *argList = 0)
+		: ExpressionNode(), newExpr(newExpr)
 	{
+		if (argList)
+		{
+			args = std::move(*argList);
+			delete argList;
+		}
 
+		takeOwnership(newExpr);
+		for (const auto& node : args)
+			takeOwnership(node);
 	}
 
 	virtual ~ExpressionNewObjectNode();
@@ -590,8 +633,8 @@ public:
 		return str + newExpr->toString();
 	}
 
-	ExpressionNode* newExpr;
-	std::vector<ExpressionNode*>* args;
+	ExpressionNode *newExpr;
+	std::vector<ExpressionNode *> args;
 };
 
 class ExpressionListNode : public ExpressionNode
@@ -600,17 +643,22 @@ public:
 	_NodeName("ExpressionListNode")
 
 	ExpressionListNode(std::vector<ExpressionNode *> *argList)
+		: ExpressionNode()
 	{
 		if (argList)
 		{
 			args = std::move(*argList);
 			delete argList;
 		}
+
+		for (const auto& node : args)
+			takeOwnership(node);
 	}
 
 	virtual ~ExpressionListNode();
 
-	virtual std::string toString() const {
+	virtual std::string toString() const
+	{
 		std::string argList;
 		if (!args.empty())
 		{
@@ -655,7 +703,7 @@ public:
 	StatementIfNode(ExpressionNode *expr, StatementNode *thenBlock, StatementNode *elseBlock = nullptr)
 		: StatementNode(), expr(expr), thenBlock(thenBlock), elseBlock(elseBlock)
 	{
-
+		takeOwnership(expr, thenBlock, elseBlock);
 	}
 
 	virtual ~StatementIfNode();
@@ -671,7 +719,7 @@ public:
 	_NodeName("StatementFnDeclNode")
 
 	StatementFnDeclNode(const char *id, std::vector<ExpressionNode *> *argList, StatementBlock *block, std::string objName = "")
-		: StatementNode(), stmtBlock(block), pub(false), objectName(std::move(objName))
+		: StatementNode(), stmtBlock(block), pub(false), ident(std::string(id)), objectName(std::move(objName))
 	{
 		if (argList)
 		{
@@ -679,7 +727,9 @@ public:
 			delete argList;
 		}
 
-		ident = std::string(id);
+		takeOwnership(stmtBlock);
+		for (const auto& node : args)
+			takeOwnership(node);
 	}
 
 	virtual ~StatementFnDeclNode();
@@ -699,16 +749,24 @@ class StatementNewNode : public StatementNode
 public:
 	_NodeName("StatementNewNode")
 
-	StatementNewNode(const char *objname, std::vector<ExpressionNode *> *a, StatementBlock *block)
-		: StatementNode(), stmtBlock(block), args(a)
+	StatementNewNode(const char *objName, std::vector<ExpressionNode *> *argList, StatementBlock *block)
+		: StatementNode(), stmtBlock(block), ident(std::string(objName))
 	{
-		ident = std::string(objname);
+		if (argList)
+		{
+			args = std::move(*argList);
+			delete argList;
+		}
+
+		takeOwnership(stmtBlock);
+		for (const auto& node : args)
+			takeOwnership(node);
 	}
 	virtual ~StatementNewNode();
 
 	std::string ident;
 	StatementBlock *stmtBlock;
-	std::vector<ExpressionNode *> *args;
+	std::vector<ExpressionNode *> args;
 };
 
 class StatementBreakNode : public StatementNode
@@ -743,7 +801,7 @@ public:
 	StatementReturnNode(ExpressionNode *expr)
 		: StatementNode(), expr(expr)
 	{
-
+		takeOwnership(expr);
 	}
 
 	virtual ~StatementReturnNode();
@@ -759,7 +817,7 @@ public:
 	StatementWhileNode(ExpressionNode *expr, StatementNode *block)
 		: StatementNode(), expr(expr), block(block)
 	{
-
+		takeOwnership(expr, block);
 	}
 	virtual ~StatementWhileNode();
 
@@ -775,7 +833,7 @@ public:
 	StatementWithNode(ExpressionNode *expr, StatementNode *block)
 		: StatementNode(), expr(expr), block(block)
 	{
-
+		takeOwnership(expr, block);
 	}
 
 	virtual ~StatementWithNode();
@@ -792,7 +850,7 @@ public:
 	StatementForNode(ExpressionNode *init, ExpressionNode *cond, ExpressionNode *incr, StatementNode *block)
 		: StatementNode(), init(init), cond(cond), postop(incr), block(block)
 	{
-
+		takeOwnership(init, cond, postop, block);
 	}
 
 	virtual ~StatementForNode();
@@ -811,7 +869,7 @@ public:
 	StatementForEachNode(ExpressionNode *name, ExpressionNode *expr, StatementNode *block)
 		: StatementNode(), name(name), expr(expr), block(block)
 	{
-
+		takeOwnership(name, expr, block);
 	}
 
 	virtual ~StatementForEachNode();
@@ -852,6 +910,14 @@ public:
 		{
 			cases = std::move(*caseNodes);
 			delete caseNodes;
+		}
+
+		takeOwnership(expr);
+		for (const auto& caseNode : cases)
+		{
+			takeOwnership(caseNode.block);
+			for (const auto& matchExpr : caseNode.exprList)
+				takeOwnership(matchExpr);
 		}
 	}
 

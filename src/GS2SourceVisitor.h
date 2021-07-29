@@ -6,17 +6,18 @@
 #include <cstdarg>
 #include "ast.h"
 
-inline std::string getArgList(std::vector<ExpressionNode *> *args) {
+inline std::string getArgList(std::vector<ExpressionNode *> & args)
+{
     std::string argList;
-    if (args)
+    for (const auto& s : args)
     {
-        for (const auto& s : *args)
-        {
-            argList += s->toString();
-            argList += ",";
-        }
-        argList.pop_back();
+        argList += s->toString();
+        argList += ",";
     }
+
+    if (!argList.empty())
+        argList.pop_back();
+
     return argList;
 }
 
@@ -26,12 +27,14 @@ public:
     int tabc;
     GS2SourceVisitor() : tabc(0) { }
 
-    void printSpaces() {
+    void printSpaces()
+    {
         for (int i = 0; i < tabc; i++)
             printf("    ");
     }
 
-    void print(const char *fmt, ...) {
+    void print(const char *fmt, ...)
+    {
         printSpaces();
 
         va_list argptr;
@@ -42,15 +45,18 @@ public:
         printf("\n");
     }
 
-	virtual void Visit(Node *node) {
+	virtual void Visit(Node *node)
+    {
 		print("Visit Node");
 	}
 
-    virtual void Visit(StatementNode *node)  {
+    virtual void Visit(StatementNode *node)
+    {
 		print("Visit StatementNode");
 	}
 
-    virtual void Visit(StatementBlock *node)  {
+    virtual void Visit(StatementBlock *node)
+    {
 		// print("Visit StatementBlock");
         tabc++;
         for (const auto& n : node->statements)
@@ -61,7 +67,8 @@ public:
         tabc--;
 	}
 
-    virtual void Visit(StatementFnDeclNode *node)  {
+    virtual void Visit(StatementFnDeclNode *node)
+    {
         tabc++;
 
         std::string argList;
@@ -85,7 +92,8 @@ public:
         tabc--;
 	}
 
-    virtual void Visit(StatementIfNode *node)  {
+    virtual void Visit(StatementIfNode *node)
+    {
 		// print("Visit StatementIfNode");
 
         tabc++;
@@ -105,7 +113,8 @@ public:
         tabc--;
 	}
 
-    virtual void Visit(StatementNewNode *node) {
+    virtual void Visit(StatementNewNode *node)
+    {
         tabc++;
         print("new %s(%s) {", node->ident.c_str(), getArgList(node->args).c_str());
         node->stmtBlock->visit(this);
@@ -113,23 +122,28 @@ public:
         tabc--;
     }
 
-    virtual void Visit(ExpressionNode *node)  {
+    virtual void Visit(ExpressionNode *node)
+    {
 		print("Visit ExpressionNode");
 	}
 
-    virtual void Visit(ExpressionCastNode* node) {
+    virtual void Visit(ExpressionCastNode* node)
+    {
         print("Visit ExpressionCastNode");
     }
 
-    virtual void Visit(ExpressionIdentifierNode *node)  {
+    virtual void Visit(ExpressionIdentifierNode *node)
+    {
 		print("Visit ExpressionIdentifierNode");
 	}
 
-    virtual void Visit(ExpressionStringConstNode *node)  {
+    virtual void Visit(ExpressionStringConstNode *node)
+    {
 		print("Visit ExpressionStringConstNode");
 	}
 
-    virtual void Visit(ExpressionIntegerNode *node)  {
+    virtual void Visit(ExpressionIntegerNode *node)
+    {
 		print("Visit ExpressionIntegerNode");
 	}
 
@@ -137,42 +151,48 @@ public:
 		print("Visit ExpressionNumberNode");
 	}
 
-    virtual void Visit(ExpressionPostfixNode *node) {
+    virtual void Visit(ExpressionPostfixNode *node)
+    {
         print("Visit ExpressionPostfixNode");
     }
-    virtual void Visit(ExpressionTernaryOpNode* node) {
+    virtual void Visit(ExpressionTernaryOpNode* node)
+    {
         tabc++;
         print("%s", node->toString().c_str());
         tabc--;
     }
-    virtual void Visit(ExpressionBinaryOpNode *node) {
+    virtual void Visit(ExpressionBinaryOpNode *node)
+    {
         tabc++;
         print("%s;", node->toString().c_str());
         tabc--;
     }
 
-    virtual void Visit(ExpressionStrConcatNode* node) {
+    virtual void Visit(ExpressionStrConcatNode *node)
+    {
         tabc++;
         print("%s;", node->toString().c_str());
         tabc--;
     }
 
-    virtual void Visit(ExpressionUnaryOpNode *node) {
+    virtual void Visit(ExpressionUnaryOpNode *node)
+    {
         
     }
 
-    virtual void Visit(ExpressionFnCallNode* node) {
+    virtual void Visit(ExpressionFnCallNode* node)
+    {
         std::string argList;
-        if (node->args)
+        
+        for (const auto& s : node->args)
         {
-            for (const auto& s : *node->args)
-            {
-                argList += s->toString();
-                argList += ",";
-            }
-            argList.pop_back();
+            argList += s->toString();
+            argList += ",";
         }
 
+        if (!argList.empty())
+            argList.pop_back();
+        
         tabc++;
         std::string funcCmd;
         if (node->objExpr != 0)

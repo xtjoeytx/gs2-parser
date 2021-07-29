@@ -6,31 +6,43 @@ std::vector<Node*> n;
 
 void checkForNodeLeaks()
 {
-	for (const auto& v : n) {
+	for (const auto& v : n)
 		printf("Nodes alive: %s\n", v->NodeType());
+}
+
+void checkNodeOwnership()
+{
+	for (const auto& v : n)
+	{
+		if (v->parent == nullptr)
+		{
+			printf("Nodes without parent: %s\n", v->NodeType());
+
+			if (strcmp(v->NodeType(), ExpressionPostfixNode::NodeName) == 0)
+			{
+				auto n = reinterpret_cast<ExpressionPostfixNode*>(v);
+				printf("	Postfix: %s\n", n->toString().c_str());
+			}
+		}
 	}
 }
 #endif
 
-Node::Node() {
+Node::Node()
+	: parent(nullptr)
+{
 #ifdef DBGALLOCATIONS
 	n.push_back(this);
-	printf("Count: %d\n", ++alloc_count);
+	printf("Nodes in memory: %d\n", ++alloc_count);
 #endif
 }
 
-Node::~Node() {
+Node::~Node()
+{
 #ifdef DBGALLOCATIONS
 	n.erase(std::remove(n.begin(), n.end(), this), n.end());
-	printf("Count: %d\n", --alloc_count);
+	printf("Nodes in memory: %d\n", --alloc_count);
 #endif
-}
-
-ProgramNode::~ProgramNode()
-{
-	for (const auto& node : nodes)
-		delete node;
-	nodes.clear();
 }
 
 StatementBlock::~StatementBlock()
@@ -44,13 +56,16 @@ void StatementBlock::append(StatementNode *node)
 {
 	if (node)
 	{
+		//
+		node->parent = this;
+
 		// TODO(joey): come back to this
 		if (strcmp(node->NodeType(), ExpressionPostfixNode::NodeName) == 0)
 		{
 			auto pfNode = reinterpret_cast<ExpressionPostfixNode*>(node);
 			if (pfNode->expressionType() == ExpressionType::EXPR_FUNCTION)
 			{
-				auto fnNode = reinterpret_cast<ExpressionFnCallNode*>(pfNode->nodes.back());
+				auto fnNode = reinterpret_cast<ExpressionFnCallNode*>(pfNode->lastNode());
 				fnNode->discardReturnValue = true;
 			}
 		}
@@ -87,11 +102,8 @@ StatementNewNode::~StatementNewNode()
 {
 	delete stmtBlock;
 
-	if (args)
-	{
-		for (const auto& node : *args)
-			delete node;
-	}
+	for (const auto& node : args)
+		delete node;
 }
 
 StatementReturnNode::~StatementReturnNode()
@@ -150,11 +162,8 @@ ExpressionCastNode::~ExpressionCastNode()
 
 ExpressionFnCallNode::~ExpressionFnCallNode()
 {
-	if (args)
-	{
-		for (const auto& node : *args)
-			delete node;
-	}
+	for (const auto& node : args)
+		delete node;
 	delete funcExpr;
 	delete objExpr;
 }
@@ -167,11 +176,8 @@ ExpressionListNode::~ExpressionListNode()
 
 ExpressionNewObjectNode::~ExpressionNewObjectNode()
 {
-	if (args)
-	{
-		for (const auto& node : *args)
-			delete node;
-	}
+	for (const auto& node : args)
+		delete node;
 	delete newExpr;
 }
 

@@ -145,6 +145,15 @@ namespace opcode
 			case OP_IF:
 				return "OP_IF";
 
+			case OP_TYPE_TRUE:
+				return "OP_TRUE";
+
+			case OP_TYPE_FALSE:
+				return "OP_FALSE";
+
+			case OP_TYPE_NULL:
+				return "OP_NULL";
+
 			case OP_ADD:
 				return "OP_ADD";
 
