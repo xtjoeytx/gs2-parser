@@ -193,8 +193,8 @@ void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
-		addLocation(byteCode.getBytecodePos() - 2);
-		
+		addContinueLocation(byteCode.getBytecodePos() - 2);
+
 		node->leftExpr->visit(this);
 
 		// set the continue position to the right-hand expression, skipping
@@ -228,25 +228,25 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			byteCode.emit(char(0xF4));
 			byteCode.emit(short(0));
 			
-			auto pos = byteCode.getBytecodePos() - 2;
-
 			// TODO(joey): This is not going to work when using logical-and in expressions
 			// that aren't if-statements, so back to the drawing board
-			if (!logicalBreakpoints.empty()) {
-				logicalBreakpoints.top().breakPointLocs.push_back(byteCode.getBytecodePos() - 2);
-			}
+			assert(!logicalBreakpoints.empty());
+			addContinueLocation(byteCode.getBytecodePos() - 2);
 
 			node->right->visit(this);
 			return;
 		}
 		else if (node->op == ExpressionOp::LogicalOr)
 		{
-			//byteCode.emit(opcode::OP_OR);
-			//byteCode.emit(char(0xF4));
-			//byteCode.emit(short(0));
+			byteCode.emit(opcode::OP_OR);
+			byteCode.emit(char(0xF4));
+			byteCode.emit(short(0));
 
-			//node->right->visit(this);
-			handled = false;
+			assert(!logicalBreakpoints.empty());
+			addBreakLocation(byteCode.getBytecodePos() - 2);
+
+			node->right->visit(this);
+			return;
 		}
 	}
 
@@ -672,16 +672,19 @@ void GS2CompilerVisitor::Visit(StatementReturnNode *node)
 
 void GS2CompilerVisitor::Visit(StatementIfNode* node)
 {
-	node->expr->visit(this);
-	//if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
-	//	byteCode.emit(opcode::OP_CONV_TO_FLOAT);
-
-	pushLogicalBreakpoint(LogicalBreakPoint{ byteCode.getOpcodePos() });
+	pushLogicalBreakpoint(LogicalBreakPoint{ });
 	{
+		node->expr->visit(this);
+		//if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
+		//	byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+
+		// set the break point to the start of the OP_IF instruction
+		logicalBreakpoints.top().opbreak = byteCode.getOpcodePos();
+
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
-		addLocation(byteCode.getBytecodePos() - 2);
+		addContinueLocation(byteCode.getBytecodePos() - 2);
 
 		node->thenBlock->visit(this);
 
