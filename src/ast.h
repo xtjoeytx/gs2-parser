@@ -17,7 +17,7 @@
 	} \
 	virtual void visit(NodeVisitor *v) { v->Visit(this); }
 
-#define DBGALLOCATIONS
+// #define DBGALLOCATIONS
 
 #ifdef DBGALLOCATIONS
 void checkForNodeLeaks();

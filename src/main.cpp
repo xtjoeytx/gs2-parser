@@ -59,7 +59,9 @@ int main(int argc, const char *argv[]) {
 			else printf("Couldn't open file\n");
 		}
 
+#ifdef DBGALLOCATIONS
 		checkNodeOwnership();
+#endif
 	}
 
 #ifdef DBGALLOCATIONS
