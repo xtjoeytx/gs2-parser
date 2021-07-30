@@ -759,44 +759,34 @@ void GS2CompilerVisitor::Visit(ExpressionNewObjectNode *node)
 
 void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 {
-	auto whileCondStart = byteCode.getOpcodePos();
+	pushLogicalBreakpoint(LogicalBreakPoint {.opcontinue = byteCode.getOpcodePos()});
+	{
+		node->expr->visit(this);
+		if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
+			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 
-	node->expr->visit(this);
-	if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
-		byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+		byteCode.emit(opcode::OP_IF);
+		byteCode.emit(char(0xF4));
+		byteCode.emit(short(0));
+		addBreakLocation(byteCode.getBytecodePos() - 2);
 
-	byteCode.emit(opcode::OP_IF);
-	byteCode.emit(char(0xF4));
-	byteCode.emit(short(0));
+		node->block->visit(this);
 
-	auto whileLoc = byteCode.getBytecodePos() - 2;
-
-	breakPoints.push(LoopBreakPoint{ });
-	node->block->visit(this);
-
-	// Jump back to condition
-	byteCode.emit(opcode::OP_SET_INDEX);
-	byteCode.emit(char(0xF4));
-	byteCode.emit(short(whileCondStart));
-
-	// Emit jump out of the while-loop
-	auto breakPointLoc = byteCode.getOpcodePos();
-	byteCode.emit(short(breakPointLoc), whileLoc);
-
-	// Write out the breakpoint jumps
-	auto& breakPoint = breakPoints.top();
-	for (const auto& loc : breakPoint.breakPointLocs)
-		byteCode.emit(short(breakPointLoc), loc);
-
-	for (const auto& loc : breakPoint.continuePointLocs)
-		byteCode.emit(short(whileCondStart), loc);
-
-	breakPoints.pop();
+		// Jump back to condition
+		byteCode.emit(opcode::OP_SET_INDEX);
+		byteCode.emit(char(0xF4));
+		addContinueLocation(byteCode.getBytecodePos() - 2);
+		
+		// Set the breakpoint to after the while-statement
+		logicalBreakpoints.top().opbreak = byteCode.getOpcodePos();
+	}
+	popLogicalBreakpoint();
 }
 
 void GS2CompilerVisitor::Visit(StatementBreakNode* node)
 {
-	if (breakPoints.empty()) {
+	if (logicalBreakpoints.empty() || logicalBreakpoints.top().opbreak == 0)
+	{
 		printf("Error, no loops to break from.\n");
 		return;
 	}
@@ -805,15 +795,13 @@ void GS2CompilerVisitor::Visit(StatementBreakNode* node)
 	byteCode.emit(opcode::OP_SET_INDEX);
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0));
-
-	// Add the location of the jmp so we can write the calculated opcode index
-	auto& breakPoint = breakPoints.top();
-	breakPoint.breakPointLocs.push_back(byteCode.getBytecodePos() - 2);
+	addBreakLocation(byteCode.getBytecodePos() - 2);
 }
 
 void GS2CompilerVisitor::Visit(StatementContinueNode* node)
 {
-	if (breakPoints.empty()) {
+	if (logicalBreakpoints.empty() || logicalBreakpoints.top().opcontinue == 0)
+	{
 		printf("Error, no loops to continue.\n");
 		return;
 	}
@@ -822,10 +810,7 @@ void GS2CompilerVisitor::Visit(StatementContinueNode* node)
 	byteCode.emit(opcode::OP_SET_INDEX);
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0));
-
-	// Add the location of the jmp so we can write the calculated opcode index
-	auto& breakPoint = breakPoints.top();
-	breakPoint.continuePointLocs.push_back(byteCode.getBytecodePos() - 2);
+	addContinueLocation(byteCode.getBytecodePos() - 2);
 }
 
 void GS2CompilerVisitor::Visit(StatementForNode* node)
@@ -845,45 +830,34 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 	}
 	else
 	{
-		// Just emit 1 for the condition
+		// Just emit 1 for the condition, while (true)
 		byteCode.emit(opcode::OP_TYPE_NUMBER);
-		byteCode.emitDynamicNumber(0);
+		byteCode.emitDynamicNumber(1);
 	}
 
 	// Emit if-loop on conditional expression, with a failed jump to the end-block
-	byteCode.emit(opcode::OP_IF);
-	byteCode.emit(char(0xF4));
-	byteCode.emit(short(0));
+	pushLogicalBreakpoint(LogicalBreakPoint{ .opbreak = byteCode.getOpcodePos() });
+	{
+		byteCode.emit(opcode::OP_IF);
+		byteCode.emit(char(0xF4));
+		byteCode.emit(short(0));
+		addBreakLocation(byteCode.getBytecodePos() - 2);
+		
+		// Emit block
+		if (node->block)
+			node->block->visit(this);
 
-	auto elseLoc = byteCode.getBytecodePos() - 2;
+		// Emit post-op
+		if (node->postop)
+			node->postop->visit(this);
 
-	breakPoints.push(LoopBreakPoint{ });
+		// Emit jump back to condition
+		byteCode.emit(opcode::OP_SET_INDEX);
+		byteCode.emitDynamicNumber(condStart);
 
-	// Emit block
-	if (node->block)
-		node->block->visit(this);
-
-	// Emit post-op
-	if (node->postop)
-		node->postop->visit(this);
-
-	// Emit jump back to condition
-	byteCode.emit(opcode::OP_SET_INDEX);
-	byteCode.emitDynamicNumber(condStart);
-
-	// Emit jump out of the loop
-	auto breakPointLoc = byteCode.getOpcodePos();
-	byteCode.emit(short(breakPointLoc), elseLoc);
-
-	// Write out the breakpoint jumps
-	auto& breakPoint = breakPoints.top();
-	for (const auto& loc : breakPoint.breakPointLocs)
-		byteCode.emit(short(breakPointLoc), loc);
-
-	for (const auto& loc : breakPoint.continuePointLocs)
-		byteCode.emit(short(condStart), loc);
-
-	breakPoints.pop();
+		logicalBreakpoints.top().opcontinue = condStart;
+	}
+	popLogicalBreakpoint();
 }
 
 //////////// not implemented yet
@@ -990,40 +964,36 @@ void GS2CompilerVisitor::Visit(StatementForEachNode *node)
 	byteCode.emit(opcode::OP_TYPE_NUMBER);
 	byteCode.emitDynamicNumber(0);
 
-	auto startLoopOp = byteCode.getOpcodePos();
-	byteCode.emit(opcode::OP_FOREACH);
-	byteCode.emit(char(0xF4));
-	byteCode.emit(short(0));
+	pushLogicalBreakpoint(LogicalBreakPoint {});
+	{
+		auto startLoopOp = byteCode.getOpcodePos();
+		byteCode.emit(opcode::OP_FOREACH);
+		byteCode.emit(char(0xF4));
+		byteCode.emit(short(0));
 
-	auto endLoc = byteCode.getBytecodePos() - 2;
-	breakPoints.push(LoopBreakPoint{ });
+		// Add break location for the jump out of the loop
+		addBreakLocation(byteCode.getBytecodePos() - 2);
 
-	byteCode.emit(opcode::OP_CMD_CALL);
-	node->block->visit(this);
+		byteCode.emit(opcode::OP_CMD_CALL);
+		node->block->visit(this);
 
-	// increase idx
-	auto continueLoopOp = byteCode.getOpcodePos();
-	byteCode.emit(opcode::OP_INC);
+		// increase idx
+		auto continueLoopOp = byteCode.getOpcodePos();
+		byteCode.emit(opcode::OP_INC);
 
-	// jump to beginning of the for-each loop
-	byteCode.emit(opcode::OP_SET_INDEX);
-	byteCode.emitDynamicNumber(startLoopOp);
+		// jump to beginning of the for-each loop
+		byteCode.emit(opcode::OP_SET_INDEX);
+		byteCode.emitDynamicNumber(startLoopOp);
 
-	// Emit jump out of the loop
-	auto endLoopOp = byteCode.getOpcodePos();
-	byteCode.emit(short(endLoopOp), endLoc);
+		auto endLoopOp = byteCode.getOpcodePos();
 
-	// Write out the breakpoint jumps
-	auto& breakPoint = breakPoints.top();
-	for (const auto& loc : breakPoint.breakPointLocs)
-		byteCode.emit(short(endLoopOp), loc);
+		// Write out the breakpoint jumps
+		logicalBreakpoints.top().opbreak = endLoopOp;
+		logicalBreakpoints.top().opcontinue = continueLoopOp;
+	}
+	popLogicalBreakpoint();
 
-	for (const auto& loc : breakPoint.continuePointLocs)
-		byteCode.emit(short(continueLoopOp), loc);
-
-	breakPoints.pop();
-
-	// pop index
+	// pop the idx variable
 	byteCode.emit(opcode::OP_INDEX_DEC);
 }
 
