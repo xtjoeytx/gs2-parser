@@ -293,7 +293,6 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::Assign:
 		{
 			node->left->visit(this);
-			node->right->visit(this);
 
 			// if the parent, and the next node are both assignments we need to
 			// copy the value on the top of the stack before the next assignment op
@@ -309,6 +308,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 					parserData->lastAssign.push(true);
 			}
 
+			node->right->visit(this);
 
 			auto opCode = getExpressionOpCode(node->op);
 			assert(opCode != opcode::Opcode::OP_NONE);
