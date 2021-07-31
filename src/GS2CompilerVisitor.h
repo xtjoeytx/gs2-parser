@@ -4,16 +4,9 @@
 #define GS2COMPILER_H
 
 #include <stack>
+#include <vector>
 #include "astvisitor.h"
 #include "GS2Bytecode.h"
-
-class ParserData;
-
-struct LoopBreakPoint
-{
-	std::vector<size_t> continuePointLocs;
-	std::vector<size_t> breakPointLocs;
-};
 
 struct LogicalBreakPoint
 {
@@ -23,13 +16,20 @@ struct LogicalBreakPoint
 	std::vector<size_t> continuePointLocs;
 };
 
+class ParserData;
+
 class GS2CompilerVisitor : public NodeVisitor
 {
 	GS2Bytecode byteCode;
 	ParserData *parserData;
 
-	std::stack<LoopBreakPoint> breakPoints;
-	std::stack<LogicalBreakPoint> logicalBreakpoints;
+	private:
+		std::stack<LogicalBreakPoint> logicalBreakpoints;
+		std::stack<LogicalBreakPoint> loopBreakpoints;
+
+		void popBreakpoint(std::stack<LogicalBreakPoint>& bp);
+		void addBreakLocation(std::stack<LogicalBreakPoint>& bp, size_t location);
+		void addContinueLocation(std::stack<LogicalBreakPoint>& bp, size_t location);
 
 	public:
 		GS2CompilerVisitor(ParserData *data) : parserData(data) { }
@@ -43,40 +43,17 @@ class GS2CompilerVisitor : public NodeVisitor
 			return byteCode.getByteCode(scriptType, scriptName, saveToDisk);
 		}
 
-		void pushLogicalBreakpoint(LogicalBreakPoint bp)
-		{
-			logicalBreakpoints.push(bp);
-		}
+		void pushLogicalBreakpoint(LogicalBreakPoint bp);
+		void popLogicalBreakpoint();
+		void addLogicalBreakLocation(size_t location);
+		void addLogicalContinueLocation(size_t location);
 
-		void popLogicalBreakpoint()
-		{
-			auto& breakPoint = logicalBreakpoints.top();
-			if (breakPoint.opbreak >= 0)
-			{
-				for (const auto& loc : breakPoint.breakPointLocs)
-					byteCode.emit(short(breakPoint.opbreak), loc);
-			}
+		void pushLoopBreakpoint(LogicalBreakPoint bp);
+		void popLoopBreakpoint();
+		void addLoopBreakLocation(size_t location);
+		void addLoopContinueLocation(size_t location);
 
-			if (breakPoint.opcontinue >= 0)
-			{
-				for (const auto& loc : breakPoint.continuePointLocs)
-					byteCode.emit(short(breakPoint.opcontinue), loc);
-			}
-
-			logicalBreakpoints.pop();
-		}
-
-		void addBreakLocation(size_t location)
-		{
-			if (!logicalBreakpoints.empty())
-				logicalBreakpoints.top().breakPointLocs.push_back(location);
-		}
-
-		void addContinueLocation(size_t location)
-		{
-			if (!logicalBreakpoints.empty())
-				logicalBreakpoints.top().continuePointLocs.push_back(location);
-		}
+		/////////
 
 		virtual void Visit(Node *node);
 		virtual void Visit(StatementNode *node);
@@ -110,5 +87,61 @@ class GS2CompilerVisitor : public NodeVisitor
 		virtual void Visit(ExpressionStrConcatNode *node);
 		virtual void Visit(ExpressionListNode *node);
 };
+
+inline void GS2CompilerVisitor::addBreakLocation(std::stack<LogicalBreakPoint>& bp, size_t location)
+{
+	if (!bp.empty())
+		bp.top().breakPointLocs.push_back(location);
+}
+
+inline void GS2CompilerVisitor::addContinueLocation(std::stack<LogicalBreakPoint>& bp, size_t location)
+{
+	if (!bp.empty())
+		bp.top().continuePointLocs.push_back(location);
+}
+
+/////////////
+
+inline void GS2CompilerVisitor::pushLogicalBreakpoint(LogicalBreakPoint bp)
+{
+	logicalBreakpoints.push(bp);
+}
+
+inline void GS2CompilerVisitor::popLogicalBreakpoint()
+{
+	popBreakpoint(logicalBreakpoints);
+}
+
+inline void GS2CompilerVisitor::addLogicalBreakLocation(size_t location)
+{
+	addBreakLocation(logicalBreakpoints, location);
+}
+
+inline void GS2CompilerVisitor::addLogicalContinueLocation(size_t location)
+{
+	addContinueLocation(logicalBreakpoints, location);
+}
+
+/////////////
+
+inline void GS2CompilerVisitor::pushLoopBreakpoint(LogicalBreakPoint bp)
+{
+	loopBreakpoints.push(bp);
+}
+
+inline void GS2CompilerVisitor::popLoopBreakpoint()
+{
+	popBreakpoint(loopBreakpoints);
+}
+
+inline void GS2CompilerVisitor::addLoopBreakLocation(size_t location)
+{
+	addBreakLocation(loopBreakpoints, location);
+}
+
+inline void GS2CompilerVisitor::addLoopContinueLocation(size_t location)
+{
+	addContinueLocation(loopBreakpoints, location);
+}
 
 #endif
