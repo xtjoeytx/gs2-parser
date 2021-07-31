@@ -531,6 +531,10 @@ class ExpressionUnaryOpNode : public ExpressionNode
 
 			return expr->toString() + std::string(ExpressionOpToString(op));
 		}
+
+		virtual ExpressionType expressionType() const {
+			return expr->expressionType();
+		}
 };
 
 class ExpressionFnCallNode : public ExpressionNode

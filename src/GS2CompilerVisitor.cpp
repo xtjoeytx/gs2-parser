@@ -377,6 +377,9 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 			case ExpressionOp::UnaryStringCast:
 			{
 				byteCode.emit(opcode::OP_CONV_TO_STRING);
+
+				// need to test to see if this should always be emitted
+				byteCode.emit(opcode::OP_MEMBER_ACCESS);
 				handled = true;
 				break;
 			}

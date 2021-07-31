@@ -253,6 +253,9 @@ namespace opcode
 			case OP_OR:
 				return "OP_OR";
 
+			case OP_ARRAY:
+				return "OP_ARRAY[]";
+
 			case OP_OBJ_CHARAT:
 				return "OP_OBJ_CHARAT";
 
