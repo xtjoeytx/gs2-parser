@@ -3,9 +3,7 @@
 #ifndef BUFFER_H
 #define BUFFER_H
 
-#include <cstdio>
 #include <cstdint>
-#include <memory>
 
 class Buffer
 {

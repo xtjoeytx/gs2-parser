@@ -21,8 +21,7 @@ class GS2Bytecode
 {
     public:
         GS2Bytecode() : opcodePos(0), opcodeWritePos(0), lastOp(opcode::Opcode::OP_NONE) {}
-        void Reset() { opcodePos = 0; }
-
+        
         Buffer getByteCode(const std::string& scriptType, const std::string& scriptName, bool saveToDisk);
 
         size_t getStringConst(const std::string& str);
@@ -36,8 +35,6 @@ class GS2Bytecode
 
         void emitDynamicNumber(int32_t val);
         void emitDoubleNumber(const std::string& num);
-
-        void popOpcode();
 
         opcode::Opcode getLastOp() const;
         size_t getOpcodePos() const;

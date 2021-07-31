@@ -23,36 +23,13 @@ class GS2CompilerVisitor : public NodeVisitor
 	GS2Bytecode byteCode;
 	ParserData *parserData;
 	
-	private:
-		bool copyAssignment;
-		std::stack<LogicalBreakPoint> logicalBreakpoints;
-		std::stack<LogicalBreakPoint> loopBreakpoints;
-
-		void popBreakpoint(std::stack<LogicalBreakPoint>& bp);
-		void addBreakLocation(std::stack<LogicalBreakPoint>& bp, size_t location);
-		void addContinueLocation(std::stack<LogicalBreakPoint>& bp, size_t location);
-
 	public:
 		GS2CompilerVisitor(ParserData *data) : parserData(data), copyAssignment(false) { }
 		virtual ~GS2CompilerVisitor() = default;
 
-		void Reset() {
-			byteCode.Reset();
-		}
-
 		Buffer getByteCode(const std::string& scriptType, const std::string& scriptName, bool saveToDisk = true) {
 			return byteCode.getByteCode(scriptType, scriptName, saveToDisk);
 		}
-
-		void pushLogicalBreakpoint(LogicalBreakPoint bp);
-		void popLogicalBreakpoint();
-		void addLogicalBreakLocation(size_t location);
-		void addLogicalContinueLocation(size_t location);
-
-		void pushLoopBreakpoint(LogicalBreakPoint bp);
-		void popLoopBreakpoint();
-		void addLoopBreakLocation(size_t location);
-		void addLoopContinueLocation(size_t location);
 
 		/////////
 
@@ -87,6 +64,26 @@ class GS2CompilerVisitor : public NodeVisitor
 		virtual void Visit(ExpressionUnaryOpNode *node);
 		virtual void Visit(ExpressionStrConcatNode *node);
 		virtual void Visit(ExpressionListNode *node);
+
+	private:
+		bool copyAssignment;
+		std::stack<LogicalBreakPoint> logicalBreakpoints;
+		std::stack<LogicalBreakPoint> loopBreakpoints;
+
+		void popBreakpoint(std::stack<LogicalBreakPoint>& bp);
+		void addBreakLocation(std::stack<LogicalBreakPoint>& bp, size_t location);
+		void addContinueLocation(std::stack<LogicalBreakPoint>& bp, size_t location);
+
+		void pushLogicalBreakpoint(LogicalBreakPoint bp);
+		void popLogicalBreakpoint();
+		void addLogicalBreakLocation(size_t location);
+		void addLogicalContinueLocation(size_t location);
+
+		void pushLoopBreakpoint(LogicalBreakPoint bp);
+		void popLoopBreakpoint();
+		void addLoopBreakLocation(size_t location);
+		void addLoopContinueLocation(size_t location);
+
 };
 
 inline void GS2CompilerVisitor::addBreakLocation(std::stack<LogicalBreakPoint>& bp, size_t location)

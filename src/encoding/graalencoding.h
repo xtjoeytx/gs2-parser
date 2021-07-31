@@ -57,6 +57,8 @@ struct GraalByte
 
     static void Write(Buffer& buf, Val_Type data)
     {
+        if (data < 223)
+            data += 32;
         buf.write((char *)&data, 1);
     }
 
@@ -64,7 +66,7 @@ struct GraalByte
     {
         char dst[1];
         buf.read(dst, 1, pos);
-        return dst[0];
+        return dst[0] - 32;
     }
 };
 
@@ -175,8 +177,12 @@ struct GraalString
 
     static void Write(Buffer& buf, Val_Type data)
     {
-        buf.Write<GraalByte>(data.length());
-        buf.write(data.c_str(), data.length());
+        auto len = data.length();
+        if (len > 223)
+            len = 223;
+
+        buf.Write<GraalByte>((uint8_t)len);
+        buf.write(data.c_str(), len);
     }
 
     static Val_Type Read(Buffer& buf, size_t pos)

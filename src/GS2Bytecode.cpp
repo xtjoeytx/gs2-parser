@@ -239,13 +239,3 @@ void GS2Bytecode::emitDoubleNumber(const std::string& num)
 	emit(char(0xF6));
 	emit(num);
 }
-
-void GS2Bytecode::popOpcode()
-{
-	if (lastOp != opcode::Opcode::OP_NONE)
-	{
-		lastOp = opcode::Opcode::OP_NONE;
-		--opcodePos;
-		bytecode.setWritePos(opcodeWritePos);
-	}
-}

@@ -1,7 +1,7 @@
 #include <cassert>
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 #include "buffer.h"
 
 Buffer::Buffer(size_t len)
@@ -26,9 +26,14 @@ Buffer::~Buffer()
 
 void Buffer::resize(size_t len)
 {
+    auto tmp = buf;
     buflen = (len > buflen ? len : buflen * 2);
     buf = (uint8_t *)realloc(buf, buflen);
     assert(buf);
+
+    // silencing msvc warning
+    if (!buf)
+        free(tmp);
 }
 
 void Buffer::read(char *dst, size_t len, size_t pos)
@@ -51,8 +56,4 @@ void Buffer::write(char val)
         resize();
 
     buf[writepos++] = val;
-
-    if (val == 0x0d) {
-        printf("written\n");
-    }
 }
