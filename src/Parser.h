@@ -39,7 +39,6 @@ class ParserData
 
 		// hacky stuff
 		int newObjCallCount;
-		std::stack<bool> lastAssign;
 
 	private:
 		yyscan_t scanner;

@@ -22,8 +22,9 @@ class GS2CompilerVisitor : public NodeVisitor
 {
 	GS2Bytecode byteCode;
 	ParserData *parserData;
-
+	
 	private:
+		bool copyAssignment;
 		std::stack<LogicalBreakPoint> logicalBreakpoints;
 		std::stack<LogicalBreakPoint> loopBreakpoints;
 
@@ -32,7 +33,7 @@ class GS2CompilerVisitor : public NodeVisitor
 		void addContinueLocation(std::stack<LogicalBreakPoint>& bp, size_t location);
 
 	public:
-		GS2CompilerVisitor(ParserData *data) : parserData(data) { }
+		GS2CompilerVisitor(ParserData *data) : parserData(data), copyAssignment(false) { }
 		virtual ~GS2CompilerVisitor() = default;
 
 		void Reset() {

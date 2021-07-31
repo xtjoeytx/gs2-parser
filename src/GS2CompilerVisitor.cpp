@@ -297,15 +297,14 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			// if the parent, and the next node are both assignments we need to
 			// copy the value on the top of the stack before the next assignment op
 			{
-				// may need to pass the calling node around to simplify this
-				if (!parserData->lastAssign.empty())
+				if (copyAssignment)
 				{
-					parserData->lastAssign.pop();
 					byteCode.emit(opcode::OP_COPY_LAST_OP);
+					copyAssignment = false;
 				}
 
 				if (node->right->isAssignment)
-					parserData->lastAssign.push(true);
+					copyAssignment = true;
 			}
 
 			node->right->visit(this);
