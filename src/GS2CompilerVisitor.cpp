@@ -111,6 +111,8 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 		case ExpressionOp::GreaterThan: return opcode::Opcode::OP_GT;
 		case ExpressionOp::GreaterThanOrEqual: return opcode::Opcode::OP_GTE;
 
+		case ExpressionOp::ConcatAssign: return opcode::Opcode::OP_JOIN;
+
 		case ExpressionOp::UnaryMinus: return opcode::Opcode::OP_UNARYSUB;
 		case ExpressionOp::UnaryNot: return opcode::Opcode::OP_NOT;
 		case ExpressionOp::Increment: return opcode::Opcode::OP_INC;
@@ -221,6 +223,8 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 	if (node->op == ExpressionOp::LogicalAnd || node->op == ExpressionOp::LogicalOr)
 	{
 		node->left->visit(this);
+		if (node->left->expressionType() != ExpressionType::EXPR_INTEGER)
+			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 
 		if (node->op == ExpressionOp::LogicalAnd)
 		{
@@ -228,13 +232,8 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			byteCode.emit(char(0xF4));
 			byteCode.emit(short(0));
 			
-			// TODO(joey): This is not going to work when using logical-and in expressions
-			// that aren't if-statements, so back to the drawing board
 			assert(!logicalBreakpoints.empty());
 			addLogicalContinueLocation(byteCode.getBytecodePos() - 2);
-
-			node->right->visit(this);
-			return;
 		}
 		else if (node->op == ExpressionOp::LogicalOr)
 		{
@@ -244,10 +243,13 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 
 			assert(!logicalBreakpoints.empty());
 			addLogicalBreakLocation(byteCode.getBytecodePos() - 2);
-
-			node->right->visit(this);
-			return;
 		}
+
+		node->right->visit(this);
+		if (node->right->expressionType() != ExpressionType::EXPR_INTEGER)
+			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+
+		return;
 	}
 
 	switch (node->op)
@@ -290,6 +292,34 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			break;
 		}
 
+		case ExpressionOp::ConcatAssign:
+		{
+			node->left->visit(this);
+			node->left->visit(this);
+			if (node->left->expressionType() != ExpressionType::EXPR_STRING)
+				byteCode.emit(opcode::OP_CONV_TO_STRING);
+			
+			auto opCode = getExpressionOpCode(node->op);
+			assert(opCode != opcode::Opcode::OP_JOIN);
+
+			node->right->visit(this);
+			byteCode.emit(opCode);
+
+			// Special assignment operators for array/multi-dimensional arrays
+			auto exprType = node->left->expressionType();
+			if (exprType == ExpressionType::EXPR_ARRAY)
+				opCode = opcode::Opcode::OP_ARRAY_ASSIGN;
+			else if (exprType == ExpressionType::EXPR_MULTIARRAY)
+				opCode = opcode::Opcode::OP_ARRAY_MULTIDIM_ASSIGN;
+			else
+				opCode = opcode::OP_ASSIGN;
+
+			byteCode.emit(opCode);
+
+			handled = true;
+			break;
+		}
+
 		case ExpressionOp::Assign:
 		{
 			node->left->visit(this);
@@ -307,10 +337,30 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 					copyAssignment = true;
 			}
 
-			node->right->visit(this);
+			opcode::Opcode opCode;
+			pushLogicalBreakpoint(LogicalBreakPoint{});
+			{
+				if (node->op != ExpressionOp::Assign)
+				{
+					opCode = opcode::Opcode::OP_ASSIGN;
+					byteCode.emit(getExpressionOpCode(node->op));
+				}
+				else
+				{
+					opCode = getExpressionOpCode(node->op);
+					assert(opCode != opcode::Opcode::OP_NONE);
+				}
 
-			auto opCode = getExpressionOpCode(node->op);
-			assert(opCode != opcode::Opcode::OP_NONE);
+				node->right->visit(this);
+
+				LogicalBreakPoint& bp = logicalBreakpoints.top();
+				if (!bp.breakPointLocs.empty() || !bp.continuePointLocs.empty())
+				{
+					bp.opbreak = bp.opcontinue = byteCode.getOpcodePos();
+					byteCode.emit(opcode::Opcode::OP_INLINE_CONDITIONAL);
+				}
+			}
+			popLogicalBreakpoint();
 
 			// Special assignment operators for array/multi-dimensional arrays
 			auto exprType = node->left->expressionType();
@@ -377,8 +427,10 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 			{
 				byteCode.emit(opcode::OP_CONV_TO_STRING);
 
-				// need to test to see if this should always be emitted
-				byteCode.emit(opcode::OP_MEMBER_ACCESS);
+				// need to test to see if this should always be emitted here, or in postfixnode
+				if (node->expr->expressionType() == ExpressionType::EXPR_ARRAY)
+					byteCode.emit(opcode::OP_MEMBER_ACCESS);
+
 				handled = true;
 				break;
 			}
@@ -592,11 +644,17 @@ void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
 	for (; i < node->nodes.size(); i++)
 	{
 		node->nodes[i]->visit(this);
-		if (node->nodes[i]->expressionType() == ExpressionType::EXPR_IDENT)
+
+		auto exprType = node->nodes[i]->expressionType();
+		if (exprType == ExpressionType::EXPR_IDENT)
 		{
 			byteCode.emit(opcode::OP_MEMBER_ACCESS);
 			if (i != node->nodes.size() - 1)
 				byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+		}
+		else if (exprType == ExpressionType::EXPR_ARRAY)
+		{
+
 		}
 	}
 }

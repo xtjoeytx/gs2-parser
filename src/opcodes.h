@@ -48,6 +48,7 @@ namespace opcode
 		OP_INLINE_NEW 	  = 40,
 		OP_MAKEVAR		  = 41,
 		OP_NEW_OBJECT 	  = 42,
+		OP_INLINE_CONDITIONAL = 44,
 		OP_ASSIGN = 50, //  S(1) = S(0)
 		OP_FUNC_PARAMS_END = 51,
 

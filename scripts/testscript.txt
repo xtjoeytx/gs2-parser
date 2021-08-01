@@ -1469,3 +1469,147 @@ function onCreated() {
 public function test() {
   player.chat = this.obj;
 }
+
+
+function onCreated()
+{
+  temp.v = "test";
+  temp.arr = new[3];
+
+
+ // temp.dump = getVal( obj.(@ temp.vars[i] ) );
+}
+
+function onCreated() {
+/*
+         6,         4: temp. (189)
+         7,         5: type(variable) (22) (Opcode: 0xF0)  - variable[0](a) (byte)
+        10,         6: member access (35)
+        11,         7: type(true) (24)
+        12,         8: "=" (50)
+*/
+  temp.a = true;
+
+/*
+        13,         9: temp. (189)
+        14,        10: type(variable) (22) (Opcode: 0xF0)  - variable[1](b) (byte)
+        17,        11: member access (35)
+        18,        12: temp. (189)
+        19,        13: type(variable) (22) (Opcode: 0xF0)  - variable[0](a) (byte)
+        22,        14: member access (35)
+        23,        15: Convert to float (33)
+        24,        16: || (3) (Opcode: 0xF3)  - double(21) (byte)
+        27,        17: temp. (189)
+        28,        18: type(variable) (22) (Opcode: 0xF0)  - variable[2](c) (byte)
+        31,        19: member access (35)
+        32,        20: Convert to float (33)
+        33,        21: End of inline conditional? (44)
+        34,        22: "=" (50)
+*/
+  temp.b = (temp.a || temp.c);
+
+/*
+        35,        23: player. (182)
+        36,        24: type(variable) (22) (Opcode: 0xF0)  - variable[3](chat) (byte)
+        39,        25: member access (35)
+        40,        26: type(string) (21) (Opcode: 0xF0)  - variable[4](Test: ) (byte)
+        43,        27: temp. (189)
+        44,        28: type(variable) (22) (Opcode: 0xF0)  - variable[1](b) (byte)
+        47,        29: member access (35)
+        48,        30: Convert to string (34)
+        49,        31: @ (113)
+        50,        32: "=" (50)
+*/
+  player.chat = "Test: " @ temp.b;
+}
+
+
+function onCreated() {
+/*
+         7,         5: temp. (189)
+         8,         6: type(variable) (22) (Opcode: 0xF0)  - variable[0](b) (byte)
+        11,         7: member access (35)
+        12,         8: Mark as loop variable (47)
+        13,         9: Assign loop variable index (45) (Opcode: 0xF3)  - double(0) (byte)
+        16,        10: Decrease last operand index by 1 (32)
+        17,        11: temp. (189)
+        18,        12: type(variable) (22) (Opcode: 0xF0)  - variable[1](a) (byte)
+        21,        13: member access (35)
+        22,        14: Mark as loop variable (47)
+        23,        15: Assign loop variable index (45) (Opcode: 0xF3)  - double(1) (byte)
+        26,        16: Decrease last operand index by 1 (32)
+*/
+
+/*
+        27,        17: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
+        30,        18: type(true) (24)
+        31,        19: "=" (50)
+*/
+  temp.a = true;
+
+/*
+        32,        20: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+        35,        21: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
+        38,        22: Convert to float (33)
+        39,        23: && (5) (Opcode: 0xF3)  - double(28) (byte)
+        42,        24: temp. (189)
+        43,        25: type(variable) (22) (Opcode: 0xF0)  - variable[2](c) (byte)
+        46,        26: member access (35)
+        47,        27: Convert to float (33)
+        48,        28: End of inline conditional? (44)
+        49,        29: "=" (50)
+*/
+  temp.b = (temp.a && temp.c);
+
+/*
+        50,        30: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
+        53,        31: Convert to float (33)
+        54,        32: || (3) (Opcode: 0xF3)  - double(35) (byte)
+        57,        33: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+        60,        34: Convert to float (33)
+        61,        35: if (4) (Opcode: 0xF3)  - double(41) (byte)
+        64,        36: type(array) (23)
+        65,        37: type(string) (21) (Opcode: 0xF0)  - variable[3](One is true) (byte)
+        68,        38: type(variable) (22) (Opcode: 0xF0)  - variable[4](echo) (byte)
+        71,        39: Call function (6)
+        72,        40: Decrease last operand index by 1 (32)
+*/
+  if (temp.a || temp.b) {
+    echo("One is true");
+  }
+
+/*
+        73,        41: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
+        76,        42: Convert to float (33)
+        77,        43: if (4) (Opcode: 0xF3)  - double(52) (byte)
+        80,        44: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+        83,        45: Convert to float (33)
+        84,        46: if (4) (Opcode: 0xF3)  - double(52) (byte)
+        87,        47: type(array) (23)
+        88,        48: type(string) (21) (Opcode: 0xF0)  - variable[5](Both is true) (byte)
+        91,        49: type(variable) (22) (Opcode: 0xF0)  - variable[4](echo) (byte)
+        94,        50: Call function (6)
+        95,        51: Decrease last operand index by 1 (32)
+*/
+  if (temp.a && temp.b) {
+    echo("Both is true");
+  }
+
+/*
+        96,        52: Loop variable (46) (Opcode: 0xF3)  - double(1) (byte)
+        99,        53: Convert to float (33)
+       100,        54: if (4) (Opcode: 0xF3)  - double(64) (byte)
+       103,        55: Loop variable (46) (Opcode: 0xF3)  - double(0) (byte)
+       106,        56: Convert to float (33)
+       107,        57: ! (68)
+       108,        58: if (4) (Opcode: 0xF3)  - double(64) (byte)
+       111,        59: type(array) (23)
+       112,        60: type(string) (21) (Opcode: 0xF0)  - variable[6](Only temp.a is true) (byte)
+       115,        61: type(variable) (22) (Opcode: 0xF0)  - variable[4](echo) (byte)
+       118,        62: Call function (6)
+       119,        63: Decrease last operand index by 1 (32)
+*/
+  if (temp.a && !temp.b) {
+    echo("Only temp.a is true");
+  }
+}
