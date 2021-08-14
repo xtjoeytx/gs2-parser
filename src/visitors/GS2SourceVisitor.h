@@ -4,7 +4,7 @@
 #define GS2VISITOR_H
 
 #include <cstdarg>
-#include "ast.h"
+#include "ast/ast.h"
 
 inline std::string getArgList(std::vector<ExpressionNode *> & args)
 {

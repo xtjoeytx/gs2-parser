@@ -1,97 +1,8 @@
 #include <cassert>
 #include <unordered_map>
 #include "GS2CompilerVisitor.h"
-#include "ast.h"
+#include "ast/ast.h"
 #include "Parser.h"
-
-struct BuiltInCmd
-{
-	std::string name;
-	opcode::Opcode op;
-	bool useArray;
-	opcode::Opcode convert_op{ opcode::OP_NONE };
-};
-
-const BuiltInCmd defaultCall = {
-	"", opcode::OP_CALL, true
-};
-
-const BuiltInCmd defaultObjCall = {
-	"", opcode::OP_CALL, true, opcode::OP_CONV_TO_OBJECT
-};
-
-const BuiltInCmd builtInCmds[] = {
-	{"sleep", opcode::OP_SLEEP, false},
-	{"makevar", opcode::OP_MAKEVAR, false, opcode::OP_CONV_TO_STRING},
-	{"format", opcode::OP_FORMAT, true},
-	{"abs", opcode::OP_ABS, false},
-	{"random", opcode::OP_RANDOM, false},
-	{"sin", opcode::OP_SIN, false},
-	{"cos", opcode::OP_COS, false},
-
-	{"arctan", opcode::OP_ARCTAN, false},
-	{"exp", opcode::OP_EXP, false},
-	{"log", opcode::OP_LOG, false},
-	{"min", opcode::OP_MIN, false},
-	{"max", opcode::OP_MAX, false},
-	{"getangle", opcode::OP_GETANGLE, false},
-	{"getdir", opcode::OP_GETDIR, false},
-	{"vecx", opcode::OP_VECX, false},
-	{"vecy", opcode::OP_VECY, false},
-};
-
-const BuiltInCmd builtInObjCmds[] = {
-	{"index", opcode::OP_OBJ_INDEX, false},
-	{"type", opcode::OP_OBJ_TYPE, false, opcode::OP_CONV_TO_OBJECT},
-
-	//
-	{"indices", opcode::OP_OBJ_INDICES, false},
-	{"link", opcode::OP_OBJ_LINK, false},
-	{"trim", opcode::OP_OBJ_TRIM, false, opcode::OP_CONV_TO_STRING},
-	{"length", opcode::OP_OBJ_LENGTH, false, opcode::OP_CONV_TO_STRING},
-	{"pos", opcode::OP_OBJ_POS, false},
-	{"charat", opcode::OP_OBJ_CHARAT, false},
-	{"substring", opcode::OP_OBJ_SUBSTR, false},
-	{"starts", opcode::OP_OBJ_STARTS, false},
-	{"ends", opcode::OP_OBJ_ENDS, false},
-	{"tokenize", opcode::OP_OBJ_TOKENIZE, false},
-	{"positions", opcode::OP_OBJ_POSITIONS, false},
-	{"size", opcode::OP_OBJ_SIZE, false, opcode::OP_CONV_TO_OBJECT},
-	{"subarray", opcode::OP_OBJ_SUBARRAY, false},
-	{"clear", opcode::OP_OBJ_CLEAR, false},
-};
-
-const std::unordered_map<std::string, BuiltInCmd>& getCommandList()
-{
-	static bool initialized = false;
-	static std::unordered_map<std::string, BuiltInCmd> builtInMap;
-
-	if (!initialized)
-	{
-		for (const auto& cmd : builtInCmds)
-			builtInMap.insert({ cmd.name, cmd });
-
-		initialized = true;
-	}
-
-	return builtInMap;
-}
-
-const std::unordered_map<std::string, BuiltInCmd>& getCommandListMethod()
-{
-	static bool initialized = false;
-	static std::unordered_map<std::string, BuiltInCmd> builtInMap;
-
-	if (!initialized)
-	{
-		for (const auto& cmd : builtInObjCmds)
-			builtInMap.insert({ cmd.name, cmd });
-
-		initialized = true;
-	}
-
-	return builtInMap;
-}
 
 opcode::Opcode getExpressionOpCode(ExpressionOp op)
 {
@@ -111,6 +22,10 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 		case ExpressionOp::GreaterThan: return opcode::Opcode::OP_GT;
 		case ExpressionOp::GreaterThanOrEqual: return opcode::Opcode::OP_GTE;
 
+		case ExpressionOp::PlusAssign: return opcode::Opcode::OP_ADD;
+		case ExpressionOp::MinusAssign: return opcode::Opcode::OP_SUB;
+		case ExpressionOp::MultiplyAssign: return opcode::Opcode::OP_MUL;
+		case ExpressionOp::DivideAssign: return opcode::Opcode::OP_DIV;
 		case ExpressionOp::ConcatAssign: return opcode::Opcode::OP_JOIN;
 
 		case ExpressionOp::UnaryMinus: return opcode::Opcode::OP_UNARYSUB;
@@ -124,11 +39,21 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 
 void GS2CompilerVisitor::Visit(Node *node)
 {
-	fprintf(stderr, "Unimplemented node type: %s\n", node->NodeType());
+	auto error_length = std::char_traits<char>::length("Unimplemented node type: ") + strlen(node->NodeType());
+	
+	std::string errorMsg;
+	errorMsg.reserve(error_length);
+	errorMsg.append("Unimplemented node type: ").append(node->NodeType());
+
+	parserContext.addError({ GS2CompilerError::ErrorCode::CompileError, errorMsg });
+
+	fprintf(stderr, "%s\n", errorMsg.c_str());
+
 #ifdef _WIN32
 	system("pause");
 #endif
-	//exit(1);
+
+	exit(1);
 }
 
 void GS2CompilerVisitor::Visit(StatementBlock *node)
@@ -142,7 +67,9 @@ void GS2CompilerVisitor::Visit(StatementBlock *node)
 
 void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 {
+#ifdef DBGEMITTERS
 	printf("Declare function: %s\n", node->ident.c_str());
+#endif
 
 	byteCode.emit(opcode::OP_SET_INDEX);
 	byteCode.emit(char(0xF4));
@@ -155,7 +82,7 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 		funcName.append(node->objectName).append(".");
 	funcName.append(node->ident);
 
-	byteCode.addFunction({funcName, byteCode.getBytecodePos(), byteCode.getOpcodePos()});
+	byteCode.addFunction(funcName, byteCode.getOpIndex(), byteCode.getBytecodePos());
 
 	{
 		byteCode.emit(opcode::OP_TYPE_ARRAY);
@@ -190,7 +117,7 @@ void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
 {
 	node->condition->visit(this);
 	
-	pushLogicalBreakpoint(LogicalBreakPoint{ byteCode.getOpcodePos() });
+	pushLogicalBreakpoint(LogicalBreakPoint{ byteCode.getOpIndex() });
 	{
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
@@ -201,7 +128,7 @@ void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
 
 		// set the continue position to the right-hand expression, skipping
 		// over the jump on the left-hand expression
-		logicalBreakpoints.top().opcontinue = byteCode.getOpcodePos() + 1;
+		logicalBreakpoints.top().opcontinue = byteCode.getOpIndex() + 1;
 	}
 	popLogicalBreakpoint();
 
@@ -213,7 +140,7 @@ void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
 	auto elseLoc = byteCode.getBytecodePos() - 2;
 
 	node->rightExpr->visit(this);
-	byteCode.emit(short(byteCode.getOpcodePos()), elseLoc);
+	byteCode.emit(short(byteCode.getOpIndex()), elseLoc);
 }
 
 void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
@@ -292,6 +219,36 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			break;
 		}
 
+		case ExpressionOp::PlusAssign:
+		case ExpressionOp::MinusAssign:
+		case ExpressionOp::MultiplyAssign:
+		case ExpressionOp::DivideAssign:
+		{
+			node->left->visit(this);
+			node->left->visit(this);
+			byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_NUMBER);
+			
+			auto opCode = getExpressionOpCode(node->op);
+			assert(opCode != opcode::Opcode::OP_NONE);
+
+			node->right->visit(this);
+			byteCode.emit(opCode);
+
+			// Special assignment operators for array/multi-dimensional arrays
+			auto exprType = node->left->expressionType();
+			if (exprType == ExpressionType::EXPR_ARRAY)
+				opCode = opcode::Opcode::OP_ARRAY_ASSIGN;
+			else if (exprType == ExpressionType::EXPR_MULTIARRAY)
+				opCode = opcode::Opcode::OP_ARRAY_MULTIDIM_ASSIGN;
+			else
+				opCode = opcode::OP_ASSIGN;
+
+			byteCode.emit(opCode);
+
+			handled = true;
+			break;
+		}
+
 		case ExpressionOp::ConcatAssign:
 		{
 			node->left->visit(this);
@@ -356,7 +313,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 				LogicalBreakPoint& bp = logicalBreakpoints.top();
 				if (!bp.breakPointLocs.empty() || !bp.continuePointLocs.empty())
 				{
-					bp.opbreak = bp.opcontinue = byteCode.getOpcodePos();
+					bp.opbreak = bp.opcontinue = byteCode.getOpIndex();
 					byteCode.emit(opcode::Opcode::OP_INLINE_CONDITIONAL);
 				}
 			}
@@ -542,10 +499,10 @@ void GS2CompilerVisitor::Visit(ExpressionArrayIndexNode *node)
 void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)
 {
 	node->expr->visit(this);
-
 	node->lower->visit(this);
-	if (node->lower->expressionType() != ExpressionType::EXPR_NUMBER)
-		byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+	byteCode.emitConversionOp(node->lower->expressionType(), ExpressionType::EXPR_NUMBER);
+	//if (node->lower->expressionType() != ExpressionType::EXPR_NUMBER)
+	//	byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 
 	if (node->higher)
 	{
@@ -564,9 +521,12 @@ void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)
 
 void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 {
-	auto enumConstant = parserData->getEnumConstant(node->val);
+	auto enumConstant = parserContext.getEnumConstant(node->val);
 	if (enumConstant)
 	{
+#ifdef DBGEMITTERS
+		printf("ENUM CONSTANT: %s\n", node->val.c_str());
+#endif
 		byteCode.emit(opcode::OP_TYPE_NUMBER);
 		byteCode.emitDynamicNumber(enumConstant.value());
 		return;
@@ -578,7 +538,9 @@ void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 	byteCode.emit((char)0xF0);
 	byteCode.emit((char)id);
 
+#ifdef DBGEMITTERS
 	printf("Identifier Node: %s\n", node->val.c_str());
+#endif
 }
 
 void GS2CompilerVisitor::Visit(ExpressionIntegerNode *node)
@@ -661,7 +623,9 @@ void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
 
 void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 {
+#ifdef DBGEMITTERS
 	printf("String: %s\n", node->val.c_str());
+#endif
 
 	auto id = byteCode.getStringConst(node->val);
 
@@ -674,10 +638,12 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 	auto isObjectCall = (node->objExpr != nullptr);
 
 	// Build-in commands
-	auto& cmdList = (isObjectCall ? getCommandListMethod() : getCommandList());
+	auto& cmdList = (isObjectCall ? builtIn.builtInObjMap : builtIn.builtInCmdMap);
 	std::string funcName = node->funcExpr->toString();
 
+#ifdef DBGEMITTERS
 	printf("Call Function: %s (obj call: %d)\n", funcName.c_str(), isObjectCall ? 1 : 0);
+#endif
 
 	auto iter = cmdList.find(funcName);
 	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : (isObjectCall ? defaultObjCall : defaultCall));
@@ -739,7 +705,7 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 		//	byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 
 		// set the break point to the start of the OP_IF instruction
-		logicalBreakpoints.top().opbreak = byteCode.getOpcodePos();
+		logicalBreakpoints.top().opbreak = byteCode.getOpIndex();
 
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
@@ -751,7 +717,7 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 		// OP_IF jumps to this location if the condition is false, so we
 		// continue to the next instruction, but if their is an else-block we must
 		// skip the next instruction since its a jmp to the end of the if-else chain
-		auto nextOpcode = byteCode.getOpcodePos() + (node->elseBlock ? 1 : 0);
+		auto nextOpcode = byteCode.getOpIndex() + (node->elseBlock ? 1 : 0);
 		logicalBreakpoints.top().opcontinue = nextOpcode;
 	}
 	popLogicalBreakpoint();
@@ -766,7 +732,7 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 		auto elseLoc = byteCode.getBytecodePos() - 2;
 
 		node->elseBlock->visit(this);
-		byteCode.emit(short(byteCode.getOpcodePos()), elseLoc);
+		byteCode.emit(short(byteCode.getOpIndex()), elseLoc);
 	}
 }
 
@@ -819,9 +785,10 @@ void GS2CompilerVisitor::Visit(ExpressionNewObjectNode *node)
 
 void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 {
+	pushLogicalBreakpoint(LogicalBreakPoint{ });
 	pushLoopBreakpoint(LogicalBreakPoint {});
 	{
-		auto loopStart = byteCode.getOpcodePos();
+		auto loopStart = byteCode.getOpIndex();
 
 		node->expr->visit(this);
 		if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
@@ -844,17 +811,20 @@ void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 		addLoopContinueLocation(byteCode.getBytecodePos() - 2);
 		
 		// Set the breakpoint to after the while-statement
-		loopBreakpoints.top().opbreak = byteCode.getOpcodePos();
+		loopBreakpoints.top().opbreak = byteCode.getOpIndex();
 		loopBreakpoints.top().opcontinue = loopStart;
 	}
 	popLoopBreakpoint();
+	popLogicalBreakpoint();
 }
 
 void GS2CompilerVisitor::Visit(StatementBreakNode* node)
 {
 	if (loopBreakpoints.empty())
 	{
+#ifdef DBGEMITTERS
 		printf("Error, no loops to break from.\n");
+#endif
 		return;
 	}
 
@@ -869,7 +839,9 @@ void GS2CompilerVisitor::Visit(StatementContinueNode* node)
 {
 	if (loopBreakpoints.empty())
 	{
+#ifdef DBGEMITTERS
 		printf("Error, no loops to continue.\n");
+#endif
 		return;
 	}
 
@@ -887,14 +859,16 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 		node->init->visit(this);
 
 	// Start of loop
-	auto loopStart = byteCode.getOpcodePos();
+	auto loopStart = byteCode.getOpIndex();
 
 	// Emit the condition expression
 	if (node->cond)
 	{
 		node->cond->visit(this);
-		if (node->cond->expressionType() != ExpressionType::EXPR_INTEGER)
-			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+		byteCode.emitConversionOp(node->cond->expressionType(), ExpressionType::EXPR_NUMBER);
+
+		//if (node->cond->expressionType() != ExpressionType::EXPR_INTEGER)
+		//	byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 	}
 	else
 	{
@@ -926,7 +900,7 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 		byteCode.emit(opcode::OP_SET_INDEX);
 		byteCode.emitDynamicNumber(loopStart);
 
-		loopBreakpoints.top().opbreak = byteCode.getOpcodePos();
+		loopBreakpoints.top().opbreak = byteCode.getOpIndex();
 		loopBreakpoints.top().opcontinue = loopStart;
 	}
 	popLoopBreakpoint();
@@ -966,20 +940,18 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0));
 
-	int testc = parserData->newObjCallCount;
-	parserData->newObjCallCount++;
-
 	auto withLoc = byteCode.getBytecodePos() - 2;
+
+	int prevNewObjectCount = newObjectCount++;
 	if (node->stmtBlock)
 		node->stmtBlock->visit(this);
 
 	byteCode.emit(opcode::OP_WITHEND);
-	byteCode.emit(short(byteCode.getOpcodePos()), withLoc);
+	byteCode.emit(short(byteCode.getOpIndex()), withLoc);
 
 	///////
 	// call addcontrol
-	int count = parserData->newObjCallCount - testc;
-	for (int i = 0; i < count; i++)
+	for (int i = 0; i < newObjectCount - prevNewObjectCount; i++)
 	{
 		byteCode.emit(opcode::OP_TYPE_ARRAY);
 		byteCode.emit(opcode::OP_SWAP_LAST_OPS);
@@ -991,7 +963,7 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 		byteCode.emit(opcode::OP_INDEX_DEC);
 	}
 
-	parserData->newObjCallCount--;
+	newObjectCount--;
 }
 
 void GS2CompilerVisitor::Visit(StatementWithNode* node)
@@ -1008,7 +980,7 @@ void GS2CompilerVisitor::Visit(StatementWithNode* node)
 		node->block->visit(this);
 
 	byteCode.emit(opcode::OP_WITHEND);
-	byteCode.emit(short(byteCode.getOpcodePos()), withLoc);
+	byteCode.emit(short(byteCode.getOpIndex()), withLoc);
 }
 
 void GS2CompilerVisitor::Visit(ExpressionListNode* node)
@@ -1037,7 +1009,7 @@ void GS2CompilerVisitor::Visit(StatementForEachNode *node)
 
 	pushLoopBreakpoint(LogicalBreakPoint {});
 	{
-		auto startLoopOp = byteCode.getOpcodePos();
+		auto startLoopOp = byteCode.getOpIndex();
 		byteCode.emit(opcode::OP_FOREACH);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
@@ -1049,7 +1021,7 @@ void GS2CompilerVisitor::Visit(StatementForEachNode *node)
 		node->block->visit(this);
 
 		// increase idx
-		auto continueLoopOp = byteCode.getOpcodePos();
+		auto continueLoopOp = byteCode.getOpIndex();
 		byteCode.emit(opcode::OP_INC);
 
 		// jump to beginning of the for-each loop
@@ -1057,7 +1029,7 @@ void GS2CompilerVisitor::Visit(StatementForEachNode *node)
 		byteCode.emitDynamicNumber(startLoopOp);
 
 		// Write out the breakpoint jumps
-		auto endLoopOp = byteCode.getOpcodePos();
+		auto endLoopOp = byteCode.getOpIndex();
 		loopBreakpoints.top().opbreak = endLoopOp;
 		loopBreakpoints.top().opcontinue = continueLoopOp;
 	}
@@ -1088,25 +1060,25 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 
 	pushLoopBreakpoint(LogicalBreakPoint{});
 	{
-		std::vector<size_t> caseStartOp;
+		std::vector<uint32_t> caseStartOp;
 
 		// jump to case-test
 		byteCode.emit(opcode::OP_SET_INDEX);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
 
-		auto caseTestLoc = byteCode.getBytecodePos() - 2;
+		size_t caseTestLoc = byteCode.getBytecodePos() - 2;
 
 		// case-list:
 		for (const auto& caseNode : node->cases)
 		{
 			for (const auto& caseExpr : caseNode.exprList)
-				caseStartOp.push_back(byteCode.getOpcodePos());
+				caseStartOp.push_back(byteCode.getOpIndex());
 			caseNode.block->visit(this);
 		}
 
 		// case-test:
-		byteCode.emit(short(byteCode.getOpcodePos()), caseTestLoc);
+		byteCode.emit(short(byteCode.getOpIndex()), caseTestLoc);
 		node->expr->visit(this);
 
 		size_t i = 0;
@@ -1130,7 +1102,7 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 		if (node->expr->expressionType() == ExpressionType::EXPR_FUNCTION)
 			byteCode.emit(opcode::OP_INDEX_DEC);
 
-		loopBreakpoints.top().opbreak = byteCode.getOpcodePos();
+		loopBreakpoints.top().opbreak = byteCode.getOpIndex();
 	}
 	popLoopBreakpoint();
 }

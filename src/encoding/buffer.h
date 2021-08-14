@@ -4,17 +4,20 @@
 #define BUFFER_H
 
 #include <cstdint>
+#include <utility>
 
 class Buffer
 {
     public:
-        Buffer(size_t len = 128);
+		Buffer();
+		Buffer(size_t len);
         Buffer(Buffer&& o) noexcept;
         Buffer(const Buffer&) = delete;
         ~Buffer();
         
         Buffer& operator=(const Buffer&) = delete;
-        
+        Buffer& operator= (Buffer&& o) noexcept;
+
         const uint8_t * buffer() const {
             return buf;
         }
@@ -31,10 +34,10 @@ class Buffer
             writepos = pos;
         }
 
-        void read(char *dst, size_t len, size_t pos = 0);
+        void read(char *dst, size_t len, size_t pos = 0) const;
         void write(const char *src, size_t len);
         void write(char val);
-        void write(Buffer& o);
+        void write(const Buffer& o);
 
         template<typename T>
         typename T::Val_Type Read(size_t pos) {
@@ -62,7 +65,46 @@ class Buffer
         size_t readpos, writepos;
 };
 
-inline void Buffer::write(Buffer& o)
+inline Buffer::Buffer()
+    : buf(nullptr), buflen(0), readpos(0), writepos(0)
+{
+
+}
+
+inline Buffer::Buffer(size_t len)
+    : Buffer()
+{
+    resize(len);
+}
+
+inline Buffer::Buffer(Buffer&& o) noexcept
+{
+    *this = std::move(o);
+}
+
+inline Buffer::~Buffer()
+{
+    if (buf)
+    {
+        free(buf);
+    }
+}
+
+inline Buffer& Buffer::operator=(Buffer&& o) noexcept
+{
+	buf = o.buf;
+    buflen = o.buflen;
+    readpos = o.readpos;
+    writepos = o.writepos;
+
+    o.buf = nullptr;
+    o.buflen = 0;
+    o.readpos = 0;
+    o.writepos = 0;
+    return *this;
+}
+
+inline void Buffer::write(const Buffer& o)
 {
     write((char *)o.buf, o.length());
 }

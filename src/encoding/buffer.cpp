@@ -1,50 +1,43 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
-#include <memory>
+
 #include "buffer.h"
-
-Buffer::Buffer(size_t len)
-    : buflen(len), readpos(0), writepos(0)
-{
-    buf = (uint8_t *)malloc(len);
-}
-
-Buffer::Buffer(Buffer&& o) noexcept
-    : buf(std::move(o.buf)), buflen(o.buflen), readpos(o.readpos), writepos(o.writepos)
-{
-    o.buf = nullptr;
-    o.buflen = 0;
-    o.readpos = 0;
-    o.writepos = 0;
-}
-
-Buffer::~Buffer()
-{
-    free(buf);
-}
 
 void Buffer::resize(size_t len)
 {
-    auto tmp = buf;
-    buflen = (len > buflen ? len : buflen * 2);
-    buf = (uint8_t *)realloc(buf, buflen);
-    assert(buf);
-
-    // silencing msvc warning
-    if (!buf)
-        free(tmp);
+	if (buf)
+	{
+		auto tmp = buf;
+		buflen = (len > buflen ? len : buflen * 2);
+		buf = (uint8_t *)realloc(buf, buflen);
+		assert(buf);
+		
+		// silencing msvc warning C6308
+		if (!buf)
+			free(tmp);
+	}
+	else
+	{
+		if (len == 0)
+			len = 128;
+		
+		buf = (uint8_t *)malloc(len);
+		buflen = len;
+	}
 }
 
-void Buffer::read(char *dst, size_t len, size_t pos)
+void Buffer::read(char *dst, size_t len, size_t pos) const
 {
-    memcpy(dst, buf + pos, len);
+	if (buflen > pos + len) {
+		memcpy(dst, buf + pos, len);
+	}
 }
 
 void Buffer::write(const char *src, size_t len)
 {
-    while (buflen < writepos + len)
-        resize();
+	if (buflen < writepos + len)
+		resize(buflen + writepos + len);
 
     memcpy(buf + writepos, src, len);
     writepos += len;

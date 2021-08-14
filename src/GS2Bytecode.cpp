@@ -1,15 +1,15 @@
 #include <cassert>
-#include <cstring>
+
 #include "GS2Bytecode.h"
 #include "encoding/graalencoding.h"
 
-// enum
-// {
-//     GS1EventFlags = 1,
-//     FunctionNames = 2,
-//     Strings = 3,
-//     Bytecode = 4
-// };
+ enum
+ {
+     SEGMENT_GS1FLAGS = 1,
+	 SEGMENT_FUNCTIONTABLE = 2,
+	 SEGMENT_STRINGTABLE = 3,
+	 SEGMENT_BYTECODE = 4
+ };
 
 // Format:
 // {GINT2(LENGTH_OF_STARTSECTION)}{STARTSECTION}{SEGMENTS}
@@ -25,48 +25,32 @@
 // StringTable: {CSTR-NULL-TERMINATED}...
 // Bytecode: ...
 
-size_t GS2Bytecode::getStringConst(const std::string& str)
+int32_t GS2Bytecode::getStringConst(const std::string& str)
 {
 	auto it = std::find(stringTable.begin(), stringTable.end(), str);
 	if (it == stringTable.end())
 	{
 		stringTable.push_back(str);
-		return stringTable.size() - 1;
+		return int32_t(stringTable.size() - 1);
 	}
 
-	return std::distance(stringTable.begin(), it);
+	auto dist = std::distance(stringTable.begin(), it);
+	assert(std::abs(dist) < std::numeric_limits<int32_t>::max());
+
+	return int32_t(dist);
 }
 
-Buffer GS2Bytecode::getByteCode(const std::string& scriptType, const std::string& scriptName, bool saveToDisk)
+Buffer GS2Bytecode::getByteCode()
 {
 	Buffer byteCode;
-
-	// Start section
-	{
-		auto headerLength = scriptType.length() + scriptName.length() + 4 + 10;
-		Buffer startSection(headerLength);
-
-		startSection.write(scriptType.c_str(), scriptType.length());
-		startSection.write(',');
-		startSection.write(scriptName.c_str(), scriptName.length());
-		startSection.write(',');
-		startSection.write(saveToDisk ? '1' : '0');
-		startSection.write(',');
-
-		for (int i = 0; i < 10; i++)
-			startSection.Write<GraalByte>(0);
-		
-		byteCode.Write<GraalShort>(startSection.length());
-		byteCode.write(startSection);
-	}
 
 	// GS1EventFlags
 	{
 		Buffer gs1flags;
 		gs1flags.Write<encoding::Int32>(0); // bitflag for gs1 events
 
-		byteCode.Write<encoding::Int32>(1);
-		byteCode.Write<encoding::Int32>(gs1flags.length());
+		byteCode.Write<encoding::Int32>(SEGMENT_GS1FLAGS);
+		byteCode.Write<encoding::Int32>(uint32_t(gs1flags.length()));
 		byteCode.write(gs1flags);
 	}
 
@@ -79,11 +63,12 @@ Buffer GS2Bytecode::getByteCode(const std::string& scriptType, const std::string
 			functionNames.write(func.functionName.c_str(), func.functionName.length());
 			functionNames.write('\0');
 
-			emit(short(opcodePos), func.functionIP - 2);
+			// emit a jump before the function declaration to the last op index
+			emit(short(opIndex), func.jmpLoc - 2);
 		}
 
-		byteCode.Write<encoding::Int32>(2);
-		byteCode.Write<encoding::Int32>(functionNames.length());
+		byteCode.Write<encoding::Int32>(SEGMENT_FUNCTIONTABLE);
+		byteCode.Write<encoding::Int32>(uint32_t(functionNames.length()));
 		byteCode.write(functionNames);
 	}
 
@@ -96,49 +81,58 @@ Buffer GS2Bytecode::getByteCode(const std::string& scriptType, const std::string
 			stringTableBuffer.write('\0');
 		}
 
-		byteCode.Write<encoding::Int32>(3);
-		byteCode.Write<encoding::Int32>(stringTableBuffer.length());
+		byteCode.Write<encoding::Int32>(SEGMENT_STRINGTABLE);
+		byteCode.Write<encoding::Int32>(uint32_t(stringTableBuffer.length()));
 		byteCode.write(stringTableBuffer);
 	}
 
 	// Bytecode
-	byteCode.Write<encoding::Int32>(4);
-	byteCode.Write<encoding::Int32>(bytecode.length());
+	byteCode.Write<encoding::Int32>(SEGMENT_BYTECODE);
+	byteCode.Write<encoding::Int32>(uint32_t(bytecode.length()));
 	byteCode.write(bytecode);
 	byteCode.write('\n');
 
 	return byteCode;
 }
 
-void GS2Bytecode::addFunction(FunctionEntry entry)
+void GS2Bytecode::addFunction(const std::string& functionName, uint32_t opIdx, size_t jmpLoc)
 {
-	auto it = std::find_if(functionTable.begin(), functionTable.end(), [entry](const FunctionEntry& e) {
-		return (entry.functionName == e.functionName);
+	auto it = std::find_if(functionTable.begin(), functionTable.end(), [functionName](const FunctionEntry& e) {
+		return (functionName == e.functionName);
 	});
 
 	if (it == functionTable.end())
 	{
-		functionTable.push_back(entry);
+		functionTable.push_back(FunctionEntry{
+			functionName,
+			opIdx,
+			jmpLoc
+		});
 	}
 	else
 	{
-		printf("Already added function %s\n", entry.functionName.c_str());
+#ifdef DBGEMITTERS
+		printf("Already added function %s\n", functionName.c_str());
+#endif
 	}
 }
 
 void GS2Bytecode::emit(opcode::Opcode op)
 {
+#ifdef DBGEMITTERS
 	printf("%5zu EMIT OPER: %s (%d) loc: %zu\n", bytecode.length(), opcode::OpcodeToString(op).c_str(), op, opcodePos);
+#endif
 
 	bytecode.write((char)op);
 	lastOp = op;
-	++opcodePos;
-	opcodeWritePos = bytecode.length() - 1;
+	++opIndex;
 }
 
 void GS2Bytecode::emit(char v, size_t pos)
 {
+#ifdef DBGEMITTERS
 	printf("%5zu EMIT byte: %d\n", (pos == SIZE_MAX ? bytecode.length() : pos), (uint8_t)v);
+#endif
 
 	if (pos != SIZE_MAX)
 	{
@@ -155,7 +149,9 @@ void GS2Bytecode::emit(char v, size_t pos)
 
 void GS2Bytecode::emit(short v, size_t pos)
 {
+#ifdef DBGEMITTERS
 	printf("%5zu EMIT short: %d\n", (pos == SIZE_MAX ? bytecode.length() : pos), v);
+#endif
 
 	if (pos != SIZE_MAX)
 	{
@@ -169,7 +165,9 @@ void GS2Bytecode::emit(short v, size_t pos)
 
 void GS2Bytecode::emit(int v, size_t pos)
 {
+#ifdef DBGEMITTERS
 	printf("%5zu EMIT int: %d\n", (pos == SIZE_MAX ? bytecode.length() : pos), v);
+#endif
 
 	if (pos != SIZE_MAX)
 	{
@@ -183,10 +181,32 @@ void GS2Bytecode::emit(int v, size_t pos)
 
 void GS2Bytecode::emit(const std::string& v)
 {
+#ifdef DBGEMITTERS
 	printf("%5zu EMIT null-terminated str: %s (len: %zu)\n", bytecode.length(), v.c_str(), v.length()+1);
+#endif
 
 	bytecode.write(v.c_str(), v.length());
 	bytecode.write('\0');
+}
+
+void GS2Bytecode::emitConversionOp(ExpressionType typeSrc, ExpressionType typeDst)
+{
+	if (typeSrc != typeDst)
+	{
+		if (typeDst == ExpressionType::EXPR_NUMBER)
+		{
+			if (typeSrc != ExpressionType::EXPR_INTEGER)
+				emit(opcode::Opcode::OP_CONV_TO_FLOAT);
+		}
+		else if (typeDst == ExpressionType::EXPR_STRING)
+		{
+			emit(opcode::Opcode::OP_CONV_TO_STRING);
+		}
+		else if (typeDst == ExpressionType::EXPR_OBJECT)
+		{
+			emit(opcode::Opcode::OP_CONV_TO_OBJECT);
+		}
+	}
 }
 
 void GS2Bytecode::emitDynamicNumber(int32_t val)

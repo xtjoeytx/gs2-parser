@@ -12,9 +12,9 @@ if(WIN32)
   set(FLEX_FLAGS "--wincompat")
 endif(WIN32)
 
-BISON_TARGET(MyParser generator/calc.y ${CMAKE_CURRENT_BINARY_DIR}/calc.tab.cc)
-FLEX_TARGET(MyScanner generator/calc.l ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.cc DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.h COMPILE_FLAGS "${FLEX_FLAGS}")
-ADD_FLEX_BISON_DEPENDENCY(MyScanner MyParser)
+BISON_TARGET(GS2Parser generator/gs2parser.y ${CMAKE_CURRENT_BINARY_DIR}/gs2parser.tab.cc)
+FLEX_TARGET(GS2Scanner generator/gs2scanner.l ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.cc DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.h COMPILE_FLAGS "${FLEX_FLAGS}")
+ADD_FLEX_BISON_DEPENDENCY(GS2Scanner GS2Parser)
 
 include_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
@@ -22,26 +22,34 @@ include_directories(
 )
 
 set(SOURCES_ALL
+		src/ast/ast.cpp
 		src/encoding/buffer.cpp
-		src/ast.cpp
+		src/visitors/GS2CompilerVisitor.cpp
+		src/GS2BuiltInFunctions.cpp
 		src/GS2Bytecode.cpp
-		src/GS2CompilerVisitor.cpp
+		src/GS2Context.cpp
 		src/Parser.cpp
 
+		src/ast/ast.h
+		src/ast/astvisitor.h
+		src/ast/expressiontypes.h
 		src/encoding/buffer.h
 		src/encoding/graalencoding.h
-		src/ast.h
-		src/astvisitor.h
+		src/exceptions/GS2CompilerError.h
+		src/utils/ContextThreadPool.h
+		src/visitors/GS2CompilerVisitor.h
+		src/visitors/GS2SourceVisitor.h
+		src/CompilerThreadJob.h
+		src/GS2BuiltInFunctions.h
 		src/GS2Bytecode.h
-		src/GS2CompilerVisitor.h
-		src/GS2SourceVisitor.h
+		src/GS2Context.h
 		src/opcodes.h
 		src/Parser.h
 
-		${BISON_MyParser_INPUT}
-		${FLEX_MyScanner_INPUT}
-		${BISON_MyParser_OUTPUTS}
-		${FLEX_MyScanner_OUTPUTS})
+		${BISON_GS2Parser_INPUT}
+		${FLEX_GS2Scanner_INPUT}
+		${BISON_GS2Parser_OUTPUTS}
+		${FLEX_GS2Scanner_OUTPUTS})
 
 add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
 add_library(gs2compiler ${SOURCES_ALL})

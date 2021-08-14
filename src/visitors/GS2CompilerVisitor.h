@@ -3,32 +3,40 @@
 #ifndef GS2COMPILER_H
 #define GS2COMPILER_H
 
+#include <string>
 #include <stack>
 #include <vector>
-#include "astvisitor.h"
+#include <unordered_map>
+#include "ast/astvisitor.h"
 #include "GS2Bytecode.h"
+#include "GS2BuiltInFunctions.h"
 
 struct LogicalBreakPoint
 {
-	size_t opbreak = 0;
-	size_t opcontinue = 0;
+	uint32_t opbreak = 0;
+	uint32_t opcontinue = 0;
 	std::vector<size_t> breakPointLocs;
 	std::vector<size_t> continuePointLocs;
 };
 
-class ParserData;
+class ParserContext;
 
 class GS2CompilerVisitor : public NodeVisitor
 {
 	GS2Bytecode byteCode;
-	ParserData *parserData;
-	
+	ParserContext& parserContext;
+	GS2BuiltInFunctions& builtIn;
+
 	public:
-		GS2CompilerVisitor(ParserData *data) : parserData(data), copyAssignment(false) { }
+		GS2CompilerVisitor(ParserContext& context, GS2BuiltInFunctions& builtin)
+			: parserContext(context), copyAssignment(false), newObjectCount(0), builtIn(builtin)
+		{
+		}
+
 		virtual ~GS2CompilerVisitor() = default;
 
-		Buffer getByteCode(const std::string& scriptType, const std::string& scriptName, bool saveToDisk = true) {
-			return byteCode.getByteCode(scriptType, scriptName, saveToDisk);
+		Buffer getByteCode() {
+			return byteCode.getByteCode();
 		}
 
 		/////////
@@ -67,6 +75,7 @@ class GS2CompilerVisitor : public NodeVisitor
 
 	private:
 		bool copyAssignment;
+		int newObjectCount;
 		std::stack<LogicalBreakPoint> logicalBreakpoints;
 		std::stack<LogicalBreakPoint> loopBreakpoints;
 
@@ -83,7 +92,6 @@ class GS2CompilerVisitor : public NodeVisitor
 		void popLoopBreakpoint();
 		void addLoopBreakLocation(size_t location);
 		void addLoopContinueLocation(size_t location);
-
 };
 
 inline void GS2CompilerVisitor::addBreakLocation(std::stack<LogicalBreakPoint>& bp, size_t location)
