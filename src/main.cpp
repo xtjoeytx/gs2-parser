@@ -23,7 +23,7 @@ CompileResonse compileFile(const std::filesystem::path& filePath)
 		std::ifstream inputstream(filePath);
 		std::string script((std::istreambuf_iterator<char>(inputstream)), std::istreambuf_iterator<char>());
 
-		response.bytecode = context.compile(script);
+		response.bytecode = context.compile(script, "weapon", "TestCode", true);
 		if (!context.hasErrors())
 		{
 			response.output_file = std::filesystem::relative(filePath.parent_path()) / filePath.stem().concat(".gs2bc");
