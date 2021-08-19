@@ -58,11 +58,11 @@ Buffer GS2Context::createHeader(const Buffer& bytecode, const std::string& scrip
 	bytecodeWithHeader.write(saveToDisk ? '1' : '0');
 	bytecodeWithHeader.write(',');
 
-	// Checksum or key for encrypted files, writing 0's has not
-	// been an issue yet
+	// Checksum or key for encrypted files
+	// Needs to be new every time script gets generated, otherwise the client won't request updated script
 	for (int i = 0; i < 10; i++)
-		bytecodeWithHeader.Write<GraalByte>(0);
-	
+		bytecodeWithHeader.Write<GraalByte>(rand() % 0xFF);
+
 	// Write out the bytecode to the buffer
 	bytecodeWithHeader.write(bytecode);
 	return bytecodeWithHeader;
