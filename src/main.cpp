@@ -41,17 +41,17 @@ CompileResonse compileFile(const std::filesystem::path& filePath)
 
 Buffer oneStopShop(const std::filesystem::path& inputPath)
 {
-	printf("Compiling file %s", inputPath.string().c_str());
+	printf("Compiling file %s\n", inputPath.string().c_str());
 
 	auto compilerResponse = compileFile(inputPath);
 	
 	if (compilerResponse.errmsg.empty())
 	{
-		printf(" -> %s\n", compilerResponse.output_file.string().c_str());
+		printf(" -> saved to %s\n", compilerResponse.output_file.string().c_str());
 	}
 	else
 	{
-		printf(" [ERROR] -> %s\n", compilerResponse.errmsg.c_str());
+		printf(" -> [ERROR] %s\n", compilerResponse.errmsg.c_str());
 	}
 
 	return std::move(compilerResponse.bytecode);

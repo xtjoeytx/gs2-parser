@@ -49,10 +49,10 @@ HEXNUM		[a-fA-F0-9]
 "||"	{return T_OPOR;}
 "=="	{return T_OPEQUALS;}
 "!="	{return T_OPNOTEQUALS;}
-"<"		{return T_OPLESSTHAN;}
+"<"		{return '<';}
 "<="	{return T_OPLESSTHANEQUAL;}
 "=<"	{return T_OPLESSTHANEQUAL;}
-">"		{return T_OPGREATERTHAN;}
+">"		{return '>';}
 ">="	{return T_OPGREATERTHANEQUAL;}
 "=>"	{return T_OPGREATERTHANEQUAL;}
 
@@ -76,7 +76,7 @@ HEXNUM		[a-fA-F0-9]
 "--"	{return T_OPDECREMENT;}
 "++"	{return T_OPINCREMENT;}
 
-"&"		{return T_BITWISE_AND;}
+"&"		{return '&';}
 "<<"	{return T_BITWISE_SHIFT_LEFT;}
 ">>"	{return T_BITWISE_SHIFT_RIGHT;}
 "~"		{return T_BITWISE_INVERT;}
@@ -105,11 +105,11 @@ HEXNUM		[a-fA-F0-9]
 "switch"	{return T_KWSWITCH;}
 "case"		{return T_KWCASE;}
 "default"	{return T_KWDEFAULT;}
+"const"		{return T_KWCONST;}
 "enum"		{return T_KWENUM;}
 "int"		{return T_KWCAST_INT;}
 "float"		{return T_KWCAST_FLOAT;}
 "in"		{return T_KWIN;}
-
 "@"			{yylval->cval = 0; return '@';}
 "NL"		{yylval->cval = '\n'; return '@';}
 "SPC"		{yylval->cval = ' '; return '@';}
@@ -132,3 +132,5 @@ HEXNUM		[a-fA-F0-9]
 {ALPHA}{ALPHANUM}*(::{ALPHA}{ALPHANUM}*)+ {yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
 {string_const}		{yylval->sval = yyextra->saveString(yytext+1, yyleng - 2, true); return T_STRCONSTANT;}
 %%
+
+		/* TODO(joey): fix string escapes */

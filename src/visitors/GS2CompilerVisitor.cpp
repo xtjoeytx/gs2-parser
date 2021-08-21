@@ -519,16 +519,33 @@ void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)
 	byteCode.emit(char(0));
 }
 
+void GS2CompilerVisitor::Visit(ExpressionConstantNode *node)
+{
+	switch (node->type)
+	{
+		case ExpressionConstantNode::ConstantType::TRUE_T:
+			byteCode.emit(opcode::OP_TYPE_TRUE);
+			break;
+
+		case ExpressionConstantNode::ConstantType::FALSE_T:
+			byteCode.emit(opcode::OP_TYPE_FALSE);
+			break;
+			
+		case ExpressionConstantNode::ConstantType::NULL_T:
+			byteCode.emit(opcode::OP_TYPE_NULL);
+			break;
+	}
+}
+
 void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 {
-	auto enumConstant = parserContext.getEnumConstant(node->val);
-	if (enumConstant)
+	auto constant = parserContext.getConstant(node->val);
+	if (constant)
 	{
 #ifdef DBGEMITTERS
-		printf("ENUM CONSTANT: %s\n", node->val.c_str());
+		printf("FOUND CONSTANT: %s\n", node->val.c_str());
 #endif
-		byteCode.emit(opcode::OP_TYPE_NUMBER);
-		byteCode.emitDynamicNumber(enumConstant.value());
+		constant->visit(this);
 		return;
 	}
 

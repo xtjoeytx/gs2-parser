@@ -72,6 +72,7 @@ class GS2CompilerVisitor : public NodeVisitor
 		virtual void Visit(ExpressionUnaryOpNode *node);
 		virtual void Visit(ExpressionStrConcatNode *node);
 		virtual void Visit(ExpressionListNode *node);
+		virtual void Visit(ExpressionConstantNode *node);
 
 	private:
 		bool copyAssignment;

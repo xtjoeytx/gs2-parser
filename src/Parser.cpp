@@ -20,23 +20,6 @@ ParserContext::ParserContext()
 	yylex_init_extra(this, &scanner);
 }
 
-// ParserData::ParserData(ParserData&& o) noexcept
-// {
-// 	prog = o.prog;
-// 	lineNumber = o.lineNumber;
-// 	newObjCallCount = o.newObjCallCount;
-// 	buffer = o.buffer;
-// 	scanner = o.scanner;
-
-// 	enumConstants = std::move(o.enumConstants);
-// 	stable = std::move(o.stable);
-// 	switchCases = std::move(o.switchCases);
-
-// 	o.buffer = nullptr;
-// 	o.scanner = nullptr;
-// 	o.prog = nullptr;
-// }
-
 ParserContext::~ParserContext()
 {
 	if (scanner)
@@ -75,7 +58,7 @@ void ParserContext::addEnum(EnumList *enumList, std::string prefix)
 	if (prefix.empty())
 	{
 		for (const auto& en : enumList->getMembers())
-			enumConstants[en->node] = en->idx;
+			addConstant(en->node, alloc<ExpressionIntegerNode>(en->idx));
 	}
 	else
 	{
@@ -85,18 +68,75 @@ void ParserContext::addEnum(EnumList *enumList, std::string prefix)
 			std::string key = prefix;
 			key.append(en->node);
 
-			enumConstants[key] = en->idx;
+			addConstant(key, alloc<ExpressionIntegerNode>(en->idx));
 		}
 	}
 
 	delete enumList;
 }
 
-std::optional<int> ParserContext::getEnumConstant(const std::string& key)
+void ParserContext::addConstant(const std::string& ident, ExpressionIdentifierNode *node)
 {
-	auto it = enumConstants.find(key);
-	if (it == enumConstants.end())
-		return {};
+	auto constant = getConstant(ident);
+	if (constant)
+	{
+		// report error - redefining constant
+		return;
+	}
+
+	ExpressionNode *constNode;
+	
+	// Map ident to the same constant pointed from the right hand identifier
+	auto rhIdent = node->toString();
+	constNode = getConstant(rhIdent);
+
+	// Handle special constants that we can't define directly as a constant
+	// because gs2 allows these identifiers in object field names.
+	if (!constNode)
+	{
+		if (rhIdent == "true") {
+			constNode = alloc<ExpressionConstantNode>(ExpressionConstantNode::ConstantType::TRUE_T);
+		}
+		else if (rhIdent == "false") {
+			constNode = alloc<ExpressionConstantNode>(ExpressionConstantNode::ConstantType::FALSE_T);
+		}
+		else if (rhIdent == "null") {
+			constNode = alloc<ExpressionConstantNode>(ExpressionConstantNode::ConstantType::NULL_T);
+		}
+		else
+		{
+			// report error - constant does not exist
+			printf("Constant %s does not exist, cant define it to %s\n", rhIdent.c_str(), ident.c_str());
+			return;
+		}
+	}
+	
+	constantsTable[ident] = constNode;
+}
+
+void ParserContext::addConstant(const std::string& ident, ExpressionNode *node)
+{
+	if (node->expressionType() == ExpressionType::EXPR_IDENT)
+	{
+		addConstant(ident, (ExpressionIdentifierNode *)node);
+		return;
+	}
+
+	auto constant = getConstant(ident);
+	if (constant)
+	{
+		// report error - redefining constant
+		return;
+	}
+
+	constantsTable[ident] = node;
+}
+
+ExpressionNode * ParserContext::getConstant(const std::string& key)
+{
+	auto it = constantsTable.find(key);
+	if (it == constantsTable.end())
+		return nullptr;
 
 	return it->second;
 }

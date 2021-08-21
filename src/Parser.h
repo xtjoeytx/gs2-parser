@@ -43,9 +43,13 @@ class ParserContext
 
 		const char * saveString(const char *str, int length, bool unquote = false);
 
+		// constants
+		void addConstant(const std::string& ident, ExpressionIdentifierNode *node);
+		void addConstant(const std::string& ident, ExpressionNode *node);
+		ExpressionNode * getConstant(const std::string& key);
+		
 		// enums
 		void addEnum(EnumList *enumList, std::string prefix = "");
-		std::optional<int> getEnumConstant(const std::string& key);
 		
 		// switch case-expressions
 		SwitchCaseState popCaseExpr();
@@ -66,7 +70,8 @@ class ParserContext
 		ParserState state;
 
 		template<typename T, typename... P>
-		T* alloc(P&&... params) {
+		T* alloc(P&&... params)
+		{
 			T* n = new T(std::forward<P>(params)...);
 			nodes.push_back(n);
 			return n;
@@ -86,7 +91,7 @@ class ParserContext
 		yyscan_t scanner;
 		YY_BUFFER_STATE buffer;
 
-		std::unordered_map<std::string, int> enumConstants;
+		std::unordered_map<std::string, ExpressionNode *> constantsTable;
 		std::unordered_set<std::string> stable;
 		std::stack<SwitchCaseState> switchCases;
 		std::vector<GS2CompilerError> errorList;

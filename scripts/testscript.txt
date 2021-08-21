@@ -329,7 +329,7 @@ function randomCommands() {
   temp.tvar = {timevar, timevar2};
 }
 
-===================================================
+//===================================================
 
 function onCreated() {
   this.obj = {"abcd", "efgh", "i"};
@@ -389,7 +389,7 @@ function testLoop()
   }
 }
 
-=========================================
+//=========================================
 
 //#CLIENTSIDE
 function onCreated() {

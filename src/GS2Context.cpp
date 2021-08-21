@@ -6,6 +6,8 @@
 
 Buffer GS2Context::compile(const std::string& script)
 {
+	errors.clear();
+	
 	// Parse the script into an AST tree
 	ParserContext parserContext;
 	parserContext.parse(script);

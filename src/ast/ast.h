@@ -78,6 +78,36 @@ public:
 	bool isAssignment;
 };
 
+class ExpressionConstantNode : public ExpressionNode
+{
+public:
+	_NodeName("ExpressionConstantNode")
+
+	enum class ConstantType
+	{
+		TRUE_T,
+		FALSE_T,
+		NULL_T,
+	};
+
+	ExpressionConstantNode(ConstantType val)
+		: ExpressionNode(), type(val)
+	{
+	}
+
+	virtual ~ExpressionConstantNode() { }
+
+	virtual std::string toString() const {
+		return std::to_string(int(type));
+	}
+
+	virtual ExpressionType expressionType() const {
+		return ExpressionType::EXPR_INTEGER;
+	}
+
+	ConstantType type;
+};
+
 class ExpressionIntegerNode : public ExpressionNode
 {
 public:
@@ -286,6 +316,21 @@ public:
 		takeOwnership(higher);
 	}
 
+	ExpressionInOpNode(std::vector<ExpressionNode*> *list, ExpressionNode* lower, ExpressionNode* higher)
+		: ExpressionNode(), lower(lower), higher(higher)
+	{
+		
+		if (list)
+		{
+			exprList = std::move(*list);
+			delete list;
+		}
+
+		//takeOwnership(exprList);
+		takeOwnership(lower);
+		takeOwnership(higher);
+	}
+
 	virtual ~ExpressionInOpNode();
 
 	virtual std::string toString() const {
@@ -296,6 +341,7 @@ public:
 		return ExpressionType::EXPR_INTEGER;
 	}
 
+	std::vector<ExpressionNode *> exprList;
 	ExpressionNode* expr;
 	ExpressionNode* lower;
 	ExpressionNode* higher;

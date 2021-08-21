@@ -63,19 +63,19 @@ typedef void* yyscan_t;
 %token '!'
 %token T_OPAND T_OPOR
 %token T_OPEQUALS T_OPNOTEQUALS
-%token T_OPLESSTHAN T_OPLESSTHANEQUAL
-%token T_OPGREATERTHAN T_OPGREATERTHANEQUAL
+%token '<' T_OPLESSTHANEQUAL
+%token '>' T_OPGREATERTHANEQUAL
 
-%token '+' '-' '*' '/' '^' '%'
+%token '+' '-' '*' '/' '^' '%' '&'
 %token '='
 %token T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN T_OPCATASSIGN
 %token T_OPDECREMENT T_OPINCREMENT
-%token T_BITWISE_AND T_BITWISE_OR T_BITWISE_SHIFT_LEFT T_BITWISE_SHIFT_RIGHT T_BITWISE_INVERT
+%token T_BITWISE_SHIFT_LEFT T_BITWISE_SHIFT_RIGHT T_BITWISE_INVERT
 %token T_BITWISE_XOR T_BITWISE_OR_ASSIGN T_BITWISE_AND_ASSIGN T_BITWISE_SHIFT_LEFT_ASSIGN T_BITWISE_SHIFT_RIGHT_ASSIGN
 %token T_KWPUBLIC
 %token T_KWIF T_KWELSE T_KWELSEIF T_KWFOR T_KWWHILE T_KWBREAK T_KWCONTINUE T_KWRETURN T_KWIN
 %token T_KWFUNCTION T_KWNEW T_KWWITH T_KWENUM
-%token T_KWSWITCH T_KWCASE T_KWDEFAULT
+%token T_KWSWITCH T_KWCASE T_KWDEFAULT T_KWCONST
 %token T_KWCAST_INT T_KWCAST_FLOAT
 
 %right '=' T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN T_OPCATASSIGN
@@ -83,9 +83,10 @@ typedef void* yyscan_t;
 %left T_OPOR
 %left T_OPAND
 %left '^'
+%left '&' '|'
 %left '@'
-%left T_OPLESSTHAN T_OPLESSTHANEQUAL
-%left T_OPGREATERTHAN T_OPGREATERTHANEQUAL
+%left '<' T_OPLESSTHANEQUAL
+%left '>' T_OPGREATERTHANEQUAL
 %left T_OPEQUALS T_OPNOTEQUALS T_KWIN
 %left '+' '-'
 %left '*' '/' '%'
@@ -140,10 +141,15 @@ decl_list: 					{ $$ = parser->alloc<StatementBlock>(); }
 decl:
 	stmt 					{ $$ = $1; }
 	| stmt_fndecl 			{ $$ = $1; }
-	| stmt_enum				{ $$ = 0; }
+	| decl_const			{ $$ = nullptr; }
+	| decl_enum				{ $$ = nullptr; }
 	;
 
-stmt_enum:
+decl_const:
+	T_KWCONST T_IDENTIFIER '=' constant	';'			{ parser->addConstant($2, $4); }
+	| T_KWCONST T_IDENTIFIER '=' expr_ident ';'		{ parser->addConstant($2, $4); }
+
+decl_enum:
 	T_KWENUM '{' enum_list '}'					{ parser->addEnum($3); }
 	| T_KWENUM T_IDENTIFIER '{' enum_list '}' 	{ parser->addEnum($4, $2); }
 	;
@@ -243,8 +249,8 @@ stmt_caseblock:
 	;
 
 stmt_fndecl:
-	T_KWFUNCTION T_IDENTIFIER '(' expr_list_with_empty ')' stmt_block						{ $$ = parser->alloc<StatementFnDeclNode>($2, $4, $6); }
-	| T_KWFUNCTION T_IDENTIFIER '.' T_IDENTIFIER '(' expr_list_with_empty ')' stmt_block	{ $$ = parser->alloc<StatementFnDeclNode>($4, $6, $8, $2); }
+	T_KWFUNCTION T_IDENTIFIER '(' expr_list_with_empty ')' stmt						{ $$ = parser->alloc<StatementFnDeclNode>($2, $4, parser->alloc<StatementBlock>($6)); }
+	| T_KWFUNCTION T_IDENTIFIER '.' T_IDENTIFIER '(' expr_list_with_empty ')' stmt	{ $$ = parser->alloc<StatementFnDeclNode>($4, $6, parser->alloc<StatementBlock>($8), $2); }
 	| T_KWPUBLIC stmt_fndecl																{ $$ = $2; $$->setPublic(true); }
 	;
 
@@ -304,7 +310,6 @@ expr:
 	| expr_ops_comparison				{ $$ = $1; }
 	| expr_ops_in						{ $$ = $1; }
 	| expr T_OPTERNARY expr ':' expr	{ $$ = parser->alloc<ExpressionTernaryOpNode>($1, $3, $5); }
-
 	;
 
 expr_ops_unary:
@@ -324,6 +329,8 @@ expr_ops_binary:
 	| expr '/' expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::Divide); }
 	| expr '%' expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::Mod); }
 	| expr '^' expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::Pow); }
+	| expr '&' expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::BitwiseAnd); }
+	| expr '|' expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::BitwiseOr); }
 	| expr '=' expr				 	{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::Assign, true); }
 	| expr '=' expr_assignment		{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::Assign, true); }
 	| expr '@' expr		 			{ $$ = parser->alloc<ExpressionStrConcatNode>($1, $3, $2); }
@@ -345,8 +352,8 @@ expr_assignment:
 expr_ops_comparison:
 	expr T_OPEQUALS expr	 					{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::Equal); }
 	| expr T_OPNOTEQUALS expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::NotEqual); }
-	| expr T_OPLESSTHAN expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::LessThan); }
-	| expr T_OPGREATERTHAN expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::GreaterThan); }
+	| expr '<' expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::LessThan); }
+	| expr '>' expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::GreaterThan); }
 	| expr T_OPLESSTHANEQUAL expr	 			{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::LessThanOrEqual); }
 	| expr T_OPGREATERTHANEQUAL expr			{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::GreaterThanOrEqual); }
 	| expr T_OPAND expr	 						{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::LogicalAnd); }
@@ -356,8 +363,9 @@ expr_ops_comparison:
 expr_ops_in:
 	expr T_KWIN '|' expr ',' expr '|'			{ $$ = parser->alloc<ExpressionInOpNode>($1, $4, $6); }
 	| expr T_KWIN expr							{ $$ = parser->alloc<ExpressionInOpNode>($1, $3, nullptr); }
+	| expr T_KWIN '<' expr ',' expr '>' { $$ = parser->alloc<ExpressionInOpNode>($1, $4, $6); }
 	;
-
+	
 expr_ident:
 	T_IDENTIFIER								{ $$ = parser->alloc<ExpressionIdentifierNode>($1); }
 	;

@@ -35,6 +35,9 @@ enum class ExpressionOp {
 	LogicalAnd,
 	LogicalOr,
 
+	BitwiseAnd,
+	BitwiseOr,
+
 	PlusAssign,
 	MinusAssign,
 	MultiplyAssign,
