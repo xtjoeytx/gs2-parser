@@ -316,22 +316,7 @@ public:
 		takeOwnership(higher);
 	}
 
-	ExpressionInOpNode(std::vector<ExpressionNode*> *list, ExpressionNode* lower, ExpressionNode* higher)
-		: ExpressionNode(), lower(lower), higher(higher)
-	{
-		
-		if (list)
-		{
-			exprList = std::move(*list);
-			delete list;
-		}
-
-		//takeOwnership(exprList);
-		takeOwnership(lower);
-		takeOwnership(higher);
-	}
-
-	virtual ~ExpressionInOpNode();
+	virtual ~ExpressionInOpNode() { }
 
 	virtual std::string toString() const {
 		return "in op";
@@ -341,7 +326,6 @@ public:
 		return ExpressionType::EXPR_INTEGER;
 	}
 
-	std::vector<ExpressionNode *> exprList;
 	ExpressionNode* expr;
 	ExpressionNode* lower;
 	ExpressionNode* higher;

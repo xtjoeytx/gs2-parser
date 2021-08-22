@@ -120,7 +120,7 @@ void GS2Bytecode::addFunction(const std::string& functionName, uint32_t opIdx, s
 void GS2Bytecode::emit(opcode::Opcode op)
 {
 #ifdef DBGEMITTERS
-	printf("%5zu EMIT OPER: %s (%d) loc: %zu\n", bytecode.length(), opcode::OpcodeToString(op).c_str(), op, opIndex);
+	printf("%5zu EMIT OPER: %s (%d) loc: %d\n", bytecode.length(), opcode::OpcodeToString(op).c_str(), op, opIndex);
 #endif
 
 	bytecode.write((char)op);

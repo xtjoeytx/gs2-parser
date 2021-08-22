@@ -362,8 +362,8 @@ expr_ops_comparison:
 
 expr_ops_in:
 	expr T_KWIN '|' expr ',' expr '|'			{ $$ = parser->alloc<ExpressionInOpNode>($1, $4, $6); }
+	| expr T_KWIN '<' expr ',' expr '>'			{ $$ = parser->alloc<ExpressionInOpNode>($1, $4, $6); }
 	| expr T_KWIN expr							{ $$ = parser->alloc<ExpressionInOpNode>($1, $3, nullptr); }
-	| expr T_KWIN '<' expr ',' expr '>' { $$ = parser->alloc<ExpressionInOpNode>($1, $4, $6); }
 	;
 	
 expr_ident:

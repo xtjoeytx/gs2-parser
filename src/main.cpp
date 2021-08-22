@@ -97,8 +97,8 @@ int main(int argc, const char *argv[]) {
 
 		if (file)
 		{
-			uint8_t packetId = 140 + 32;
-			fwrite(&packetId, sizeof(uint8_t), 1, file);
+			//uint8_t packetId = 140 + 32;
+			//fwrite(&packetId, sizeof(uint8_t), 1, file);
 			fwrite(buf.buffer(), sizeof(uint8_t), buf.length(), file);
 			fclose(file);
 

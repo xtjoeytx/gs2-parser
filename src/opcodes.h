@@ -194,6 +194,9 @@ namespace opcode
 			case OP_TYPE_ARRAY:
 				return "OP_TYPE_ARRAY";
 
+			case OP_ARRAY_END:
+				return "OP_ARRAY_END";
+
 			case OP_CONV_TO_FLOAT:
 				return "OP_CONV_TO_FLOAT";
 
@@ -265,6 +268,12 @@ namespace opcode
 
 			case OP_OBJ_ENDS:
 				return "OP_OBJ_ENDS";
+
+			case OP_IN_RANGE:
+				return "OP_IN_RANGE";
+
+			case OP_IN_OBJ:
+				return "OP_IN_OBJ";
 
 			case OP_OBJ_INDEX:
 				return "OP_OBJ_INDEX";

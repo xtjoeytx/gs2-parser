@@ -498,15 +498,17 @@ void GS2CompilerVisitor::Visit(ExpressionArrayIndexNode *node)
 
 void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)
 {
+	// expr in |lower, higher|
+	// expr in obj - obj = lower
+
 	node->expr->visit(this);
 	node->lower->visit(this);
 	byteCode.emitConversionOp(node->lower->expressionType(), ExpressionType::EXPR_NUMBER);
-	//if (node->lower->expressionType() != ExpressionType::EXPR_NUMBER)
-	//	byteCode.emit(opcode::OP_CONV_TO_FLOAT);
-
+	
 	if (node->higher)
 	{
 		node->higher->visit(this);
+		byteCode.emitConversionOp(node->higher->expressionType(), ExpressionType::EXPR_NUMBER);
 
 		byteCode.emit(opcode::OP_IN_RANGE);
 	}
@@ -514,9 +516,6 @@ void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)
 	{
 		byteCode.emit(opcode::OP_IN_OBJ);
 	}
-
-	byteCode.emit(char(0xF3));
-	byteCode.emit(char(0));
 }
 
 void GS2CompilerVisitor::Visit(ExpressionConstantNode *node)

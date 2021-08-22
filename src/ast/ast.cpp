@@ -234,10 +234,3 @@ void EnumList::addMember(EnumMember *member)
 
 	members.push_back(member);
 }
-
-ExpressionInOpNode::~ExpressionInOpNode()
-{
-	//delete expr;
-	//delete lower;
-	//delete higher;
-}
