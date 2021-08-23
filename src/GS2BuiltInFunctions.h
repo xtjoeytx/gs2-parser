@@ -21,15 +21,21 @@ struct BuiltInCmd
 	std::string name;										// Function Name
 	opcode::Opcode op;										// Op-code for built in command, or OP_CALL
 	opcode::Opcode convert_op{ opcode::OP_NONE };			// Convert result to this type
-	uint8_t flags = (CMD_REVERSE_ARGS | CMD_RETURN_VALUE);
+	uint8_t flags = (CMD_REVERSE_ARGS | CMD_RETURN_VALUE);	// See above for cmd options
 };
 
 const BuiltInCmd defaultCall = {
-	"", opcode::OP_CALL, opcode::OP_NONE, (CMD_USE_ARRAY | CMD_REVERSE_ARGS | CMD_RETURN_VALUE)
+	"",
+	opcode::OP_CALL,
+	opcode::OP_NONE,
+	(CMD_USE_ARRAY | CMD_REVERSE_ARGS | CMD_RETURN_VALUE)
 };
 
 const BuiltInCmd defaultObjCall = {
-	"", opcode::OP_CALL, opcode::OP_CONV_TO_OBJECT, (CMD_USE_ARRAY | CMD_REVERSE_ARGS | CMD_RETURN_VALUE)
+	"",
+	opcode::OP_CALL,
+	opcode::OP_CONV_TO_OBJECT,
+	(CMD_USE_ARRAY | CMD_REVERSE_ARGS | CMD_RETURN_VALUE)
 };
 
 struct GS2BuiltInFunctions

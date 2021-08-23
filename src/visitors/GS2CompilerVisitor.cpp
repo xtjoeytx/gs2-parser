@@ -698,6 +698,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 		}
 		else
 		{
+			// obj.tokenize has a default parameter of " ,"
 			if (node->args.empty() && cmd.op == opcode::Opcode::OP_OBJ_TOKENIZE)
 			{
 				auto id = byteCode.getStringConst(" ,");
