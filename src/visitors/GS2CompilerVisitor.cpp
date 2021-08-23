@@ -665,23 +665,54 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : (isObjectCall ? defaultObjCall : defaultCall));
 
 	{
-		if (cmd.useArray)
-			byteCode.emit(opcode::OP_TYPE_ARRAY);
+		auto argVisitFn = [this](ExpressionNode* node) {
+			if (node)
+				node->visit(this);
+		};
 
-		for (auto it = node->args.rbegin(); it != node->args.rend(); ++it)
+		auto objectVisitFn = [&]() {
+			if (isObjectCall)
+				node->objExpr->visit(this);
+
+			if (cmd.convert_op != opcode::Opcode::OP_NONE)
+			{
+				if (byteCode.getLastOp() != cmd.convert_op && byteCode.getLastOp() != opcode::OP_THISO)
+					byteCode.emit(cmd.convert_op);
+			}
+		};
+
+
+		if ((cmd.flags & CmdFlags::CMD_OBJECT_FIRST) == CmdFlags::CMD_OBJECT_FIRST)
 		{
-			ExpressionNode *arg = *it;
-			if (arg)
-				arg->visit(this);
+			objectVisitFn();
 		}
 
-		if (isObjectCall)
-			node->objExpr->visit(this);
-
-		if (cmd.convert_op != opcode::Opcode::OP_NONE)
+		if ((cmd.flags & CmdFlags::CMD_USE_ARRAY) == CmdFlags::CMD_USE_ARRAY)
 		{
-			if (byteCode.getLastOp() != cmd.convert_op && byteCode.getLastOp() != opcode::OP_THISO)
-				byteCode.emit(cmd.convert_op);
+			byteCode.emit(opcode::OP_TYPE_ARRAY);
+		}
+
+		if ((cmd.flags & CmdFlags::CMD_REVERSE_ARGS) == CmdFlags::CMD_REVERSE_ARGS)
+		{
+			std::for_each(node->args.rbegin(), node->args.rend(), argVisitFn);
+		}
+		else
+		{
+			if (node->args.empty() && cmd.op == opcode::Opcode::OP_OBJ_TOKENIZE)
+			{
+				auto id = byteCode.getStringConst(" ,");
+				byteCode.emit(opcode::OP_TYPE_STRING);
+				byteCode.emitDynamicNumber(id);
+			}
+			else
+			{
+				std::for_each(node->args.begin(), node->args.end(), argVisitFn);
+			}
+		}
+
+		if ((cmd.flags & CmdFlags::CMD_OBJECT_FIRST) != CmdFlags::CMD_OBJECT_FIRST)
+		{
+			objectVisitFn();
 		}
 
 		if (cmd.op == opcode::OP_CALL)
@@ -695,8 +726,11 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 		byteCode.emit(cmd.op);
 	}
 
-	if (node->discardReturnValue)
-		byteCode.emit(opcode::OP_INDEX_DEC);
+	if ((cmd.flags & CmdFlags::CMD_RETURN_VALUE) == CmdFlags::CMD_RETURN_VALUE)
+	{
+		if (node->discardReturnValue)
+			byteCode.emit(opcode::OP_INDEX_DEC);
+	}
 }
 
 void GS2CompilerVisitor::Visit(StatementReturnNode *node)

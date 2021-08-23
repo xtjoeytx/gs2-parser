@@ -7,20 +7,29 @@
 #include <unordered_map>
 #include "opcodes.h"
 
+enum CmdFlags
+{
+	CMD_NOOPT			= uint8_t(0),			// No options set
+	CMD_USE_ARRAY		= uint8_t(1 << 0),		// Pass arguments to function call in an array
+	CMD_REVERSE_ARGS	= uint8_t(1 << 1),		// Reverse the order in which arguments are visited (default) 
+	CMD_RETURN_VALUE	= uint8_t(1 << 2),		// Call returns a value (needed to discard unused return values)
+	CMD_OBJECT_FIRST	= uint8_t(1 << 3)		// Visit the object before you visit arguments (needed for setarray)
+};
+
 struct BuiltInCmd
 {
-	std::string name;								// Function Name
-	opcode::Opcode op;								// Op-code for built in command, or OP_CALL
-	bool useArray;									// Parameters should be emitted as an array
-	opcode::Opcode convert_op{ opcode::OP_NONE };	// Convert result to this type
+	std::string name;										// Function Name
+	opcode::Opcode op;										// Op-code for built in command, or OP_CALL
+	opcode::Opcode convert_op{ opcode::OP_NONE };			// Convert result to this type
+	uint8_t flags = (CMD_REVERSE_ARGS | CMD_RETURN_VALUE);
 };
 
 const BuiltInCmd defaultCall = {
-	"", opcode::OP_CALL, true
+	"", opcode::OP_CALL, opcode::OP_NONE, (CMD_USE_ARRAY | CMD_REVERSE_ARGS | CMD_RETURN_VALUE)
 };
 
 const BuiltInCmd defaultObjCall = {
-	"", opcode::OP_CALL, true, opcode::OP_CONV_TO_OBJECT
+	"", opcode::OP_CALL, opcode::OP_CONV_TO_OBJECT, (CMD_USE_ARRAY | CMD_REVERSE_ARGS | CMD_RETURN_VALUE)
 };
 
 struct GS2BuiltInFunctions
