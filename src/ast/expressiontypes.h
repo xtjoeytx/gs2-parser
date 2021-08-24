@@ -14,7 +14,8 @@ enum class ExpressionType
 	EXPR_OBJECT,
 	EXPR_ARRAY,
 	EXPR_MULTIARRAY,
-	EXPR_FUNCTION
+	EXPR_FUNCTION,
+	EXPR_FUNCTIONOBJ
 };
 
 enum class ExpressionOp {

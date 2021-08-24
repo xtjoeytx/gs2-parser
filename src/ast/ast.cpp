@@ -44,7 +44,6 @@ Node::Node()
 		n.push_back(this);
 		alloc_count++;
 		total_alloc_count++;
-		//printf("Nodes in memory: %d\n", alloc_count);
 	}
 #endif
 }
@@ -56,16 +55,8 @@ Node::~Node()
 		std::scoped_lock lock(astCountLock);
 		n.erase(std::remove(n.begin(), n.end(), this), n.end());
 		--alloc_count;
-		//printf("Nodes in memory: %d\n", alloc_count);
 	}
 #endif
-}
-
-StatementBlock::~StatementBlock()
-{
-	//for (const auto& node : statements)
-	//	delete node;
-	//statements.clear();
 }
 
 void StatementBlock::append(StatementNode *node)
@@ -97,127 +88,6 @@ void StatementBlock::append(StatementNode *node)
 
 		statements.push_back(node);
 	}
-}
-
-StatementIfNode::~StatementIfNode()
-{
-	//delete expr;
-	//delete thenBlock;
-	//delete elseBlock;
-}
-
-StatementFnDeclNode::~StatementFnDeclNode()
-{
-	//delete stmtBlock;
-
-	//for (auto& node : args)
-	//	delete node;
-}
-
-StatementNewNode::~StatementNewNode()
-{
-	//delete stmtBlock;
-
-	//for (const auto& node : args)
-	//	delete node;
-}
-
-StatementReturnNode::~StatementReturnNode()
-{
-	//delete expr;
-}
-
-StatementWhileNode::~StatementWhileNode()
-{
-	//delete expr;
-	//delete block;
-}
-
-StatementWithNode::~StatementWithNode()
-{
-	//delete expr;
-	//delete block;
-}
-
-StatementForNode::~StatementForNode()
-{
-	//delete init;
-	//delete cond;
-	//delete postop;
-	//delete block;
-}
-
-StatementForEachNode::~StatementForEachNode()
-{
-	//delete name;
-	//delete expr;
-	//delete block;
-}
-
-StatementSwitchNode::~StatementSwitchNode()
-{
-	//for (const auto& caseList : cases)
-	//{
-		//for (const auto& matchExpr : caseList.exprList)
-		//{
-		//	// default case is nullptr
-		//	if (matchExpr)
-		//		delete matchExpr;
-		//}
-
-		//delete caseList.block;
-	//}
-	
-	//delete expr;
-}
-
-ExpressionCastNode::~ExpressionCastNode()
-{
-	//delete expr;
-}
-
-ExpressionFnCallNode::~ExpressionFnCallNode()
-{
-	//for (const auto& node : args)
-	//	delete node;
-	//delete funcExpr;
-	//delete objExpr;
-}
-
-ExpressionListNode::~ExpressionListNode()
-{
-	//for (const auto& node : args)
-	//	delete node;
-}
-
-ExpressionNewObjectNode::~ExpressionNewObjectNode()
-{
-	//for (const auto& node : args)
-	//	delete node;
-	//delete newExpr;
-}
-
-ExpressionPostfixNode::~ExpressionPostfixNode()
-{
-	//for (const auto& node : nodes)
-	//	delete node;
-}
-
-ExpressionArrayIndexNode::~ExpressionArrayIndexNode()
-{
-	//for (const auto& expr : exprList)
-	//	delete expr;
-}
-
-ExpressionBinaryOpNode::~ExpressionBinaryOpNode()
-{
-	//delete left;
-	//delete right;
-}
-
-ExpressionUnaryOpNode::~ExpressionUnaryOpNode()
-{
-	//delete expr;
 }
 
 void EnumList::addMember(EnumMember *member)

@@ -4,9 +4,9 @@
 #define GS2BYTECODE_H
 
 #include <cstdint>
-#include <algorithm>
-#include <limits>
 #include <string>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "ast/ast.h"
@@ -28,10 +28,13 @@ class GS2Bytecode
         GS2Bytecode() : opIndex(0), lastOp(opcode::Opcode::OP_NONE) {}
         
         Buffer getByteCode();
-
         int32_t getStringConst(const std::string& str);
-        void addFunction(const std::string& functionName, uint32_t opIdx, size_t jmpLoc);
 
+        void addFunction(std::string functionName, uint32_t opIdx, size_t jmpLoc);
+        
+        /*
+         * Functions to emit bytecode into the underlying buffer
+         */
         void emit(opcode::Opcode op);
         void emit(char v, size_t pos = SIZE_MAX);
         void emit(short v, size_t pos = SIZE_MAX);
@@ -64,11 +67,14 @@ class GS2Bytecode
 
     private:
         Buffer bytecode;
-        std::vector<std::string> stringTable;
-        std::vector<FunctionEntry> functionTable;
-
-        opcode::Opcode lastOp;
         uint32_t opIndex;
+        opcode::Opcode lastOp;
+
+        std::vector<std::string> stringTable;
+        std::unordered_map<std::string, int32_t> stringTableMapping;
+
+        std::vector<FunctionEntry> functionTable;
+        std::unordered_set<std::string> functionSet;
 };
 
 inline opcode::Opcode GS2Bytecode::getLastOp() const {

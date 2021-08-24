@@ -23,7 +23,7 @@ typedef void* yyscan_t;
 	char cval;
 	int ival;
 	float fval;
-	const char *sval;
+	std::string *sval;
 	StatementNode *stmtNode;
 	StatementBlock *stmtBlock;
 	StatementIfNode *stmtIfNode;
@@ -146,12 +146,12 @@ decl:
 	;
 
 decl_const:
-	T_KWCONST T_IDENTIFIER '=' constant	';'			{ parser->addConstant($2, $4); }
-	| T_KWCONST T_IDENTIFIER '=' expr_ident ';'		{ parser->addConstant($2, $4); }
+	T_KWCONST T_IDENTIFIER '=' constant	';'			{ parser->addConstant(*$2, $4); }
+	| T_KWCONST T_IDENTIFIER '=' expr_ident ';'		{ parser->addConstant(*$2, $4); }
 
 decl_enum:
 	T_KWENUM '{' enum_list '}'					{ parser->addEnum($3); }
-	| T_KWENUM T_IDENTIFIER '{' enum_list '}' 	{ parser->addEnum($4, $2); }
+	| T_KWENUM T_IDENTIFIER '{' enum_list '}' 	{ parser->addEnum($4, *$2); }
 	;
 
 enum_list:
@@ -345,8 +345,9 @@ expr_ops_binary:
 	;
 
 expr_assignment:
-	expr_new									{ $$ = $1; }
-	| '{' '}'									{ $$ = parser->alloc<ExpressionListNode>(nullptr); }
+	expr_new											{ $$ = $1; }
+	| T_KWFUNCTION '(' expr_list_with_empty ')' stmt	{ $$ = parser->alloc<ExpressionFnObject>(parser->generateLambdaFuncName(), $3, parser->alloc<StatementBlock>($5)); }
+	| '{' '}'											{ $$ = parser->alloc<ExpressionListNode>(nullptr); }
 	;
 
 expr_ops_comparison:

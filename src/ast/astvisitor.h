@@ -38,6 +38,7 @@ class NodeVisitor
         virtual void Visit(class ExpressionStrConcatNode *node) = 0;
         virtual void Visit(class ExpressionListNode *node) = 0;
         virtual void Visit(class ExpressionConstantNode *node) = 0;
+        virtual void Visit(class ExpressionFnObject *node) = 0;
 };
 
 #endif

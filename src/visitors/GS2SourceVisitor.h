@@ -326,6 +326,10 @@ public:
 
         tabc--;
 	}
+
+    virtual void Visit(ExpressionFnObject *node) {
+
+    }
 };
 
 #endif

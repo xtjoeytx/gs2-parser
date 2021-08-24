@@ -7,6 +7,7 @@
 #include <stack>
 #include <vector>
 #include <unordered_map>
+
 #include "ast/astvisitor.h"
 #include "GS2Bytecode.h"
 #include "GS2BuiltInFunctions.h"
@@ -73,6 +74,7 @@ class GS2CompilerVisitor : public NodeVisitor
 		virtual void Visit(ExpressionStrConcatNode *node);
 		virtual void Visit(ExpressionListNode *node);
 		virtual void Visit(ExpressionConstantNode *node);
+		virtual void Visit(ExpressionFnObject* node);
 
 	private:
 		bool copyAssignment;

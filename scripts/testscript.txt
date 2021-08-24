@@ -1613,3 +1613,277 @@ function onCreated() {
     echo("Only temp.a is true");
   }
 }
+
+
+
+//#CLIENTSIDE
+function onCreated() {
+/*
+         7,         5: temp. (189)
+         8,         6: type(variable) (22) (Opcode: 0xF0)  - variable[0](q) (byte)
+        11,         7: member access (35)
+        12,         8: type(array) (23)
+        13,         9: type(string) (21) (Opcode: 0xF0)  - variable[1](asdf) (byte)
+        16,        10: type(string) (21) (Opcode: 0xF0)  - variable[2](some) (byte)
+        19,        11: End of array (37)
+        20,        12: "=" (50)
+*/
+
+  temp.q = { "some", "asdf" };
+
+/*
+        21,        13: temp. (189)
+        22,        14: type(variable) (22) (Opcode: 0xF0)  - variable[3](I) (byte)
+        25,        15: member access (35)
+        26,        16: type(number) (20) (Opcode: 0xF3)  - double(3) (byte)
+        29,        17: "=" (50)
+*/
+  temp.I = 3;
+
+/*
+        30,        18: this. (180)
+        31,        19: type(variable) (22) (Opcode: 0xF0)  - variable[4](items2) (byte)
+        34,        20: member access (35)
+        35,        21: Convert to object (36)
+        36,        22: type(number) (20) (Opcode: 0xF3)  - double(4) (byte)
+        39,        23: setarray() (39)
+*/
+  setarray(this.items2, 4);
+
+/*
+        40,        24: this. (180)
+        41,        25: type(variable) (22) (Opcode: 0xF0)  - variable[5](items) (byte)
+        44,        26: member access (35)
+        45,        27: Convert to object (36)
+        46,        28: obj.clear() (141)
+*/
+  this.items.clear();
+
+/*
+        47,        29: this. (180)
+        48,        30: type(variable) (22) (Opcode: 0xF0)  - variable[5](items) (byte)
+        51,        31: member access (35)
+        52,        32: Convert to object (36)
+        53,        33: type(array) (23)
+        54,        34: temp. (189)
+        55,        35: type(variable) (22) (Opcode: 0xF0)  - variable[0](q) (byte)
+        58,        36: member access (35)
+        59,        37: temp. (189)
+        60,        38: type(variable) (22) (Opcode: 0xF0)  - variable[3](I) (byte)
+        63,        39: member access (35)
+        64,        40: End of array (37)
+        65,        41: addstring() (136)
+*/
+  this.items.add({temp.I, temp.q});
+
+/*
+       66,        42: type(array) (23)
+        67,        43: type(string) (21) (Opcode: 0xF0)  - variable[6](Test: ) (byte)
+        70,        44: this. (180)
+        71,        45: type(variable) (22) (Opcode: 0xF0)  - variable[5](items) (byte)
+        74,        46: member access (35)
+        75,        47: Convert to object (36)
+        76,        48: obj.size() (130)
+        77,        49: Convert to string (34)
+        78,        50: @ (113)
+        79,        51: type(variable) (22) (Opcode: 0xF0)  - variable[7](echo) (byte)
+        82,        52: Call function (6)
+        83,        53: Decrease last operand index by 1 (32)
+*/
+  echo("Test: " @ this.items.size());
+}
+
+
+public function isHuman() {
+/*
+         6,         4: type(variable) (22) (Opcode: 0xF0)  - variable[0](clientr) (byte)
+         9,         5: Convert to object (36)
+        10,         6: type(variable) (22) (Opcode: 0xF0)  - variable[1](race) (byte)
+        13,         7: member access (35)
+        14,         8: type(string) (21) (Opcode: 0xF0)  - variable[2](human) (byte)
+        17,         9: == (70)
+        18,        10: if (4) (Opcode: 0xF3)  - double(13) (byte)
+        21,        11: type(true) (24)
+        22,        12: Set operation index (1) (Opcode: 0xF3)  - double(14) (byte)
+        25,        13: type(false) (25)
+*/
+  return (clientr.race == "human" ? true : false);
+}
+
+
+public function someFunction() {
+/*
+         7,         5: this. (180)
+         8,         6: type(variable) (22) (Opcode: 0xF0)  - variable[0](obj) (byte)
+        11,         7: member access (35)
+        12,         8: type(number) (20) (Opcode: 0xF3)  - double(6) (byte)
+        15,         9: new[] (38)
+        16,        10: "=" (50)
+
+*/
+  this.obj = new[6];
+
+/*
+        17,        11: temp. (189)
+        18,        12: type(variable) (22) (Opcode: 0xF0)  - variable[1](str) (byte)
+        21,        13: member access (35)
+        22,        14: this. (180)
+        23,        15: type(variable) (22) (Opcode: 0xF0)  - variable[0](obj) (byte)
+        26,        16: member access (35)
+        27,        17: Convert to string (34)
+        28,        18: type(string) (21) (Opcode: 0xF0)  - variable[2]( ,) (byte)
+        31,        19: obj.tokenize() (118)
+        32,        20: "=" (50)
+*/
+  temp.str = this.obj.tokenize();
+
+/*
+       33,        21: type(array) (23)
+        34,        22: type(string) (21) (Opcode: 0xF0)  - variable[3](Test: ) (byte)
+        37,        23: temp. (189)
+        38,        24: type(variable) (22) (Opcode: 0xF0)  - variable[1](str) (byte)
+        41,        25: member access (35)
+        42,        26: Convert to string (34)
+        43,        27: @ (113)
+        44,        28: type(variable) (22) (Opcode: 0xF0)  - variable[4](echo) (byte)
+        47,        29: Call function (6)
+        48,        30: Decrease last operand index by 1 (32)
+        49,        31: type(number) (20) (Opcode: 0xF3)  - double(0) (byte)
+*/
+  echo("Test: " @ temp.str);
+}
+
+
+
+/*
+//#CLIENTSIDE
+function onCreated() {
+   this.func = this.func1;
+   this.func(123);
+
+   this.func2 = function() {
+     echo("nameless functions");
+   };
+ }
+ function func1(param) {
+   echo("param: " @ param);
+ }
+*/
+
+
+
+
+
+
+
+
+//#CLIENTSIDE
+function onCreated()
+{
+  /*
+       496,       294: this. (180)	
+       497,       295: type(variable) (22) (Opcode: 0xF0)  - variable[52](particleSystemEditor) (byte)	
+       500,       296: member access (35)	
+       501,       297: type(variable) (22) (Opcode: 0xF0)  - variable[53](unknown_object) (byte)	
+       504,       298: type(string) (21) (Opcode: 0xF0)  - variable[0](TParticleSystemEditor) (byte)	
+       507,       299: new Object? (42)	
+       508,       300: "=" (50)
+*/
+  this.particleSystemEditor = new TParticleSystemEditor();
+  player.chat = "fired2: " @ ++this.i;
+  
+/*
+       527,       311: this. (180)	
+       528,       312: type(variable) (22) (Opcode: 0xF0)  - variable[55](someobj) (byte)	
+       531,       313: member access (35)	
+       532,       314: type(variable) (22) (Opcode: 0xF0)  - variable[53](unknown_object) (byte)	
+       535,       315: type(string) (21) (Opcode: 0xF0)  - variable[16](GuiWindowCtrl) (byte)	
+       538,       316: new Object? (42)	
+       539,       317: "=" (50)
+*/
+  this.someobj = new GuiWindowCtrl();
+  this.someobj.show();
+  
+  player.chat = "fired2.1: " @ ++this.i;
+  
+/*
+       571,       337: this. (180)	
+       572,       338: type(variable) (22) (Opcode: 0xF0)  - variable[58](someobj2) (byte)	
+       575,       339: member access (35)	
+       576,       340: type(string) (21) (Opcode: 0xF0)  - variable[59](SomeWindow) (byte)	
+       579,       341: inline new? (40)	
+       580,       342: type(string) (21) (Opcode: 0xF0)  - variable[16](GuiWindowCtrl) (byte)	
+       583,       343: new Object? (42)	
+       584,       344: "=" (50)
+*/
+  this.someobj2 = new GuiWindowCtrl("SomeWindow");
+  this.someobj2.show();
+  player.chat = "fired2.2: " @ ++this.i;
+  
+/*
+       616,       364: this. (180)	
+       617,       365: type(variable) (22) (Opcode: 0xF0)  - variable[61](someobj3) (byte)	
+       620,       366: member access (35)	
+       621,       367: type(string) (21) (Opcode: 0xF0)  - variable[62](arg1) (byte)	
+       624,       368: inline new? (40)	
+       625,       369: type(string) (21) (Opcode: 0xF0)  - variable[0](TParticleSystemEditor) (byte)	
+       628,       370: new Object? (42)	
+       629,       371: "=" (50)
+*/
+  this.someobj3 = new TParticleSystemEditor("arg1");
+  player.chat = "fired2.3: " @ ++this.i;
+  
+/*
+       648,       382: this. (180)	
+       649,       383: type(variable) (22) (Opcode: 0xF0)  - variable[64](someobj4) (byte)	
+       652,       384: member access (35)	
+       653,       385: type(variable) (22) (Opcode: 0xF0)  - variable[53](unknown_object) (byte)	
+       656,       386: type(string) (21) (Opcode: 0xF0)  - variable[0](TParticleSystemEditor) (byte)	
+       659,       387: new Object? (42)	
+       660,       388: "=" (50)
+*/
+  this.someobj4 = new TParticleSystemEditor("arg1", "arg2", "arg3");
+  player.chat = "fired3: " @ ++this.i;
+  
+/*
+       679,       399: this. (180)	
+       680,       400: type(variable) (22) (Opcode: 0xF0)  - variable[66](anotherobj) (byte)	
+       683,       401: member access (35)	
+       684,       402: type(variable) (22) (Opcode: 0xF0)  - variable[53](unknown_object) (byte)	
+       687,       403: type(string) (21) (Opcode: 0xF0)  - variable[3](TStaticVar) (byte)	
+       690,       404: new Object? (42)	
+       691,       405: "=" (50)
+*/
+  this.anotherobj = new TStaticVar();
+  player.chat = "fired4: " @ ++this.i;
+
+/*
+       710,       416: this. (180)	
+       711,       417: type(variable) (22) (Opcode: 0xF0)  - variable[68](anotherobj2) (byte)	
+       714,       418: member access (35)	
+       715,       419: type(string) (21) (Opcode: 0xF0)  - variable[13](test) (byte)	
+       718,       420: inline new? (40)	
+       719,       421: type(string) (21) (Opcode: 0xF0)  - variable[3](TStaticVar) (byte)	
+       722,       422: new Object? (42)	
+       723,       423: "=" (50)
+*/
+  this.anotherobj2 = new TStaticVar("test");
+  player.chat = "fired5: " @ ++this.i;
+
+/*
+       742,       434: this. (180)	
+       743,       435: type(variable) (22) (Opcode: 0xF0)  - variable[70](anotherobj3) (byte)	
+       746,       436: member access (35)	
+       747,       437: type(variable) (22) (Opcode: 0xF0)  - variable[53](unknown_object) (byte)	
+       750,       438: type(string) (21) (Opcode: 0xF0)  - variable[3](TStaticVar) (byte)	
+       753,       439: new Object? (42)	
+       754,       440: "=" (50)
+*/
+  this.anotherobj3 = new TStaticVar("test", "abc");
+  player.chat = "fired6: " @ ++this.i;
+
+  this.particleSystemEditor.initialize(findImg(300));
+  player.chat = "fired8: " @ ++this.i;
+}
+
+

@@ -25,6 +25,11 @@ class GS2Context
 			return !errors.empty();
 		}
 
+		std::vector<GS2CompilerError>&& getErrors()
+		{
+			return std::move(errors);
+		}
+
 		const std::vector<GS2CompilerError>& getErrors() const
 		{
 			return errors;

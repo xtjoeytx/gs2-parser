@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <string>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <functional>
@@ -20,8 +21,24 @@ CompileResonse compileFile(const std::filesystem::path& filePath)
 
 	if (std::filesystem::exists(filePath))
 	{
-		std::ifstream inputstream(filePath);
-		std::string script((std::istreambuf_iterator<char>(inputstream)), std::istreambuf_iterator<char>());
+		std::string script;
+		auto fileName = filePath.string();
+		FILE* file = fopen(fileName.c_str(), "r");
+		if (file)
+		{
+			static char buf[16384];
+			size_t size = 0;
+			while ((size = fread(buf, 1, sizeof(buf), file)) > 0)
+			{
+				script.append(&buf[0], size);
+			}
+
+			fclose(file);
+			file = nullptr;
+		}
+
+		//std::ifstream inputstream(filePath);
+		//std::string script((std::istreambuf_iterator<char>(inputstream)), std::istreambuf_iterator<char>());
 
 		response.bytecode = context.compile(script, "weapon", "TestCode", true);
 		if (!context.hasErrors())
@@ -43,7 +60,12 @@ Buffer oneStopShop(const std::filesystem::path& inputPath)
 {
 	printf("Compiling file %s\n", inputPath.string().c_str());
 
+	auto start = std::chrono::high_resolution_clock::now();
 	auto compilerResponse = compileFile(inputPath);
+	auto finish = std::chrono::high_resolution_clock::now();
+
+	std::chrono::duration<double> diff = finish - start;
+	printf("Compiled in %f seconds\n", diff.count());
 	
 	if (compilerResponse.errmsg.empty())
 	{

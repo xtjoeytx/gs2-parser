@@ -1,5 +1,7 @@
 #include <cassert>
+#include <algorithm>
 #include <unordered_map>
+
 #include "GS2CompilerVisitor.h"
 #include "ast/ast.h"
 #include "Parser.h"
@@ -60,39 +62,44 @@ void GS2CompilerVisitor::Visit(StatementBlock *node)
 {
    for (const auto& n : node->statements)
 	{
-		if (n)
-			n->visit(this);
+		assert(n != nullptr);
+		n->visit(this);
 	}
 }
 
 void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 {
 #ifdef DBGEMITTERS
-	printf("Declare function: %s\n", node->ident.c_str());
+	printf("Declare function: %s\n", node->ident->c_str());
 #endif
 
-	byteCode.emit(opcode::OP_SET_INDEX);
-	byteCode.emit(char(0xF4));
-	byteCode.emit(short(0)); // replaced with jump index to last opcode
+	size_t jmpLoc = 0;
+
+	if (node->emit_prejump)
+	{
+		byteCode.emit(opcode::OP_SET_INDEX);
+		byteCode.emit(char(0xF4));
+		byteCode.emit(short(0)); // replaced with jump index to last opcode
+		jmpLoc = byteCode.getBytecodePos();
+	}
 
 	std::string funcName;
 	if (node->pub)
 		funcName.append("public.");
-	if (!node->objectName.empty())
-		funcName.append(node->objectName).append(".");
-	funcName.append(node->ident);
+	if (node->objectName && !node->objectName->empty())
+		funcName.append(*node->objectName).append(".");
+	funcName.append(*node->ident);
 
-	byteCode.addFunction(funcName, byteCode.getOpIndex(), byteCode.getBytecodePos());
+	byteCode.addFunction(funcName, byteCode.getOpIndex(), jmpLoc);
 
 	{
 		byteCode.emit(opcode::OP_TYPE_ARRAY);
 		
 		for (auto it = node->args.rbegin(); it != node->args.rend(); ++it)
 		{
-			assert(*it);
+			assert(*it != nullptr);
 			
-			if (*it != nullptr)
-				(*it)->visit(this);
+			(*it)->visit(this);
 		}
 		
 		byteCode.emit(opcode::OP_FUNC_PARAMS_END);
@@ -538,24 +545,24 @@ void GS2CompilerVisitor::Visit(ExpressionConstantNode *node)
 
 void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 {
-	auto constant = parserContext.getConstant(node->val);
+	auto constant = parserContext.getConstant(*node->val);
 	if (constant)
 	{
 #ifdef DBGEMITTERS
-		printf("FOUND CONSTANT: %s\n", node->val.c_str());
+		printf("FOUND CONSTANT: %s\n", node->val->c_str());
 #endif
 		constant->visit(this);
 		return;
 	}
 
-	auto id = byteCode.getStringConst(node->val);
+	auto id = byteCode.getStringConst(*node->val);
 
 	byteCode.emit(opcode::OP_TYPE_VAR);
 	byteCode.emit((char)0xF0);
 	byteCode.emit((char)id);
 
 #ifdef DBGEMITTERS
-	printf("Identifier Node: %s\n", node->val.c_str());
+	printf("Identifier Node: %s\n", node->val->c_str());
 #endif
 }
 
@@ -568,7 +575,7 @@ void GS2CompilerVisitor::Visit(ExpressionIntegerNode *node)
 void GS2CompilerVisitor::Visit(ExpressionNumberNode *node)
 {
 	byteCode.emit(opcode::OP_TYPE_NUMBER);
-	byteCode.emitDoubleNumber(node->val);
+	byteCode.emitDoubleNumber(*node->val);
 }
 
 void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
@@ -580,31 +587,33 @@ void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
 	if (node->nodes[0]->expressionType() == ExpressionType::EXPR_IDENT)
 	{
 		auto identNode = reinterpret_cast<ExpressionIdentifierNode*>(node->nodes[0]);
-		if (identNode->val == "this") {
+		auto& identNodeStr = *identNode->val;
+
+		if (identNodeStr == "this") {
 			byteCode.emit(opcode::OP_THIS);
 		}
-		else if (identNode->val == "thiso") {
+		else if (identNodeStr == "thiso") {
 			byteCode.emit(opcode::OP_THISO);
 		}
-		else if (identNode->val == "player") {
+		else if (identNodeStr == "player") {
 			byteCode.emit(opcode::OP_PLAYER);
 		}
-		else if (identNode->val == "playero") {
+		else if (identNodeStr == "playero") {
 			byteCode.emit(opcode::OP_PLAYERO);
 		}
-		else if (identNode->val == "level") {
+		else if (identNodeStr == "level") {
 			byteCode.emit(opcode::OP_LEVEL);
 		}
-		else if (identNode->val == "temp") {
+		else if (identNodeStr == "temp") {
 			byteCode.emit(opcode::OP_TEMP);
 		}
-		else if (identNode->val == "true") {
+		else if (identNodeStr == "true") {
 			byteCode.emit(opcode::OP_TYPE_TRUE);
 		}
-		else if (identNode->val == "false") {
+		else if (identNodeStr == "false") {
 			byteCode.emit(opcode::OP_TYPE_FALSE);
 		}
-		else if (identNode->val == "null") {
+		else if (identNodeStr == "null") {
 			byteCode.emit(opcode::OP_TYPE_NULL);
 		}
 		else {
@@ -640,10 +649,10 @@ void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
 void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 {
 #ifdef DBGEMITTERS
-	printf("String: %s\n", node->val.c_str());
+	printf("String: %s\n", node->val->c_str());
 #endif
 
-	auto id = byteCode.getStringConst(node->val);
+	auto id = byteCode.getStringConst(*node->val);
 
 	byteCode.emit(opcode::OP_TYPE_STRING);
 	byteCode.emitDynamicNumber(id);
@@ -666,8 +675,8 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 
 	{
 		auto argVisitFn = [this](ExpressionNode* node) {
-			if (node)
-				node->visit(this);
+			assert(node != nullptr);
+			node->visit(this);
 		};
 
 		auto objectVisitFn = [&]() {
@@ -676,7 +685,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 
 			if (cmd.convert_op != opcode::Opcode::OP_NONE)
 			{
-				if (byteCode.getLastOp() != cmd.convert_op && byteCode.getLastOp() != opcode::OP_THISO)
+				if (byteCode.getLastOp() != cmd.convert_op && byteCode.getLastOp() != opcode::OP_THISO && byteCode.getLastOp() != opcode::OP_THIS)
 					byteCode.emit(cmd.convert_op);
 			}
 		};
@@ -719,7 +728,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 		if (cmd.op == opcode::OP_CALL)
 		{
 			node->funcExpr->visit(this);
-
+			
 			if (isObjectCall)
 				byteCode.emit(opcode::OP_MEMBER_ACCESS);
 		}
@@ -732,6 +741,33 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 		if (node->discardReturnValue)
 			byteCode.emit(opcode::OP_INDEX_DEC);
 	}
+}
+
+void GS2CompilerVisitor::Visit(ExpressionFnObject *node)
+{
+	// We are emitting the jump before the function-decl node
+	byteCode.emit(opcode::OP_SET_INDEX);
+	byteCode.emit(char(0xF4));
+	byteCode.emit(short(0));
+	auto jmpLoc = byteCode.getBytecodePos();
+
+	// Visit the function declaration node
+	Visit(&node->fnNode);
+
+	// Emit jump for the above index, skipping over the lambda function
+	byteCode.emit(short(byteCode.getOpIndex()), jmpLoc - 2);
+
+	// this
+	byteCode.emit(opcode::OP_THIS);
+	
+	// assigned anonymous function name
+	auto id = byteCode.getStringConst(*node->ident);
+	byteCode.emit(opcode::OP_TYPE_VAR);
+	byteCode.emitDynamicNumber(id);
+
+	// access this.function_name as an object
+	byteCode.emit(opcode::OP_MEMBER_ACCESS);
+	byteCode.emit(opcode::OP_CONV_TO_OBJECT);
 }
 
 void GS2CompilerVisitor::Visit(StatementReturnNode *node)
@@ -809,27 +845,25 @@ void GS2CompilerVisitor::Visit(ExpressionNewObjectNode *node)
 	// temp.a = new TStaticVar("str") will return a regular string,
 	// but if there is additional args it has no effect on the output.
 	
-	for (const auto& n : node->args)
-		n->visit(this);
-
 	// TODO(joey): fix
 
 	auto identNode = reinterpret_cast<ExpressionIdentifierNode*>(node->newExpr);
-	auto id = byteCode.getStringConst(identNode->val);
+	auto identIdx = byteCode.getStringConst(*identNode->val);
 
-	if (identNode->val == "TStaticVar") {
-		byteCode.emit(opcode::OP_TYPE_VAR);
-		byteCode.emitDynamicNumber(byteCode.getStringConst("unknown_object"));
+	// new only works with one argument, and the argument is the object name
+	if (node->args.size() == 1)
+	{
+		node->args.front()->visit(this);
+		byteCode.emit(opcode::OP_INLINE_NEW);
 	}
 	else
 	{
-		byteCode.emit(opcode::OP_INLINE_NEW);
+		byteCode.emit(opcode::OP_TYPE_VAR);
+		byteCode.emitDynamicNumber(byteCode.getStringConst("unknown_object"));
 	}
 
 	byteCode.emit(opcode::OP_TYPE_STRING);
-	byteCode.emitDynamicNumber(id);
-
-	//node->newExpr->visit(this);
+	byteCode.emitDynamicNumber(identIdx);
 
 	byteCode.emit(opcode::OP_NEW_OBJECT);
 }
@@ -957,8 +991,6 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 	popLoopBreakpoint();
 }
 
-//////////// not implemented yet
-
 void GS2CompilerVisitor::Visit(StatementNewNode* node)
 {
 	assert(node->args.size() == 1);
@@ -974,7 +1006,7 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 	byteCode.emit(opcode::OP_COPY_LAST_OP);
 
 	// emit object type
-	auto id = byteCode.getStringConst(node->ident);
+	auto id = byteCode.getStringConst(*node->ident);
 	byteCode.emit(opcode::OP_TYPE_STRING);
 	byteCode.emitDynamicNumber(id);
 

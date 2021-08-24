@@ -41,7 +41,8 @@ class ParserContext
 	public:
 		void cleanup();
 
-		const char * saveString(const char *str, int length, bool unquote = false);
+		std::string * saveString(const char* str, int length, bool unquote = false);
+		std::string * generateLambdaFuncName();
 
 		// constants
 		void addConstant(const std::string& ident, ExpressionIdentifierNode *node);
@@ -91,8 +92,9 @@ class ParserContext
 		yyscan_t scanner;
 		YY_BUFFER_STATE buffer;
 
+		size_t lambdaFunctionCount;
 		std::unordered_map<std::string, ExpressionNode *> constantsTable;
-		std::unordered_set<std::string> stable;
+		std::unordered_map<std::string, std::shared_ptr<std::string>> stringTable;
 		std::stack<SwitchCaseState> switchCases;
 		std::vector<GS2CompilerError> errorList;
 

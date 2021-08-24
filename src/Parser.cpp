@@ -15,7 +15,7 @@ void ReplaceStringInPlace(std::string& subject, const std::string& search, const
 }
 
 ParserContext::ParserContext()
-	: lineNumber(0), columnNumber(0), buffer(nullptr), programNode(nullptr), state(ParserState::START)
+	: lineNumber(0), columnNumber(0), buffer(nullptr), programNode(nullptr), state(ParserState::START), lambdaFunctionCount(0)
 {
 	yylex_init_extra(this, &scanner);
 }
@@ -40,7 +40,7 @@ void ParserContext::cleanup()
 	nodes.clear();
 }
 
-const char * ParserContext::saveString(const char* str, int length, bool unquote)
+std::string * ParserContext::saveString(const char* str, int length, bool unquote)
 {
 	auto tmpStr = std::string(str, length);
 	if (unquote)
@@ -49,8 +49,26 @@ const char * ParserContext::saveString(const char* str, int length, bool unquote
 		ReplaceStringInPlace(tmpStr, "\\n", "\n");
 	}
 
-	auto ins = stable.insert(std::move(tmpStr));
-	return ins.first->c_str();
+	auto it = stringTable.find(tmpStr);
+	if (it != stringTable.end())
+		return it->second.get();
+
+	auto ptr = std::make_shared<std::string>(std::move(tmpStr));
+	auto ret = stringTable.insert({ *ptr, ptr });
+	return ptr.get(); // warning: C26816, but seems ok to me
+	//return ret.first->second.get();
+}
+
+std::string * ParserContext::generateLambdaFuncName()
+{
+	std::string fnName;
+	fnName.reserve(30);
+	fnName.append("function_");
+	fnName.append(std::to_string(420 + lambdaFunctionCount));
+	fnName.append("_").append("1");
+	
+	lambdaFunctionCount++;
+	return saveString(fnName.c_str(), int(fnName.length()));
 }
 
 void ParserContext::addEnum(EnumList *enumList, std::string prefix)
@@ -58,7 +76,7 @@ void ParserContext::addEnum(EnumList *enumList, std::string prefix)
 	if (prefix.empty())
 	{
 		for (const auto& en : enumList->getMembers())
-			addConstant(en->node, alloc<ExpressionIntegerNode>(en->idx));
+			addConstant(*en->node, alloc<ExpressionIntegerNode>(en->idx));
 	}
 	else
 	{
@@ -66,7 +84,7 @@ void ParserContext::addEnum(EnumList *enumList, std::string prefix)
 		for (const auto& en : enumList->getMembers())
 		{
 			std::string key = prefix;
-			key.append(en->node);
+			key.append(*en->node);
 
 			addConstant(key, alloc<ExpressionIntegerNode>(en->idx));
 		}

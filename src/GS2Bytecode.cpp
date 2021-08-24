@@ -1,4 +1,6 @@
 #include <cassert>
+#include <algorithm>
+#include <limits>
 
 #include "GS2Bytecode.h"
 #include "encoding/graalencoding.h"
@@ -11,33 +13,17 @@
 	 SEGMENT_BYTECODE = 4
  };
 
-// Format:
-// {GINT2(LENGTH_OF_STARTSECTION)}{STARTSECTION}{SEGMENTS}
-
-// Start Section:
-// weapon,npcName,saveToDisk[0,1],GINT5(HASH1)GINT5(HASH2)
-
-// Segments: GS1EventFlags:1, FunctionNames:2, Strings:3, Bytecode:4
-// {INT4(SEGMENT_TYPE)}{INT4(SEGMENT_LEN)}
-
-// GS1EventFlags: {INT4(0)} - bitflags
-// FunctionNames: {INT4(INSTRUCT_ID)}{CSTR-NULL-TERMINATED}...
-// StringTable: {CSTR-NULL-TERMINATED}...
-// Bytecode: ...
-
 int32_t GS2Bytecode::getStringConst(const std::string& str)
 {
-	auto it = std::find(stringTable.begin(), stringTable.end(), str);
-	if (it == stringTable.end())
-	{
-		stringTable.push_back(str);
-		return int32_t(stringTable.size() - 1);
-	}
+	auto it = stringTableMapping.find(str);
+	if (it != stringTableMapping.end())
+		return it->second;
 
-	auto dist = std::distance(stringTable.begin(), it);
-	assert(std::abs(dist) < std::numeric_limits<int32_t>::max());
+	stringTable.push_back(str);
+	auto idx = int32_t(stringTable.size() - 1);
 
-	return int32_t(dist);
+	stringTableMapping[str] = idx;
+	return idx;
 }
 
 Buffer GS2Bytecode::getByteCode()
@@ -56,20 +42,60 @@ Buffer GS2Bytecode::getByteCode()
 
 	// Function Names
 	{
-		Buffer functionNames;
+		std::vector<std::string> functionTableOrder;
+		std::unordered_set<std::string> visitedFunctions;
+
+		// Functions need to appear in order of them being called, so
+		// im just adding every string in the table followed by the list of
+		// functions defined in the script. Then culling out any strings that
+		// isn't a function from the final list.
+		for (const auto& ident : stringTable)
+		{
+			if (functionSet.find(ident) != functionSet.end() && visitedFunctions.insert(ident).second)
+			{
+				functionTableOrder.push_back(ident);
+			}
+		}
+
 		for (const auto& func : functionTable)
 		{
-			functionNames.Write<encoding::Int32>(func.opIndex);
-			functionNames.write(func.functionName.c_str(), func.functionName.length());
-			functionNames.write('\0');
+			if (functionSet.find(func.functionName) != functionSet.end() && visitedFunctions.insert(func.functionName).second)
+			{
+				functionTableOrder.push_back(func.functionName);
+			}
+		}
 
-			// emit a jump before the function declaration to the last op index
-			emit(short(opIndex), func.jmpLoc - 2);
+		Buffer functionTableBuffer;
+		for (const auto& funcName : functionTableOrder)
+		{
+			// Not a defined function, so skip
+			assert(functionSet.find(funcName) != functionSet.end());
+
+			//if (functionSet.find(funcName) == functionSet.end())
+			//	continue;
+
+			auto it = std::find_if(functionTable.begin(), functionTable.end(), [funcName](const FunctionEntry& e) {
+				return (funcName == e.functionName);
+			});
+
+			if (it != functionTable.end())
+			{
+				auto& func = *it;
+				functionTableBuffer.Write<encoding::Int32>(func.opIndex);
+				functionTableBuffer.write(func.functionName.c_str(), func.functionName.length());
+				functionTableBuffer.write('\0');
+
+				// emit a jump before the function declaration to the last op index
+				if (func.jmpLoc != 0)
+				{
+					emit(short(opIndex), func.jmpLoc - 2);
+				}
+			}
 		}
 
 		byteCode.Write<encoding::Int32>(SEGMENT_FUNCTIONTABLE);
-		byteCode.Write<encoding::Int32>(uint32_t(functionNames.length()));
-		byteCode.write(functionNames);
+		byteCode.Write<encoding::Int32>(uint32_t(functionTableBuffer.length()));
+		byteCode.write(functionTableBuffer);
 	}
 
 	// String Table
@@ -95,16 +121,14 @@ Buffer GS2Bytecode::getByteCode()
 	return byteCode;
 }
 
-void GS2Bytecode::addFunction(const std::string& functionName, uint32_t opIdx, size_t jmpLoc)
+void GS2Bytecode::addFunction(std::string functionName, uint32_t opIdx, size_t jmpLoc)
 {
-	auto it = std::find_if(functionTable.begin(), functionTable.end(), [functionName](const FunctionEntry& e) {
-		return (functionName == e.functionName);
-	});
+	auto ret = functionSet.insert(functionName);
 
-	if (it == functionTable.end())
+	if (ret.second)
 	{
 		functionTable.push_back(FunctionEntry{
-			functionName,
+			std::move(functionName),
 			opIdx,
 			jmpLoc
 		});
