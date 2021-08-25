@@ -28,6 +28,15 @@ int32_t GS2Bytecode::getStringConst(const std::string& str)
 
 Buffer GS2Bytecode::getByteCode()
 {
+	// This fixes a weird bug in which the last function was uncallable,
+	// i am unsure if this is a bug with our specific client or something
+	// weird is happening during compilation that is causing the issue.
+	// I've used identical bytecode as per the decompiler, and still
+	// ran into this issue so I believe its a client issue.
+	// Either way, emitting this op seems to fix it. *shrugs*
+	// - joey
+	emit(opcode::OP_RET);
+
 	Buffer byteCode;
 
 	// GS1EventFlags
@@ -42,13 +51,16 @@ Buffer GS2Bytecode::getByteCode()
 
 	// Function Names
 	{
-		std::vector<std::string> functionTableOrder;
-		std::unordered_set<std::string> visitedFunctions;
-
 		// Functions need to appear in order of them being called, so
 		// im just adding every string in the table followed by the list of
 		// functions defined in the script. Then culling out any strings that
 		// isn't a function from the final list.
+		// 
+		// note: this may not actually be the case, and it may be related to the
+		// function bug i mentioned a few lines up
+		std::vector<std::string> functionTableOrder;
+		std::unordered_set<std::string> visitedFunctions;
+
 		for (const auto& ident : stringTable)
 		{
 			if (functionSet.find(ident) != functionSet.end() && visitedFunctions.insert(ident).second)
@@ -70,9 +82,6 @@ Buffer GS2Bytecode::getByteCode()
 		{
 			// Not a defined function, so skip
 			assert(functionSet.find(funcName) != functionSet.end());
-
-			//if (functionSet.find(funcName) == functionSet.end())
-			//	continue;
 
 			auto it = std::find_if(functionTable.begin(), functionTable.end(), [funcName](const FunctionEntry& e) {
 				return (funcName == e.functionName);

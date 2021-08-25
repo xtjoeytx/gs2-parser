@@ -132,6 +132,43 @@ namespace opcode
 		// @formatter:on
 	};
 
+	inline bool IsBooleanReturningOp(Opcode opcode)
+	{
+		switch (opcode)
+		{
+		case OP_NOT:
+		case OP_EQ:
+		case OP_NEQ:
+		case OP_LT:
+		case OP_GT:
+		case OP_LTE:
+		case OP_GTE:
+		case OP_IN_RANGE:
+		case OP_IN_OBJ:
+			return true;
+
+		default:
+			return false;
+		}
+	}
+
+	inline bool IsObjectReturningOp(Opcode opcode)
+	{
+		switch (opcode)
+		{
+			case OP_THIS:
+			case OP_THISO:
+			case OP_PLAYER:
+			case OP_PLAYERO:
+			case OP_LEVEL:
+			case OP_TEMP:
+				return true;
+				
+			default:
+				return false;
+		}
+	}
+
 	inline std::string OpcodeToString(Opcode opcode)
 	{
 		switch (opcode)

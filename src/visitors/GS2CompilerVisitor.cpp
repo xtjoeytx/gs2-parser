@@ -683,10 +683,16 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 			if (isObjectCall)
 				node->objExpr->visit(this);
 
-			if (cmd.convert_op != opcode::Opcode::OP_NONE)
+			if (cmd.convert_op != opcode::Opcode::OP_NONE && byteCode.getLastOp() != cmd.convert_op)
 			{
-				if (byteCode.getLastOp() != cmd.convert_op && byteCode.getLastOp() != opcode::OP_THISO && byteCode.getLastOp() != opcode::OP_THIS)
-					byteCode.emit(cmd.convert_op);
+				if (cmd.convert_op == opcode::Opcode::OP_CONV_TO_OBJECT)
+				{
+					if (!IsObjectReturningOp(byteCode.getLastOp()))
+					{
+						byteCode.emit(cmd.convert_op);
+					}
+				}
+				else byteCode.emit(cmd.convert_op);
 			}
 		};
 
@@ -788,8 +794,11 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 	pushLogicalBreakpoint(LogicalBreakPoint{ });
 	{
 		node->expr->visit(this);
-		//if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
-		//	byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+
+		// Convert the result of the expression to a number since this
+		// value will be used for the following if () stmt
+		if (!IsBooleanReturningOp(byteCode.getLastOp()))
+			byteCode.emitConversionOp(node->expr->expressionType(), ExpressionType::EXPR_NUMBER);
 
 		// set the break point to the start of the OP_IF instruction
 		logicalBreakpoints.top().opbreak = byteCode.getOpIndex();
