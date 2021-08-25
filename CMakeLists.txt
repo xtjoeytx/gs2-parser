@@ -32,11 +32,13 @@ set(SOURCES_ALL
 
 		src/ast/ast.h
 		src/ast/astvisitor.h
+		src/ast/astnodevisitor.h
 		src/ast/expressiontypes.h
 		src/encoding/buffer.h
 		src/encoding/graalencoding.h
 		src/exceptions/GS2CompilerError.h
 		src/utils/ContextThreadPool.h
+		src/visitors/FunctionInspectVisitor.h
 		src/visitors/GS2CompilerVisitor.h
 		src/visitors/GS2SourceVisitor.h
 		src/CompilerThreadJob.h

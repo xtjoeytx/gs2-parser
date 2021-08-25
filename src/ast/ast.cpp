@@ -64,19 +64,10 @@ void StatementBlock::append(StatementNode *node)
 	if (node)
 	{
 		//
-		node->parent = this;
+		takeOwnership(node);
 
 		// TODO(joey): come back to this
-		if (strcmp(node->NodeType(), ExpressionPostfixNode::NodeName) == 0)
-		{
-			auto pfNode = reinterpret_cast<ExpressionPostfixNode*>(node);
-			if (pfNode->expressionType() == ExpressionType::EXPR_FUNCTION)
-			{
-				auto fnNode = reinterpret_cast<ExpressionFnCallNode*>(pfNode->lastNode());
-				fnNode->discardReturnValue = true;
-			}
-		}
-		else if (strcmp(node->NodeType(), ExpressionUnaryOpNode::NodeName) == 0)
+		if (strcmp(node->NodeType(), ExpressionUnaryOpNode::NodeName) == 0)
 		{
 			// doesn't utilize the value, so we emit the operator the same way
 			// we do operator-first unary ops. involves just a single inc operator

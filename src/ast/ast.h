@@ -209,7 +209,7 @@ public:
 
 	void addNode(ExpressionNode* node)
 	{
-		node->parent = this;
+		takeOwnership(node);
 		nodes.push_back(node);
 	}
 
@@ -427,7 +427,7 @@ public:
 	_NodeName("ExpressionFnCallNode")
 
 	ExpressionFnCallNode(ExpressionNode *funcExpr, ExpressionNode *objExpr, std::vector<ExpressionNode *> *argList = nullptr)
-		: ExpressionNode(), funcExpr(funcExpr), objExpr(objExpr), discardReturnValue(false)
+		: ExpressionNode(), funcExpr(funcExpr), objExpr(objExpr)
 	{
 		if (argList)
 		{
@@ -462,7 +462,6 @@ public:
 	ExpressionNode* funcExpr;
 	ExpressionNode* objExpr;
 	std::vector<ExpressionNode*> args;
-	bool discardReturnValue;
 };
 
 class ExpressionNewArrayNode : public ExpressionNode

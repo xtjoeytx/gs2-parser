@@ -24,7 +24,7 @@ namespace opcode
 		OP_RET = 7,			//  Return to location on top of on jump stack
 		OP_SLEEP = 8,
 		
-		OP_CMD_CALL = 9,	//  Pushes # of args, followed by args --- note: may just increase the loop count for the loop limit of 10k
+		OP_CMD_CALL = 9,	//  may just increase the loop count for the loop limit of 10k
 		OP_JMP = 10,		//  JUMP to N(0, 4) by byte offset unconditionally
 
 		OP_TYPE_NUMBER = 20,

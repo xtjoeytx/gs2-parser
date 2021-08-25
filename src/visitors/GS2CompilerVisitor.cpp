@@ -2,8 +2,9 @@
 #include <algorithm>
 #include <unordered_map>
 
-#include "GS2CompilerVisitor.h"
 #include "ast/ast.h"
+#include "visitors/FunctionInspectVisitor.h"
+#include "visitors/GS2CompilerVisitor.h"
 #include "Parser.h"
 
 opcode::Opcode getExpressionOpCode(ExpressionOp op)
@@ -106,7 +107,16 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 	}
 
 	byteCode.emit(opcode::OP_JMP);
-	byteCode.emit(opcode::OP_CMD_CALL);
+
+	// Found plenty of examples of OP_CMD_CALL being excluded, none of the functions
+	// that excluded the opcode had function calls so we are replicating that behavior
+	{
+		FunctionInspectVisitor funcVisitor;
+		funcVisitor.Visit(node->stmtBlock);
+
+		if (funcVisitor.foundFunctionCall)
+			byteCode.emit(opcode::OP_CMD_CALL);
+	}
 
 	node->stmtBlock->visit(this);
 
@@ -742,10 +752,22 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 		byteCode.emit(cmd.op);
 	}
 
+	// Handling of discarding unused return values
+	// 
+	// We need to pop the return value off the stack if the value is not going
+	// to be used in the next op. All function calls are wrapped in an ExpressionPostfixNode,
+	// and if the parent node of the postfix node is a statement block then we can assume
+	// the return value is unused and emit OP_INDEX_DEC to pop the value off the stack.
 	if ((cmd.flags & CmdFlags::CMD_RETURN_VALUE) == CmdFlags::CMD_RETURN_VALUE)
 	{
-		if (node->discardReturnValue)
-			byteCode.emit(opcode::OP_INDEX_DEC);
+		if (node->parent && node->parent->NodeType() == ExpressionPostfixNode::NodeName)
+		{
+			auto postfixParent = node->parent->parent;
+			if (postfixParent && postfixParent->NodeType() == StatementBlock::NodeName)
+			{
+				byteCode.emit(opcode::OP_INDEX_DEC);
+			}
+		}
 	}
 }
 
