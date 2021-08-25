@@ -128,6 +128,7 @@ HEXNUM		[a-fA-F0-9]
 0x{HEXNUM}+			{yylval->ival = std::stoul(yytext, nullptr, 16); return T_INT;}
 {DIGIT}*\.{DIGIT}+	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_FLOAT;}
 {DIGIT}+			{yylval->ival = atoi(yytext); return T_INT;}
+-{DIGIT}+			{yylval->ival = atoi(yytext); return T_INT;}
 {ALPHA}{ALPHANUM}*	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
 {ALPHA}{ALPHANUM}*(::{ALPHA}{ALPHANUM}*)+ {yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
 {string_const}		{yylval->sval = yyextra->saveString(yytext+1, yyleng - 2, true); return T_STRCONSTANT;}

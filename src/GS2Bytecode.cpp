@@ -244,8 +244,6 @@ void GS2Bytecode::emitConversionOp(ExpressionType typeSrc, ExpressionType typeDs
 
 void GS2Bytecode::emitDynamicNumber(int32_t val)
 {
-	assert(val == std::abs(val));
-
 	// Strings use 0xF0 -> 0xF2, numbers use 0xF3 -> 0xF5
 	// 0xF6 is used for null-terminated strings converted to doubles
 	char offset = 0;
@@ -258,27 +256,23 @@ void GS2Bytecode::emitDynamicNumber(int32_t val)
 			offset = 3;
 			break;
 
-		case opcode::OP_TYPE_VAR:
-		case opcode::OP_TYPE_STRING:
-			//offset = 0;
-			break;
-
 		default:
 			printf("Previous opcode should be a number or string!!\n");
+			assert(false);
 			return;
 	}
 
-	if (val <= std::numeric_limits<int8_t>::max())
+	if (val >= std::numeric_limits<int8_t>::min() && val <= std::numeric_limits<int8_t>::max())
 	{
 		emit(char(0xF0 + offset));
 		emit(char(val));
 	}
-	else if (val <= std::numeric_limits<int16_t>::max())
+	else if (val >= std::numeric_limits<int16_t>::min() && val <= std::numeric_limits<int16_t>::max())
 	{
 		emit(char(0xF1 + offset));
 		emit(short(val));
 	}
-	else if (val <= std::numeric_limits<int32_t>::max())
+	else if (val >= std::numeric_limits<int32_t>::min() && val <= std::numeric_limits<int32_t>::max())
 	{
 		emit(char(0xF2 + offset));
 		emit(int(val));
