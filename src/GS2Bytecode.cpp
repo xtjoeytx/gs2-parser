@@ -256,8 +256,13 @@ void GS2Bytecode::emitDynamicNumber(int32_t val)
 			offset = 3;
 			break;
 
+		case opcode::OP_TYPE_VAR:
+		case opcode::OP_TYPE_STRING:
+			//offset = 0;
+			break;
+
 		default:
-			printf("Previous opcode should be a number or string!!\n");
+			printf("Previous opcode should be a number or string!! Received: %d (%s)\n", getLastOp(), opcode::OpcodeToString(getLastOp()).c_str());
 			assert(false);
 			return;
 	}
