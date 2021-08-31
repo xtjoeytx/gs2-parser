@@ -3,6 +3,7 @@
 #ifndef GS2COMPILER_H
 #define GS2COMPILER_H
 
+#include <set>
 #include <string>
 #include <stack>
 #include <vector>
@@ -27,6 +28,7 @@ class GS2CompilerVisitor : public NodeVisitor
 	GS2Bytecode byteCode;
 	ParserContext& parserContext;
 	GS2BuiltInFunctions& builtIn;
+	std::set<std::string> joinedClasses;
 
 	public:
 		GS2CompilerVisitor(ParserContext& context, GS2BuiltInFunctions& builtin)
@@ -38,6 +40,10 @@ class GS2CompilerVisitor : public NodeVisitor
 
 		Buffer getByteCode() {
 			return byteCode.getByteCode();
+		}
+
+		const std::set<std::string>& getJoinedClasses() const {
+			return joinedClasses;
 		}
 
 		/////////

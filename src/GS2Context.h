@@ -3,6 +3,7 @@
 #ifndef GS2CONTEXT_H
 #define GS2CONTEXT_H
 
+#include <set>
 #include <vector>
 #include "encoding/buffer.h"
 #include "exceptions/GS2CompilerError.h"
@@ -11,8 +12,10 @@
 struct CompilerResponse
 {
 	bool success;
-	Buffer bytecode;
 	std::vector<GS2CompilerError> errors;
+
+	Buffer bytecode;
+	std::set<std::string> joinedClasses;
 };
 
 class GS2Context

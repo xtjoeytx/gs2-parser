@@ -769,6 +769,20 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 			}
 		}
 	}
+
+	// Any scripts that are joined by this npc/weapon need to be compiled and sent before
+	// the client can execute this script, so we are keeping track of any calls to join
+	// with string constants so we can precompile these scripts and send them ahead of time
+	if (funcName == "join")
+	{
+		if (node->args.size() == 1)
+		{
+			if (node->args[0]->expressionType() == ExpressionType::EXPR_STRING)
+			{
+				joinedClasses.insert(node->args[0]->toString());
+			}
+		}
+	}
 }
 
 void GS2CompilerVisitor::Visit(ExpressionFnObject *node)

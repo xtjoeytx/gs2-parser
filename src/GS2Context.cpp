@@ -38,8 +38,9 @@ CompilerResponse GS2Context::compile(const std::string& script)
 
 			return CompilerResponse{
 				true,
+				std::move(errors),
 				compilerVisitor.getByteCode(),
-				std::move(errors)
+				compilerVisitor.getJoinedClasses()
 			};
 		}
 	}
@@ -52,8 +53,8 @@ CompilerResponse GS2Context::compile(const std::string& script)
 
 	return CompilerResponse{
 		false,
+		std::move(errors),
 		Buffer{},
-		std::move(errors)
 	};
 }
 
