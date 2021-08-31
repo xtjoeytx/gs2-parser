@@ -11,97 +11,145 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#include <fmt/format.h>
 #include "ast/ast.h"
 #include "exceptions/GS2CompilerError.h"
 
 typedef void* yyscan_t;
 typedef struct yy_buffer_state* YY_BUFFER_STATE;
 
-enum class ParserState {
-	START,
-	FUNC_INITIALIZER,
-	STMT,
-	END
-};
-
 class ParserContext
 {
 	public:
-		ParserContext();
+		ParserContext(GS2ErrorService& service);
 		ParserContext(ParserContext&& o) noexcept = delete;
 		ParserContext(const ParserContext&) = delete;
 		~ParserContext();
 
 		ParserContext& operator=(const ParserContext&) = delete;
 
-		//
-		void parse(const std::string& input);
+		/**
+		 * Returns the error service to push errors encountered during the
+		 * parser/compilation process.
+		 *
+		 * @return ErrorService
+		 */
+		auto & getErrorService() {
+			return errorService;
+		}
+
+		/**
+		 * Parse an input into the parse context, and create an
+		 * abstract syntax tree retrievable via getRootStatement() upon
+		 * success
+		 * @param source
+		 *
+		 * @return true if success, false otherwise
+		 */
+		bool parse(const std::string& source);
+
+public:
+		void addParserError(const std::string& errmsg);
+		void addSyntaxError(const std::string& errmsg);
+		void addError(GS2CompilerError error);
 
 	// Accessed by bison
 	public:
-		void cleanup();
+		int lineNumber;
+		int columnNumber;
 
 		std::string * saveString(const char* str, int length, bool unquote = false);
 		std::string * generateLambdaFuncName();
 
-		// constants
+		/*
+		 * Add/get constants - used by bison during parsing
+		 */
 		void addConstant(const std::string& ident, ExpressionIdentifierNode *node);
 		void addConstant(const std::string& ident, ExpressionNode *node);
-		ExpressionNode * getConstant(const std::string& key);
-		
-		// enums
+		ExpressionNode * getConstant(const std::string& key) const;
+
+		/*
+		 * Add the enum to the current constant space, used by bison when parsing
+		 */
 		void addEnum(EnumList *enumList, std::string prefix = "");
-		
-		// switch case-expressions
+
+		/*
+		 * Switch-Case Statements:
+		 * Helps parse the switch-case statements into a proper
+		 * data structure that we can easily traverse at a later time.
+		 */
 		SwitchCaseState popCaseExpr();
 		void pushCaseExpr(ExpressionNode *expr);
 		void setCaseStatement(StatementBlock *block);
 
+		/*
+		 * A pointer to the root node of the abstract syntax tree
+		 */
 		StatementBlock * getRootStatement() const;
+
+		/*
+		 * Used by bison to set the root statement from the parser
+		 * ** Should not be used normally
+		 */
 		void setRootStatement(StatementBlock *block);
 
-		// error handling
-		bool hasErrors() const;
-		std::vector<GS2CompilerError>& getErrorList();
-		void addError(GS2CompilerError error);
-
-		// accessed directly by bison
-		int lineNumber;
-		int columnNumber;
-		ParserState state;
-
+		/*
+		 * Allocates a node for the parser, the memory is managed
+		 * by the parser context
+		 */
 		template<typename T, typename... P>
-		T* alloc(P&&... params)
-		{
-			T* n = new T(std::forward<P>(params)...);
-			nodes.push_back(n);
-			return n;
-		}
+		T *alloc(P&&... params);
 
+		/*
+		 * Deallocate node instance, recommend avoid using
+		 * as any node allocated with alloc() will be deallocated
+		 * by a call to cleanup(), or in the destructor of the context
+		 */
 		template<typename T>
-		void dealloc(T* n)
-		{
-			if (n)
-			{
-				nodes.erase(std::remove(nodes.begin(), nodes.end(), n), nodes.end());
-				delete n;
-			}
-		}
+		void dealloc(T *n);
+
+	private:
+		/**
+		 * Cleanup any nodes allocated
+		 */
+		void cleanup();
+
+		/**
+		 * Reset parser state
+		 */
+		void reset();
 
 	private:
 		yyscan_t scanner;
 		YY_BUFFER_STATE buffer;
 
+		bool failed;
 		size_t lambdaFunctionCount;
 		std::unordered_map<std::string, ExpressionNode *> constantsTable;
 		std::unordered_map<std::string, std::shared_ptr<std::string>> stringTable;
 		std::stack<SwitchCaseState> switchCases;
-		std::vector<GS2CompilerError> errorList;
 
 		std::vector<Node*> nodes;
 		StatementBlock* programNode;
+		GS2ErrorService& errorService;
 };
 
+/*
+ * Constants Table
+ */
+inline ExpressionNode * ParserContext::getConstant(const std::string& key) const
+{
+	auto it = constantsTable.find(key);
+	if (it == constantsTable.end())
+		return nullptr;
+
+	return it->second;
+}
+
+/*
+ * Switch-Case Statements
+ */
 inline void ParserContext::pushCaseExpr(ExpressionNode* expr)
 {
 	switchCases.top().exprList.push_back(expr);
@@ -119,6 +167,9 @@ inline SwitchCaseState ParserContext::popCaseExpr()
 	return state;
 }
 
+/*
+ * Abstract Syntax Tree Node - set by bison
+ */
 inline StatementBlock * ParserContext::getRootStatement() const
 {
 	return programNode;
@@ -129,22 +180,53 @@ inline void ParserContext::setRootStatement(StatementBlock *block)
 	programNode = block;
 }
 
-
-// error handling
-
-inline bool ParserContext::hasErrors() const
+/*
+ * Push errors to the error service, these functions are used during
+ * bison parsing and compiling phase.
+ */
+inline void ParserContext::addSyntaxError(const std::string &errmsg)
 {
-	return !errorList.empty();
+	std::string msg = fmt::format("Syntax error occurred (line {}, col {}): {}", lineNumber, columnNumber, errmsg);
+	addError( { ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Parser, std::move(msg) });
 }
 
-inline std::vector<GS2CompilerError>& ParserContext::getErrorList()
+inline void ParserContext::addParserError(const std::string& errmsg)
 {
-	return errorList;
+	std::string msg = fmt::format("Parser error occurred (line {}, col {}): {}", lineNumber, columnNumber, errmsg);
+	addError( { ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Parser, std::move(msg) });
 }
 
 inline void ParserContext::addError(GS2CompilerError error)
 {
-	errorList.push_back(std::move(error));
+	if (error.level() == ErrorLevel::E_ERROR)
+		failed = true;
+
+	getErrorService().submitPayload( std::move(error));
 }
+
+/*
+ * Memory Allocation for Nodes
+ */
+template<typename T, typename ...P>
+inline T *ParserContext::alloc(P && ...params)
+{
+	T *n = new T(std::forward<P>(params)...);
+	nodes.push_back(n);
+	return n;
+}
+
+/*
+ * Memory Deallocation for Nodes
+ */
+template<typename T>
+inline void ParserContext::dealloc(T *n)
+{
+	if (n)
+	{
+		nodes.erase(std::remove(nodes.begin(), nodes.end(), n), nodes.end());
+		delete n;
+	}
+}
+
 
 #endif

@@ -1,3 +1,4 @@
+%require "3.4"
 %define api.pure full
 %locations
 %param { class ParserContext *parser }
@@ -78,6 +79,9 @@ typedef void* yyscan_t;
 %token T_KWSWITCH T_KWCASE T_KWDEFAULT T_KWCONST
 %token T_KWCAST_INT T_KWCAST_FLOAT
 
+%precedence T_KWIF 
+%precedence T_KWELSE T_KWELSEIF
+
 %right '=' T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN T_OPCATASSIGN
 %left '[' T_OPTERNARY ':'
 %left T_OPOR
@@ -94,7 +98,7 @@ typedef void* yyscan_t;
 %left '.'
 
 %type<exprNode> expr
-%type<exprNode> constant primary
+%type<exprNode> constant constant_neg primary
 %type<exprPostfix> postfix
 %type<exprNode> expr_cast
 %type<exprNode> expr_intconst expr_numberconst expr_strconst
@@ -104,7 +108,7 @@ typedef void* yyscan_t;
 %type<exprBinaryNode> expr_ops_binary expr_ops_comparison
 %type<exprInNode> expr_ops_in
 %type<exprListNode> expr_arraylist
-%type<stmtIfNode> stmt_if
+%type<stmtIfNode> stmt_if stmt_if_extension
 %type<stmtBlock> stmt_list
 %type<stmtNode> stmt
 %type<stmtNode> stmt_ret stmt_break stmt_continue stmt_expr
@@ -113,11 +117,11 @@ typedef void* yyscan_t;
 %type<stmtNode> stmt_for
 %type<stmtWhileNode> stmt_while
 %type<stmtWithNode> stmt_with
-%type<exprList> expr_list expr_list_with_empty
+%type<exprList> expr_list expr_list_with_empty 
 %type<stmtBlock> decl_list
 %type<stmtNode> decl
 %type<fnStmtNode> stmt_fndecl
-
+%type<exprNode> expr_functionobj
 %type<stmtSwitchNode> stmt_switch
 %type<caseNodeList> stmt_caseblock_list
 %type<enumList> enum_list
@@ -126,12 +130,21 @@ typedef void* yyscan_t;
 %type<ival> array_idx
 %type<indexList> array_idx_list
 
+
+	// Destructors for allocated std vectors incase an error happens
+	// during parsing before ownership is moved to the node
+%destructor { delete $$; printf("destroy enumList\n"); } <enumList>
+%destructor { delete $$; printf("destroy caseNodeList\n"); } <caseNodeList>
+%destructor { delete $$; printf("destroy indexList\n"); } <indexList>
+
+
 %start program
 
 %%
 
 program:
 	decl_list				{ parser->setRootStatement($1); }
+	//| decl_list error		{ parser->setRootStatement(nullptr); printf("Detected error at root\n"); yyerrok; }
 	;
 
 decl_list: 					{ $$ = parser->alloc<StatementBlock>(); }
@@ -147,6 +160,7 @@ decl:
 
 decl_const:
 	T_KWCONST T_IDENTIFIER '=' constant	';'			{ parser->addConstant(*$2, $4); }
+	| T_KWCONST T_IDENTIFIER '=' constant_neg ';'	{ parser->addConstant(*$2, $4); }
 	| T_KWCONST T_IDENTIFIER '=' expr_ident ';'		{ parser->addConstant(*$2, $4); }
 
 decl_enum:
@@ -156,7 +170,8 @@ decl_enum:
 
 enum_list:
 	enum_item						{ $$ = new EnumList($1); }
-	| enum_list ',' enum_item		{ $1->addMember($3); }
+	| enum_list ',' enum_item		{ $$ = $1; $1->addMember($3); }
+	| enum_list error ','			{ $$ = $1; parser->addSyntaxError("missing comma in enum list"); }
 	;
 
 enum_item:
@@ -175,7 +190,8 @@ stmt_block:
 	| '{' '}'				{ $$ = parser->alloc<StatementBlock>(); }
 	;
 
-stmt: stmt_if				{ $$ = $1;}
+stmt:
+	stmt_if					{ $$ = $1;}
 	| stmt_ret
 	| stmt_break
 	| stmt_continue
@@ -183,23 +199,30 @@ stmt: stmt_if				{ $$ = $1;}
 	| stmt_block 			{ $$ = $1; }
 	| stmt_new 				{ $$ = $1; }
 	| stmt_for				{ $$ = $1; }
-	| stmt_while			{ $$ = $1; }
 	| stmt_with				{ $$ = $1; }
+	| stmt_while			{ $$ = $1; }
 	| stmt_switch 			{ $$ = $1; }
 	;
 
+stmt_if:
+	T_KWIF stmt_if_extension								{ $$ = $2; }
+	;
+
+stmt_if_extension:
+	'(' expr ')' stmt %prec T_KWIF							{ $$ = parser->alloc<StatementIfNode>($2, $4); }
+	| '(' expr ')' stmt T_KWELSE stmt					{ $$ = parser->alloc<StatementIfNode>($2, $4, $6); }
+	//| '(' expr ')' stmt T_KWELSE stmt_if					{ $$ = parser->alloc<StatementIfNode>($2, $4, $6); }
+	| '(' expr ')' stmt T_KWELSEIF stmt_if_extension		{ $$ = parser->alloc<StatementIfNode>($2, $4, $6); }
+	;
+	
 stmt_expr:
 	';'						{ $$ = 0; }
 	| expr ';'				{ $$ = $1; }
+	| expr error ';'		{ $$ = $1; parser->addSyntaxError("Missing semi-colon \n"); }
 	;
 
 stmt_new:
 	T_KWNEW T_IDENTIFIER '(' expr_list_with_empty ')' stmt_block	{ $$ = parser->alloc<StatementNewNode>($2, $4, $6); }
-	;
-
-stmt_if:
-	T_KWIF '(' expr ')' stmt 										{ $$ = parser->alloc<StatementIfNode>($3, $5); }
-	| T_KWIF '(' expr ')' stmt T_KWELSE stmt 						{ $$ = parser->alloc<StatementIfNode>($3, $5, $7); }
 	;
 
 stmt_for:
@@ -207,7 +230,7 @@ stmt_for:
 	| T_KWFOR '(' ';' expr ';' expr ')' stmt 				{ $$ = parser->alloc<StatementForNode>(nullptr, $4, $6, $8); }
 	| T_KWFOR '(' expr ':' expr ')' stmt					{ $$ = parser->alloc<StatementForEachNode>($3, $5, $7); }
 	;
-
+	
 stmt_while:
 	T_KWWHILE '(' expr ')' stmt 							{ $$ = parser->alloc<StatementWhileNode>($3, $5); }
 	;
@@ -227,6 +250,11 @@ stmt_continue:
 stmt_ret:
 	T_KWRETURN expr ';' 									{ $$ = parser->alloc<StatementReturnNode>($2); }
 	| T_KWRETURN ';' 										{ $$ = parser->alloc<StatementReturnNode>(nullptr); }
+	| T_KWRETURN error '\n'									{
+																parser->addSyntaxError("Error in return? Missing semi-colon");
+																$$ = parser->alloc<StatementReturnNode>(nullptr);
+																yyerrok;
+															}
 	;
 
 stmt_switch:
@@ -234,7 +262,7 @@ stmt_switch:
 	;
 
 stmt_caseblock_list:
-	stmt_caseblock_list stmt_caseblock 						{ $1->push_back(parser->popCaseExpr()); }
+	stmt_caseblock_list stmt_caseblock 						{ $$ = $1; $$->push_back(parser->popCaseExpr()); }
 	| stmt_caseblock 										{ $$ = new std::vector<SwitchCaseState>(); $$->push_back(parser->popCaseExpr()); }
 	;
 
@@ -260,8 +288,10 @@ expr_list_with_empty:
 	;
 
 expr_list:
-	expr_list ',' expr				{ $1->push_back($3); }
-	| expr							{ $$ = new std::vector<ExpressionNode *>(); $$->reserve(12); $$->push_back($1); }
+	expr_list ',' expr					{ $1->push_back($3); }
+	| expr_list ',' expr_functionobj	{ $1->push_back($3); }
+	| expr								{ $$ = new std::vector<ExpressionNode *>(); $$->reserve(12); $$->push_back($1); }
+	| expr_functionobj					{ $$ = new std::vector<ExpressionNode *>(); $$->reserve(12); $$->push_back($1); }
 	;
 
 constant:
@@ -269,6 +299,10 @@ constant:
 	| expr_numberconst
 	| expr_strconst
 	;
+
+constant_neg:
+    '-' T_INT           { $$ = parser->alloc<ExpressionIntegerNode>(-$2); }
+    ;
 
 primary:
 	constant			{ $$ = $1;}
@@ -346,8 +380,12 @@ expr_ops_binary:
 
 expr_assignment:
 	expr_new											{ $$ = $1; }
-	| T_KWFUNCTION '(' expr_list_with_empty ')' stmt	{ $$ = parser->alloc<ExpressionFnObject>(parser->generateLambdaFuncName(), $3, parser->alloc<StatementBlock>($5)); }
+	| expr_functionobj									{ $$ = $1; }
 	| '{' '}'											{ $$ = parser->alloc<ExpressionListNode>(nullptr); }
+	;
+
+expr_functionobj:
+	T_KWFUNCTION '(' expr_list_with_empty ')' stmt		{ $$ = parser->alloc<ExpressionFnObject>(parser->generateLambdaFuncName(), $3, parser->alloc<StatementBlock>($5)); }
 	;
 
 expr_ops_comparison:
@@ -398,7 +436,7 @@ array_idx:
 	;
 
 array_idx_list:
-	array_idx_list array_idx						{ $1->push_back($2); }
+	array_idx_list array_idx						{ $$ = $1; $$->push_back($2); }
 	| array_idx										{ $$ = new std::vector<int>(); $$->push_back($1); }
 	;
 
@@ -415,12 +453,17 @@ void yyerror(YYLTYPE* yyllocp, class ParserContext *parser, yyscan_t unused, con
 {
 	std::string msg;
 	msg
-		.append("Syntax error occurred (line ")
+		.append("Eeeee Syntax error occurred (line ")
 		.append(std::to_string(parser->lineNumber))
 		.append(", col ")
 		.append(std::to_string(parser->columnNumber))
 		.append("): ")
 		.append(s);
 
-	parser->addError({ GS2CompilerError::ErrorCode::ParserError, std::move(msg) });
+//	parser->addSyntaxError(msg);
+
+    // Unset the root statement to indicate failure, if none of our
+    // error catching rules catch the error then a generic error
+    // response will be emitted with the last known line/col number
+    parser->setRootStatement(nullptr);
 }

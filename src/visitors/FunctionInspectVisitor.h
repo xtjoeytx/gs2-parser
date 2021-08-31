@@ -3,7 +3,6 @@
 #ifndef FUNCTIONINSPECTVISITOR_H
 #define FUNCTIONINSPECTVISITOR_H
 
-#include "ast/ast.h"
 #include "ast/astnodevisitor.h"
 
 class FunctionInspectVisitor : public ASTNodeVisitor

@@ -20,7 +20,7 @@ struct BuiltInCmd
 {
 	std::string name;										// Function Name
 	opcode::Opcode op;										// Op-code for built in command, or OP_CALL
-	opcode::Opcode convert_op{ opcode::OP_NONE };			// Convert result to this type
+	opcode::Opcode convert_op{ opcode::OP_NONE };			// Convert object to this type [used for object.call() functions]
 	uint8_t flags = (CMD_REVERSE_ARGS | CMD_RETURN_VALUE);	// See above for cmd options
 };
 

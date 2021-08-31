@@ -93,7 +93,7 @@ HEXNUM		[a-fA-F0-9]
 "public"	{return T_KWPUBLIC;}
 "if"		{return T_KWIF;}
 "else"		{return T_KWELSE;}
-	/*"elseif"	{return T_KWELSEIF;} */
+"elseif"	{return T_KWELSEIF;}
 "for"		{return T_KWFOR;}
 "while"		{return T_KWWHILE;}
 "break"		{return T_KWBREAK;}
@@ -128,10 +128,11 @@ HEXNUM		[a-fA-F0-9]
 0x{HEXNUM}+			{yylval->ival = std::stoul(yytext, nullptr, 16); return T_INT;}
 {DIGIT}*\.{DIGIT}+	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_FLOAT;}
 {DIGIT}+			{yylval->ival = atoi(yytext); return T_INT;}
--{DIGIT}+			{yylval->ival = atoi(yytext); return T_INT;}
 {ALPHA}{ALPHANUM}*	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
 {ALPHA}{ALPHANUM}*(::{ALPHA}{ALPHANUM}*)+ {yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
 {string_const}		{yylval->sval = yyextra->saveString(yytext+1, yyleng - 2, true); return T_STRCONSTANT;}
+'.|\.'              {yylval->sval = yyextra->saveString(yytext+1, yyleng - 2, true); return T_STRCONSTANT;}
+
 %%
 
 		/* TODO(joey): fix string escapes */

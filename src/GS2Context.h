@@ -3,46 +3,55 @@
 #ifndef GS2CONTEXT_H
 #define GS2CONTEXT_H
 
+#include <vector>
+#include "encoding/buffer.h"
 #include "exceptions/GS2CompilerError.h"
-#include "visitors/GS2CompilerVisitor.h"
 #include "GS2BuiltInFunctions.h"
+
+struct CompilerResponse
+{
+	bool success;
+	Buffer bytecode;
+	std::vector<GS2CompilerError> errors;
+};
 
 class GS2Context
 {
 	public:
-		GS2Context()
-		{
-			builtIn = GS2BuiltInFunctions::getBuiltIn();
-		}
+		GS2Context();
 
-		Buffer compile(const std::string& script);
-		Buffer compile(const std::string& script, const std::string& scriptType, const std::string& scriptName, bool saveToDisk);
+		CompilerResponse compile(const std::string& script);
+		CompilerResponse compile(const std::string& script, const std::string& scriptType, const std::string& scriptName, bool saveToDisk);
 
-		static Buffer createHeader(const Buffer& bytecode, const std::string& scriptType, const std::string& scriptName, bool saveToDisk);
-
-		bool hasErrors() const
-		{
-			return !errors.empty();
-		}
-
-		std::vector<GS2CompilerError>&& getErrors()
-		{
-			return std::move(errors);
-		}
-
-		const std::vector<GS2CompilerError>& getErrors() const
-		{
-			return errors;
-		}
+		static Buffer CreateHeader(const Buffer& bytecode, const std::string& scriptType, const std::string& scriptName, bool saveToDisk);
+		static CompilerResponse Compile(const std::string &script, const std::string &scriptType, const std::string &scriptName, bool saveToDisk);
 
 	private:
 		GS2BuiltInFunctions builtIn;
+		GS2ErrorService errorService;
 		std::vector<GS2CompilerError> errors;
+
+		/*
+		 * Called whenever an error occurs during any stage of compilation,
+		 * currently just appends the error to the errors vector to return
+		 * in CompilerResponse
+		 */
+		void handleError(GS2CompilerError &error);
 };
 
-inline Buffer GS2Context::compile(const std::string& script, const std::string& scriptType, const std::string& scriptName, bool saveToDisk)
+inline CompilerResponse GS2Context::compile(const std::string& script, const std::string& scriptType, const std::string& scriptName, bool saveToDisk)
 {
-	return createHeader(compile(script), scriptType, scriptName, saveToDisk);
+	CompilerResponse results = compile(script);
+	if (results.success)
+		results.bytecode = CreateHeader(results.bytecode, scriptType, scriptName, saveToDisk);
+
+	return results;
+}
+
+inline CompilerResponse GS2Context::Compile(const std::string &script, const std::string &scriptType, const std::string &scriptName, bool saveToDisk)
+{
+	GS2Context ctx;
+	return ctx.compile(script, scriptType, scriptName, saveToDisk);
 }
 
 #endif

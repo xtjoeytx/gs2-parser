@@ -1,23 +1,23 @@
 #include <cstdio>
-#include <string>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <string>
 #include "GS2Context.h"
 
-struct CompileResonse
+struct Response
 {
-	Buffer bytecode;
-	std::string errmsg;
+	CompilerResponse response;
 	std::filesystem::path output_file;
+	std::string errmsg;
 };
 
-CompileResonse compileFile(const std::filesystem::path& filePath)
+Response compileFile(const std::filesystem::path& filePath)
 {
 	static GS2Context context;
-	
-	CompileResonse response{};
+
+	Response result{};
 
 	if (std::filesystem::exists(filePath))
 	{
@@ -37,23 +37,25 @@ CompileResonse compileFile(const std::filesystem::path& filePath)
 			file = nullptr;
 		}
 
-		//std::ifstream inputstream(filePath);
-		//std::string script((std::istreambuf_iterator<char>(inputstream)), std::istreambuf_iterator<char>());
-
-		response.bytecode = context.compile(script, "weapon", "TestCode", true);
-		if (!context.hasErrors())
+		result.response = context.compile(script, "weapon", "TestCode", true);
+		if (result.response.errors.empty())
 		{
-			response.output_file = std::filesystem::relative(filePath.parent_path()) / filePath.stem().concat(".gs2bc");
+			result.output_file = std::filesystem::relative(filePath.parent_path()) / filePath.stem().concat(".gs2bc");
 
-			std::ofstream outstream(response.output_file, std::ofstream::out | std::ofstream::binary);
-			outstream.write((const char *)response.bytecode.buffer(), response.bytecode.length());
+			std::ofstream outstream(result.output_file, std::ofstream::out | std::ofstream::binary);
+			outstream.write((const char *)result.response.bytecode.buffer(), result.response.bytecode.length());
 			outstream.close();
 		}
-		else response.errmsg = context.getErrors()[0].msg();
+		else
+		{
+			result.errmsg.clear();
+			for (const auto &err : result.response.errors)
+				result.errmsg.append(err.msg()).append("\n");
+		}
 	}
-	else response.errmsg = "File does not exist";
+	else result.errmsg = "File does not exist";
 
-	return response;
+	return result;
 }
 
 Buffer oneStopShop(const std::filesystem::path& inputPath)
@@ -61,22 +63,22 @@ Buffer oneStopShop(const std::filesystem::path& inputPath)
 	printf("Compiling file %s\n", inputPath.string().c_str());
 
 	auto start = std::chrono::high_resolution_clock::now();
-	auto compilerResponse = compileFile(inputPath);
+	auto result = compileFile(inputPath);
 	auto finish = std::chrono::high_resolution_clock::now();
 
 	std::chrono::duration<double> diff = finish - start;
 	printf("Compiled in %f seconds\n", diff.count());
 	
-	if (compilerResponse.errmsg.empty())
+	if (result.errmsg.empty())
 	{
-		printf(" -> saved to %s\n", compilerResponse.output_file.string().c_str());
+		printf(" -> saved to %s\n", result.output_file.string().c_str());
 	}
 	else
 	{
-		printf(" -> [ERROR] %s\n", compilerResponse.errmsg.c_str());
+		printf(" -> [ERROR] %s\n", result.errmsg.c_str());
 	}
 
-	return std::move(compilerResponse.bytecode);
+	return std::move(result.response.bytecode);
 }
 
 int main(int argc, const char *argv[]) {
@@ -84,7 +86,16 @@ int main(int argc, const char *argv[]) {
 //  yydebug = 1;
 #endif
 
+//	auto ret = fmt::format("Test {}", 42);
+//	printf("Test: %s\n", ret.c_str());
+	//auto ret = std::format("test {}", 3);
+	//printf("Test: %s\n", ret.c_str());
+
 	Buffer buf;
+
+	printf("Argc: %d\n", argc);
+	if (argc >= 1)
+		printf("Args: %s\n", argv[1]);
 
 	if (argc > 1)
 	{
@@ -108,7 +119,10 @@ int main(int argc, const char *argv[]) {
 		}
 		else
 		{
-			buf = oneStopShop(inputPath);
+			//for (int i = 0; i < 1000; i++)
+			{
+				buf = oneStopShop(inputPath);
+			}
 		}
 	}
 

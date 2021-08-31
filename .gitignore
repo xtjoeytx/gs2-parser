@@ -36,5 +36,7 @@
 /bin
 /.vs
 /.vscode
-
+/.idea
 /build
+/cmake-build-debug
+/scripts

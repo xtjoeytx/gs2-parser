@@ -5,7 +5,7 @@ project(gs2test VERSION 1.0)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-find_package(BISON REQUIRED)
+find_package(BISON 3.4 REQUIRED)
 find_package(FLEX REQUIRED)
 
 if(WIN32)
@@ -36,6 +36,7 @@ set(SOURCES_ALL
 		src/ast/expressiontypes.h
 		src/encoding/buffer.h
 		src/encoding/graalencoding.h
+        src/utils/EventHandler.h
 		src/exceptions/GS2CompilerError.h
 		src/utils/ContextThreadPool.h
 		src/visitors/FunctionInspectVisitor.h
@@ -53,10 +54,12 @@ set(SOURCES_ALL
 		${BISON_GS2Parser_OUTPUTS}
 		${FLEX_GS2Scanner_OUTPUTS})
 
+add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/fmtlib EXCLUDE_FROM_ALL)
+
 add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
 add_library(gs2compiler ${SOURCES_ALL})
-target_link_libraries(gs2test)
-target_link_libraries(gs2compiler)
+target_link_libraries(gs2test fmt::fmt)
+target_link_libraries(gs2compiler fmt::fmt)
 
 set(GS2COMPILER_INCLUDE_DIRECTORY
 		"${PROJECT_SOURCE_DIR}/include"

@@ -1,43 +1,63 @@
+#include <fmt/format.h>
 #include "GS2Context.h"
-
 #include "encoding/graalencoding.h"
+#include "visitors/GS2CompilerVisitor.h"
 #include "GS2Bytecode.h"
 #include "Parser.h"
 
-Buffer GS2Context::compile(const std::string& script)
+GS2Context::GS2Context()
+	: errorService([this](auto && PH1) { handleError(std::forward<decltype(PH1)>(PH1)); })
+{
+	builtIn = GS2BuiltInFunctions::getBuiltIn();
+}
+
+void GS2Context::handleError(GS2CompilerError& error)
+{
+	errors.push_back(std::move(error));
+}
+
+CompilerResponse GS2Context::compile(const std::string& script)
 {
 	errors.clear();
-	
+
 	// Parse the script into an AST tree
-	ParserContext parserContext;
-	parserContext.parse(script);
+	ParserContext parserContext(errorService);
+	bool success = parserContext.parse(script);
 
 	// Check for parser errors
-	if (!parserContext.hasErrors())
+	if (success)
 	{
 		// Grab the root node of the AST tree
 		auto stmtBlock = parserContext.getRootStatement();
 
-		// Walk the AST tree to produce bytecode
-		GS2CompilerVisitor compilerVisitor(parserContext, builtIn);
-		compilerVisitor.Visit(stmtBlock);
+		if (stmtBlock)
+		{
+			// Walk the AST tree to produce bytecode
+			GS2CompilerVisitor compilerVisitor(parserContext, builtIn);
+			compilerVisitor.Visit(stmtBlock);
 
-		// Check for compiler errors
-		if (!parserContext.hasErrors())
-			return compilerVisitor.getByteCode();
+			return CompilerResponse{
+				true,
+				compilerVisitor.getByteCode(),
+				std::move(errors)
+			};
+		}
 	}
 
-	// Move the parsers errors into the context
-	errors = std::move(parserContext.getErrorList());
-
 	if (errors.empty())
-		errors.push_back(GS2CompilerError(GS2CompilerError::ErrorCode::ParserError, "Failed to parse script"));
+	{
+		std::string msg = fmt::format("Parse error occurred (line {}, col {}): syntax error", parserContext.lineNumber, parserContext.columnNumber);
+		errors.emplace_back(ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Parser, std::move(msg));
+	}
 
-	// Empty buffer indicates failure
-	return {};
+	return CompilerResponse{
+		false,
+		Buffer{},
+		std::move(errors)
+	};
 }
 
-Buffer GS2Context::createHeader(const Buffer& bytecode, const std::string& scriptType, const std::string& scriptName, bool saveToDisk)
+Buffer GS2Context::CreateHeader(const Buffer& bytecode, const std::string& scriptType, const std::string& scriptName, bool saveToDisk)
 {
 	// Empty bytecode buffer indicates there was a compilation error
 	if (!bytecode.length())

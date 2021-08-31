@@ -51,7 +51,7 @@ class CompilerThreadJob
 {
 public:
 	struct job_result {
-		Buffer buf;
+		CompilerResponse response;
 	};
 
 	struct thread_context {
@@ -68,8 +68,8 @@ public:
 
 	void run(thread_context& th_context, promise_type& promise)
 	{
-		Buffer buf = th_context.gs2context.compile(*_src.get(), "weapon", "TestCode", true);
-		promise.set_value({ std::move(buf) });
+		auto response = th_context.gs2context.compile(*_src.get(), "weapon", "TestCode", true);
+		promise.set_value({ std::move(response) });
 	}
 
 	static void init(thread_context& th_context)

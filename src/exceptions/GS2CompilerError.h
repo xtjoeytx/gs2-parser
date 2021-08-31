@@ -4,19 +4,28 @@
 #define GS2ERRORHANDLING_H
 
 #include <string>
+#include "utils/EventHandler.h"
+
+enum class ErrorLevel
+{
+	E_INFO,
+	E_WARNING,
+	E_ERROR,
+	E_ALL
+};
 
 class GS2CompilerError
 {
 public:
-	enum class ErrorCode
+	enum class ErrorCategory
 	{
-		UnknownError,
-		ParserError,
-		CompileError
+		Undefined,
+		Parser,
+		Compiler
 	};
 
-	GS2CompilerError(ErrorCode code, std::string msg)
-		: _code(code), _msg(std::move(msg))
+	GS2CompilerError(ErrorLevel level, ErrorCategory code, std::string msg)
+			: _code(code), _level(level), _msg(std::move(msg))
 	{
 
 	}
@@ -29,17 +38,27 @@ public:
 	GS2CompilerError(GS2CompilerError&& o) noexcept = default;
 	GS2CompilerError& operator=(GS2CompilerError&& o) noexcept = default;
 
-	const std::string& msg() const {
+	const std::string& msg() const
+	{
 		return _msg;
 	}
 
-	ErrorCode code() const {
+	ErrorCategory code() const
+	{
 		return _code;
 	}
 
+	ErrorLevel level() const
+	{
+		return _level;
+	}
+
 private:
-	ErrorCode _code;
+	ErrorCategory _code;
+	ErrorLevel _level;
 	std::string _msg;
 };
+
+using GS2ErrorService = EventHandler<GS2CompilerError, ErrorLevel>;
 
 #endif

@@ -48,7 +48,7 @@ void GS2CompilerVisitor::Visit(Node *node)
 	errorMsg.reserve(error_length);
 	errorMsg.append("Unimplemented node type: ").append(node->NodeType());
 
-	parserContext.addError({ GS2CompilerError::ErrorCode::CompileError, errorMsg });
+	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, errorMsg });
 
 	fprintf(stderr, "%s\n", errorMsg.c_str());
 
@@ -274,7 +274,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 				byteCode.emit(opcode::OP_CONV_TO_STRING);
 			
 			auto opCode = getExpressionOpCode(node->op);
-			assert(opCode != opcode::Opcode::OP_JOIN);
+			assert(opCode == opcode::Opcode::OP_JOIN);
 
 			node->right->visit(this);
 			byteCode.emit(opCode);

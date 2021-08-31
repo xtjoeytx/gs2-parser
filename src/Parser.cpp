@@ -14,8 +14,9 @@ void ReplaceStringInPlace(std::string& subject, const std::string& search, const
 	}
 }
 
-ParserContext::ParserContext()
-	: lineNumber(0), columnNumber(0), buffer(nullptr), programNode(nullptr), state(ParserState::START), lambdaFunctionCount(0)
+ParserContext::ParserContext(GS2ErrorService& service)
+		: lineNumber(0), columnNumber(0), buffer(nullptr), programNode(nullptr), failed(false),
+		  lambdaFunctionCount(0), errorService(service)
 {
 	yylex_init_extra(this, &scanner);
 }
@@ -40,7 +41,31 @@ void ParserContext::cleanup()
 	nodes.clear();
 }
 
-std::string * ParserContext::saveString(const char* str, int length, bool unquote)
+void ParserContext::reset()
+{
+	// Cleanup any allocated nodes
+	cleanup();
+
+	// Reset our tables
+	constantsTable = {};
+	switchCases = {};
+	stringTable = {};
+
+	// Delete the buffer associated with the parser
+	if (buffer)
+	{
+		yy_delete_buffer(buffer, scanner);
+		buffer = nullptr;
+	}
+
+	lineNumber = 0;
+	columnNumber = 0;
+	programNode = nullptr;
+	lambdaFunctionCount = 0;
+	failed = false;
+}
+
+std::string* ParserContext::saveString(const char* str, int length, bool unquote)
 {
 	auto tmpStr = std::string(str, length);
 	if (unquote)
@@ -99,6 +124,7 @@ void ParserContext::addConstant(const std::string& ident, ExpressionIdentifierNo
 	if (constant)
 	{
 		// report error - redefining constant
+		addParserError(fmt::format("redefinition of constant {}", ident));
 		return;
 	}
 
@@ -112,19 +138,22 @@ void ParserContext::addConstant(const std::string& ident, ExpressionIdentifierNo
 	// because gs2 allows these identifiers in object field names.
 	if (!constNode)
 	{
-		if (rhIdent == "true") {
+		if (rhIdent == "true")
+		{
 			constNode = alloc<ExpressionConstantNode>(ExpressionConstantNode::ConstantType::TRUE_T);
 		}
-		else if (rhIdent == "false") {
+		else if (rhIdent == "false")
+		{
 			constNode = alloc<ExpressionConstantNode>(ExpressionConstantNode::ConstantType::FALSE_T);
 		}
-		else if (rhIdent == "null") {
+		else if (rhIdent == "null")
+		{
 			constNode = alloc<ExpressionConstantNode>(ExpressionConstantNode::ConstantType::NULL_T);
 		}
 		else
 		{
 			// report error - constant does not exist
-			printf("Constant %s does not exist, cant define it to %s\n", rhIdent.c_str(), ident.c_str());
+			addParserError(fmt::format("constant {} is undefined", ident));
 			return;
 		}
 	}
@@ -143,29 +172,18 @@ void ParserContext::addConstant(const std::string& ident, ExpressionNode *node)
 	auto constant = getConstant(ident);
 	if (constant)
 	{
-		// report error - redefining constant
+		addParserError(fmt::format("redefinition of constant {}", ident));
 		return;
 	}
 
 	constantsTable[ident] = node;
 }
 
-ExpressionNode * ParserContext::getConstant(const std::string& key)
+bool ParserContext::parse(const std::string& source)
 {
-	auto it = constantsTable.find(key);
-	if (it == constantsTable.end())
-		return nullptr;
+	reset();
 
-	return it->second;
-}
-
-void ParserContext::parse(const std::string& input)
-{
-	if (buffer)
-		yy_delete_buffer(buffer, scanner);
-	
-	errorList.clear();
-	lineNumber = 1;
-	buffer = yy_scan_string(input.c_str(), scanner);
+	buffer = yy_scan_string(source.c_str(), scanner);
 	yyparse(this, scanner);
+	return !failed;
 }
