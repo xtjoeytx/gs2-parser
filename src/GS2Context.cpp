@@ -44,13 +44,11 @@ CompilerResponse GS2Context::compile(const std::string& script)
 			};
 		}
 	}
-
+	
+	// If we have no errors, lets add one
 	if (errors.empty())
-	{
-		std::string msg = fmt::format("Parse error occurred (line {}, col {}): syntax error", parserContext.lineNumber, parserContext.columnNumber);
-		errors.emplace_back(ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Parser, std::move(msg));
-	}
-
+		parserContext.addParserError("malformed input");
+	
 	return CompilerResponse{
 		false,
 		std::move(errors),

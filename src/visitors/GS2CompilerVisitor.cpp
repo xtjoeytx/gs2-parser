@@ -42,21 +42,17 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 
 void GS2CompilerVisitor::Visit(Node *node)
 {
-	auto error_length = std::char_traits<char>::length("Unimplemented node type: ") + strlen(node->NodeType());
-	
-	std::string errorMsg;
-	errorMsg.reserve(error_length);
-	errorMsg.append("Unimplemented node type: ").append(node->NodeType());
-
+	std::string errorMsg = fmt::format("unimplemented node type {}", node->NodeType());
 	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, errorMsg });
 
+#ifdef DBGEMITTERS
 	fprintf(stderr, "%s\n", errorMsg.c_str());
 
-#ifdef _WIN32
-	system("pause");
-#endif
-
+	#ifdef _WIN32
+		system("pause");
+	#endif
 	exit(1);
+#endif
 }
 
 void GS2CompilerVisitor::Visit(StatementBlock *node)

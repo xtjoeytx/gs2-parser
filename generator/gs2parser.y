@@ -171,7 +171,7 @@ decl_enum:
 enum_list:
 	enum_item						{ $$ = new EnumList($1); }
 	| enum_list ',' enum_item		{ $$ = $1; $1->addMember($3); }
-	| enum_list error ','			{ $$ = $1; parser->addSyntaxError("missing comma in enum list"); }
+	| enum_list error ','			{ $$ = $1; parser->addParserError("missing comma in enum list"); }
 	;
 
 enum_item:
@@ -218,7 +218,7 @@ stmt_if_extension:
 stmt_expr:
 	';'						{ $$ = 0; }
 	| expr ';'				{ $$ = $1; }
-	| expr error ';'		{ $$ = $1; parser->addSyntaxError("Missing semi-colon \n"); }
+	| expr error ';'		{ $$ = $1; parser->addParserError("missing semicolon"); }
 	;
 
 stmt_new:
@@ -251,7 +251,7 @@ stmt_ret:
 	T_KWRETURN expr ';' 									{ $$ = parser->alloc<StatementReturnNode>($2); }
 	| T_KWRETURN ';' 										{ $$ = parser->alloc<StatementReturnNode>(nullptr); }
 	| T_KWRETURN error '\n'									{
-																parser->addSyntaxError("Error in return? Missing semi-colon");
+																parser->addParserError("missing semicolon");
 																$$ = parser->alloc<StatementReturnNode>(nullptr);
 																yyerrok;
 															}
@@ -451,6 +451,7 @@ expr_new:
 
 void yyerror(YYLTYPE* yyllocp, class ParserContext *parser, yyscan_t unused, const char* s)
 {
+	/*
 	std::string msg;
 	msg
 		.append("Eeeee Syntax error occurred (line ")
@@ -460,7 +461,8 @@ void yyerror(YYLTYPE* yyllocp, class ParserContext *parser, yyscan_t unused, con
 		.append("): ")
 		.append(s);
 
-//	parser->addSyntaxError(msg);
+	parser->addParserError(msg);
+	*/
 
     // Unset the root statement to indicate failure, if none of our
     // error catching rules catch the error then a generic error

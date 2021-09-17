@@ -49,10 +49,20 @@ class ParserContext
 		 */
 		bool parse(const std::string& source);
 
-public:
-		void addParserError(const std::string& errmsg);
-		void addSyntaxError(const std::string& errmsg);
+		/**
+		 * Pushes a compile error to the error service
+		 * 
+		 * @param GS2CompilerError
+		 */
 		void addError(GS2CompilerError error);
+
+		/**
+		 * Creates a new compiler error from the string, and includes the line number
+		 * and line contents in the error string
+		 * 
+		 * @param string error_msg
+		 */
+		void addParserError(const std::string& errmsg);
 
 	// Accessed by bison
 	public:
@@ -125,6 +135,7 @@ public:
 		YY_BUFFER_STATE buffer;
 
 		bool failed;
+		const std::string *inputStringPtr;
 		size_t lambdaFunctionCount;
 		std::unordered_map<std::string, ExpressionNode *> constantsTable;
 		std::unordered_map<std::string, std::shared_ptr<std::string>> stringTable;
@@ -181,21 +192,8 @@ inline void ParserContext::setRootStatement(StatementBlock *block)
 }
 
 /*
- * Push errors to the error service, these functions are used during
- * bison parsing and compiling phase.
+ * Push errors to the error service
  */
-inline void ParserContext::addSyntaxError(const std::string &errmsg)
-{
-	std::string msg = fmt::format("Syntax error occurred (line {}, col {}): {}", lineNumber, columnNumber, errmsg);
-	addError( { ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Parser, std::move(msg) });
-}
-
-inline void ParserContext::addParserError(const std::string& errmsg)
-{
-	std::string msg = fmt::format("Parser error occurred (line {}, col {}): {}", lineNumber, columnNumber, errmsg);
-	addError( { ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Parser, std::move(msg) });
-}
-
 inline void ParserContext::addError(GS2CompilerError error)
 {
 	if (error.level() == ErrorLevel::E_ERROR)

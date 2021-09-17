@@ -4,6 +4,24 @@
 #include "gs2parser.tab.hh"
 #include "lex.yy.h"
 
+std::string GetLineByLineNumber(const std::string& subject, uint32_t lineNumber)
+{
+	size_t pos = 0;
+	for (uint32_t i = 0; i < lineNumber - 1; i++)
+	{
+		pos = subject.find("\n", pos);
+		if (pos == std::string::npos)
+			return {};
+
+		++pos;
+	}
+
+	auto end = subject.find("\n", pos);
+	if (end == std::string::npos)
+		return subject.substr(pos);
+	return subject.substr(pos, end - pos);
+}
+
 void ReplaceStringInPlace(std::string& subject, const std::string& search, const std::string& replace)
 {
 	size_t pos = 0;
@@ -15,8 +33,8 @@ void ReplaceStringInPlace(std::string& subject, const std::string& search, const
 }
 
 ParserContext::ParserContext(GS2ErrorService& service)
-		: lineNumber(0), columnNumber(0), buffer(nullptr), programNode(nullptr), failed(false),
-		  lambdaFunctionCount(0), errorService(service)
+		: lineNumber(0), columnNumber(0), buffer(nullptr), failed(false), inputStringPtr(nullptr),
+		  lambdaFunctionCount(0), programNode(nullptr), errorService(service)
 {
 	yylex_init_extra(this, &scanner);
 }
@@ -61,6 +79,7 @@ void ParserContext::reset()
 	lineNumber = 0;
 	columnNumber = 0;
 	programNode = nullptr;
+	inputStringPtr = nullptr;
 	lambdaFunctionCount = 0;
 	failed = false;
 }
@@ -86,12 +105,7 @@ std::string* ParserContext::saveString(const char* str, int length, bool unquote
 
 std::string * ParserContext::generateLambdaFuncName()
 {
-	std::string fnName;
-	fnName.reserve(30);
-	fnName.append("function_");
-	fnName.append(std::to_string(420 + lambdaFunctionCount));
-	fnName.append("_").append("1");
-	
+	std::string fnName = fmt::format("function_{}_1", 100 + lambdaFunctionCount);
 	lambdaFunctionCount++;
 	return saveString(fnName.c_str(), int(fnName.length()));
 }
@@ -179,10 +193,33 @@ void ParserContext::addConstant(const std::string& ident, ExpressionNode *node)
 	constantsTable[ident] = node;
 }
 
+void ParserContext::addParserError(const std::string& errmsg)
+{
+	assert(inputStringPtr != nullptr);
+
+	std::string lineText;
+	if (inputStringPtr)
+		lineText = GetLineByLineNumber(*inputStringPtr, lineNumber);
+
+	std::string msg;
+	if (lineText.empty())
+	{
+		msg = fmt::format("parser error occurred near line {}: {}", lineNumber, errmsg);
+	}
+	else
+	{
+		msg = fmt::format("{} at line {}: {}", errmsg, lineNumber, lineText);
+	}
+	
+	addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Parser, std::move(msg) });
+}
+
 bool ParserContext::parse(const std::string& source)
 {
 	reset();
 
+	// Holding a pointer to the source incase we have an error msg raised
+	inputStringPtr = &source;
 	buffer = yy_scan_string(source.c_str(), scanner);
 	yyparse(this, scanner);
 	return !failed;
