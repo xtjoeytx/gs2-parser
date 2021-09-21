@@ -92,12 +92,12 @@ class GS2CompilerVisitor : public NodeVisitor
 		void addBreakLocation(std::stack<LogicalBreakPoint>& bp, size_t location);
 		void addContinueLocation(std::stack<LogicalBreakPoint>& bp, size_t location);
 
-		void pushLogicalBreakpoint(LogicalBreakPoint bp);
+		void pushLogicalBreakpoint(LogicalBreakPoint bp = {});
 		void popLogicalBreakpoint();
 		void addLogicalBreakLocation(size_t location);
 		void addLogicalContinueLocation(size_t location);
 
-		void pushLoopBreakpoint(LogicalBreakPoint bp);
+		void pushLoopBreakpoint(LogicalBreakPoint bp = {});
 		void popLoopBreakpoint();
 		void addLoopBreakLocation(size_t location);
 		void addLoopContinueLocation(size_t location);

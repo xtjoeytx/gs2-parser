@@ -808,7 +808,16 @@ void GS2CompilerVisitor::Visit(ExpressionFnObject *node)
 void GS2CompilerVisitor::Visit(StatementReturnNode *node)
 {
 	if (node->expr)
-		node->expr->visit(this);
+	{
+		pushLogicalBreakpoint();
+		{
+			node->expr->visit(this);
+
+			logicalBreakpoints.top().opbreak = byteCode.getOpIndex();
+			logicalBreakpoints.top().opcontinue = byteCode.getOpIndex();
+		}
+		popLogicalBreakpoint();
+	}
 	else
 	{
 		byteCode.emit(opcode::OP_TYPE_NUMBER);
@@ -820,7 +829,7 @@ void GS2CompilerVisitor::Visit(StatementReturnNode *node)
 
 void GS2CompilerVisitor::Visit(StatementIfNode* node)
 {
-	pushLogicalBreakpoint(LogicalBreakPoint{ });
+	pushLogicalBreakpoint();
 	{
 		node->expr->visit(this);
 
@@ -908,14 +917,13 @@ void GS2CompilerVisitor::Visit(ExpressionNewObjectNode *node)
 
 void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 {
-	pushLogicalBreakpoint(LogicalBreakPoint{ });
-	pushLoopBreakpoint(LogicalBreakPoint {});
+	pushLogicalBreakpoint();
+	pushLoopBreakpoint();
 	{
 		auto loopStart = byteCode.getOpIndex();
 
 		node->expr->visit(this);
-		if (node->expr->expressionType() != ExpressionType::EXPR_INTEGER)
-			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+		byteCode.emitConversionOp(node->expr->expressionType(), ExpressionType::EXPR_NUMBER);
 
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
@@ -989,9 +997,6 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 	{
 		node->cond->visit(this);
 		byteCode.emitConversionOp(node->cond->expressionType(), ExpressionType::EXPR_NUMBER);
-
-		//if (node->cond->expressionType() != ExpressionType::EXPR_INTEGER)
-		//	byteCode.emit(opcode::OP_CONV_TO_FLOAT);
 	}
 	else
 	{
