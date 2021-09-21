@@ -18,7 +18,8 @@ enum class ExpressionType
 	EXPR_FUNCTIONOBJ
 };
 
-enum class ExpressionOp {
+enum class ExpressionOp
+{
 	Plus,
 	Minus,
 	Multiply,

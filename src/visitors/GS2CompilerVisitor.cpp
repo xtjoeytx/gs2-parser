@@ -163,8 +163,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 	if (node->op == ExpressionOp::LogicalAnd || node->op == ExpressionOp::LogicalOr)
 	{
 		node->left->visit(this);
-		if (node->left->expressionType() != ExpressionType::EXPR_INTEGER)
-			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+		byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_NUMBER);
 
 		if (node->op == ExpressionOp::LogicalAnd)
 		{
@@ -186,9 +185,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		}
 
 		node->right->visit(this);
-		if (node->right->expressionType() != ExpressionType::EXPR_INTEGER)
-			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
-
+		byteCode.emitConversionOp(node->right->expressionType(), ExpressionType::EXPR_NUMBER);
 		return;
 	}
 
@@ -206,9 +203,9 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::GreaterThanOrEqual:
 		{
 			node->left->visit(this);
-			if (node->left->expressionType() != ExpressionType::EXPR_INTEGER)
-				byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+			byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_NUMBER);
 			node->right->visit(this);
+			byteCode.emitConversionOp(node->right->expressionType(), ExpressionType::EXPR_NUMBER);
 
 			auto opCode = getExpressionOpCode(node->op);
 			assert(opCode != opcode::Opcode::OP_NONE);
@@ -238,7 +235,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::DivideAssign:
 		{
 			node->left->visit(this);
-			node->left->visit(this);
+			byteCode.emit(opcode::Opcode::OP_COPY_LAST_OP);
 			byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_NUMBER);
 			
 			auto opCode = getExpressionOpCode(node->op);
@@ -445,9 +442,8 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 void GS2CompilerVisitor::Visit(ExpressionStrConcatNode *node)
 {
 	node->left->visit(this);
-	if (node->left->expressionType() != ExpressionType::EXPR_STRING)
-		byteCode.emit(opcode::OP_CONV_TO_STRING);
-
+	byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_STRING);
+	
 	switch (node->sep)
 	{
 		case ' ':
@@ -516,10 +512,10 @@ void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)
 
 	node->expr->visit(this);
 	node->lower->visit(this);
-	byteCode.emitConversionOp(node->lower->expressionType(), ExpressionType::EXPR_NUMBER);
 	
 	if (node->higher)
 	{
+		byteCode.emitConversionOp(node->lower->expressionType(), ExpressionType::EXPR_NUMBER);
 		node->higher->visit(this);
 		byteCode.emitConversionOp(node->higher->expressionType(), ExpressionType::EXPR_NUMBER);
 
@@ -527,6 +523,7 @@ void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)
 	}
 	else
 	{
+		byteCode.emitConversionOp(node->lower->expressionType(), ExpressionType::EXPR_OBJECT);
 		byteCode.emit(opcode::OP_IN_OBJ);
 	}
 }

@@ -211,7 +211,6 @@ stmt_if:
 stmt_if_extension:
 	'(' expr ')' stmt %prec T_KWIF							{ $$ = parser->alloc<StatementIfNode>($2, $4); }
 	| '(' expr ')' stmt T_KWELSE stmt					{ $$ = parser->alloc<StatementIfNode>($2, $4, $6); }
-	//| '(' expr ')' stmt T_KWELSE stmt_if					{ $$ = parser->alloc<StatementIfNode>($2, $4, $6); }
 	| '(' expr ')' stmt T_KWELSEIF stmt_if_extension		{ $$ = parser->alloc<StatementIfNode>($2, $4, $6); }
 	;
 	

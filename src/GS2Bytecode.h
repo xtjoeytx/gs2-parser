@@ -40,7 +40,7 @@ class GS2Bytecode
         void emit(short v, size_t pos = SIZE_MAX);
         void emit(int v, size_t pos = SIZE_MAX);
         void emit(const std::string& v);
-        void emitConversionOp(ExpressionType typeSrc, ExpressionType typeDst);
+        bool emitConversionOp(ExpressionType typeSrc, ExpressionType typeDst);
         void emitDynamicNumber(int32_t val);
         void emitDoubleNumber(const std::string& num);
 

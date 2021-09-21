@@ -139,6 +139,10 @@ public:
 		return *val;
 	}
 
+	virtual ExpressionType expressionType() const {
+		return ExpressionType::EXPR_NUMBER;
+	}
+
 	std::string *val;
 };
 
@@ -375,6 +379,34 @@ class ExpressionBinaryOpNode : public ExpressionNode
 		}
 
 		virtual ExpressionType expressionType() const {
+
+			switch (op)
+			{
+				case ExpressionOp::Plus:
+				case ExpressionOp::Minus:
+				case ExpressionOp::Multiply:
+				case ExpressionOp::Divide:
+				case ExpressionOp::Mod:
+				case ExpressionOp::Pow:
+				case ExpressionOp::Equal:
+				case ExpressionOp::NotEqual:
+				case ExpressionOp::LessThan:
+				case ExpressionOp::GreaterThan:
+				case ExpressionOp::LessThanOrEqual:
+				case ExpressionOp::GreaterThanOrEqual:
+				case ExpressionOp::LogicalAnd:
+				case ExpressionOp::LogicalOr:
+				case ExpressionOp::BitwiseAnd:
+				case ExpressionOp::BitwiseOr:
+					return ExpressionType::EXPR_NUMBER;
+
+				case ExpressionOp::Assign:
+					return right->expressionType();
+
+				case ExpressionOp::Concat:
+					return ExpressionType::EXPR_STRING;
+			}
+
 			return left->expressionType();
 		}
 };
@@ -416,7 +448,15 @@ class ExpressionUnaryOpNode : public ExpressionNode
 			return expr->toString() + std::string(ExpressionOpToString(op));
 		}
 
-		virtual ExpressionType expressionType() const {
+		virtual ExpressionType expressionType() const
+		{
+			switch (op)
+			{
+				case ExpressionOp::UnaryMinus:
+				case ExpressionOp::UnaryNot:
+					return ExpressionType::EXPR_NUMBER;
+			}
+
 			return expr->expressionType();
 		}
 };

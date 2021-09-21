@@ -222,8 +222,10 @@ void GS2Bytecode::emit(const std::string& v)
 	bytecode.write('\0');
 }
 
-void GS2Bytecode::emitConversionOp(ExpressionType typeSrc, ExpressionType typeDst)
+bool GS2Bytecode::emitConversionOp(ExpressionType typeSrc, ExpressionType typeDst)
 {
+	auto curOpIndex = opIndex;
+
 	if (typeSrc != typeDst)
 	{
 		if (typeDst == ExpressionType::EXPR_NUMBER)
@@ -240,10 +242,17 @@ void GS2Bytecode::emitConversionOp(ExpressionType typeSrc, ExpressionType typeDs
 			emit(opcode::Opcode::OP_CONV_TO_OBJECT);
 		}
 	}
+
+	return opIndex != curOpIndex;
 }
 
 void GS2Bytecode::emitDynamicNumber(int32_t val)
 {
+	// 9/20/21:
+	// Leaving a note here: for string table, unsigned values are valid. So 0xF0 should represent [0, 255],
+	// but negative numbers could also be used in some operations like emitting an integer constant.
+	// On some later date, we should create a function for unsigned integers as well ~joey
+	
 	// Strings use 0xF0 -> 0xF2, numbers use 0xF3 -> 0xF5
 	// 0xF6 is used for null-terminated strings converted to doubles
 	char offset = 0;
