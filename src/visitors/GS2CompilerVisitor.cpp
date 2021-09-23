@@ -560,8 +560,7 @@ void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 	auto id = byteCode.getStringConst(*node->val);
 
 	byteCode.emit(opcode::OP_TYPE_VAR);
-	byteCode.emit((char)0xF0);
-	byteCode.emit((char)id);
+	byteCode.emitDynamicNumber(id);
 
 #ifdef DBGEMITTERS
 	printf("Identifier Node: %s\n", node->val->c_str());
