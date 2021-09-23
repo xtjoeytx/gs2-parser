@@ -428,6 +428,7 @@ expr_arraylist:
 expr_cast:
 	T_KWCAST_INT '(' expr ')'					{ $$ = parser->alloc<ExpressionCastNode>($3, ExpressionCastNode::CastType::INTEGER); }
 	| T_KWCAST_FLOAT '(' expr ')'				{ $$ = parser->alloc<ExpressionCastNode>($3, ExpressionCastNode::CastType::FLOAT); }
+	| '_' '(' expr ')'							{ $$ = parser->alloc<ExpressionCastNode>($3, ExpressionCastNode::CastType::TRANSLATION); }
 	;
 
 array_idx:

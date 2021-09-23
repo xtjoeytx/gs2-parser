@@ -270,7 +270,8 @@ public:
 	{
 		INTEGER,
 		FLOAT,
-		STRING
+		STRING,
+		TRANSLATION
 	};
 
 public:

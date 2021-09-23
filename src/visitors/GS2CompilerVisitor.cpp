@@ -485,6 +485,10 @@ void GS2CompilerVisitor::Visit(ExpressionCastNode* node)
 		case ExpressionCastNode::CastType::STRING:
 			byteCode.emit(opcode::OP_CONV_TO_STRING);
 			break;
+
+		case ExpressionCastNode::CastType::TRANSLATION:
+			byteCode.emit(opcode::OP_TRANSLATE);
+			break;
 	}
 }
 
