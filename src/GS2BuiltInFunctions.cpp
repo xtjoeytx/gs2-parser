@@ -32,7 +32,7 @@ const BuiltInCmd builtInObjCmds[] = {
 	{"length", opcode::OP_OBJ_LENGTH, opcode::OP_CONV_TO_STRING},
 	{"pos", opcode::OP_OBJ_POS, opcode::OP_CONV_TO_STRING, CMD_RETURN_VALUE | CMD_OBJECT_FIRST },
 	{"charat", opcode::OP_OBJ_CHARAT},
-	{"substring", opcode::OP_OBJ_SUBSTR },
+	{"substring", opcode::OP_OBJ_SUBSTR, opcode::OP_CONV_TO_STRING, CMD_RETURN_VALUE | CMD_OBJECT_FIRST },
 	{"starts", opcode::OP_OBJ_STARTS, opcode::OP_CONV_TO_STRING, CMD_RETURN_VALUE | CMD_OBJECT_FIRST},
 	{"ends", opcode::OP_OBJ_ENDS, opcode::OP_CONV_TO_STRING, CMD_RETURN_VALUE | CMD_OBJECT_FIRST },
 	{"tokenize", opcode::OP_OBJ_TOKENIZE, opcode::OP_CONV_TO_STRING, CMD_RETURN_VALUE | CMD_OBJECT_FIRST },
