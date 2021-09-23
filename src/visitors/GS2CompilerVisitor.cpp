@@ -262,10 +262,9 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::ConcatAssign:
 		{
 			node->left->visit(this);
-			node->left->visit(this);
-			if (node->left->expressionType() != ExpressionType::EXPR_STRING)
-				byteCode.emit(opcode::OP_CONV_TO_STRING);
-			
+			byteCode.emit(opcode::Opcode::OP_COPY_LAST_OP);
+			byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_STRING);
+
 			auto opCode = getExpressionOpCode(node->op);
 			assert(opCode == opcode::Opcode::OP_JOIN);
 
