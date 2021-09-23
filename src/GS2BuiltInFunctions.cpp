@@ -30,7 +30,7 @@ const BuiltInCmd builtInObjCmds[] = {
 	{"link", opcode::OP_OBJ_LINK },
 	{"trim", opcode::OP_OBJ_TRIM, opcode::OP_CONV_TO_STRING},
 	{"length", opcode::OP_OBJ_LENGTH, opcode::OP_CONV_TO_STRING},
-	{"pos", opcode::OP_OBJ_POS },
+	{"pos", opcode::OP_OBJ_POS, opcode::OP_CONV_TO_STRING, CMD_RETURN_VALUE | CMD_OBJECT_FIRST },
 	{"charat", opcode::OP_OBJ_CHARAT},
 	{"substring", opcode::OP_OBJ_SUBSTR },
 	{"starts", opcode::OP_OBJ_STARTS, opcode::OP_CONV_TO_STRING, CMD_RETURN_VALUE | CMD_OBJECT_FIRST},
