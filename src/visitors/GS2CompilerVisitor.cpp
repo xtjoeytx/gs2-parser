@@ -132,6 +132,11 @@ void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
 	
 	pushLogicalBreakpoint(LogicalBreakPoint{ byteCode.getOpIndex() });
 	{
+		// Convert the result of the expression to a number since this
+		// value will be used for the following if () stmt
+		if (!IsBooleanReturningOp(byteCode.getLastOp()))
+			byteCode.emitConversionOp(node->condition->expressionType(), ExpressionType::EXPR_NUMBER);
+
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
