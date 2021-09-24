@@ -110,6 +110,7 @@ HEXNUM		[a-fA-F0-9]
 "int"		{return T_KWCAST_INT;}
 "float"		{return T_KWCAST_FLOAT;}
 "in"		{return T_KWIN;}
+"_"			{return T_KWTRANSLATE;}
 "@"			{yylval->cval = 0; return '@';}
 "NL"		{yylval->cval = '\n'; return '@';}
 "SPC"		{yylval->cval = ' '; return '@';}

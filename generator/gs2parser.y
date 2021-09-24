@@ -77,7 +77,7 @@ typedef void* yyscan_t;
 %token T_KWIF T_KWELSE T_KWELSEIF T_KWFOR T_KWWHILE T_KWBREAK T_KWCONTINUE T_KWRETURN T_KWIN
 %token T_KWFUNCTION T_KWNEW T_KWWITH T_KWENUM
 %token T_KWSWITCH T_KWCASE T_KWDEFAULT T_KWCONST
-%token T_KWCAST_INT T_KWCAST_FLOAT
+%token T_KWCAST_INT T_KWCAST_FLOAT T_KWTRANSLATE
 
 %precedence T_KWIF 
 %precedence T_KWELSE T_KWELSEIF
@@ -428,7 +428,7 @@ expr_arraylist:
 expr_cast:
 	T_KWCAST_INT '(' expr ')'					{ $$ = parser->alloc<ExpressionCastNode>($3, ExpressionCastNode::CastType::INTEGER); }
 	| T_KWCAST_FLOAT '(' expr ')'				{ $$ = parser->alloc<ExpressionCastNode>($3, ExpressionCastNode::CastType::FLOAT); }
-	| '_' '(' expr ')'							{ $$ = parser->alloc<ExpressionCastNode>($3, ExpressionCastNode::CastType::TRANSLATION); }
+	| T_KWTRANSLATE '(' expr ')'				{ $$ = parser->alloc<ExpressionCastNode>($3, ExpressionCastNode::CastType::TRANSLATION); }
 	;
 
 array_idx:
