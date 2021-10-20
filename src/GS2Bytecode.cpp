@@ -293,6 +293,47 @@ void GS2Bytecode::emitDynamicNumber(int32_t val)
 	}
 }
 
+void GS2Bytecode::emitDynamicNumberUnsigned(uint32_t val)
+{
+	// Strings use 0xF0 -> 0xF2, numbers use 0xF3 -> 0xF5
+	// 0xF6 is used for null-terminated strings converted to doubles
+	char offset = 0;
+
+	switch (getLastOp())
+	{
+		case opcode::OP_SET_INDEX:
+		case opcode::OP_SET_INDEX_TRUE:
+		case opcode::OP_TYPE_NUMBER:
+			offset = 3;
+			break;
+
+		case opcode::OP_TYPE_VAR:
+		case opcode::OP_TYPE_STRING:
+			break;
+
+		default:
+			printf("Previous opcode should be a number or string!! Received: %d (%s)\n", getLastOp(), opcode::OpcodeToString(getLastOp()).c_str());
+			assert(false);
+			return;
+	}
+
+	if (val >= std::numeric_limits<uint8_t>::min() && val <= std::numeric_limits<uint8_t>::max())
+	{
+		emit(char(0xF0 + offset));
+		emit(char(val));
+	}
+	else if (val >= std::numeric_limits<uint16_t>::min() && val <= std::numeric_limits<uint16_t>::max())
+	{
+		emit(char(0xF1 + offset));
+		emit(short(val));
+	}
+	else if (val >= std::numeric_limits<uint32_t>::min() && val <= std::numeric_limits<uint32_t>::max())
+	{
+		emit(char(0xF2 + offset));
+		emit(int(val));
+	}
+}
+
 void GS2Bytecode::emitDoubleNumber(const std::string& num)
 {
 	assert(getLastOp() == opcode::OP_TYPE_NUMBER);

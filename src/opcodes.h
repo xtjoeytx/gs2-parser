@@ -152,6 +152,23 @@ namespace opcode
 		}
 	}
 
+	inline bool IsReservedIdentOp(Opcode opcode)
+	{
+		switch (opcode)
+		{
+		case OP_THIS:
+		case OP_THISO:
+		case OP_PLAYER:
+		case OP_PLAYERO:
+		case OP_LEVEL:
+		case OP_TEMP:
+			return true;
+
+		default:
+			return false;
+		}
+	}
+
 	inline bool IsObjectReturningOp(Opcode opcode)
 	{
 		switch (opcode)
@@ -220,6 +237,9 @@ namespace opcode
 
 			case OP_DEC:
 				return "OP_DEC";
+			
+			case OP_UNARYSUB:
+				return "OP_UNARYSUB";
 
 			case OP_TYPE_NUMBER:
 				return "OP_TYPE_NUMBER";

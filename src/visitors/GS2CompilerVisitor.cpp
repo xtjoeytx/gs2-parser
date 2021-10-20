@@ -40,6 +40,41 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 	}
 }
 
+GS2CompilerVisitor::GS2CompilerVisitor(ParserContext & context, GS2BuiltInFunctions & builtin)
+	: parserContext(context), builtIn(builtin),
+	_isCopyAssignment(false), _isInlineConditional(true), _isInsideExpression(false), _newObjectCount(0)
+{
+	fail_label = success_label = exit_label = createLabel();
+	break_label = continue_label = 0;
+}
+
+GS2CompilerVisitor::label_id GS2CompilerVisitor::createLabel()
+{
+	static label_id counter = 0;
+	auto id = ++counter;
+	return id;
+}
+
+void GS2CompilerVisitor::writeLabels()
+{
+	for (const auto& [label, locs] : label_locs)
+	{
+		if (label == exit_label)
+			continue;
+
+		auto label_iter = label_addr.find(label);
+		if (label_iter != label_addr.end())
+		{
+			auto write_addr = label_iter->second;
+
+			for (const auto& loc : locs)
+			{
+				byteCode.emit(short(write_addr), loc);
+			}
+		}
+	}
+}
+
 void GS2CompilerVisitor::Visit(Node *node)
 {
 	std::string errorMsg = fmt::format("unimplemented node type {}", node->NodeType());
@@ -80,12 +115,29 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 		jmpLoc = byteCode.getBytecodePos();
 	}
 
+	bool is_universe = false;
 	std::string funcName;
 	if (node->pub)
 		funcName.append("public.");
+
 	if (node->objectName && !node->objectName->empty())
+	{
+		if (node->objectName->length() == 8 && *node->objectName == "universe")
+			is_universe = true;
+
 		funcName.append(*node->objectName).append(".");
+	}
 	funcName.append(*node->ident);
+
+	if (is_universe)
+	{
+		std::string funcNameUni;
+		if (node->pub)
+			funcNameUni.append("public.");
+
+		funcNameUni.append(*node->ident).append(",").append(funcName);
+		std::swap(funcName, funcNameUni);
+	}
 
 	byteCode.addFunction(funcName, byteCode.getOpIndex(), jmpLoc);
 
@@ -130,8 +182,15 @@ void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
 {
 	node->condition->visit(this);
 	
-	pushLogicalBreakpoint(LogicalBreakPoint{ byteCode.getOpIndex() });
+	label_id save_labels[] = { success_label, fail_label };
+
+	auto new_fail_label = createLabel();
+	auto new_success_label = createLabel();
+
 	{
+		fail_label = new_fail_label;
+		success_label = new_success_label;
+
 		// Convert the result of the expression to a number since this
 		// value will be used for the following if () stmt
 		if (!IsBooleanReturningOp(byteCode.getLastOp()))
@@ -140,57 +199,118 @@ void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
-		addLogicalContinueLocation(byteCode.getBytecodePos() - 2);
+		addLocation(new_fail_label, byteCode.getBytecodePos() - 2);
 
 		node->leftExpr->visit(this);
 
 		// set the continue position to the right-hand expression, skipping
 		// over the jump on the left-hand expression
-		logicalBreakpoints.top().opcontinue = byteCode.getOpIndex() + 1;
+		setLocation(new_fail_label, byteCode.getOpIndex() + 1);
 	}
-	popLogicalBreakpoint();
 
 	// emit a jump to the end of this else block for the previous if-block
 	byteCode.emit(opcode::OP_SET_INDEX);
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0));
-
-	auto elseLoc = byteCode.getBytecodePos() - 2;
+	addLocation(new_success_label, byteCode.getBytecodePos() - 2);
 
 	node->rightExpr->visit(this);
-	byteCode.emit(short(byteCode.getOpIndex()), elseLoc);
+	setLocation(new_success_label, byteCode.getOpIndex());
+
+	success_label = save_labels[0];
+	fail_label = save_labels[1];
 }
 
 void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 {
-	bool handled = false;
-
 	if (node->op == ExpressionOp::LogicalAnd || node->op == ExpressionOp::LogicalOr)
 	{
-		node->left->visit(this);
-		byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_NUMBER);
+		label_id save_labels[] = { fail_label, success_label };
+
+		bool isFirstBinaryExpr = !_isInsideExpression;
+		if (isFirstBinaryExpr)
+		{
+			_isInsideExpression = true;
+
+			// If its a conditional expression we need to create new jump labels which leads
+			// to OP_INLINE_CONDITIONAL emitted at the end of the first binary expression
+			if (_isInlineConditional)
+				success_label = fail_label = createLabel();
+		}
+
+		auto tmp_success_label = success_label;
+		auto tmp_fail_label = fail_label;
+		bool is_inline_cond = _isInlineConditional;
 
 		if (node->op == ExpressionOp::LogicalAnd)
 		{
-			byteCode.emit(opcode::OP_IF);
-			byteCode.emit(char(0xF4));
-			byteCode.emit(short(0));
+			auto new_success_label = createLabel();
+			success_label = new_success_label;
+
+			node->left->visit(this);
+			byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_NUMBER);
 			
-			assert(!logicalBreakpoints.empty());
-			addLogicalContinueLocation(byteCode.getBytecodePos() - 2);
+			setLocation(new_success_label, byteCode.getOpIndex());
+			success_label = tmp_success_label;
+			fail_label = tmp_fail_label;
+
+			if (is_inline_cond)
+			{
+				byteCode.emit(opcode::OP_AND);
+				byteCode.emit(char(0xF4));
+				byteCode.emit(short(0));
+				addLocation(fail_label, byteCode.getBytecodePos() - 2);
+			}
+			else
+			{
+				byteCode.emit(opcode::OP_IF);
+				byteCode.emit(char(0xF4));
+				byteCode.emit(short(0));
+				addLocation(fail_label, byteCode.getBytecodePos() - 2);
+			}
+			
+			node->right->visit(this);
+			byteCode.emitConversionOp(node->right->expressionType(), ExpressionType::EXPR_NUMBER);
 		}
 		else if (node->op == ExpressionOp::LogicalOr)
 		{
+			auto new_fail_label = createLabel();
+			fail_label = new_fail_label;
+
+			node->left->visit(this);
+			byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_NUMBER);
+
 			byteCode.emit(opcode::OP_OR);
 			byteCode.emit(char(0xF4));
 			byteCode.emit(short(0));
+			addLocation(success_label, byteCode.getBytecodePos() - 2);
 
-			assert(!logicalBreakpoints.empty());
-			addLogicalBreakLocation(byteCode.getBytecodePos() - 2);
+			setLocation(new_fail_label, byteCode.getOpIndex());
+			auto success_label_copy = success_label;
+			success_label = tmp_success_label;
+			fail_label = tmp_fail_label;
+
+			node->right->visit(this);
+			byteCode.emitConversionOp(node->right->expressionType(), ExpressionType::EXPR_NUMBER);
 		}
 
-		node->right->visit(this);
-		byteCode.emitConversionOp(node->right->expressionType(), ExpressionType::EXPR_NUMBER);
+		if (isFirstBinaryExpr)
+		{
+			setLocation(tmp_success_label, byteCode.getOpIndex());
+
+			fail_label = save_labels[0];
+			success_label = save_labels[1];
+			_isInsideExpression = false;
+
+			if (is_inline_cond)
+				byteCode.emit(opcode::Opcode::OP_INLINE_CONDITIONAL);
+		}
+		else
+		{
+			success_label = tmp_success_label;
+			fail_label = tmp_fail_label;
+		}
+
 		return;
 	}
 
@@ -216,8 +336,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			assert(opCode != opcode::Opcode::OP_NONE);
 
 			byteCode.emit(opCode);
-			handled = true;
-			break;
+			return;
 		}
 
 		case ExpressionOp::Equal:
@@ -230,8 +349,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			assert(opCode != opcode::Opcode::OP_NONE);
 
 			byteCode.emit(opCode);
-			handled = true;
-			break;
+			return;
 		}
 
 		case ExpressionOp::PlusAssign:
@@ -259,9 +377,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 				opCode = opcode::OP_ASSIGN;
 
 			byteCode.emit(opCode);
-
-			handled = true;
-			break;
+			return;
 		}
 
 		case ExpressionOp::ConcatAssign:
@@ -274,6 +390,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			assert(opCode == opcode::Opcode::OP_JOIN);
 
 			node->right->visit(this);
+			byteCode.emitConversionOp(node->right->expressionType(), ExpressionType::EXPR_STRING);
 			byteCode.emit(opCode);
 
 			// Special assignment operators for array/multi-dimensional arrays
@@ -286,9 +403,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 				opCode = opcode::OP_ASSIGN;
 
 			byteCode.emit(opCode);
-
-			handled = true;
-			break;
+			return;
 		}
 
 		case ExpressionOp::Assign:
@@ -298,41 +413,30 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			// if the parent, and the next node are both assignments we need to
 			// copy the value on the top of the stack before the next assignment op
 			{
-				if (copyAssignment)
+				if (_isCopyAssignment)
 				{
 					byteCode.emit(opcode::OP_COPY_LAST_OP);
-					copyAssignment = false;
+					_isCopyAssignment = false;
 				}
 
 				if (node->right->isAssignment)
-					copyAssignment = true;
+					_isCopyAssignment = true;
 			}
 
 			opcode::Opcode opCode;
-			pushLogicalBreakpoint(LogicalBreakPoint{});
+			if (node->op != ExpressionOp::Assign)
 			{
-				if (node->op != ExpressionOp::Assign)
-				{
-					opCode = opcode::Opcode::OP_ASSIGN;
-					byteCode.emit(getExpressionOpCode(node->op));
-				}
-				else
-				{
-					opCode = getExpressionOpCode(node->op);
-					assert(opCode != opcode::Opcode::OP_NONE);
-				}
-
-				node->right->visit(this);
-
-				LogicalBreakPoint& bp = logicalBreakpoints.top();
-				if (!bp.breakPointLocs.empty() || !bp.continuePointLocs.empty())
-				{
-					bp.opbreak = bp.opcontinue = byteCode.getOpIndex();
-					byteCode.emit(opcode::Opcode::OP_INLINE_CONDITIONAL);
-				}
+				opCode = opcode::Opcode::OP_ASSIGN;
+				byteCode.emit(getExpressionOpCode(node->op));
 			}
-			popLogicalBreakpoint();
+			else
+			{
+				opCode = getExpressionOpCode(node->op);
+				assert(opCode != opcode::Opcode::OP_NONE);
+			}
 
+			node->right->visit(this);
+			
 			// Special assignment operators for array/multi-dimensional arrays
 			auto exprType = node->left->expressionType();
 			if (exprType == ExpressionType::EXPR_ARRAY)
@@ -341,28 +445,62 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 				opCode = opcode::Opcode::OP_ARRAY_MULTIDIM_ASSIGN;
 			
 			byteCode.emit(opCode);
-			handled = true;
-			break;
+			return;
 		}
-
-		default:
-			handled = false;
-			break;
 	}
-
-	////////
-	if (!handled)
-	{
-		printf("Undefined opcode: %s (%d)\n", ExpressionOpToString(node->op), node->op);
-		Visit((Node*)node);
-	}
+	
+	std::string errorMsg = fmt::format("Undefined opcode in BinaryExpression {}: {}", node->op, ExpressionOpToString(node->op));
+	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 }
 
 void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 {
-	bool handled = false;
+	// If the expression is a constant, we can apply the negative now to the expression
+	if (node->op == ExpressionOp::UnaryMinus)
+	{
+		auto nodeType = node->expr->NodeType();
+
+		if (nodeType == ExpressionIntegerNode::NodeName)
+		{
+			auto underlying_node = reinterpret_cast<ExpressionIntegerNode *>(node->expr);
+			underlying_node->val = -underlying_node->val;
+			underlying_node->visit(this);
+			return;
+		}
+		else if (nodeType == ExpressionNumberNode::NodeName)
+		{
+			auto underlying_node = reinterpret_cast<ExpressionNumberNode *>(node->expr);
+			underlying_node->val->insert(0, "-");
+			underlying_node->visit(this);
+			return;
+		}
+	}
+
+	auto temp_inlinecond = _isInlineConditional;
+	label_id save_labels[] = { success_label, fail_label, 0 };
+
+	bool isFirstBinaryExpr = !_isInsideExpression;
+	if (isFirstBinaryExpr)
+	{
+		_isInsideExpression = true;
+		_isInlineConditional = true;
+
+		save_labels[2] = createLabel();
+		success_label = fail_label = save_labels[2];
+	}
 
 	node->expr->visit(this);
+
+	if (isFirstBinaryExpr)
+	{
+		_isInsideExpression = false;
+		_isInlineConditional = temp_inlinecond;
+
+		success_label = save_labels[0];
+		fail_label = save_labels[1];
+
+		setLocation(save_labels[2], byteCode.getOpIndex());
+	}
 
 	if (node->opFirst)
 	{
@@ -378,8 +516,7 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 				if (node->opUnused)
 					byteCode.emit(opcode::OP_INDEX_DEC);
 
-				handled = true;
-				break;
+				return;
 			}
 
 			case ExpressionOp::UnaryMinus:
@@ -388,10 +525,11 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 				auto opCode = getExpressionOpCode(node->op);
 				assert(opCode != opcode::Opcode::OP_NONE);
 
-				byteCode.emit(opcode::OP_CONV_TO_FLOAT);
+				if (!IsBooleanReturningOp(byteCode.getLastOp()))
+					byteCode.emitConversionOp(node->expr->expressionType(), ExpressionType::EXPR_NUMBER);
+
 				byteCode.emit(opCode);
-				handled = true;
-				break;
+				return;
 			}
 
 			case ExpressionOp::UnaryStringCast:
@@ -402,13 +540,8 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 				if (node->expr->expressionType() == ExpressionType::EXPR_ARRAY)
 					byteCode.emit(opcode::OP_MEMBER_ACCESS);
 
-				handled = true;
-				break;
+				return;
 			}
-
-			default:
-				handled = false;
-				break;
 		}
 	}
 	else
@@ -427,20 +560,13 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 				byteCode.emit(opcode::OP_SWAP_LAST_OPS);
 				byteCode.emit(opCode);
 				byteCode.emit(opcode::OP_INDEX_DEC);
-				handled = true;
-				break;
+				return;
 			}
-
-			default:
-				handled = false;
-				break;
 		}
 	}
 
-	if (!handled)
-	{
-		Visit((Node*)node);
-	}
+	std::string errorMsg = fmt::format("Undefined opcode in UnaryExpression {}: {}", node->op, ExpressionOpToString(node->op));
+	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 }
 
 void GS2CompilerVisitor::Visit(ExpressionStrConcatNode *node)
@@ -455,15 +581,14 @@ void GS2CompilerVisitor::Visit(ExpressionStrConcatNode *node)
 		case '\n':
 			auto id = byteCode.getStringConst(std::string(1, node->sep));
 			byteCode.emit(opcode::OP_TYPE_STRING);
-			byteCode.emitDynamicNumber(id);
+			byteCode.emitDynamicNumberUnsigned(id);
 
 			byteCode.emit(opcode::OP_JOIN);
 			break;
 	}
 	
 	node->right->visit(this);
-	if (node->right->expressionType() != ExpressionType::EXPR_STRING)
-		byteCode.emit(opcode::OP_CONV_TO_STRING);
+	byteCode.emitConversionOp(node->right->expressionType(), ExpressionType::EXPR_STRING);
 
 	byteCode.emit(opcode::OP_JOIN);
 }
@@ -487,6 +612,7 @@ void GS2CompilerVisitor::Visit(ExpressionCastNode* node)
 			break;
 
 		case ExpressionCastNode::CastType::TRANSLATION:
+			byteCode.emitConversionOp(node->expr->expressionType(), ExpressionType::EXPR_STRING);
 			byteCode.emit(opcode::OP_TRANSLATE);
 			break;
 	}
@@ -497,11 +623,7 @@ void GS2CompilerVisitor::Visit(ExpressionArrayIndexNode *node)
 	for (const auto& expr : node->exprList)
 	{
 		expr->visit(this);
-		if (expr->expressionType() != ExpressionType::EXPR_NUMBER
-			&& expr->expressionType() != ExpressionType::EXPR_INTEGER)
-		{
-			byteCode.emit(opcode::OP_CONV_TO_FLOAT);
-		}
+		byteCode.emitConversionOp(expr->expressionType(), ExpressionType::EXPR_NUMBER);
 	}
 
 	if (!node->isAssignment)
@@ -556,49 +678,15 @@ void GS2CompilerVisitor::Visit(ExpressionConstantNode *node)
 
 void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 {
-	auto constant = parserContext.getConstant(*node->val);
-	if (constant)
+	// This is only true if the identifier is the leading node so in the case of
+	// this.testobj.field, it would be true for the first node (this) but false for
+	// the second node (testobj) and third node (field) that way reserved keywords
+	// can technically be used in field names. don't recommend, but it should work
+	if (node->checkForReservedIdents)
 	{
-#ifdef DBGEMITTERS
-		printf("FOUND CONSTANT: %s\n", node->val->c_str());
-#endif
-		constant->visit(this);
-		return;
-	}
+		auto& identNodeStr = *node->val;
 
-	auto id = byteCode.getStringConst(*node->val);
-
-	byteCode.emit(opcode::OP_TYPE_VAR);
-	byteCode.emitDynamicNumber(id);
-
-#ifdef DBGEMITTERS
-	printf("Identifier Node: %s\n", node->val->c_str());
-#endif
-}
-
-void GS2CompilerVisitor::Visit(ExpressionIntegerNode *node)
-{
-	byteCode.emit(opcode::OP_TYPE_NUMBER);
-	byteCode.emitDynamicNumber(node->val);
-}
-
-void GS2CompilerVisitor::Visit(ExpressionNumberNode *node)
-{
-	byteCode.emit(opcode::OP_TYPE_NUMBER);
-	byteCode.emitDoubleNumber(*node->val);
-}
-
-void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
-{
-	assert(!node->nodes.empty());
-
-	size_t i = 0;
-
-	if (node->nodes[0]->expressionType() == ExpressionType::EXPR_IDENT)
-	{
-		auto identNode = reinterpret_cast<ExpressionIdentifierNode*>(node->nodes[0]);
-		auto& identNodeStr = *identNode->val;
-
+		bool handled = true;
 		if (identNodeStr == "this") {
 			byteCode.emit(opcode::OP_THIS);
 		}
@@ -626,32 +714,78 @@ void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
 		else if (identNodeStr == "null") {
 			byteCode.emit(opcode::OP_TYPE_NULL);
 		}
-		else {
-			identNode->visit(this);
-			if (node->nodes.size() > 1)
-				byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+		else handled = false;
+
+		if (handled)
+		{
+			return;
 		}
-		i++;
 	}
-	
+
+	auto constant = parserContext.getConstant(*node->val);
+	if (constant)
+	{
+#ifdef DBGEMITTERS
+		printf("FOUND CONSTANT: %s\n", node->val->c_str());
+#endif
+		constant->visit(this);
+		return;
+	}
+
+	auto id = byteCode.getStringConst(*node->val);
+
+	byteCode.emit(opcode::OP_TYPE_VAR);
+	byteCode.emitDynamicNumberUnsigned(id);
+
+#ifdef DBGEMITTERS
+	printf("Identifier Node: %s\n", node->val->c_str());
+#endif
+}
+
+void GS2CompilerVisitor::Visit(ExpressionIntegerNode *node)
+{
+	byteCode.emit(opcode::OP_TYPE_NUMBER);
+	byteCode.emitDynamicNumber(node->val);
+}
+
+void GS2CompilerVisitor::Visit(ExpressionNumberNode *node)
+{
+	byteCode.emit(opcode::OP_TYPE_NUMBER);
+	byteCode.emitDoubleNumber(*node->val);
+}
+
+void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
+{
+	assert(!node->nodes.empty());
+
 	// mark our last node as an assignment
 	if (node->isAssignment)
 		node->nodes.back()->isAssignment = true;
 
-	for (; i < node->nodes.size(); i++)
+	auto count = node->nodes.size();
+	for (auto i = 0; i < count; i++)
 	{
 		node->nodes[i]->visit(this);
 
 		auto exprType = node->nodes[i]->expressionType();
-		if (exprType == ExpressionType::EXPR_IDENT)
+		if (exprType != ExpressionType::EXPR_ARRAY)
 		{
-			byteCode.emit(opcode::OP_MEMBER_ACCESS);
-			if (i != node->nodes.size() - 1)
-				byteCode.emit(opcode::OP_CONV_TO_OBJECT);
-		}
-		else if (exprType == ExpressionType::EXPR_ARRAY)
-		{
-
+			if (i == 0)
+			{
+				if (count > 1 && !IsObjectReturningOp(byteCode.getLastOp()))
+					/* && byteCode.getLastOp() == opcode::OP_TYPE_VAR*/
+				{
+					byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+				}
+			}
+			else if (i > 0)
+			{
+				byteCode.emit(opcode::OP_MEMBER_ACCESS);
+				if (i < count - 1)
+				{
+					byteCode.emit(opcode::OP_CONV_TO_OBJECT);
+				}
+			}
 		}
 	}
 }
@@ -665,7 +799,7 @@ void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 	auto id = byteCode.getStringConst(*node->val);
 
 	byteCode.emit(opcode::OP_TYPE_STRING);
-	byteCode.emitDynamicNumber(id);
+	byteCode.emitDynamicNumberUnsigned(id);
 }
 
 void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
@@ -728,7 +862,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 			{
 				auto id = byteCode.getStringConst(" ,");
 				byteCode.emit(opcode::OP_TYPE_STRING);
-				byteCode.emitDynamicNumber(id);
+				byteCode.emitDynamicNumberUnsigned(id);
 			}
 			else
 			{
@@ -760,13 +894,15 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 	// the return value is unused and emit OP_INDEX_DEC to pop the value off the stack.
 	if ((cmd.flags & CmdFlags::CMD_RETURN_VALUE) == CmdFlags::CMD_RETURN_VALUE)
 	{
-		if (node->parent && node->parent->NodeType() == ExpressionPostfixNode::NodeName)
+		Node *checkNode = node->parent;
+		assert(checkNode);
+
+		if (checkNode->NodeType() == ExpressionPostfixNode::NodeName)
+			checkNode = checkNode->parent;
+
+		if (checkNode->NodeType() == StatementBlock::NodeName)
 		{
-			auto postfixParent = node->parent->parent;
-			if (postfixParent && postfixParent->NodeType() == StatementBlock::NodeName)
-			{
-				byteCode.emit(opcode::OP_INDEX_DEC);
-			}
+			byteCode.emit(opcode::OP_INDEX_DEC);
 		}
 	}
 
@@ -805,7 +941,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnObject *node)
 	// assigned anonymous function name
 	auto id = byteCode.getStringConst(*node->ident);
 	byteCode.emit(opcode::OP_TYPE_VAR);
-	byteCode.emitDynamicNumber(id);
+	byteCode.emitDynamicNumberUnsigned(id);
 
 	// access this.function_name as an object
 	byteCode.emit(opcode::OP_MEMBER_ACCESS);
@@ -816,14 +952,15 @@ void GS2CompilerVisitor::Visit(StatementReturnNode *node)
 {
 	if (node->expr)
 	{
-		pushLogicalBreakpoint();
-		{
-			node->expr->visit(this);
+		label_id save_labels[] = { success_label, fail_label };
 
-			logicalBreakpoints.top().opbreak = byteCode.getOpIndex();
-			logicalBreakpoints.top().opcontinue = byteCode.getOpIndex();
-		}
-		popLogicalBreakpoint();
+		fail_label = success_label = createLabel();
+
+		node->expr->visit(this);
+
+		setLocation(success_label, byteCode.getOpIndex());
+		success_label = save_labels[0];
+		fail_label = save_labels[1];
 	}
 	else
 	{
@@ -836,9 +973,20 @@ void GS2CompilerVisitor::Visit(StatementReturnNode *node)
 
 void GS2CompilerVisitor::Visit(StatementIfNode* node)
 {
-	pushLogicalBreakpoint();
+	label_id save_labels[] = { success_label, fail_label };
+
+	auto new_success_label = createLabel();
+	auto new_fail_label = createLabel();
+
 	{
-		node->expr->visit(this);
+		success_label = new_success_label;
+		fail_label = new_fail_label;
+
+		{
+			_isInlineConditional = false;
+			node->expr->visit(this);
+			_isInlineConditional = true;
+		}
 
 		// Convert the result of the expression to a number since this
 		// value will be used for the following if () stmt
@@ -846,12 +994,12 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 			byteCode.emitConversionOp(node->expr->expressionType(), ExpressionType::EXPR_NUMBER);
 
 		// set the break point to the start of the OP_IF instruction
-		logicalBreakpoints.top().opbreak = byteCode.getOpIndex();
+		setLocation(new_success_label, byteCode.getOpIndex());
 
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
-		addLogicalContinueLocation(byteCode.getBytecodePos() - 2);
+		addLocation(new_fail_label, byteCode.getBytecodePos() - 2);
 
 		node->thenBlock->visit(this);
 
@@ -859,9 +1007,11 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 		// continue to the next instruction, but if their is an else-block we must
 		// skip the next instruction since its a jmp to the end of the if-else chain
 		auto nextOpcode = byteCode.getOpIndex() + (node->elseBlock ? 1 : 0);
-		logicalBreakpoints.top().opcontinue = nextOpcode;
+		setLocation(new_fail_label, nextOpcode);
 	}
-	popLogicalBreakpoint();
+
+	success_label = save_labels[0];
+	fail_label = save_labels[1];
 
 	if (node->elseBlock)
 	{
@@ -874,6 +1024,9 @@ void GS2CompilerVisitor::Visit(StatementIfNode* node)
 
 		node->elseBlock->visit(this);
 		byteCode.emit(short(byteCode.getOpIndex()), elseLoc);
+
+		success_label = save_labels[0];
+		fail_label = save_labels[1];
 	}
 }
 
@@ -899,8 +1052,6 @@ void GS2CompilerVisitor::Visit(ExpressionNewObjectNode *node)
 	// temp.a = new TStaticVar("str") will return a regular string,
 	// but if there is additional args it has no effect on the output.
 	
-	// TODO(joey): fix
-
 	auto identNode = reinterpret_cast<ExpressionIdentifierNode*>(node->newExpr);
 	auto identIdx = byteCode.getStringConst(*identNode->val);
 
@@ -913,29 +1064,39 @@ void GS2CompilerVisitor::Visit(ExpressionNewObjectNode *node)
 	else
 	{
 		byteCode.emit(opcode::OP_TYPE_VAR);
-		byteCode.emitDynamicNumber(byteCode.getStringConst("unknown_object"));
+		byteCode.emitDynamicNumberUnsigned(byteCode.getStringConst("unknown_object"));
 	}
 
 	byteCode.emit(opcode::OP_TYPE_STRING);
-	byteCode.emitDynamicNumber(identIdx);
+	byteCode.emitDynamicNumberUnsigned(identIdx);
 
 	byteCode.emit(opcode::OP_NEW_OBJECT);
 }
 
 void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 {
-	pushLogicalBreakpoint();
-	pushLoopBreakpoint();
-	{
-		auto loopStart = byteCode.getOpIndex();
+	auto new_success_label = createLabel();
+	auto new_fail_label = createLabel();
 
-		node->expr->visit(this);
+	{
+		success_label = new_success_label;
+		fail_label = new_fail_label;
+
+		// Set the success breakpoint to the start of the loop
+		setLocation(new_success_label, byteCode.getOpIndex());
+
+		{
+			_isInlineConditional = false;
+			node->expr->visit(this);
+			_isInlineConditional = true;
+		}
+
 		byteCode.emitConversionOp(node->expr->expressionType(), ExpressionType::EXPR_NUMBER);
 
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
-		addLoopBreakLocation(byteCode.getBytecodePos() - 2);
+		addLocation(new_fail_label, byteCode.getBytecodePos() - 2);
 
 		// Increment loop count
 		byteCode.emit(opcode::OP_CMD_CALL);
@@ -946,48 +1107,33 @@ void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 		byteCode.emit(opcode::OP_SET_INDEX);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
-		addLoopContinueLocation(byteCode.getBytecodePos() - 2);
+		addLocation(new_success_label, byteCode.getBytecodePos() - 2);
 		
-		// Set the breakpoint to after the while-statement
-		loopBreakpoints.top().opbreak = byteCode.getOpIndex();
-		loopBreakpoints.top().opcontinue = loopStart;
+		// Set the fail breakpoint to after the while-statement
+		setLocation(new_fail_label, byteCode.getOpIndex());
 	}
-	popLoopBreakpoint();
-	popLogicalBreakpoint();
 }
 
 void GS2CompilerVisitor::Visit(StatementBreakNode* node)
 {
-	if (loopBreakpoints.empty())
-	{
-#ifdef DBGEMITTERS
-		printf("Error, no loops to break from.\n");
-#endif
-		return;
-	}
+	assert(break_label > 0);
 
 	// Emit jump out of loop
 	byteCode.emit(opcode::OP_SET_INDEX);
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0));
-	addLoopBreakLocation(byteCode.getBytecodePos() - 2);
+	addLocation(break_label, byteCode.getBytecodePos() - 2);
 }
 
 void GS2CompilerVisitor::Visit(StatementContinueNode* node)
 {
-	if (loopBreakpoints.empty())
-	{
-#ifdef DBGEMITTERS
-		printf("Error, no loops to continue.\n");
-#endif
-		return;
-	}
+	assert(continue_label > 0);
 
 	// Emit jump back to the loop-condition
 	byteCode.emit(opcode::OP_SET_INDEX);
 	byteCode.emit(char(0xF4));
 	byteCode.emit(short(0));
-	addLoopContinueLocation(byteCode.getBytecodePos() - 2);
+	addLocation(continue_label, byteCode.getBytecodePos() - 2);
 }
 
 void GS2CompilerVisitor::Visit(StatementForNode* node)
@@ -1012,13 +1158,18 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 		byteCode.emit(opcode::OP_TYPE_TRUE);
 	}
 
-	pushLoopBreakpoint(LogicalBreakPoint{});
+	auto new_success_label = createLabel();
+	auto new_fail_label = createLabel();
+
 	{
+		success_label = new_success_label;
+		fail_label = new_fail_label;
+
 		// Emit if-loop on conditional expression, with a failed jump to the end-block
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
-		addLoopBreakLocation(byteCode.getBytecodePos() - 2);
+		addLocation(new_fail_label, byteCode.getBytecodePos() - 2);
 		
 		// Increment loop count
 		byteCode.emit(opcode::OP_CMD_CALL);
@@ -1029,16 +1180,18 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 
 		// Emit post-op
 		if (node->postop)
+		{
+			// TODO(joey): discard return
 			node->postop->visit(this);
+		}
 
 		// Emit jump back to condition
 		byteCode.emit(opcode::OP_SET_INDEX);
 		byteCode.emitDynamicNumber(loopStart);
 
-		loopBreakpoints.top().opbreak = byteCode.getOpIndex();
-		loopBreakpoints.top().opcontinue = loopStart;
+		setLocation(new_fail_label, byteCode.getOpIndex());
+		setLocation(new_success_label, loopStart);
 	}
-	popLoopBreakpoint();
 }
 
 void GS2CompilerVisitor::Visit(StatementNewNode* node)
@@ -1058,7 +1211,7 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 	// emit object type
 	auto id = byteCode.getStringConst(*node->ident);
 	byteCode.emit(opcode::OP_TYPE_STRING);
-	byteCode.emitDynamicNumber(id);
+	byteCode.emitDynamicNumberUnsigned(id);
 
 	// official emits this
 	byteCode.emit(opcode::OP_CONV_TO_STRING);
@@ -1075,7 +1228,7 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 
 	auto withLoc = byteCode.getBytecodePos() - 2;
 
-	int prevNewObjectCount = newObjectCount++;
+	int prevNewObjectCount = _newObjectCount++;
 	if (node->stmtBlock)
 		node->stmtBlock->visit(this);
 
@@ -1084,19 +1237,19 @@ void GS2CompilerVisitor::Visit(StatementNewNode* node)
 
 	///////
 	// call addcontrol
-	for (int i = 0; i < newObjectCount - prevNewObjectCount; i++)
+	for (int i = 0; i < _newObjectCount - prevNewObjectCount; i++)
 	{
 		byteCode.emit(opcode::OP_TYPE_ARRAY);
 		byteCode.emit(opcode::OP_SWAP_LAST_OPS);
 
 		auto addControlId = byteCode.getStringConst("addcontrol");
 		byteCode.emit(opcode::OP_TYPE_VAR);
-		byteCode.emitDynamicNumber(addControlId);
+		byteCode.emitDynamicNumberUnsigned(addControlId);
 		byteCode.emit(opcode::OP_CALL);
 		byteCode.emit(opcode::OP_INDEX_DEC);
 	}
 
-	newObjectCount--;
+	_newObjectCount--;
 }
 
 void GS2CompilerVisitor::Visit(StatementWithNode* node)
@@ -1140,21 +1293,28 @@ void GS2CompilerVisitor::Visit(StatementForEachNode *node)
 	byteCode.emit(opcode::OP_TYPE_NUMBER);
 	byteCode.emitDynamicNumber(0);
 
-	pushLoopBreakpoint(LogicalBreakPoint {});
+	label_id save_labels[] = { success_label, fail_label, continue_label, break_label };
+
 	{
+		auto new_break_label = createLabel();
+		auto new_continue_label = createLabel();
+
+		break_label = new_break_label;
+		continue_label = new_continue_label;
+
 		auto startLoopOp = byteCode.getOpIndex();
 		byteCode.emit(opcode::OP_FOREACH);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
 
 		// Add break location for the jump out of the loop
-		addLoopBreakLocation(byteCode.getBytecodePos() - 2);
+		addLocation(new_break_label, byteCode.getBytecodePos() - 2);
 
 		byteCode.emit(opcode::OP_CMD_CALL);
 		node->block->visit(this);
 
-		// increase idx
-		auto continueLoopOp = byteCode.getOpIndex();
+		// Set the continue location before we increment the idx
+		setLocation(new_continue_label, byteCode.getOpIndex());
 		byteCode.emit(opcode::OP_INC);
 
 		// jump to beginning of the for-each loop
@@ -1162,11 +1322,14 @@ void GS2CompilerVisitor::Visit(StatementForEachNode *node)
 		byteCode.emitDynamicNumber(startLoopOp);
 
 		// Write out the breakpoint jumps
-		auto endLoopOp = byteCode.getOpIndex();
-		loopBreakpoints.top().opbreak = endLoopOp;
-		loopBreakpoints.top().opcontinue = continueLoopOp;
+		setLocation(new_break_label, byteCode.getOpIndex());
 	}
-	popLoopBreakpoint();
+
+	// restore labels
+	success_label = save_labels[0];
+	fail_label = save_labels[1];
+	continue_label = save_labels[2];
+	break_label = save_labels[3];
 
 	// pop the idx variable
 	byteCode.emit(opcode::OP_INDEX_DEC);
@@ -1191,22 +1354,31 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 	// endloc:
 	// ....
 
-	pushLoopBreakpoint(LogicalBreakPoint{});
+	// save labels
+	label_id save_labels[] = { break_label, continue_label, success_label, fail_label };
+
 	{
-		std::vector<uint32_t> caseStartOp;
+		auto new_break_label = createLabel();
+		
+		std::vector<label_id> caseStartOp;
 
 		// jump to case-test
 		byteCode.emit(opcode::OP_SET_INDEX);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
-
 		size_t caseTestLoc = byteCode.getBytecodePos() - 2;
 
 		// case-list:
 		for (const auto& caseNode : node->cases)
 		{
+			auto new_case_label = createLabel();
+			setLocation(new_case_label, byteCode.getOpIndex());
+
 			for (const auto& caseExpr : caseNode.exprList)
-				caseStartOp.push_back(byteCode.getOpIndex());
+				caseStartOp.push_back(new_case_label);
+
+			break_label = new_break_label;
+			continue_label = new_case_label;
 			caseNode.block->visit(this);
 		}
 
@@ -1228,38 +1400,25 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 				}
 				else byteCode.emit(opcode::OP_SET_INDEX);
 
-				byteCode.emitDynamicNumber(caseStartOp[i++]);
+				byteCode.emitDynamicNumber(label_addr[caseStartOp[i++]]);
 			}
 		}
 
-		if (node->expr->expressionType() == ExpressionType::EXPR_FUNCTION)
-			byteCode.emit(opcode::OP_INDEX_DEC);
+		setLocation(new_break_label, byteCode.getOpIndex());
 
-		loopBreakpoints.top().opbreak = byteCode.getOpIndex();
+		// Since we are consuming a copy for each case-test, we need to pop
+		// the original value off the top of the stack.
+		//if (node->expr->expressionType() == ExpressionType::EXPR_FUNCTION) // note: no idea why this was here
+		byteCode.emit(opcode::OP_INDEX_DEC);
 	}
-	popLoopBreakpoint();
+
+	// restore labels
+	break_label = save_labels[0];
+	continue_label = save_labels[1];
+	success_label = save_labels[2];
+	fail_label = save_labels[3];
 }
 
 // not implemented: should never occur
 void GS2CompilerVisitor::Visit(StatementNode *node) { Visit((Node *)node); }
 void GS2CompilerVisitor::Visit(ExpressionNode *node) { Visit((Node *)node); }
-
-///////////////////
-
-void GS2CompilerVisitor::popBreakpoint(std::stack<LogicalBreakPoint>& bp)
-{
-	auto& breakPoint = bp.top();
-	if (breakPoint.opbreak >= 0)
-	{
-		for (const auto& loc : breakPoint.breakPointLocs)
-			byteCode.emit(short(breakPoint.opbreak), loc);
-	}
-
-	if (breakPoint.opcontinue >= 0)
-	{
-		for (const auto& loc : breakPoint.continuePointLocs)
-			byteCode.emit(short(breakPoint.opcontinue), loc);
-	}
-
-	bp.pop();
-}

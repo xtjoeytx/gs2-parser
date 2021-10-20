@@ -33,8 +33,8 @@ public:
 
 	virtual const char * NodeType() const = 0;
 	virtual void visit(NodeVisitor *v) { v->Visit(this); }
-
-	Node *parent;
+	virtual bool isExpressionNode() const { return false; }
+	virtual bool isStatementNode() const { return false; }
 
 	void takeOwnership(Node* child)
 	{
@@ -49,6 +49,8 @@ public:
 		takeOwnership(child);
 		(takeOwnership(node), ...);
 	}
+
+	Node *parent;
 };
 
 class StatementNode : public Node
@@ -57,6 +59,8 @@ public:
 	_NodeName("StatementNode")
 
 	StatementNode() : Node() { }
+
+	virtual bool isStatementNode() const { return true; }
 };
 
 class ExpressionNode : public StatementNode
@@ -66,11 +70,12 @@ public:
 
 	ExpressionNode() : StatementNode(), isAssignment(false) { }
 
-	virtual std::string toString() const = 0;
-
-	virtual ExpressionType expressionType() const {
-		return ExpressionType::EXPR_ANY;
+	virtual bool isExpressionNode() const {
+		return true;
 	}
+
+	virtual std::string toString() const = 0;
+	virtual ExpressionType expressionType() const = 0;
 
 	bool isAssignment;
 };
@@ -152,7 +157,7 @@ public:
 	_NodeName("ExpressionIdentifierNode")
 
 	ExpressionIdentifierNode(std::string *str)
-		: ExpressionNode(), val(str)
+		: ExpressionNode(), val(str), checkForReservedIdents(true)
 	{
 	}
 
@@ -165,6 +170,7 @@ public:
 	}
 
 	std::string *val;
+	bool checkForReservedIdents;
 };
 
 class ExpressionStringConstNode : public ExpressionNode
@@ -203,7 +209,9 @@ public:
 	virtual std::string toString() const {
 		std::string str;
 		for (const auto& n : nodes)
-			str.append(n->toString());
+			str.append(n->toString()).append(".");
+		if (!str.empty())
+			str.pop_back();
 		return str;
 	}
 
@@ -213,6 +221,15 @@ public:
 
 	void addNode(ExpressionNode* node)
 	{
+		assert(node);
+
+		// Only the first identifier can be used for reserved keywords
+		if (!nodes.empty() && node->expressionType() == ExpressionType::EXPR_IDENT)
+		{
+			ExpressionIdentifierNode *identNode = reinterpret_cast<ExpressionIdentifierNode *>(node);
+			identNode->checkForReservedIdents = false;
+		}
+
 		takeOwnership(node);
 		nodes.push_back(node);
 	}
@@ -287,6 +304,24 @@ public:
 		return expr->toString();
 	}
 
+	virtual ExpressionType expressionType() const
+	{
+		switch (type)
+		{
+			case CastType::INTEGER:
+				return ExpressionType::EXPR_INTEGER;
+
+			case CastType::FLOAT:
+				return ExpressionType::EXPR_NUMBER;
+
+			case CastType::STRING:
+			case CastType::TRANSLATION:
+				return ExpressionType::EXPR_STRING;
+		}
+
+		return expr->expressionType();
+	}
+
 	ExpressionNode* expr;
 	CastType type;
 };
@@ -328,13 +363,23 @@ public:
 		takeOwnership(cond, left, right);
 	}
 
-	virtual std::string toString() const {
+	virtual std::string toString() const
+	{
 		std::string ret;
 		ret.append("(").append(condition->toString());
 		ret.append(" ? ").append(leftExpr->toString());
 		ret.append(" : ").append(rightExpr->toString());
 		ret.append(")");
 		return ret;
+	}
+
+	virtual ExpressionType expressionType() const
+	{
+		auto exprType = leftExpr->expressionType();
+		if (exprType == rightExpr->expressionType())
+			return exprType;
+
+		return ExpressionType::EXPR_ANY;
 	}
 
 	ExpressionNode *condition;
@@ -380,7 +425,6 @@ class ExpressionBinaryOpNode : public ExpressionNode
 		}
 
 		virtual ExpressionType expressionType() const {
-
 			switch (op)
 			{
 				case ExpressionOp::Plus:
@@ -528,6 +572,10 @@ public:
 		return str;
 	}
 
+	virtual ExpressionType expressionType() const {
+		return ExpressionType::EXPR_ARRAY;
+	}
+
 	std::vector<int> dimensions;
 };
 
@@ -553,6 +601,10 @@ public:
 	virtual std::string toString() const {
 		std::string str = "new ";
 		return str + newExpr->toString();
+	}
+
+	virtual ExpressionType expressionType() const {
+		return ExpressionType::EXPR_OBJECT;
 	}
 
 	ExpressionNode *newExpr;
@@ -591,7 +643,10 @@ public:
 		}
 
 		return std::string("{") + argList + "}";
+	}
 
+	virtual ExpressionType expressionType() const {
+		return ExpressionType::EXPR_ARRAY;
 	}
 
 	std::vector<ExpressionNode *> args;
@@ -756,11 +811,7 @@ class StatementForNode : public StatementNode
 public:
 	_NodeName("StatementForNode")
 
-	StatementForNode(ExpressionNode *init, ExpressionNode *cond, ExpressionNode *incr, StatementNode *block)
-		: StatementNode(), init(init), cond(cond), postop(incr), block(block)
-	{
-		takeOwnership(init, cond, postop, block);
-	}
+	StatementForNode(ExpressionNode *init, ExpressionNode *cond, ExpressionNode *incr, StatementNode *block);
 
 	ExpressionNode *init;
 	ExpressionNode *cond;
@@ -902,5 +953,14 @@ class EnumList
 		int curIdx;
 		std::vector<EnumMember *> members;
 };
+
+namespace ast
+{
+	/**
+	 * Checks if the postfix node has only one child, and if that is the case
+	 * it will return the child otherwise it will return the postfix node back
+	 */
+	ExpressionNode * checkPostfixNode(ExpressionPostfixNode *node);
+}
 
 #endif

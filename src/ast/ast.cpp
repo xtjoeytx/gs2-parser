@@ -35,6 +35,20 @@ void checkNodeOwnership()
 }
 #endif
 
+void inspectNodeForUnary(Node *node)
+{
+	//if (strcmp(node->NodeType(), ExpressionUnaryOpNode::NodeName) == 0)
+	if (node->NodeType() == ExpressionUnaryOpNode::NodeName)
+	{
+		// doesn't utilize the value, so we emit the operator the same way
+		// we do operator-first unary ops. involves just a single inc operator
+		// rather than pushing the node back to the stack
+		auto unaryNode = reinterpret_cast<ExpressionUnaryOpNode *>(node);
+		unaryNode->opFirst = true;
+		unaryNode->opUnused = true;
+	}
+}
+
 Node::Node()
 	: parent(nullptr)
 {
@@ -63,19 +77,10 @@ void StatementBlock::append(StatementNode *node)
 {
 	if (node)
 	{
-		//
 		takeOwnership(node);
 
 		// TODO(joey): come back to this
-		if (strcmp(node->NodeType(), ExpressionUnaryOpNode::NodeName) == 0)
-		{
-			// doesn't utilize the value, so we emit the operator the same way
-			// we do operator-first unary ops. involves just a single inc operator
-			// rather than pushing the node back to the stack
-			auto unaryNode = reinterpret_cast<ExpressionUnaryOpNode *>(node);
-			unaryNode->opFirst = true;
-			unaryNode->opUnused = true;
-		}
+		inspectNodeForUnary(node);
 
 		statements.push_back(node);
 	}
@@ -94,4 +99,28 @@ void EnumList::addMember(EnumMember *member)
 	}
 
 	members.push_back(member);
+}
+
+StatementForNode::StatementForNode(ExpressionNode *init, ExpressionNode *cond, ExpressionNode *incr, StatementNode *block)
+	: StatementNode(), init(init), cond(cond), postop(incr), block(block)
+{
+	takeOwnership(init, cond, postop, block);
+	inspectNodeForUnary(postop);
+}
+
+namespace ast
+{
+	ExpressionNode * checkPostfixNode(ExpressionPostfixNode *node)
+	{
+		assert(node);
+
+		if (node->nodes.size() != 1)
+			return node;
+
+		assert(node->nodes[0]);
+
+		auto newNode = node->nodes[0];
+		newNode->parent = node->parent;
+		return newNode;
+	}
 }

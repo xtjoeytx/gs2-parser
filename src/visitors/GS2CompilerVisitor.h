@@ -5,49 +5,26 @@
 
 #include <set>
 #include <string>
-#include <stack>
 #include <vector>
 #include <unordered_map>
-
 #include "ast/astvisitor.h"
 #include "GS2Bytecode.h"
 #include "GS2BuiltInFunctions.h"
-
-struct LogicalBreakPoint
-{
-	uint32_t opbreak = 0;
-	uint32_t opcontinue = 0;
-	std::vector<size_t> breakPointLocs;
-	std::vector<size_t> continuePointLocs;
-};
 
 class ParserContext;
 
 class GS2CompilerVisitor : public NodeVisitor
 {
-	GS2Bytecode byteCode;
-	ParserContext& parserContext;
-	GS2BuiltInFunctions& builtIn;
-	std::set<std::string> joinedClasses;
+	using label_id = uint32_t;
+	using jmp_address = uint32_t;
 
 	public:
-		GS2CompilerVisitor(ParserContext& context, GS2BuiltInFunctions& builtin)
-			: parserContext(context), copyAssignment(false), newObjectCount(0), builtIn(builtin)
-		{
-		}
+		GS2CompilerVisitor(ParserContext& context, GS2BuiltInFunctions& builtin);
 
-		virtual ~GS2CompilerVisitor() = default;
+		Buffer getByteCode();
+		const std::set<std::string>& getJoinedClasses() const;
 
-		Buffer getByteCode() {
-			return byteCode.getByteCode();
-		}
-
-		const std::set<std::string>& getJoinedClasses() const {
-			return joinedClasses;
-		}
-
-		/////////
-
+	public:
 		virtual void Visit(Node *node);
 		virtual void Visit(StatementNode *node);
 		virtual void Visit(StatementBlock *node);
@@ -83,80 +60,49 @@ class GS2CompilerVisitor : public NodeVisitor
 		virtual void Visit(ExpressionFnObject* node);
 
 	private:
-		bool copyAssignment;
-		int newObjectCount;
-		std::stack<LogicalBreakPoint> logicalBreakpoints;
-		std::stack<LogicalBreakPoint> loopBreakpoints;
+		GS2Bytecode byteCode;
+		ParserContext& parserContext;
+		GS2BuiltInFunctions& builtIn;
+		std::set<std::string> joinedClasses;
 
-		void popBreakpoint(std::stack<LogicalBreakPoint>& bp);
-		void addBreakLocation(std::stack<LogicalBreakPoint>& bp, size_t location);
-		void addContinueLocation(std::stack<LogicalBreakPoint>& bp, size_t location);
+		bool _isCopyAssignment;
+		bool _isInlineConditional;
+		bool _isInsideExpression;
+		int _newObjectCount;
 
-		void pushLogicalBreakpoint(LogicalBreakPoint bp = {});
-		void popLogicalBreakpoint();
-		void addLogicalBreakLocation(size_t location);
-		void addLogicalContinueLocation(size_t location);
+		// Jump-labels
+		label_id success_label, fail_label, exit_label;
+		label_id break_label, continue_label;
+		std::unordered_map<label_id, std::vector<size_t>> label_locs;
+		std::unordered_map<label_id, jmp_address> label_addr;
 
-		void pushLoopBreakpoint(LogicalBreakPoint bp = {});
-		void popLoopBreakpoint();
-		void addLoopBreakLocation(size_t location);
-		void addLoopContinueLocation(size_t location);
+		// Jump-label functions
+		label_id createLabel();
+		void addLocation(label_id label, size_t loc);
+		void setLocation(label_id label, jmp_address addr);
+		void writeLabels();
 };
 
-inline void GS2CompilerVisitor::addBreakLocation(std::stack<LogicalBreakPoint>& bp, size_t location)
+inline Buffer GS2CompilerVisitor::getByteCode()
 {
-	if (!bp.empty())
-		bp.top().breakPointLocs.push_back(location);
+	setLocation(exit_label, byteCode.getOpIndex());
+	writeLabels();
+	return byteCode.getByteCode();
 }
 
-inline void GS2CompilerVisitor::addContinueLocation(std::stack<LogicalBreakPoint>& bp, size_t location)
+inline const std::set<std::string>& GS2CompilerVisitor::getJoinedClasses() const
 {
-	if (!bp.empty())
-		bp.top().continuePointLocs.push_back(location);
+	return joinedClasses;
 }
 
-/////////////
-
-inline void GS2CompilerVisitor::pushLogicalBreakpoint(LogicalBreakPoint bp)
+inline void GS2CompilerVisitor::addLocation(label_id label, size_t loc)
 {
-	logicalBreakpoints.push(bp);
+	label_locs[label].push_back(loc);
 }
 
-inline void GS2CompilerVisitor::popLogicalBreakpoint()
+inline void GS2CompilerVisitor::setLocation(label_id label, jmp_address addr)
 {
-	popBreakpoint(logicalBreakpoints);
-}
-
-inline void GS2CompilerVisitor::addLogicalBreakLocation(size_t location)
-{
-	addBreakLocation(logicalBreakpoints, location);
-}
-
-inline void GS2CompilerVisitor::addLogicalContinueLocation(size_t location)
-{
-	addContinueLocation(logicalBreakpoints, location);
-}
-
-/////////////
-
-inline void GS2CompilerVisitor::pushLoopBreakpoint(LogicalBreakPoint bp)
-{
-	loopBreakpoints.push(bp);
-}
-
-inline void GS2CompilerVisitor::popLoopBreakpoint()
-{
-	popBreakpoint(loopBreakpoints);
-}
-
-inline void GS2CompilerVisitor::addLoopBreakLocation(size_t location)
-{
-	addBreakLocation(loopBreakpoints, location);
-}
-
-inline void GS2CompilerVisitor::addLoopContinueLocation(size_t location)
-{
-	addContinueLocation(loopBreakpoints, location);
+	label_addr[label] = addr;
 }
 
 #endif

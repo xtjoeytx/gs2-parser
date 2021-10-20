@@ -42,6 +42,7 @@ class GS2Bytecode
         void emit(const std::string& v);
         bool emitConversionOp(ExpressionType typeSrc, ExpressionType typeDst);
         void emitDynamicNumber(int32_t val);
+        void emitDynamicNumberUnsigned(uint32_t val);
         void emitDoubleNumber(const std::string& num);
 
         /**

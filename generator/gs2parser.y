@@ -314,20 +314,18 @@ postfix:
 	| postfix '[' expr_list ']'								{ $1->addNode(parser->alloc<ExpressionArrayIndexNode>($3)); }
 	| postfix '(' expr_list_with_empty ')'					{
 			// remove last element, to be used as function ident
-			auto tmp = $1->nodes.back();
+			auto funcNode = $1->nodes.back();
 			$1->nodes.pop_back();
 
 			// if we still have nodes, this is used as the object parameter
-			// for the function call
-			if ($1->nodes.empty()) {
-				parser->dealloc($1);
-				//delete $1;
-				$1 = nullptr;
-			}
-
+			// for the function call. ast::checkPostfixNode will pull out
+			// the underlying node if its the only node in the container
+			ExpressionNode *objectNode = nullptr;
+			if (!$1->nodes.empty())
+				objectNode = ast::checkPostfixNode($1);
+			
 			// create function node
-			auto n = parser->alloc<ExpressionFnCallNode>(tmp, $1, $3);
-
+			auto n = parser->alloc<ExpressionFnCallNode>(funcNode, objectNode, $3);
 			$$ = parser->alloc<ExpressionPostfixNode>(n);
 	}
 
@@ -335,7 +333,7 @@ postfix:
 	;
 
 expr:
-	postfix								{ $$ = $1; }
+	postfix								{ $$ = ast::checkPostfixNode($1); }
 	| expr_cast							{ $$ = $1; }
 	| expr_arraylist					{ $$ = $1; }
 	| expr_ops_binary 					{ $$ = $1; }
