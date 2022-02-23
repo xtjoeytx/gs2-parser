@@ -678,56 +678,37 @@ void GS2CompilerVisitor::Visit(ExpressionConstantNode *node)
 
 void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 {
-	// This is only true if the identifier is the leading node so in the case of
+	static std::unordered_map<std::string, opcode::Opcode> identMappings = {
+		{"this", opcode::OP_THIS},
+		{"thiso", opcode::OP_THISO},
+		{"player", opcode::OP_PLAYER},
+		{"playero", opcode::OP_PLAYERO},
+		{"level", opcode::OP_LEVEL},
+		{"temp", opcode::OP_TEMP},
+		{"true", opcode::OP_TYPE_TRUE},
+		{"false", opcode::OP_TYPE_FALSE},
+		{"null", opcode::OP_TYPE_NULL},
+		{"pi", opcode::OP_PI}
+	};
+
+	// This is only true for the leading identifier
 	// this.testobj.field, it would be true for the first node (this) but false for
 	// the second node (testobj) and third node (field) that way reserved keywords
 	// can technically be used in field names. don't recommend, but it should work
 	if (node->checkForReservedIdents)
 	{
-		auto& identNodeStr = *node->val;
-
-		bool handled = true;
-		if (identNodeStr == "this") {
-			byteCode.emit(opcode::OP_THIS);
-		}
-		else if (identNodeStr == "thiso") {
-			byteCode.emit(opcode::OP_THISO);
-		}
-		else if (identNodeStr == "player") {
-			byteCode.emit(opcode::OP_PLAYER);
-		}
-		else if (identNodeStr == "playero") {
-			byteCode.emit(opcode::OP_PLAYERO);
-		}
-		else if (identNodeStr == "level") {
-			byteCode.emit(opcode::OP_LEVEL);
-		}
-		else if (identNodeStr == "temp") {
-			byteCode.emit(opcode::OP_TEMP);
-		}
-		else if (identNodeStr == "true") {
-			byteCode.emit(opcode::OP_TYPE_TRUE);
-		}
-		else if (identNodeStr == "false") {
-			byteCode.emit(opcode::OP_TYPE_FALSE);
-		}
-		else if (identNodeStr == "null") {
-			byteCode.emit(opcode::OP_TYPE_NULL);
-		}
-		else handled = false;
-
-		if (handled)
+		auto identIter = identMappings.find(*node->val);
+		if (identIter != identMappings.end())
 		{
+			byteCode.emit(identIter->second);
 			return;
 		}
 	}
 
+	// TODO(joey): This may need to be included in the above check
 	auto constant = parserContext.getConstant(*node->val);
 	if (constant)
 	{
-#ifdef DBGEMITTERS
-		printf("FOUND CONSTANT: %s\n", node->val->c_str());
-#endif
 		constant->visit(this);
 		return;
 	}
@@ -736,10 +717,6 @@ void GS2CompilerVisitor::Visit(ExpressionIdentifierNode *node)
 
 	byteCode.emit(opcode::OP_TYPE_VAR);
 	byteCode.emitDynamicNumberUnsigned(id);
-
-#ifdef DBGEMITTERS
-	printf("Identifier Node: %s\n", node->val->c_str());
-#endif
 }
 
 void GS2CompilerVisitor::Visit(ExpressionIntegerNode *node)
@@ -802,6 +779,20 @@ void GS2CompilerVisitor::Visit(ExpressionStringConstNode *node)
 	byteCode.emitDynamicNumberUnsigned(id);
 }
 
+ExpressionType getSigType(char idx) {
+	// x -> NONE
+	// f -> OP_CONV_TO_FLOAT
+	// o -> OP_CONV_TO_OBJECT
+	// s -> OP_CONV_TO_STRING
+
+	switch (idx) {
+		case 'f': return ExpressionType::EXPR_NUMBER;
+		case 'o': return ExpressionType::EXPR_OBJECT;
+		case 's': return ExpressionType::EXPR_STRING;
+		default: return ExpressionType::EXPR_ANY;
+	}
+}
+
 void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 {
 	auto isObjectCall = (node->objExpr != nullptr);
@@ -818,28 +809,47 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : (isObjectCall ? defaultObjCall : defaultCall));
 
 	{
-		auto argVisitFn = [this](ExpressionNode* node) {
-			assert(node != nullptr);
-			node->visit(this);
+		auto argumentVisitFn = [&](auto arg_iter, auto arg_iter_end, auto sig_iter, auto sig_iter_end) {
+			const auto& sig = cmd.sig;
+			
+			// we need to skip over the return value
+			if (sig_iter != sig_iter_end)
+				++sig_iter;
+
+			for (; arg_iter != arg_iter_end; ++arg_iter)
+			{
+				char sig_ch = 'x';
+				if (sig_iter != sig_iter_end)
+				{
+					sig_ch = *sig_iter;
+					++sig_iter;
+				}
+
+				ExpressionNode* node = *arg_iter;
+				node->visit(this);
+				byteCode.emitConversionOp(node->expressionType(), getSigType(sig_ch));
+			}
 		};
 
 		auto objectVisitFn = [&]() {
 			if (isObjectCall)
 				node->objExpr->visit(this);
 
-			if (cmd.convert_op != opcode::Opcode::OP_NONE && byteCode.getLastOp() != cmd.convert_op)
+			// Convert the object to a specific type
+			// Explanation: Some functions (like string functions, ex: str.substr(start, end)) are really passed as
+			// substr(str, start, end) and so we need to ensure the first argument is in fact a string so we convert that here.
+			if (cmd.convert_object_op != opcode::Opcode::OP_NONE && byteCode.getLastOp() != cmd.convert_object_op)
 			{
-				if (cmd.convert_op == opcode::Opcode::OP_CONV_TO_OBJECT)
+				if (cmd.convert_object_op == opcode::Opcode::OP_CONV_TO_OBJECT)
 				{
 					if (!IsObjectReturningOp(byteCode.getLastOp()))
 					{
-						byteCode.emit(cmd.convert_op);
+						byteCode.emit(cmd.convert_object_op);
 					}
 				}
-				else byteCode.emit(cmd.convert_op);
+				else byteCode.emit(cmd.convert_object_op);
 			}
 		};
-
 
 		if ((cmd.flags & CmdFlags::CMD_OBJECT_FIRST) == CmdFlags::CMD_OBJECT_FIRST)
 		{
@@ -853,7 +863,8 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 
 		if ((cmd.flags & CmdFlags::CMD_REVERSE_ARGS) == CmdFlags::CMD_REVERSE_ARGS)
 		{
-			std::for_each(node->args.rbegin(), node->args.rend(), argVisitFn);
+			// note: reversing both args and signature
+			argumentVisitFn(node->args.rbegin(), node->args.rend(), cmd.sig.rbegin(), cmd.sig.rend());
 		}
 		else
 		{
@@ -866,7 +877,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 			}
 			else
 			{
-				std::for_each(node->args.begin(), node->args.end(), argVisitFn);
+				argumentVisitFn(node->args.begin(), node->args.end(), cmd.sig.begin(), cmd.sig.end());
 			}
 		}
 

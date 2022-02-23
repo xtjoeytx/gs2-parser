@@ -7,6 +7,10 @@
 
 namespace opcode
 {
+	// Potential unknown standard functions:
+	// char(ascii), ex: char(65) -> 'A'
+	// waitfor(objectname,event[,timeout])
+
 	enum Opcode
 	{
 		// @formatter:off
