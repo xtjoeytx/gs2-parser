@@ -75,6 +75,13 @@ const BuiltInCmd builtInCmds[] = {
 		.sig = "fff"
 	},
 
+    {
+        .name = "pow",
+        .op = opcode::OP_POW,
+        .flags = CMD_RETURN_VALUE,
+        .sig = "fff"
+    },
+
 	{
 		.name = "random",
 		.op = opcode::OP_RANDOM,
