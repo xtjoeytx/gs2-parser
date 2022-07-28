@@ -1147,14 +1147,14 @@ void GS2CompilerVisitor::Visit(StatementContinueNode* node)
 	addLocation(continue_label, byteCode.getBytecodePos() - 2);
 }
 
-void GS2CompilerVisitor::Visit(StatementForNode* node)
+void GS2CompilerVisitor::Visit(StatementForNode *node)
 {
 	// Emit init expression
 	if (node->init)
 		node->init->visit(this);
 
 	// Start of loop
-	auto loopStart = byteCode.getOpIndex();
+	auto startLoopOp = byteCode.getOpIndex();
 
 	// Emit the condition expression
 	if (node->cond)
@@ -1169,25 +1169,32 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 		byteCode.emit(opcode::OP_TYPE_TRUE);
 	}
 
-	auto new_success_label = createLabel();
-	auto new_fail_label = createLabel();
+	label_id save_labels[] = {success_label, fail_label, continue_label, break_label};
 
 	{
-		success_label = new_success_label;
-		fail_label = new_fail_label;
+		auto new_break_label = createLabel();
+		auto new_continue_label = createLabel();
+
+		break_label = new_break_label;
+		continue_label = new_continue_label;
 
 		// Emit if-loop on conditional expression, with a failed jump to the end-block
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
-		addLocation(new_fail_label, byteCode.getBytecodePos() - 2);
-		
+
+		// Add break location for the jump out of the loop
+		addLocation(new_break_label, byteCode.getBytecodePos() - 2);
+
 		// Increment loop count
 		byteCode.emit(opcode::OP_CMD_CALL);
 
 		// Emit block
 		if (node->block)
 			node->block->visit(this);
+
+		// Set the continue location before the post-op
+		setLocation(new_continue_label, byteCode.getOpIndex());
 
 		// Emit post-op
 		if (node->postop)
@@ -1198,11 +1205,17 @@ void GS2CompilerVisitor::Visit(StatementForNode* node)
 
 		// Emit jump back to condition
 		byteCode.emit(opcode::OP_SET_INDEX);
-		byteCode.emitDynamicNumber(loopStart);
+		byteCode.emitDynamicNumberUnsigned(startLoopOp);
 
-		setLocation(new_fail_label, byteCode.getOpIndex());
-		setLocation(new_success_label, loopStart);
+		// Write out the breakpoint jumps
+		setLocation(new_break_label, byteCode.getOpIndex());
 	}
+
+	// restore labels
+	success_label = save_labels[0];
+	fail_label = save_labels[1];
+	continue_label = save_labels[2];
+	break_label = save_labels[3];
 }
 
 void GS2CompilerVisitor::Visit(StatementNewNode* node)
