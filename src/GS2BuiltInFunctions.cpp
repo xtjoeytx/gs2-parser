@@ -92,7 +92,7 @@ const BuiltInCmd builtInCmds[] = {
 		.name = "setarray",
 		.op = opcode::OP_SETARRAY,
 		.flags = CmdFlags::CMD_NOOPT,
-		.sig = "-xf"
+		.sig = "-of"
 	},
 
 	{
