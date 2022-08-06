@@ -305,6 +305,7 @@ void GS2Bytecode::emitDynamicNumberUnsigned(uint32_t val)
 		case opcode::OP_SET_INDEX_TRUE:
 		case opcode::OP_TYPE_NUMBER:
 			offset = 3;
+			assert(false); // This function should only be used for string/var indexing
 			break;
 
 		case opcode::OP_TYPE_VAR:

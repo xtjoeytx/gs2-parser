@@ -1205,7 +1205,7 @@ void GS2CompilerVisitor::Visit(StatementForNode *node)
 
 		// Emit jump back to condition
 		byteCode.emit(opcode::OP_SET_INDEX);
-		byteCode.emitDynamicNumberUnsigned(startLoopOp);
+		byteCode.emitDynamicNumber(startLoopOp);
 
 		// Write out the breakpoint jumps
 		setLocation(new_break_label, byteCode.getOpIndex());
