@@ -600,6 +600,7 @@ void GS2CompilerVisitor::Visit(ExpressionCastNode* node)
 	switch (node->type)
 	{
 		case ExpressionCastNode::CastType::INTEGER:
+			byteCode.emitConversionOp(node->expr->expressionType(), ExpressionType::EXPR_NUMBER);
 			byteCode.emit(opcode::OP_INT);
 			break;
 
