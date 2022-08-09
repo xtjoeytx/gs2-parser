@@ -357,14 +357,18 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::MultiplyAssign:
 		case ExpressionOp::DivideAssign:
 		{
+			// Visit left operand, and copy it. Cast to number for operation
 			node->left->visit(this);
 			byteCode.emit(opcode::Opcode::OP_COPY_LAST_OP);
 			byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_NUMBER);
-			
+
+			// Visit right operand
+			node->right->visit(this);
+			byteCode.emitConversionOp(node->right->expressionType(), ExpressionType::EXPR_NUMBER);
+
+			// Emit the operation sign ('+', '-', '*', '/')
 			auto opCode = getExpressionOpCode(node->op);
 			assert(opCode != opcode::Opcode::OP_NONE);
-
-			node->right->visit(this);
 			byteCode.emit(opCode);
 
 			// Special assignment operators for array/multi-dimensional arrays
