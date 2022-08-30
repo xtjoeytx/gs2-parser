@@ -4,6 +4,8 @@
 #define BUFFER_H
 
 #include <cstdint>
+#include <cstring>
+#include <cstdlib>
 #include <utility>
 
 class Buffer
@@ -14,7 +16,7 @@ class Buffer
         Buffer(Buffer&& o) noexcept;
         Buffer(const Buffer&) = delete;
         ~Buffer();
-        
+
         Buffer& operator=(const Buffer&) = delete;
         Buffer& operator= (Buffer&& o) noexcept;
 
@@ -43,7 +45,7 @@ class Buffer
         typename T::Val_Type Read(size_t pos) {
             return T::Read(*this, pos);
         }
-        
+
         template<typename T>
         void Write(typename T::Val_Type val) {
             T::Write(*this, val);
@@ -56,7 +58,7 @@ class Buffer
             T::Write(*this, val);
             writepos = tmp;
         }
-        
+
     private:
         void resize(size_t len = 0);
 

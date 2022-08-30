@@ -22,6 +22,12 @@ const BuiltInCmd builtInCmds[] = {
 	},
 
 	{
+		.name = "char",
+		.op = opcode::OP_CHAR,
+		.sig = "ff"
+	},
+
+	{
 		.name = "cos",
 		.op = opcode::OP_COS,
 		.sig = "ff"

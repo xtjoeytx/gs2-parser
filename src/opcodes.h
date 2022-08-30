@@ -19,15 +19,15 @@ namespace opcode
 		/* ------------------------------------------------ */
 		OP_NONE = 0,
 		OP_SET_INDEX = 1,	//  S(1) =			// likely JMP to opIndex
-		OP_SET_INDEX_TRUE = 2,		
+		OP_SET_INDEX_TRUE = 2,
 
 		OP_OR = 3,
 		OP_IF = 4,			// likely JMPIFNOT
 		OP_AND = 5,
-		OP_CALL = 6,		
+		OP_CALL = 6,
 		OP_RET = 7,			//  Return to location on top of on jump stack
 		OP_SLEEP = 8,
-		
+
 		OP_CMD_CALL = 9,	//  may just increase the loop count for the loop limit of 10k
 		OP_JMP = 10,		//  JUMP to N(0, 4) by byte offset unconditionally
 
@@ -75,7 +75,7 @@ namespace opcode
 		OP_GT = 73, //  PUSH (S(1) > S(0))
 		OP_LTE = 74, //  PUSH (S(1) <= S(0))
 		OP_GTE = 75, //  PUSH (S(1) >= S(0))
-		
+
 		OP_IN_RANGE = 80,
 		OP_IN_OBJ = 81,
 		OP_OBJ_INDEX = 82,
@@ -97,6 +97,7 @@ namespace opcode
 		OP_VECY = 98,
 		OP_OBJ_INDICES = 99,
 		OP_OBJ_LINK = 100,
+		OP_CHAR = 103,
 		OP_OBJ_TRIM = 110,
 		OP_OBJ_LENGTH = 111,
 		OP_OBJ_POS = 112,
@@ -184,7 +185,7 @@ namespace opcode
 			case OP_LEVEL:
 			case OP_TEMP:
 				return true;
-				
+
 			default:
 				return false;
 		}
@@ -241,7 +242,7 @@ namespace opcode
 
 			case OP_DEC:
 				return "OP_DEC";
-			
+
 			case OP_UNARYSUB:
 				return "OP_UNARYSUB";
 
