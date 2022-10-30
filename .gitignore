@@ -43,3 +43,4 @@
 
 !win_bison.exe
 !win_flex.exe
+!lalr1.d
