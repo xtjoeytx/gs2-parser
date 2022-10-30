@@ -40,3 +40,6 @@
 /build
 /cmake-build-debug
 /scripts
+
+!win_bison.exe
+!win_flex.exe
