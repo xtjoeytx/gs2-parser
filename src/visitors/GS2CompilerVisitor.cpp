@@ -750,7 +750,7 @@ void GS2CompilerVisitor::Visit(ExpressionPostfixNode* node)
 		node->nodes[i]->visit(this);
 
 		auto exprType = node->nodes[i]->expressionType();
-		if (exprType != ExpressionType::EXPR_ARRAY)
+		if (!(exprType == ExpressionType::EXPR_ARRAY || exprType == ExpressionType::EXPR_MULTIARRAY))
 		{
 			if (i == 0)
 			{
