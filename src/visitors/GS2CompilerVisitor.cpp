@@ -17,6 +17,8 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 		case ExpressionOp::Divide: return opcode::Opcode::OP_DIV;
 		case ExpressionOp::Mod: return opcode::Opcode::OP_MOD;
 		case ExpressionOp::Pow: return opcode::Opcode::OP_POW;
+		case ExpressionOp::BitwiseAnd: return opcode::Opcode::OP_BWA;
+		case ExpressionOp::BitwiseOr: return opcode::Opcode::OP_BWO;
 		case ExpressionOp::Assign: return opcode::Opcode::OP_ASSIGN;
 		case ExpressionOp::Equal: return opcode::Opcode::OP_EQ;
 		case ExpressionOp::NotEqual: return opcode::Opcode::OP_NEQ;
@@ -143,14 +145,14 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 
 	{
 		byteCode.emit(opcode::OP_TYPE_ARRAY);
-		
+
 		for (auto it = node->args.rbegin(); it != node->args.rend(); ++it)
 		{
 			assert(*it != nullptr);
-			
+
 			(*it)->visit(this);
 		}
-		
+
 		byteCode.emit(opcode::OP_FUNC_PARAMS_END);
 	}
 
@@ -181,7 +183,7 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
 {
 	node->condition->visit(this);
-	
+
 	label_id save_labels[] = { success_label, fail_label };
 
 	auto new_fail_label = createLabel();
@@ -249,7 +251,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 
 			node->left->visit(this);
 			byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_NUMBER);
-			
+
 			setLocation(new_success_label, byteCode.getOpIndex());
 			success_label = tmp_success_label;
 			fail_label = tmp_fail_label;
@@ -268,7 +270,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 				byteCode.emit(short(0));
 				addLocation(fail_label, byteCode.getBytecodePos() - 2);
 			}
-			
+
 			node->right->visit(this);
 			byteCode.emitConversionOp(node->right->expressionType(), ExpressionType::EXPR_NUMBER);
 		}
@@ -322,6 +324,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::Divide:
 		case ExpressionOp::Mod:
 		case ExpressionOp::Pow:
+		case ExpressionOp::BitwiseAnd:
 		case ExpressionOp::LessThan:
 		case ExpressionOp::LessThanOrEqual:
 		case ExpressionOp::GreaterThan:
@@ -440,20 +443,20 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 			}
 
 			node->right->visit(this);
-			
+
 			// Special assignment operators for array/multi-dimensional arrays
 			auto exprType = node->left->expressionType();
 			if (exprType == ExpressionType::EXPR_ARRAY)
 				opCode = opcode::Opcode::OP_ARRAY_ASSIGN;
 			else if (exprType == ExpressionType::EXPR_MULTIARRAY)
 				opCode = opcode::Opcode::OP_ARRAY_MULTIDIM_ASSIGN;
-			
+
 			byteCode.emit(opCode);
 			return;
 		}
 	}
-	
-	std::string errorMsg = fmt::format("Undefined opcode in BinaryExpression {}: {}", node->op, ExpressionOpToString(node->op));
+
+	std::string errorMsg = fmt::format("Undefined opcode in BinaryExpression {}: {} {}", node->op, ExpressionOpToString(node->op), node->toString());
 	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 }
 
@@ -536,6 +539,18 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 				return;
 			}
 
+			case ExpressionOp::Plus:
+			{
+				auto opCode = getExpressionOpCode(node->op);
+				assert(opCode != opcode::Opcode::OP_NONE);
+
+				if (!IsBooleanReturningOp(byteCode.getLastOp()))
+					byteCode.emitConversionOp(node->expr->expressionType(), ExpressionType::EXPR_NUMBER);
+
+				byteCode.emit(opCode);
+				return;
+			}
+
 			case ExpressionOp::UnaryStringCast:
 			{
 				byteCode.emit(opcode::OP_CONV_TO_STRING);
@@ -577,7 +592,7 @@ void GS2CompilerVisitor::Visit(ExpressionStrConcatNode *node)
 {
 	node->left->visit(this);
 	byteCode.emitConversionOp(node->left->expressionType(), ExpressionType::EXPR_STRING);
-	
+
 	switch (node->sep)
 	{
 		case ' ':
@@ -590,7 +605,7 @@ void GS2CompilerVisitor::Visit(ExpressionStrConcatNode *node)
 			byteCode.emit(opcode::OP_JOIN);
 			break;
 	}
-	
+
 	node->right->visit(this);
 	byteCode.emitConversionOp(node->right->expressionType(), ExpressionType::EXPR_STRING);
 
@@ -647,7 +662,7 @@ void GS2CompilerVisitor::Visit(ExpressionInOpNode *node)
 
 	node->expr->visit(this);
 	node->lower->visit(this);
-	
+
 	if (node->higher)
 	{
 		byteCode.emitConversionOp(node->lower->expressionType(), ExpressionType::EXPR_NUMBER);
@@ -674,7 +689,7 @@ void GS2CompilerVisitor::Visit(ExpressionConstantNode *node)
 		case ExpressionConstantNode::ConstantType::FALSE_T:
 			byteCode.emit(opcode::OP_TYPE_FALSE);
 			break;
-			
+
 		case ExpressionConstantNode::ConstantType::NULL_T:
 			byteCode.emit(opcode::OP_TYPE_NULL);
 			break;
@@ -816,7 +831,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 	{
 		auto argumentVisitFn = [&](auto arg_iter, auto arg_iter_end, auto sig_iter, auto sig_iter_end) {
 			const auto& sig = cmd.sig;
-			
+
 			// we need to skip over the return value
 			if (sig_iter != sig_iter_end)
 				++sig_iter;
@@ -894,7 +909,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 		if (cmd.op == opcode::OP_CALL)
 		{
 			node->funcExpr->visit(this);
-			
+
 			if (isObjectCall)
 				byteCode.emit(opcode::OP_MEMBER_ACCESS);
 		}
@@ -903,7 +918,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 	}
 
 	// Handling of discarding unused return values
-	// 
+	//
 	// We need to pop the return value off the stack if the value is not going
 	// to be used in the next op. All function calls are wrapped in an ExpressionPostfixNode,
 	// and if the parent node of the postfix node is a statement block then we can assume
@@ -953,7 +968,7 @@ void GS2CompilerVisitor::Visit(ExpressionFnObject *node)
 
 	// this
 	byteCode.emit(opcode::OP_THIS);
-	
+
 	// assigned anonymous function name
 	auto id = byteCode.getStringConst(*node->ident);
 	byteCode.emit(opcode::OP_TYPE_VAR);
@@ -1067,7 +1082,7 @@ void GS2CompilerVisitor::Visit(ExpressionNewObjectNode *node)
 	// TODO(joey): more testing needed
 	// temp.a = new TStaticVar("str") will return a regular string,
 	// but if there is additional args it has no effect on the output.
-	
+
 	auto identNode = reinterpret_cast<ExpressionIdentifierNode*>(node->newExpr);
 	auto identIdx = byteCode.getStringConst(*identNode->val);
 
@@ -1124,7 +1139,7 @@ void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
 		addLocation(new_success_label, byteCode.getBytecodePos() - 2);
-		
+
 		// Set the fail breakpoint to after the while-statement
 		setLocation(new_fail_label, byteCode.getOpIndex());
 	}
@@ -1388,7 +1403,7 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 
 	{
 		auto new_break_label = createLabel();
-		
+
 		std::vector<label_id> caseStartOp;
 
 		// jump to case-test

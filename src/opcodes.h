@@ -76,6 +76,9 @@ namespace opcode
 		OP_LTE = 74, //  PUSH (S(1) <= S(0))
 		OP_GTE = 75, //  PUSH (S(1) >= S(0))
 
+		OP_BWO = 76, //  PUSH (S(1) | S(0))
+		OP_BWA = 77, //  PUSH (S(1) & S(0))
+
 		OP_IN_RANGE = 80,
 		OP_IN_OBJ = 81,
 		OP_OBJ_INDEX = 82,
