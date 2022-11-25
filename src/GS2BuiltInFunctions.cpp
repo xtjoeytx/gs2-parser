@@ -104,12 +104,14 @@ const BuiltInCmd builtInCmds[] = {
 	{
 		.name = "getangle",
 		.op = opcode::OP_GETANGLE,
+		.flags = CMD_RETURN_VALUE,
 		.sig = "fff"
 	},
 
 	{
 		.name = "getdir",
 		.op = opcode::OP_GETDIR,
+		.flags = CMD_RETURN_VALUE,
 		.sig = "fff"
 	},
 
