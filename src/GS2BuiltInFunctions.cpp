@@ -95,6 +95,18 @@ const BuiltInCmd builtInCmds[] = {
 	},
 
 	{
+		.name = "arraylen",
+		.op = opcode::OP_OBJ_SIZE,
+		.sig = "fo"
+	},
+
+	{
+		.name = "sarraylen",
+		.op = opcode::OP_OBJ_SIZE,
+		.sig = "fo"
+	},
+
+	{
 		.name = "setarray",
 		.op = opcode::OP_SETARRAY,
 		.flags = CmdFlags::CMD_NOOPT,
