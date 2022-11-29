@@ -95,6 +95,18 @@ const BuiltInCmd builtInCmds[] = {
 	},
 
 	{
+		.name = "arraylen",
+		.op = opcode::OP_OBJ_SIZE,
+		.sig = "fo"
+	},
+
+	{
+		.name = "sarraylen",
+		.op = opcode::OP_OBJ_SIZE,
+		.sig = "fo"
+	},
+
+	{
 		.name = "setarray",
 		.op = opcode::OP_SETARRAY,
 		.flags = CmdFlags::CMD_NOOPT,
@@ -104,12 +116,14 @@ const BuiltInCmd builtInCmds[] = {
 	{
 		.name = "getangle",
 		.op = opcode::OP_GETANGLE,
+		.flags = CMD_RETURN_VALUE,
 		.sig = "fff"
 	},
 
 	{
 		.name = "getdir",
 		.op = opcode::OP_GETDIR,
+		.flags = CMD_RETURN_VALUE,
 		.sig = "fff"
 	},
 
