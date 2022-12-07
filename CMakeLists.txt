@@ -10,7 +10,7 @@ if(WIN32 AND NOT MINGW)
 	execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/winflexbison/build-winflex-bison --parallel 8)
 	LIST(APPEND CMAKE_PROGRAM_PATH ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/winflexbison/bin/Release)
 	set(FLEX_FLAGS "--wincompat")
-endif(WIN32)
+endif(WIN32 AND NOT MINGW)
 
 find_package(BISON 3.4 REQUIRED)
 find_package(FLEX REQUIRED)
