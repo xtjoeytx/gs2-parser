@@ -1147,7 +1147,12 @@ void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 
 void GS2CompilerVisitor::Visit(StatementBreakNode* node)
 {
-	assert(break_label > 0);
+	if (break_label <= 0)
+	{
+		std::string errorMsg = fmt::format("`break` outside loop detected");
+		parserContext.addError({ ErrorLevel::E_WARNING, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
+		return;
+	}
 
 	// Emit jump out of loop
 	byteCode.emit(opcode::OP_SET_INDEX);
@@ -1158,7 +1163,12 @@ void GS2CompilerVisitor::Visit(StatementBreakNode* node)
 
 void GS2CompilerVisitor::Visit(StatementContinueNode* node)
 {
-	assert(continue_label > 0);
+	if (continue_label <= 0)
+	{
+		std::string errorMsg = fmt::format("`continue` outside loop detected");
+		parserContext.addError({ ErrorLevel::E_WARNING, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
+		return;
+	}
 
 	// Emit jump back to the loop-condition
 	byteCode.emit(opcode::OP_SET_INDEX);

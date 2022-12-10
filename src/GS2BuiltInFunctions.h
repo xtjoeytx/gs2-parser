@@ -16,6 +16,9 @@ enum CmdFlags
 	CMD_OBJECT_FIRST	= uint8_t(1 << 3)		// Visit the object before you visit arguments (needed for setarray)
 };
 
+const uint8_t DEFAULT_CMD_FLAGS = CMD_USE_ARRAY | CMD_REVERSE_ARGS | CMD_RETURN_VALUE;
+const uint8_t DEFAULT_OBJ_CMD_FLAGS = CMD_USE_ARRAY | CMD_REVERSE_ARGS | CMD_RETURN_VALUE;
+
 struct BuiltInCmd
 {
 	std::string name;										// Function Name
@@ -29,14 +32,14 @@ const BuiltInCmd defaultCall = {
 	"",
 	opcode::OP_CALL,
 	opcode::OP_NONE,
-	(CMD_USE_ARRAY | CMD_REVERSE_ARGS | CMD_RETURN_VALUE)
+	DEFAULT_CMD_FLAGS
 };
 
 const BuiltInCmd defaultObjCall = {
 	"",
 	opcode::OP_CALL,
 	opcode::OP_CONV_TO_OBJECT,
-	(CMD_USE_ARRAY | CMD_REVERSE_ARGS | CMD_RETURN_VALUE)
+	DEFAULT_OBJ_CMD_FLAGS
 };
 
 struct GS2BuiltInFunctions

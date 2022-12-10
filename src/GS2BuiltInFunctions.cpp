@@ -243,6 +243,24 @@ const BuiltInCmd builtInObjCmds[] = {
 		.convert_object_op = opcode::OP_CONV_TO_OBJECT,
 		.flags = CmdFlags::CMD_OBJECT_FIRST,
 	},
+	{
+		.name = "delete",
+		.op = opcode::OP_OBJ_DELETESTRING,
+		.convert_object_op = opcode::OP_CONV_TO_OBJECT,
+		.flags = CmdFlags::CMD_OBJECT_FIRST,
+	},
+	{
+		.name = "insert",
+		.op = opcode::OP_OBJ_INSERTSTRING,
+		.convert_object_op = opcode::OP_CONV_TO_OBJECT,
+		.flags = CmdFlags::CMD_OBJECT_FIRST | CmdFlags::CMD_REVERSE_ARGS,
+	},
+	{
+		.name = "remove",
+		.op = opcode::OP_OBJ_REMOVESTRING,
+		.convert_object_op = opcode::OP_CONV_TO_OBJECT,
+		.flags = CmdFlags::CMD_OBJECT_FIRST | CmdFlags::CMD_REVERSE_ARGS,
+	},
 };
 
 GS2BuiltInFunctions GS2BuiltInFunctions::getBuiltIn()
