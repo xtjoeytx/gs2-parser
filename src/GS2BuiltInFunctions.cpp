@@ -194,6 +194,7 @@ const BuiltInCmd builtInObjCmds[] = {
 		.op = opcode::OP_OBJ_SUBSTR,
 		.convert_object_op = opcode::OP_CONV_TO_STRING,
 		.flags = CmdFlags::CMD_OBJECT_FIRST | CmdFlags::CMD_RETURN_VALUE,
+		.sig = "sff"
 	},
 
 	{
