@@ -220,6 +220,9 @@ const BuiltInCmd builtInObjCmds[] = {
 	{
 		.name = "positions",
 		.op = opcode::OP_OBJ_POSITIONS,
+		.convert_object_op = opcode::OP_CONV_TO_STRING,
+		.flags = CmdFlags::CMD_OBJECT_FIRST | CmdFlags::CMD_RETURN_VALUE,
+		.sig = "os"
 	},
 
 	{
