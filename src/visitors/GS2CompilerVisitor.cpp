@@ -1106,15 +1106,17 @@ void GS2CompilerVisitor::Visit(ExpressionNewObjectNode *node)
 
 void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 {
-	auto new_success_label = createLabel();
-	auto new_fail_label = createLabel();
+	label_id save_labels[] = {success_label, fail_label, continue_label, break_label};
 
 	{
-		success_label = new_success_label;
-		fail_label = new_fail_label;
+		auto new_break_label = createLabel();
+		auto new_continue_label = createLabel();
 
-		// Set the success breakpoint to the start of the loop
-		setLocation(new_success_label, byteCode.getOpIndex());
+		break_label = new_break_label;
+		continue_label = new_continue_label;
+
+		// Set the continue breakpoint to the start of the loop
+		setLocation(continue_label, byteCode.getOpIndex());
 
 		{
 			_isInlineConditional = false;
@@ -1127,7 +1129,7 @@ void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 		byteCode.emit(opcode::OP_IF);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
-		addLocation(new_fail_label, byteCode.getBytecodePos() - 2);
+		addLocation(new_break_label, byteCode.getBytecodePos() - 2);
 
 		// Increment loop count
 		byteCode.emit(opcode::OP_CMD_CALL);
@@ -1138,11 +1140,17 @@ void GS2CompilerVisitor::Visit(StatementWhileNode *node)
 		byteCode.emit(opcode::OP_SET_INDEX);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
-		addLocation(new_success_label, byteCode.getBytecodePos() - 2);
+		addLocation(new_continue_label, byteCode.getBytecodePos() - 2);
 
 		// Set the fail breakpoint to after the while-statement
-		setLocation(new_fail_label, byteCode.getOpIndex());
+		setLocation(new_break_label, byteCode.getOpIndex());
 	}
+
+	// restore labels
+	success_label = save_labels[0];
+	fail_label = save_labels[1];
+	continue_label = save_labels[2];
+	break_label = save_labels[3];
 }
 
 void GS2CompilerVisitor::Visit(StatementBreakNode* node)
