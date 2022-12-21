@@ -66,7 +66,7 @@ const BuiltInCmd builtInCmds[] = {
 	{
 		.name = "log",
 		.op = opcode::OP_LOG,
-		.sig = "ff"
+		.sig = "fff"
 	},
 
 	{
