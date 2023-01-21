@@ -301,6 +301,7 @@ constant:
 
 constant_neg:
     '-' T_INT           { $$ = parser->alloc<ExpressionIntegerNode>(-$2); }
+    | '-' T_FLOAT       { $$ = parser->alloc<ExpressionNumberNode>($2); }
     ;
 
 primary:
