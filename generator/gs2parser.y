@@ -71,8 +71,8 @@ typedef void* yyscan_t;
 %token '='
 %token T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN T_OPCATASSIGN
 %token T_OPDECREMENT T_OPINCREMENT
-%token T_BITWISE_SHIFT_LEFT T_BITWISE_SHIFT_RIGHT T_BITWISE_INVERT
-%token T_BITWISE_XOR T_BITWISE_OR_ASSIGN T_BITWISE_AND_ASSIGN T_BITWISE_SHIFT_LEFT_ASSIGN T_BITWISE_SHIFT_RIGHT_ASSIGN
+%token T_OPBWXOR T_OPBWLSHIFT T_OPBWRSHIFT T_OPBWINVERT
+%token T_OPBWORASSIGN T_OPBWANDASSIGN T_OPBWLSHIFTASSIGN T_OPBWRSHIFTASSIGN
 %token T_KWPUBLIC
 %token T_KWIF T_KWELSE T_KWELSEIF T_KWFOR T_KWWHILE T_KWBREAK T_KWCONTINUE T_KWRETURN T_KWIN
 %token T_KWFUNCTION T_KWNEW T_KWWITH T_KWENUM
@@ -82,19 +82,18 @@ typedef void* yyscan_t;
 %precedence T_KWIF 
 %precedence T_KWELSE T_KWELSEIF
 
-%right '=' T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN T_OPCATASSIGN
+%right '=' T_OPADDASSIGN T_OPSUBASSIGN T_OPMULASSIGN T_OPDIVASSIGN T_OPPOWASSIGN T_OPMODASSIGN T_OPCATASSIGN T_OPBWLSHIFTASSIGN T_OPBWRSHIFTASSIGN 
 %left '[' T_OPTERNARY ':'
 %left T_OPOR
 %left T_OPAND
-%left '^'
-%left '&' '|'
+%left '&' '|' T_OPBWXOR T_OPBWLSHIFT T_OPBWRSHIFT
 %left '@'
 %left '<' T_OPLESSTHANEQUAL
 %left '>' T_OPGREATERTHANEQUAL
 %left T_OPEQUALS T_OPNOTEQUALS T_KWIN
 %left '+' '-'
-%left '*' '/' '%'
-%right '!' T_OPDECREMENT T_OPINCREMENT
+%left '*' '/' '^' '%'
+%right '!' T_OPDECREMENT T_OPINCREMENT T_OPBWINVERT
 %left '.'
 
 %type<exprNode> expr
@@ -133,9 +132,9 @@ typedef void* yyscan_t;
 
 	// Destructors for allocated std vectors incase an error happens
 	// during parsing before ownership is moved to the node
-%destructor { delete $$; printf("destroy enumList\n"); } <enumList>
-%destructor { delete $$; printf("destroy caseNodeList\n"); } <caseNodeList>
-%destructor { delete $$; printf("destroy indexList\n"); } <indexList>
+%destructor { delete $$; } <enumList>
+%destructor { delete $$; } <caseNodeList>
+%destructor { delete $$; } <indexList>
 
 
 %start program
@@ -348,6 +347,7 @@ expr_ops_unary:
 	'-' expr 						{ $$ = parser->alloc<ExpressionUnaryOpNode>($2, ExpressionOp::UnaryMinus, true); }
 	| '@' expr						{ $$ = parser->alloc<ExpressionUnaryOpNode>($2, ExpressionOp::UnaryStringCast, true); }
 	| '!' expr 						{ $$ = parser->alloc<ExpressionUnaryOpNode>($2, ExpressionOp::UnaryNot, true); }
+	| T_OPBWINVERT expr 			{ $$ = parser->alloc<ExpressionUnaryOpNode>($2, ExpressionOp::BitwiseInvert, true); }
 	| T_OPDECREMENT expr 			{ $$ = parser->alloc<ExpressionUnaryOpNode>($2, ExpressionOp::Decrement, true); }
 	| T_OPINCREMENT expr 			{ $$ = parser->alloc<ExpressionUnaryOpNode>($2, ExpressionOp::Increment, true); }
 	| expr T_OPINCREMENT			{ $$ = parser->alloc<ExpressionUnaryOpNode>($1, ExpressionOp::Increment, false); }
@@ -363,6 +363,9 @@ expr_ops_binary:
 	| expr '^' expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::Pow); }
 	| expr '&' expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::BitwiseAnd); }
 	| expr '|' expr	 				{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::BitwiseOr); }
+	| expr T_OPBWXOR expr	 		{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::BitwiseXor); }
+	| expr T_OPBWLSHIFT expr		{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::BitwiseLeftShift); }
+	| expr T_OPBWRSHIFT expr		{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::BitwiseRightShift); }
 	| expr '=' expr				 	{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::Assign, true); }
 	| expr '=' expr_assignment		{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::Assign, true); }
 	| expr '@' expr		 			{ $$ = parser->alloc<ExpressionStrConcatNode>($1, $3, $2); }
@@ -373,6 +376,8 @@ expr_ops_binary:
 	| expr T_OPDIVASSIGN expr		{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::DivideAssign, true); }
 	| expr T_OPPOWASSIGN expr		{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::PowAssign, true); }
 	| expr T_OPMODASSIGN expr		{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::ModAssign, true); }
+	| expr T_OPBWLSHIFTASSIGN expr	{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::BitwiseLeftShiftAssign, true); }
+	| expr T_OPBWRSHIFTASSIGN expr	{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::BitwiseRightShiftAssign, true); }
 	| expr T_OPCATASSIGN expr		{ $$ = parser->alloc<ExpressionBinaryOpNode>($1, $3, ExpressionOp::ConcatAssign, true); }
 	;
 

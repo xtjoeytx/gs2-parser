@@ -39,6 +39,9 @@ enum class ExpressionOp
 
 	BitwiseAnd,
 	BitwiseOr,
+	BitwiseXor,
+	BitwiseLeftShift,
+	BitwiseRightShift,
 
 	PlusAssign,
 	MinusAssign,
@@ -47,10 +50,13 @@ enum class ExpressionOp
 	PowAssign,
 	ModAssign,
 	ConcatAssign,
+	BitwiseLeftShiftAssign,
+	BitwiseRightShiftAssign,
 
 	UnaryStringCast,
 	UnaryNot,
 	UnaryMinus,
+	BitwiseInvert,
 	Increment,
 	Decrement
 };

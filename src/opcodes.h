@@ -64,7 +64,7 @@ namespace opcode
 		OP_MUL = 62, //  PUSH (S(1) * S(0))
 		OP_DIV = 63, //  PUSH (S(1) / S(0))
 		OP_MOD = 64, //  PUSH (S(1) % S(0))
-		OP_POW = 65, //  PUSH (S(1) ^ S(0))
+		OP_POW = 65, //  PUSH (pow(S(1), S(0)))
 
 		OP_NOT = 68, //  PUSH (!S(0))
 		OP_UNARYSUB = 69,
@@ -78,6 +78,8 @@ namespace opcode
 
 		OP_BWO = 76, //  PUSH (S(1) | S(0))
 		OP_BWA = 77, //  PUSH (S(1) & S(0))
+		OP_BWX = 78, //  PUSH (S(1) ^ S(0))
+		OP_BWI = 79, //  PUSH (~S(0))
 
 		OP_IN_RANGE = 80,
 		OP_IN_OBJ = 81,
@@ -100,6 +102,8 @@ namespace opcode
 		OP_VECY = 98,
 		OP_OBJ_INDICES = 99,
 		OP_OBJ_LINK = 100,
+		OP_BW_LEFTSHIFT = 101,	//  PUSH (S(1) << S(0))
+		OP_BW_RIGHTSHIFT = 102,	//  PUSH (S(1) >> S(0))
 		OP_CHAR = 103,
 		OP_OBJ_TRIM = 110,
 		OP_OBJ_LENGTH = 111,

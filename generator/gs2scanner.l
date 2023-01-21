@@ -35,6 +35,7 @@ HEXNUM		[a-fA-F0-9]
 ":"		{return ':';}
 ";"		{return ';';}
 "|"		{return '|';}
+"&"		{return '&';}
 
 "("		{return '(';}
 ")"		{return ')';}
@@ -72,20 +73,17 @@ HEXNUM		[a-fA-F0-9]
 "^="	{return T_OPPOWASSIGN;}
 "%="	{return T_OPMODASSIGN;}
 "@="	{return T_OPCATASSIGN;}
+"|="	{return T_OPBWORASSIGN;}
+"&="	{return T_OPBWANDASSIGN;}
+"<<="	{return T_OPBWLSHIFTASSIGN;}
+">>="	{return T_OPBWRSHIFTASSIGN;}
 
 "--"	{return T_OPDECREMENT;}
 "++"	{return T_OPINCREMENT;}
-
-"&"		{return '&';}
-"<<"	{return T_BITWISE_SHIFT_LEFT;}
-">>"	{return T_BITWISE_SHIFT_RIGHT;}
-"~"		{return T_BITWISE_INVERT;}
-"xor"	{return T_BITWISE_XOR;}
-
-"|="	{return T_BITWISE_OR_ASSIGN;}
-"&="	{return T_BITWISE_AND_ASSIGN;}
-"<<="	{return T_BITWISE_SHIFT_LEFT_ASSIGN;}
-">>="	{return T_BITWISE_SHIFT_RIGHT_ASSIGN;}
+"<<"	{return T_OPBWLSHIFT;}
+">>"	{return T_OPBWRSHIFT;}
+"~"		{return T_OPBWINVERT;}
+"xor"	{return T_OPBWXOR;}
 
 	/*
 		Reserved Keywords

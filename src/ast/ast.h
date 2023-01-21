@@ -409,7 +409,8 @@ class ExpressionBinaryOpNode : public ExpressionNode
 		ExpressionOp op;
 		bool assignment;
 
-		virtual std::string toString() const {
+		virtual std::string toString() const
+		{
 			std::string ret;
 
 			if (!assignment)
@@ -424,7 +425,8 @@ class ExpressionBinaryOpNode : public ExpressionNode
 			return ret;
 		}
 
-		virtual ExpressionType expressionType() const {
+		virtual ExpressionType expressionType() const
+		{
 			switch (op)
 			{
 				case ExpressionOp::Plus:
@@ -443,6 +445,10 @@ class ExpressionBinaryOpNode : public ExpressionNode
 				case ExpressionOp::LogicalOr:
 				case ExpressionOp::BitwiseAnd:
 				case ExpressionOp::BitwiseOr:
+				case ExpressionOp::BitwiseXor:
+				case ExpressionOp::BitwiseInvert:
+				case ExpressionOp::BitwiseLeftShift:
+				case ExpressionOp::BitwiseRightShift:
 					return ExpressionType::EXPR_NUMBER;
 
 				case ExpressionOp::Assign:

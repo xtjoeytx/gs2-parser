@@ -19,6 +19,10 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 		case ExpressionOp::Pow: return opcode::Opcode::OP_POW;
 		case ExpressionOp::BitwiseAnd: return opcode::Opcode::OP_BWA;
 		case ExpressionOp::BitwiseOr: return opcode::Opcode::OP_BWO;
+		case ExpressionOp::BitwiseXor: return opcode::Opcode::OP_BWX;
+		case ExpressionOp::BitwiseLeftShift: return opcode::Opcode::OP_BW_LEFTSHIFT;
+		case ExpressionOp::BitwiseRightShift: return opcode::Opcode::OP_BW_RIGHTSHIFT;
+		case ExpressionOp::BitwiseInvert: return opcode::Opcode::OP_BWI;
 		case ExpressionOp::Assign: return opcode::Opcode::OP_ASSIGN;
 		case ExpressionOp::Equal: return opcode::Opcode::OP_EQ;
 		case ExpressionOp::NotEqual: return opcode::Opcode::OP_NEQ;
@@ -30,8 +34,11 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 		case ExpressionOp::PlusAssign: return opcode::Opcode::OP_ADD;
 		case ExpressionOp::MinusAssign: return opcode::Opcode::OP_SUB;
 		case ExpressionOp::MultiplyAssign: return opcode::Opcode::OP_MUL;
+		case ExpressionOp::ModAssign: return opcode::Opcode::OP_MOD;
 		case ExpressionOp::DivideAssign: return opcode::Opcode::OP_DIV;
 		case ExpressionOp::ConcatAssign: return opcode::Opcode::OP_JOIN;
+		case ExpressionOp::BitwiseLeftShiftAssign: return opcode::Opcode::OP_BW_LEFTSHIFT;
+		case ExpressionOp::BitwiseRightShiftAssign: return opcode::Opcode::OP_BW_RIGHTSHIFT;
 
 		case ExpressionOp::UnaryMinus: return opcode::Opcode::OP_UNARYSUB;
 		case ExpressionOp::UnaryNot: return opcode::Opcode::OP_NOT;
@@ -325,6 +332,10 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::Mod:
 		case ExpressionOp::Pow:
 		case ExpressionOp::BitwiseAnd:
+		case ExpressionOp::BitwiseOr:
+		case ExpressionOp::BitwiseXor:
+		case ExpressionOp::BitwiseLeftShift:
+		case ExpressionOp::BitwiseRightShift:
 		case ExpressionOp::LessThan:
 		case ExpressionOp::LessThanOrEqual:
 		case ExpressionOp::GreaterThan:
@@ -359,6 +370,9 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		case ExpressionOp::MinusAssign:
 		case ExpressionOp::MultiplyAssign:
 		case ExpressionOp::DivideAssign:
+		case ExpressionOp::ModAssign:
+		case ExpressionOp::BitwiseLeftShiftAssign:
+		case ExpressionOp::BitwiseRightShiftAssign:
 		{
 			// Visit left operand, and copy it. Cast to number for operation
 			node->left->visit(this);
@@ -528,6 +542,7 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 
 			case ExpressionOp::UnaryMinus:
 			case ExpressionOp::UnaryNot:
+			case ExpressionOp::BitwiseInvert:
 			{
 				auto opCode = getExpressionOpCode(node->op);
 				assert(opCode != opcode::Opcode::OP_NONE);
