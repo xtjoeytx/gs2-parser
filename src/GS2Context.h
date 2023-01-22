@@ -27,7 +27,8 @@ class GS2Context
 		CompilerResponse compile(const std::string& script, const std::string& scriptType, const std::string& scriptName, bool saveToDisk);
 
 		static Buffer CreateHeader(const Buffer& bytecode, const std::string& scriptType, const std::string& scriptName, bool saveToDisk);
-		static CompilerResponse Compile(const std::string &script, const std::string &scriptType, const std::string &scriptName, bool saveToDisk);
+		static CompilerResponse Compile(const std::string& script);
+		static CompilerResponse Compile(const std::string& script, const std::string& scriptType, const std::string& scriptName, bool saveToDisk);
 
 	private:
 		GS2BuiltInFunctions builtIn;
@@ -51,7 +52,13 @@ inline CompilerResponse GS2Context::compile(const std::string& script, const std
 	return results;
 }
 
-inline CompilerResponse GS2Context::Compile(const std::string &script, const std::string &scriptType, const std::string &scriptName, bool saveToDisk)
+inline CompilerResponse GS2Context::Compile(const std::string& script)
+{
+	GS2Context ctx;
+	return ctx.compile(script);
+}
+
+inline CompilerResponse GS2Context::Compile(const std::string& script, const std::string& scriptType, const std::string& scriptName, bool saveToDisk)
 {
 	GS2Context ctx;
 	return ctx.compile(script, scriptType, scriptName, saveToDisk);
