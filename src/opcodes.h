@@ -20,16 +20,15 @@ namespace opcode
 		OP_NONE = 0,
 		OP_SET_INDEX = 1,	//  S(1) =			// likely JMP to opIndex
 		OP_SET_INDEX_TRUE = 2,
-
 		OP_OR = 3,
 		OP_IF = 4,			// likely JMPIFNOT
 		OP_AND = 5,
 		OP_CALL = 6,
 		OP_RET = 7,			//  Return to location on top of on jump stack
 		OP_SLEEP = 8,
-
 		OP_CMD_CALL = 9,	//  may just increase the loop count for the loop limit of 10k
 		OP_JMP = 10,		//  JUMP to N(0, 4) by byte offset unconditionally
+		OP_UNKNOWN_11 = 11,
 
 		OP_TYPE_NUMBER = 20,
 		OP_TYPE_STRING = 21,
@@ -39,6 +38,7 @@ namespace opcode
 		OP_TYPE_FALSE = 25,
 		OP_TYPE_NULL = 26,
 		OP_PI = 27,
+
 		OP_COPY_LAST_OP = 30,
 		OP_SWAP_LAST_OPS = 31,
 		OP_INDEX_DEC = 32,
@@ -52,12 +52,17 @@ namespace opcode
 		OP_INLINE_NEW 	  = 40,
 		OP_MAKEVAR		  = 41,
 		OP_NEW_OBJECT 	  = 42,
+		OP_UNKNOWN_43	  = 43,		// makeOldScriptVar
 		OP_INLINE_CONDITIONAL = 44,
+		OP_UNKNOWN_45	  = 45,
+		OP_UNKNOWN_46	  = 46,
+		OP_UNKNOWN_47	  = 47,
+
 		OP_ASSIGN = 50, //  S(1) = S(0)
 		OP_FUNC_PARAMS_END = 51,
-
 		OP_INC = 52, //  SET (S(0) = S(0) + 1)
 		OP_DEC = 53, //  SET (S(0) = S(0) - 1)
+		OP_UNKNOWN_54 = 54,
 
 		OP_ADD = 60, //  PUSH (S(1) + S(0))
 		OP_SUB = 61, //  PUSH (S(1) - S(0))
@@ -65,22 +70,20 @@ namespace opcode
 		OP_DIV = 63, //  PUSH (S(1) / S(0))
 		OP_MOD = 64, //  PUSH (S(1) % S(0))
 		OP_POW = 65, //  PUSH (pow(S(1), S(0)))
-
+		OP_UNKNOWN_66 = 66,
+		OP_UNKNOWN_67 = 67,
 		OP_NOT = 68, //  PUSH (!S(0))
-		OP_UNARYSUB = 69,
-
+		OP_UNARYSUB = 69, //  PUSH (-S(0))
 		OP_EQ = 70, //  PUSH (S(1) == S(0))
-		OP_NEQ = 71,
+		OP_NEQ = 71, // PUSH (S(1) != S(0))
 		OP_LT = 72, //  PUSH (S(1) < S(0))
 		OP_GT = 73, //  PUSH (S(1) > S(0))
 		OP_LTE = 74, //  PUSH (S(1) <= S(0))
 		OP_GTE = 75, //  PUSH (S(1) >= S(0))
-
 		OP_BWO = 76, //  PUSH (S(1) | S(0))
 		OP_BWA = 77, //  PUSH (S(1) & S(0))
 		OP_BWX = 78, //  PUSH (S(1) ^ S(0))
 		OP_BWI = 79, //  PUSH (~S(0))
-
 		OP_IN_RANGE = 80,
 		OP_IN_OBJ = 81,
 		OP_OBJ_INDEX = 82,
@@ -105,6 +108,8 @@ namespace opcode
 		OP_BW_LEFTSHIFT = 101,	//  PUSH (S(1) << S(0))
 		OP_BW_RIGHTSHIFT = 102,	//  PUSH (S(1) >> S(0))
 		OP_CHAR = 103,
+		OP_OBJ_COMPARE = 104,	// something like that
+
 		OP_OBJ_TRIM = 110,
 		OP_OBJ_LENGTH = 111,
 		OP_OBJ_POS = 112,
@@ -116,6 +121,7 @@ namespace opcode
 		OP_OBJ_TOKENIZE = 118,
 		OP_TRANSLATE = 119,
 		OP_OBJ_POSITIONS = 120, // array of positions of the substring in the string
+
 		OP_OBJ_SIZE = 130,
 		OP_ARRAY = 131,
 		OP_ARRAY_ASSIGN = 132,
