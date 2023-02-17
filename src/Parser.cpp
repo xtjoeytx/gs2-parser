@@ -76,7 +76,7 @@ void ParserContext::reset()
 		buffer = nullptr;
 	}
 
-	lineNumber = 0;
+	lineNumber = 1;
 	columnNumber = 0;
 	programNode = nullptr;
 	inputStringPtr = nullptr;

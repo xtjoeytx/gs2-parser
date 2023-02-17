@@ -28,7 +28,7 @@ HEXNUM		[a-fA-F0-9]
 
 %%
 
-[ \t]	{ yyextra->columnNumber++; }; // ignore all whitespace
+[ \t]	{}; // ignore all whitespace
 \n		{ yyextra->lineNumber++; yyextra->columnNumber = 0; };
 "."		{return '.';}
 ","		{return ',';}
