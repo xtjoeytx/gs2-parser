@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 project(gs2test VERSION 1.0)
 
 # specify the C++ standard
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 
 if(WIN32 AND NOT MINGW)
 	execute_process(COMMAND ${CMAKE_COMMAND} -S${CMAKE_CURRENT_SOURCE_DIR}/dependencies/winflexbison -B${CMAKE_CURRENT_SOURCE_DIR}/dependencies/winflexbison/build-winflex-bison -GNinja -DCMAKE_BUILD_TYPE=Release)
@@ -32,6 +34,7 @@ set(SOURCES_ALL
 	src/GS2Bytecode.cpp
 	src/GS2Context.cpp
 	src/Parser.cpp
+	src/c_interface.cpp
 
 	src/ast/ast.h
 	src/ast/astvisitor.h
@@ -60,7 +63,10 @@ set(SOURCES_ALL
 add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/fmtlib EXCLUDE_FROM_ALL)
 
 add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
-add_library(gs2compiler ${SOURCES_ALL})
+add_library(gs2compiler STATIC SHARED ${SOURCES_ALL})
+set_property(TARGET gs2test PROPERTY CXX_STANDARD 23)
+set_property(TARGET gs2compiler PROPERTY CXX_STANDARD 23)
+
 target_link_libraries(gs2test fmt::fmt)
 target_link_libraries(gs2compiler fmt::fmt)
 
