@@ -1,5 +1,11 @@
 #include "GS2Context.h"
 
+#ifdef _WIN32
+#define DLL_EXPORT __declspec(dllexport)
+#else
+#define DLL_EXPORT
+#endif
+
 extern "C" {
 
 	struct Response
@@ -10,11 +16,11 @@ extern "C" {
 		uint bytecodesize;
 	};
 
-	void* get_context() {
+	void* DLL_EXPORT get_context() {
 		return new GS2Context();
 	}
 
-	Response compile_code(void* context, const char* code, const char* type, const char* name) {
+	Response DLL_EXPORT compile_code(void* context, const char* code, const char* type, const char* name) {
 		Response result{};
 		result.success = false;
 		auto gs2Context = (GS2Context*)context;
@@ -26,12 +32,13 @@ extern "C" {
 
 			if (!response.errors.empty()) {
 				errMsg.clear();
-				for (const auto &err : response.errors)
+				for (const auto& err : response.errors)
 					errMsg.append(err.msg()).append("\n");
 
 				int lenStr = errMsg.length() + 1;
 				result.errmsg = new char[lenStr];
 				strcpy(const_cast<char*>(result.errmsg), errMsg.c_str());
+
 				result.bytecode = nullptr;
 				result.bytecodesize = 0;
 			} else {
@@ -46,7 +53,8 @@ extern "C" {
 		return result;
 	}
 
-	void delete_context(void* context) {
+	void DLL_EXPORT delete_context(void* context) {
 		delete (GS2Context*)context;
 	}
+
 }
