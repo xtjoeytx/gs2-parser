@@ -63,7 +63,13 @@ set(SOURCES_ALL
 add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/fmtlib EXCLUDE_FROM_ALL)
 
 add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
-add_library(gs2compiler STATIC SHARED ${SOURCES_ALL})
+
+if (STATIC)
+	add_library(gs2compiler STATIC ${SOURCES_ALL})
+else()
+	add_library(gs2compiler SHARED ${SOURCES_ALL})
+endif()
+
 set_property(TARGET gs2test PROPERTY CXX_STANDARD 23)
 set_property(TARGET gs2compiler PROPERTY CXX_STANDARD 23)
 
