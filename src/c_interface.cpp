@@ -12,7 +12,7 @@ extern "C" {
 		bool Success;
 		const char* ErrMsg;
 		unsigned char* ByteCode;
-		uint ByteCodeSize;
+		uint32_t ByteCodeSize;
 	};
 
 	void* DLL_EXPORT get_context() {
