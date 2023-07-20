@@ -15,11 +15,11 @@ extern "C" {
 		uint32_t ByteCodeSize;
 	};
 
-	void* DLL_EXPORT get_context() {
+    DLL_EXPORT void* get_context() {
 		return new GS2Context();
 	}
 
-	Response DLL_EXPORT compile_code(void* context, const char* code, const char* type, const char* name) {
+    DLL_EXPORT Response compile_code(void* context, const char* code, const char* type, const char* name) {
 		Response result{};
 		result.Success = false;
 
@@ -53,7 +53,7 @@ extern "C" {
 		return result;
 	}
 
-	void DLL_EXPORT delete_context(void* context) {
+    DLL_EXPORT void delete_context(void* context) {
 		delete (GS2Context*)context;
 	}
 }
