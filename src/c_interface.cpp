@@ -7,23 +7,22 @@
 #endif
 
 extern "C" {
-	struct Response
-	{
+	struct Response {
 		bool Success;
-		const char* ErrMsg;
-		unsigned char* ByteCode;
+		const char *ErrMsg;
+		unsigned char *ByteCode;
 		uint32_t ByteCodeSize;
 	};
 
-    DLL_EXPORT void* get_context() {
+	DLL_EXPORT void *get_context() {
 		return new GS2Context();
 	}
 
-    DLL_EXPORT Response compile_code(void* context, const char* code, const char* type, const char* name) {
+	DLL_EXPORT Response compile_code(void *context, const char *code, const char *type, const char *name) {
 		Response result{};
 		result.Success = false;
 
-		auto gs2Context = (GS2Context*)context;
+		auto gs2Context = (GS2Context *) context;
 
 		if (gs2Context != nullptr) {
 			std::string script = code;
@@ -32,19 +31,19 @@ extern "C" {
 
 			if (!response.errors.empty()) {
 				errMsg.clear();
-				for (const auto& err : response.errors)
+				for (const auto &err: response.errors)
 					errMsg.append(err.msg()).append("\n");
 
 				int lenStr = errMsg.length() + 1;
 				result.ErrMsg = new char[lenStr];
-				strcpy(const_cast<char*>(result.ErrMsg), errMsg.c_str());
+				strcpy(const_cast<char *>(result.ErrMsg), errMsg.c_str());
 
 				result.ByteCode = nullptr;
 				result.ByteCodeSize = 0;
 			} else {
 				result.ErrMsg = nullptr;
 				result.ByteCode = new unsigned char[response.bytecode.size()];  // Allocate memory
-				memcpy((void*)result.ByteCode, response.bytecode.buffer(), response.bytecode.size());
+				memcpy((void *) result.ByteCode, response.bytecode.buffer(), response.bytecode.size());
 				result.ByteCodeSize = response.bytecode.size();
 			}
 			result.Success = response.success;
@@ -53,7 +52,7 @@ extern "C" {
 		return result;
 	}
 
-    DLL_EXPORT void delete_context(void* context) {
-		delete (GS2Context*)context;
+	DLL_EXPORT void delete_context(void *context) {
+		delete (GS2Context *) context;
 	}
 }
