@@ -50,6 +50,7 @@ HEXNUM		[a-fA-F0-9]
 "||"	{return T_OPOR;}
 "=="	{return T_OPEQUALS;}
 "!="	{return T_OPNOTEQUALS;}
+"<>"	{return T_OPNOTEQUALS;}
 "<"		{return '<';}
 "<="	{return T_OPLESSTHANEQUAL;}
 "=<"	{return T_OPLESSTHANEQUAL;}
