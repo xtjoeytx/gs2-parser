@@ -28,7 +28,7 @@ namespace opcode
 		OP_SLEEP = 8,
 		OP_CMD_CALL = 9,	//  may just increase the loop count for the loop limit of 10k
 		OP_JMP = 10,		//  JUMP to N(0, 4) by byte offset unconditionally
-		OP_UNKNOWN_11 = 11,
+		OP_WAITFOR = 11,
 
 		OP_TYPE_NUMBER = 20,
 		OP_TYPE_STRING = 21,
@@ -52,7 +52,7 @@ namespace opcode
 		OP_INLINE_NEW 	  = 40,
 		OP_MAKEVAR		  = 41,
 		OP_NEW_OBJECT 	  = 42,
-		OP_UNKNOWN_43	  = 43,		// makeOldScriptVar
+		OP_OBJ_FROM_STR	  = 43,		// makeOldScriptVar -- review: this comes from setstring
 		OP_INLINE_CONDITIONAL = 44,
 		OP_UNKNOWN_45	  = 45,
 		OP_UNKNOWN_46	  = 46,
