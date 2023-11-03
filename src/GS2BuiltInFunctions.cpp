@@ -127,6 +127,13 @@ const BuiltInCmd builtInCmds[] = {
 		.sig = "fff"
 	},
 
+    {
+        .name = "waitfor",
+        .op = opcode::OP_WAITFOR,
+        .flags = CMD_RETURN_VALUE,
+        .sig = "xssf"
+    },
+
 	{
 		.name = "format",
 		.op = opcode::OP_FORMAT,

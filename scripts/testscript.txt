@@ -327,6 +327,15 @@ function randomCommands() {
        626,       352: "=" (50)
   */
   temp.tvar = {timevar, timevar2};
+
+  /*
+    38: PushVariable        this
+    39: ConvertToString
+    40: PushString          foo
+    41: PushNumber          7200
+    42: WaitFor
+  */
+  waitfor(this, "foo", 7200);
 }
 
 //===================================================
