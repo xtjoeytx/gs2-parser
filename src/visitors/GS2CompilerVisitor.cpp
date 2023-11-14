@@ -185,6 +185,10 @@ void GS2CompilerVisitor::Visit(StatementFnDeclNode *node)
 		byteCode.emitDynamicNumber(0);
 		byteCode.emit(opcode::OP_RET);
 	}
+
+	// output end of function opindex
+	if (node->emit_prejump)
+		byteCode.emit(short(byteCode.getOpIndex()), jmpLoc - 2);
 }
 
 void GS2CompilerVisitor::Visit(ExpressionTernaryOpNode *node)
@@ -570,7 +574,7 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 			{
 				byteCode.emit(opcode::OP_CONV_TO_STRING);
 
-				// need to test to see if this should always be emitted here, or in postfixnode
+				// need to tests to see if this should always be emitted here, or in postfixnode
 				if (node->expr->expressionType() == ExpressionType::EXPR_ARRAY)
 					byteCode.emit(opcode::OP_MEMBER_ACCESS);
 
@@ -1414,14 +1418,14 @@ void GS2CompilerVisitor::Visit(StatementForEachNode *node)
 
 void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 {
-	// emit jump to case-test
+	// emit jump to case-tests
 	// case-list:
 	// record case-block start
 	// emit case-block
 	// emit jump to endloc // actually no
 	// ...repeat..
 
-	// case-test:
+	// case-tests:
 	// push switch-expr
 	// copy last operand
 	// push case-expr
@@ -1439,7 +1443,7 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 
 		std::vector<label_id> caseStartOp;
 
-		// jump to case-test
+		// jump to case-tests
 		byteCode.emit(opcode::OP_SET_INDEX);
 		byteCode.emit(char(0xF4));
 		byteCode.emit(short(0));
@@ -1459,7 +1463,7 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 			caseNode.block->visit(this);
 		}
 
-		// case-test:
+		// case-tests:
 		byteCode.emit(short(byteCode.getOpIndex()), caseTestLoc);
 		node->expr->visit(this);
 
@@ -1483,7 +1487,7 @@ void GS2CompilerVisitor::Visit(StatementSwitchNode* node)
 
 		setLocation(new_break_label, byteCode.getOpIndex());
 
-		// Since we are consuming a copy for each case-test, we need to pop
+		// Since we are consuming a copy for each case-tests, we need to pop
 		// the original value off the top of the stack.
 		//if (node->expr->expressionType() == ExpressionType::EXPR_FUNCTION) // note: no idea why this was here
 		byteCode.emit(opcode::OP_INDEX_DEC);

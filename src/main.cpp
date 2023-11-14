@@ -88,7 +88,7 @@ int main(int argc, const char *argv[]) {
 
 //	auto ret = fmt::format("Test {}", 42);
 //	printf("Test: %s\n", ret.c_str());
-	//auto ret = std::format("test {}", 3);
+	//auto ret = std::format("tests {}", 3);
 	//printf("Test: %s\n", ret.c_str());
 
 	Buffer buf;
