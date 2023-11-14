@@ -1,0 +1,220 @@
+digraph "Block graph for GS2 module \"TEST\"" {
+	label="Block graph for GS2 module \"TEST\"";
+	subgraph cluster_function0 {
+		label="Function unnamed_0";
+		Instruction0[shape=plaintext,style=filled,color="#00ff00",fillcolor="#99ff77",label=<
+			<table border="0">
+				<tr>
+					<td>
+						<table border = "0">
+							<tr>
+								<td colspan="3" align="center" balign="center"><br align="center" /><b>Instruction 0</b></td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									Player
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									PushVariable
+								</td>
+								<td align="left" balign="left"><br align="left" />
+									chat
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									AccessMember
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									PushString
+								</td>
+								<td align="left" balign="left"><br align="left" />
+									asd
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									Assign
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									Jmp
+								</td>
+								<td align="left" balign="left"><br align="left" />
+									11
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<table border="0">
+							<tr><td align="center" balign="center" port="s0" colspan="2"><br align="center" /></td></tr>
+						</table>
+					</td>
+				</tr>
+			</table>>
+		]
+		Instruction11[shape=plaintext,style=filled,color="#00ff00",fillcolor="#99ff77",label=<
+			<table border="0">
+				<tr>
+					<td>
+						<table border = "0">
+							<tr>
+								<td colspan="3" align="center" balign="center"><br align="center" /><b>Instruction 11</b></td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									Player
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									PushVariable
+								</td>
+								<td align="left" balign="left"><br align="left" />
+									chat
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									AccessMember
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									PushString
+								</td>
+								<td align="left" balign="left"><br align="left" />
+									asdf
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									Assign
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									Player
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									PushVariable
+								</td>
+								<td align="left" balign="left"><br align="left" />
+									chat
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									AccessMember
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									PushString
+								</td>
+								<td align="left" balign="left"><br align="left" />
+									abc
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									Assign
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<table border="0">
+							<tr><td align="center" balign="center" port="s0" colspan="2"><br align="center" /></td></tr>
+						</table>
+					</td>
+				</tr>
+			</table>>
+		]
+		Instruction21[shape=plaintext,style=filled,color="#00ff00",fillcolor="#99ff77",label=<
+			<table border="0">
+				<tr>
+					<td>
+						<table border = "0">
+							<tr>
+								<td colspan="3" align="center" balign="center"><br align="center" /><b>Instruction 21</b></td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<table border="0">
+							<tr><td align="center" balign="center" port="s0" colspan="2"><br align="center" /></td></tr>
+						</table>
+					</td>
+				</tr>
+			</table>>
+		]
+	}
+	Instruction0:s0 -> Instruction11:n0
+	Instruction11:s0 -> Instruction21:n0
+	subgraph cluster_function6 {
+		label="Function onPlayerEnters";
+		Instruction6[shape=plaintext,style=filled,color="#00ff00",fillcolor="#99ff77",label=<
+			<table border="0">
+				<tr>
+					<td>
+						<table border = "0">
+							<tr>
+								<td colspan="3" align="center" balign="center"><br align="center" /><b>Instruction 6</b></td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									PushArray
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									EndParams
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									FunctionStart
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									PushNumber
+								</td>
+								<td align="left" balign="left"><br align="left" />
+									0
+								</td>
+							</tr>
+							<tr>
+								<td align="left" balign="left"><br align="left" />
+									Ret
+								</td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<table border="0">
+							<tr><td align="center" balign="center" port="s0" colspan="2"><br align="center" /></td></tr>
+						</table>
+					</td>
+				</tr>
+			</table>>
+		]
+	}
+}

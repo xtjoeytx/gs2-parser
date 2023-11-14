@@ -1,0 +1,7 @@
+//#CLIENTSIDE
+player.chat = "asd";
+function onPlayerEnters() {
+  // player.chat = "someone entered";
+}
+player.chat = "asdf";
+player.chat = "abc";

@@ -42,6 +42,13 @@ class Buffer
         void write(char val);
         void write(const Buffer& o);
 
+		template<typename T>
+		typename T::Val_Type Read() {
+			auto result = T::Read(*this, readpos);
+			readpos += sizeof(result);
+			return result;
+		}
+
         template<typename T>
         typename T::Val_Type Read(size_t pos) {
             return T::Read(*this, pos);

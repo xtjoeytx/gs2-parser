@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.22)
 project(gs2test VERSION 1.0)
 
 # specify the C++ standard
@@ -6,6 +6,40 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
+# Additional CMake modules
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+set(MAKE_TESTS ON)
+set(MAKE_CACHE2 OFF)
+set(MAKE_GTEST ON)
+
+if(MAKE_TESTS)
+	include(FetchContent)
+
+	if (MAKE_CACHE2)
+		FetchContent_Declare(
+				Catch2
+				GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+				GIT_TAG        v3.4.0 # or a later release
+		)
+
+		FetchContent_MakeAvailable(Catch2)
+	endif()
+
+	if (MAKE_GTEST)
+		include(FetchContent)
+		FetchContent_Declare(
+				googletest
+				URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+		)
+
+		if(WIN32)
+			# For Windows: Prevent overriding the parent project's compiler/linker settings
+			set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+		endif()
+
+		FetchContent_MakeAvailable(googletest)
+	endif()
+endif()
 
 if(WIN32 AND NOT MINGW)
 	execute_process(COMMAND ${CMAKE_COMMAND} -S${CMAKE_CURRENT_SOURCE_DIR}/dependencies/winflexbison -B${CMAKE_CURRENT_SOURCE_DIR}/dependencies/winflexbison/build-winflex-bison -GNinja -DCMAKE_BUILD_TYPE=Release)
@@ -81,3 +115,14 @@ set(GS2COMPILER_INCLUDE_DIRECTORY
 	"${PROJECT_BINARY_DIR}/include"
 	"${PROJECT_SOURCE_DIR}/src"
 	PARENT_SCOPE)
+
+if (MAKE_TESTS)
+	enable_testing()
+	if (MAKE_CACHE2)
+		add_subdirectory(${PROJECT_SOURCE_DIR}/testing/catch2)
+	endif()
+
+	if (MAKE_GTEST)
+		add_subdirectory(${PROJECT_SOURCE_DIR}/testing/gtest)
+	endif()
+endif()

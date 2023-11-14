@@ -1,4 +1,3 @@
-#include <cassert>
 #include <cstdlib>
 #include <cstring>
 
@@ -11,17 +10,17 @@ void Buffer::resize(size_t len)
 		auto tmp = buf;
 		buflen = (len > buflen ? len : buflen * 2);
 		buf = (uint8_t *)realloc(buf, buflen);
-		assert(buf);
-		
+
 		// silencing msvc warning C6308
-		if (!buf)
+		if (!buf) {
 			free(tmp);
+		}
 	}
 	else
 	{
 		if (len == 0)
 			len = 128;
-		
+
 		buf = (uint8_t *)malloc(len);
 		buflen = len;
 	}
@@ -29,7 +28,7 @@ void Buffer::resize(size_t len)
 
 void Buffer::read(char *dst, size_t len, size_t pos) const
 {
-	if (buflen > pos + len) {
+	if (buflen >= pos + len) {
 		memcpy(dst, buf + pos, len);
 	}
 }

@@ -37,7 +37,7 @@ Response compileFile(const std::filesystem::path& filePath)
 			file = nullptr;
 		}
 
-		result.response = context.compile(script, "weapon", "TestCode", true);
+		result.response = context.compile(script); //, "weapon", "TestCode", true);
 		if (result.response.errors.empty())
 		{
 			result.output_file = std::filesystem::relative(filePath.parent_path()) / filePath.stem().concat(".gs2bc");
