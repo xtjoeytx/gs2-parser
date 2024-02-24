@@ -62,7 +62,16 @@ set(SOURCES_ALL
 
 add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/fmtlib EXCLUDE_FROM_ALL)
 
-add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
+if (DEFINED EMSCRIPTEN)
+	add_executable(gs2test ${SOURCES_ALL} src/js_interface.cpp)
+
+	# set(CMAKE_EXECUTABLE_SUFFIX ".wasm")
+
+	# set_target_properties(gs2test PROPERTIES COMPILE_FLAGS "-Os -s SIDE_MODULE=0 ")
+	set_target_properties(gs2test PROPERTIES LINK_FLAGS "-s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
+else()
+	add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
+endif()
 
 if (STATIC)
 	add_library(gs2compiler STATIC ${SOURCES_ALL})
