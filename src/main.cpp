@@ -6,6 +6,7 @@
 #include <string>
 #include "GS2Context.h"
 
+
 struct Response
 {
 	CompilerResponse response;
