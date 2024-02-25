@@ -27,7 +27,7 @@ jobs:
     - name: Publish
       run: |
         # Assuming you're generating a npm package
-        npm version minor -m "Bump version %s [skip ci]"
+        npm ci
         npm publish
       env:
         NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
