@@ -10,11 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     # Set up Emscripten
     - name: Set up Emscripten
-      uses: mymindstorm/setup-emsdk@v6
+      uses: mymindstorm/setup-emsdk@v14
 
     # Build your project with CMake
     - name: Build
