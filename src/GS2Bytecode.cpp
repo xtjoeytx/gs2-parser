@@ -35,7 +35,7 @@ Buffer GS2Bytecode::getByteCode()
 	// ran into this issue so I believe its a client issue.
 	// Either way, emitting this op seems to fix it. *shrugs*
 	// - joey
-	emit(opcode::OP_RET);
+//	emit(opcode::OP_RET);
 
 	Buffer byteCode;
 
@@ -97,7 +97,7 @@ Buffer GS2Bytecode::getByteCode()
 				// emit a jump before the function declaration to the last op index
 				if (func.jmpLoc != 0)
 				{
-					emit(short(opIndex), func.jmpLoc - 2);
+//					emit(short(opIndex), func.jmpLoc - 2);
 				}
 			}
 		}
@@ -286,7 +286,7 @@ void GS2Bytecode::emitDynamicNumber(int32_t val)
 		emit(char(0xF1 + offset));
 		emit(short(val));
 	}
-	else if (val >= std::numeric_limits<int32_t>::min() && val <= std::numeric_limits<int32_t>::max())
+	else
 	{
 		emit(char(0xF2 + offset));
 		emit(int(val));
@@ -318,17 +318,17 @@ void GS2Bytecode::emitDynamicNumberUnsigned(uint32_t val)
 			return;
 	}
 
-	if (val >= std::numeric_limits<uint8_t>::min() && val <= std::numeric_limits<uint8_t>::max())
+	if (val <= std::numeric_limits<uint8_t>::max())
 	{
 		emit(char(0xF0 + offset));
 		emit(char(val));
 	}
-	else if (val >= std::numeric_limits<uint16_t>::min() && val <= std::numeric_limits<uint16_t>::max())
+	else if (val <= std::numeric_limits<uint16_t>::max())
 	{
 		emit(char(0xF1 + offset));
 		emit(short(val));
 	}
-	else if (val >= std::numeric_limits<uint32_t>::min() && val <= std::numeric_limits<uint32_t>::max())
+	else
 	{
 		emit(char(0xF2 + offset));
 		emit(int(val));
