@@ -3,7 +3,7 @@ name: Build and Publish
 on:
   push:
     branches:
-      - dev  # Or your default branch
+      - main  # Or your default branch
 
 jobs:
   build:
