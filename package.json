@@ -1,0 +1,17 @@
+{
+  "name": "@xtjoeytx/gs2-parser",
+  "version": "1.0.0",
+  "description": "This is a compiler for the Graal Script 2 (GS2) language.",
+  "main": "dist/gs2test.js",
+  "types": "dist/gs2test.d.ts",
+  "scripts": {
+    "build": "mkdir -p dist && mkdir -p build && cd build && emcmake cmake .. && make -j$(nproc) && mv ./gs2test.js ../dist/gs2test.js && mv ./gs2test.d.ts ../dist/gs2test.d.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [],
+  "author": "xtjoeytx",
+  "license": "GPL-3.0-only",
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  }
+}

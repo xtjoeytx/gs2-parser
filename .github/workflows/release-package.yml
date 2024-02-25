@@ -1,0 +1,31 @@
+name: Build and Publish
+
+on:
+  push:
+    branches:
+      - dev  # Or your default branch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    # Set up Emscripten
+    - name: Set up Emscripten
+      uses: mymindstorm/setup-emsdk@v6
+
+    # Build your project with CMake
+    - name: Build
+      run: |
+        npm run build
+
+    # Publish to GitHub Packages (adjust for your packaging tool)
+    - name: Publish
+      run: |
+        # Assuming you're generating a npm package
+        npm version minor -m "Bump version %s [skip ci]"
+        npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
