@@ -22,6 +22,24 @@ jobs:
     - name: Build
       run: |
         npm run build
+    
+    # Upload build artifacts
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-artifacts
+        path: dist
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Download build artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: build-artifacts
+        path: dist
 
     # Publish to GitHub Packages (adjust for your packaging tool)
     - name: Publish
