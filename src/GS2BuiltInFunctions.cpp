@@ -152,7 +152,10 @@ const BuiltInCmd builtInCmds[] = {
 const BuiltInCmd builtInObjCmds[] = {
 	{
 		.name = "index",
-		.op = opcode::OP_OBJ_INDEX
+		.op = opcode::OP_OBJ_INDEX,
+		.convert_object_op = opcode::OP_CONV_TO_OBJECT,
+		.flags = CmdFlags::CMD_OBJECT_FIRST | CmdFlags::CMD_RETURN_VALUE,
+		.sig = "fx"
 	},
 
 	{
@@ -194,7 +197,9 @@ const BuiltInCmd builtInObjCmds[] = {
 	{
 		.name = "charat",
 		.op = opcode::OP_OBJ_CHARAT,
-		//.convert_object_op = opcode::OP_CONV_TO_STRING
+		.convert_object_op = opcode::OP_CONV_TO_STRING,
+		.flags = CmdFlags::CMD_OBJECT_FIRST | CmdFlags::CMD_RETURN_VALUE,
+		.sig = "sf"
 	},
 
 	{
