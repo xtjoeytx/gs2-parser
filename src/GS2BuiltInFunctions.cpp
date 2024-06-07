@@ -278,6 +278,12 @@ const BuiltInCmd builtInObjCmds[] = {
 		.convert_object_op = opcode::OP_CONV_TO_OBJECT,
 		.flags = CmdFlags::CMD_OBJECT_FIRST | CmdFlags::CMD_REVERSE_ARGS,
 	},
+	{
+		.name = "replace",
+		.op = opcode::OP_OBJ_REPLACESTRING,
+		.convert_object_op = opcode::OP_CONV_TO_OBJECT,
+		.flags = CmdFlags::CMD_OBJECT_FIRST | CmdFlags::CMD_REVERSE_ARGS,
+	},
 };
 
 GS2BuiltInFunctions GS2BuiltInFunctions::getBuiltIn()
