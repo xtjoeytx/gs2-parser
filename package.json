@@ -5,8 +5,7 @@
   "main": "dist/gs2test.js",
   "types": "dist/gs2test.d.ts",
   "scripts": {
-    "build": "mkdir -p dist && mkdir -p build && cd build && emcmake cmake .. && make -j$(nproc) && mv ./gs2test.js ../dist/gs2test.js && mv ./gs2test.d.ts ../dist/gs2test.d.ts",
-    "prepublishOnly": "npm run build"
+    "build": "mkdir -p dist && mkdir -p build && cd build && emcmake cmake .. && make -j$(nproc) && mv ./gs2test.js ../dist/gs2test.js && mv ./gs2test.d.ts ../dist/gs2test.d.ts"
   },
   "keywords": [],
   "author": "xtjoeytx",
