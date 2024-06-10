@@ -38,7 +38,7 @@ Response compileFile(const std::filesystem::path& filePath)
 			file = nullptr;
 		}
 
-		result.response = context.compile(script, "weapon", "TestCode", true);
+		result.response = context.compile(script); //, "weapon", "TestCode", true);
 		if (result.response.errors.empty())
 		{
 			result.output_file = std::filesystem::relative(filePath.parent_path()) / filePath.stem().concat(".gs2bc");
@@ -89,7 +89,7 @@ int main(int argc, const char *argv[]) {
 
 //	auto ret = fmt::format("Test {}", 42);
 //	printf("Test: %s\n", ret.c_str());
-	//auto ret = std::format("test {}", 3);
+	//auto ret = std::format("tests {}", 3);
 	//printf("Test: %s\n", ret.c_str());
 
 	Buffer buf;

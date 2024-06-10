@@ -1,0 +1,8 @@
+//#CLIENTSIDE
+function onCreated() {
+    temp.arr = {"foo", "bar", "baz"};
+    temp.fooInArr = "foo" in temp.arr;
+    temp.barIndex = indexof("bar", temp.arr);
+    temp.barIndex2 = temp.barIndex.pos("bar");
+    temp.thirdPositionIsBaz = temp.arr[2] == "baz";
+}
