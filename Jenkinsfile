@@ -130,7 +130,6 @@ def buildStepDocker() {
             stage("Building NuGet Package") {
 
                 customImage.inside("-u 0") {
-                    sh("find ./");
                     dir("bindings/dotnet/") {
                         sh("chmod 777 -R .");
                         sh("dotnet pack GS2Compiler.csproj -c Release ${VER}");
@@ -203,8 +202,6 @@ node('master') {
 		}
 	}
 
-	sh("rm -rf ./*");
-
 	parallel(branches);
 
 	def customImage = docker.image("mcr.microsoft.com/dotnet/sdk:8.0");
@@ -231,4 +228,6 @@ node('master') {
     }
 
     buildStepDocker();
+
+    sh("rm -rf ./*");
 }
