@@ -130,6 +130,7 @@ def buildStepDocker() {
             stage("Building NuGet Package") {
 
                 customImage.inside("-u 0") {
+                    sh("find ./");
                     dir("bindings/dotnet/") {
                         sh("chmod 777 -R .");
                         sh("dotnet pack GS2Compiler.csproj -c Release ${VER}");
