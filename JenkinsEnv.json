@@ -1,0 +1,16 @@
+{
+  "builds": [
+	{
+	  "DockerImage": "amigadev/crosstools:x86_64-linux",
+	  "Generator":   "Unix Makefiles",
+	  "OS":          "Linux x86_64",
+	  "Defines":     ""
+	},
+	{
+	  "DockerImage": "amigadev/crosstools:x86_64-w64-mingw32",
+	  "Generator":   "Unix Makefiles",
+	  "OS":          "Windows x86_64",
+	  "Defines":     ""
+	}
+  ]
+}

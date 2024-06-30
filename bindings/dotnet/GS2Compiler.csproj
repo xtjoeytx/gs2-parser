@@ -1,0 +1,32 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<Title>GS2Compiler</Title>
+		<Authors>Preagonal</Authors>
+		<Copyright>Preagonal 2023-2024</Copyright>
+		<PackageProjectUrl>https://github.com/Preagonal/GS2Engine</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/Preagonal/GS2Engine</RepositoryUrl>
+		<AssemblyVersion>1.0.0</AssemblyVersion>
+		<FileVersion>1.0.0</FileVersion>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<AssemblyName>GS2Compiler</AssemblyName>
+		<RootNamespace>GS2Compiler</RootNamespace>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+		<TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
+	  <Optimize>true</Optimize>
+	  <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="cross-compile/linux-x64/libgs2compiler.so" Pack="true" PackagePath="runtimes/linux-x64/native/" />
+	</ItemGroup>
+</Project>
