@@ -41,7 +41,8 @@ def killall_jobs() {
 
 def buildStep(dockerImage, generator, os, defines) {
 	def split_job_name = env.JOB_NAME.split(/\/{1}/);
-	def fixed_job_name = split_job_name[1].replace('%2F',' ');
+	def fixed_job_name = split_job_name[1].replace('%2F','-');
+	fixed_job_name = fixed_job_name.replace('/','-');
     def fixed_os = os.replace(' ','-');
 
 	try{
@@ -68,8 +69,8 @@ def buildStep(dockerImage, generator, os, defines) {
 				discordSend description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Starting ${os} build target...", webhookURL: env.GS2EMU_WEBHOOK
 
 				dir("build") {
-					sh("cmake -G\"${generator}\" ${defines} -DVER_EXTRA=\"-${fixed_os}-${fixed_job_name}\" .. || true"); // Temporary fix for Windows MingW builds
-					sh("cmake --build . --config Release --target package -- -j `nproc`");
+					sh("cmake -G\"${generator}\" -DCMAKE_BUILD_TYPE=Release ${defines} -DVER_EXTRA=\"-${fixed_os}-${fixed_job_name}\" .. || true"); // Temporary fix for Windows MingW builds
+					sh("cmake --build . --config Release --target all -- -j `nproc`");
 
 					archiveArtifacts(artifacts: '*.zip,*.tar.gz,*.tgz');
 				}
