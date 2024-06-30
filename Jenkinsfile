@@ -96,71 +96,72 @@ def buildStepDocker() {
 	customImage.pull();
 
 	try {
+        dir("bindings/dotnet/") {
+            def buildenv = "";
+            def tag = '';
+            def VER = '';
+            def EXTRA_VER = '';
 
-		def buildenv = "";
-		def tag = '';
-		def VER = '';
-		def EXTRA_VER = '';
 
+            if(env.TAG_NAME) {
+                sh(returnStdout: true, script: "echo '```' > RELEASE_DESCRIPTION.txt");
+                env.RELEASE_DESCRIPTION = sh(returnStdout: true, script: "git tag -l --format='%(contents)' ${env.TAG_NAME} >> RELEASE_DESCRIPTION.txt");
+                sh(returnStdout: true, script: "echo '```' >> RELEASE_DESCRIPTION.txt");
+            }
 
-		if(env.TAG_NAME) {
-			sh(returnStdout: true, script: "echo '```' > RELEASE_DESCRIPTION.txt");
-			env.RELEASE_DESCRIPTION = sh(returnStdout: true, script: "git tag -l --format='%(contents)' ${env.TAG_NAME} >> RELEASE_DESCRIPTION.txt");
-			sh(returnStdout: true, script: "echo '```' >> RELEASE_DESCRIPTION.txt");
-		}
+            if (env.BRANCH_NAME.equals('main')) {
+                tag = "latest";
+            } else {
+                tag = "${env.BRANCH_NAME.replace('/','-')}";
+            }
 
-		if (env.BRANCH_NAME.equals('main')) {
-			tag = "latest";
-		} else {
-			tag = "${env.BRANCH_NAME.replace('/','-')}";
-		}
+            if (env.TAG_NAME) {
+                EXTRA_VER = "";
+                VER = "/p:Version=${env.TAG_NAME}";
+            } else if (env.BRANCH_NAME.equals('dev')) {
+                EXTRA_VER = "-beta";
+            } else {
+                EXTRA_VER = "--build-arg VER_EXTRA=-${tag}";
+            }
 
-		if (env.TAG_NAME) {
-			EXTRA_VER = "";
-			VER = "/p:Version=${env.TAG_NAME}";
-		} else if (env.BRANCH_NAME.equals('dev')) {
-			EXTRA_VER = "-beta";
-		} else {
-			EXTRA_VER = "--build-arg VER_EXTRA=-${tag}";
-		}
+            docker.withRegistry("https://index.docker.io/v1/", "dockergraal") {
+                def release_name = env.JOB_NAME.replace('%2F','/');
+                def release_type = ("${release_name}").replace('/','-').replace('GS2Engine-','').replace('main','').replace('dev','');
 
-		docker.withRegistry("https://index.docker.io/v1/", "dockergraal") {
-			def release_name = env.JOB_NAME.replace('%2F','/');
-			def release_type = ("${release_name}").replace('/','-').replace('GS2Engine-','').replace('main','').replace('dev','');
+                stage("Building NuGet Package") {
 
-			stage("Building NuGet Package") {
+                    customImage.inside("-u 0") {
+                        sh("chmod 777 -R .");
+                        sh("dotnet pack GS2Compiler.csproj -c Release ${VER}");
+                        sh("chmod 777 -R .");
+                    }
+                }
 
-				customImage.inside("-u 0") {
-					sh("chmod 777 -R .");
-					sh("dotnet pack GS2Compiler.csproj -c Release ${VER}");
-					sh("chmod 777 -R .");
-				}
-			}
+                def archive_date = sh (
+                    script: 'date +"-%Y%m%d-%H%M"',
+                    returnStdout: true
+                ).trim();
 
-			def archive_date = sh (
-				script: 'date +"-%Y%m%d-%H%M"',
-				returnStdout: true
-			).trim();
+                if (env.TAG_NAME) {
+                    archive_date = '';
+                }
 
-			if (env.TAG_NAME) {
-				archive_date = '';
-			}
-
-			if (env.TAG_NAME) {
-				stage("Pushing NuGet") {
-					customImage.inside("-u 0") {
-						withCredentials([string(credentialsId: 'PREAGONAL_GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
-							sh("dotnet nuget push -s https://nuget.pkg.github.com/Preagonal/index.json -k ${env.GITHUB_TOKEN} bin/Release/*.nupkg;chmod 777 -R .");
-							discordSend description: "NuGet Successful", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Artifact Successful: ${fixed_job_name} #${env.BUILD_NUMBER}", webhookURL: env.GS2EMU_WEBHOOK;
-						}
-						withCredentials([string(credentialsId: 'PREAGONAL_NUGET_TOKEN', variable: 'NUGET_TOKEN')]) {
-							sh("dotnet nuget push -s https://api.nuget.org/v3/index.json -k ${env.NUGET_TOKEN} bin/Release/*.nupkg;chmod 777 -R .");
-							discordSend description: "NuGet Successful", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Artifact Successful: ${fixed_job_name} #${env.BUILD_NUMBER}", webhookURL: env.GS2EMU_WEBHOOK;
-						}
-					}
-				}
-			}
-		}
+                if (env.TAG_NAME) {
+                    stage("Pushing NuGet") {
+                        customImage.inside("-u 0") {
+                            withCredentials([string(credentialsId: 'PREAGONAL_GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
+                                sh("dotnet nuget push -s https://nuget.pkg.github.com/Preagonal/index.json -k ${env.GITHUB_TOKEN} bin/Release/*.nupkg;chmod 777 -R .");
+                                discordSend description: "NuGet Successful", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Artifact Successful: ${fixed_job_name} #${env.BUILD_NUMBER}", webhookURL: env.GS2EMU_WEBHOOK;
+                            }
+                            withCredentials([string(credentialsId: 'PREAGONAL_NUGET_TOKEN', variable: 'NUGET_TOKEN')]) {
+                                sh("dotnet nuget push -s https://api.nuget.org/v3/index.json -k ${env.NUGET_TOKEN} bin/Release/*.nupkg;chmod 777 -R .");
+                                discordSend description: "NuGet Successful", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Artifact Successful: ${fixed_job_name} #${env.BUILD_NUMBER}", webhookURL: env.GS2EMU_WEBHOOK;
+                            }
+                        }
+                    }
+                }
+            }
+        }
 	} catch(err) {
 		currentBuild.result = 'FAILURE'
 		customImage.inside("-u 0") {
@@ -211,12 +212,20 @@ node('master') {
 
         dir("bindings/dotnet/cross-compile/${v.OSDir}/") {
             unstash(name: v.OSDir);
-            sh("ls -l");
+            try {
+                sh("mv -fv bin/* .");
+                sh("rm -rf bin")
+            } catch(err) { }
+            try {
+                sh("mv -fv lib/* .");
+                sh("rm -rf lib")
+            } catch(err) { }
         }
     }
 
     dir("bindings/dotnet/") {
         sh("ls -l cross-compile/*");
-        buildStepDocker();
     }
+
+    buildStepDocker();
 }
