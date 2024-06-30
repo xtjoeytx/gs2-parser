@@ -77,7 +77,9 @@ def buildStep(dockerImage, generator, os, defines) {
 				}
 
 				dir("lib") {
-					archiveArtifacts(artifacts: '*.dylib,*.so,*.dll');
+					archiveArtifacts(artifacts: '*.dylib', allowEmptyArchive: true);
+					archiveArtifacts(artifacts: '*.so', allowEmptyArchive: true);
+					archiveArtifacts(artifacts: '*.dll', allowEmptyArchive: true);
 				}
 
 				discordSend description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Build ${fixed_job_name} #${env.BUILD_NUMBER} Target: ${os} successful!", webhookURL: env.GS2EMU_WEBHOOK
