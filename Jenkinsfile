@@ -91,10 +91,6 @@ node('master') {
 	def fixed_job_name = split_job_name[1].replace('%2F',' ');
 	checkout(scm);
 
-    withCredentials([usernamePassword(credentialsId: 'githubgraal2', passwordVariable: 'GIT_PASSWORD', usernameVariable: 'GIT_USERNAME')]) {
-        sh("git push https://${GIT_USERNAME}:${GIT_PASSWORD}@bitbucket.org/xtjoeytx/gs2lib.git HEAD:${fixed_job_name}");
-    }
-
 	env.COMMIT_MSG = sh (
 		script: 'git log -1 --pretty=%B ${GIT_COMMIT}',
 		returnStdout: true
