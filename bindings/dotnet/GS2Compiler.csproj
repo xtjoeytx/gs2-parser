@@ -29,6 +29,6 @@
 	<ItemGroup>
 		<None Include="cross-compile/linux-x64/libgs2compiler.so" Pack="true" PackagePath="runtimes/linux-x64/native/" />
 		<None Include="cross-compile/win-x64/gs2compiler.dll" Pack="true" PackagePath="runtimes/win-x64/native/" />
-		<None Include="cross-compile/osx-x64/gs2compiler.dylib" Pack="true" PackagePath="runtimes/osx-x64/native/" />
+		<!--<None Include="cross-compile/osx-x64/gs2compiler.dylib" Pack="true" PackagePath="runtimes/osx-x64/native/" />-->
 	</ItemGroup>
 </Project>

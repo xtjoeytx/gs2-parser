@@ -177,19 +177,79 @@ def buildStepDocker() {
 }
 
 node('master') {
-	killall_jobs();
+killall_jobs();
 	def split_job_name = env.JOB_NAME.split(/\/{1}/);
 	def fixed_job_name = split_job_name[1].replace('%2F',' ');
 	checkout(scm);
 
-	env.COMMIT_MSG = sh (
+	env.COMMIT_MSG = sh(
 		script: 'git log -1 --pretty=%B ${GIT_COMMIT}',
 		returnStdout: true
 	).trim();
 
+	env.GIT_COMMIT = sh(
+		script: 'git log -1 --pretty=%H ${GIT_COMMIT}',
+		returnStdout: true
+	).trim();
+
+	sh('git fetch --tags');
+
+	env.LATEST_TAG = sh(
+		script: 'git tag -l | tail -1',
+		returnStdout: true
+	).trim();
+
+	echo("Latest tag: ${env.LATEST_TAG}");
+
+	def version = env.LATEST_TAG.split(/\./);
+
+	echo("Version: ${version}");
+
+	def verMajor = version[0] as Integer;
+	def verMinor = version[1] as Integer;
+	def verPatch = version[2] as Integer;
+	def versionChanged = false;
+
+	echo("Version - Major: ${verMajor}, Minor: ${verMinor}, Patch: ${verPatch}");
+
+	if (env.BRANCH_NAME.equals('main')) {
+		verMinor++;
+		verPatch = 0;
+		versionChanged = true;
+	} else if (env.BRANCH_NAME.equals('dev')) {
+		verPatch++;
+		versionChanged = true;
+	}
+
+    if (versionChanged) {
+        withCredentials([string(credentialsId: 'PREAGONAL_GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
+            def tagName = "${verMajor}.${verMinor}.${verPatch}";
+
+            def iso8601Date = sh(
+                script: 'date -Iseconds',
+                returnStdout: true
+            ).trim();
+
+            env.JSON_RESPONSE = sh(
+                script: "curl -L -X POST -H \"Accept: application/vnd.github+json\" -H \"Authorization: Bearer ${env.GITHUB_TOKEN}\" -H \"X-GitHub-Api-Version: 2022-11-28\" https://api.github.com/repos/preagonal/gs2engine/git/tags -d '{\"tag\":\"${tagName}\",\"message\":\"${env.COMMIT_MSG}\",\"object\":\"${env.GIT_COMMIT}\",\"type\":\"tree\",\"tagger\":{\"name\":\"preagonal-pipeline[bot]\",\"email\":\"119898225+preagonal-pipeline[bot]@users.noreply.github.com\",\"date\":\"${iso8601Date}\"}}'",
+                returnStdout: true
+            );
+            def response = readJSON(text: env.JSON_RESPONSE);
+
+            sh(
+                script: "curl -L -X POST -H \"Accept: application/vnd.github+json\" -H \"Authorization: Bearer ${env.GITHUB_TOKEN}\" -H \"X-GitHub-Api-Version: 2022-11-28\" https://api.github.com/repos/preagonal/gs2engine/git/refs -d '{\"ref\": \"refs/tags/${tagName}\", \"sha\": \"${response.sha}\"}'",
+                returnStdout: true
+            );
+        }
+    }
+
 	discordSend description: "${env.COMMIT_MSG}", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Build Started: ${fixed_job_name} #${env.BUILD_NUMBER}", webhookURL: env.GS2EMU_WEBHOOK
 
-
+	if (env.TAG_NAME) {
+		sh(returnStdout: true, script: "echo '```' > RELEASE_DESCRIPTION.txt");
+		env.RELEASE_DESCRIPTION = sh(returnStdout: true, script: "git tag -l --format='%(contents)' ${env.TAG_NAME} >> RELEASE_DESCRIPTION.txt");
+		sh(returnStdout: true, script: "echo '```' >> RELEASE_DESCRIPTION.txt");
+	}
 
 	def branches = [:];
 	def project = readJSON file: "JenkinsEnv.json";
@@ -228,6 +288,10 @@ node('master') {
     }
 
     buildStepDocker();
+	if (env.TAG_NAME) {
+		//def DESC = sh(returnStdout: true, script: 'cat RELEASE_DESCRIPTION.txt');
+		//discordSend description: "${DESC}", customUsername: "OpenGraal", customAvatarUrl: "https://pbs.twimg.com/profile_images/1895028712/13460_106738052711614_100001262603030_51047_4149060_n_400x400.jpg", footer: "OpenGraal Team", link: "https://github.com/Preagonal/GS2Engine/pkgs/nuget/GS2Engine", result: "SUCCESS", title: "GS2Engine v${env.TAG_NAME} NuGet Package", webhookURL: env.GS2EMU_RELEASE_WEBHOOK;
+	}
 
     sh("rm -rf ./*");
 }
