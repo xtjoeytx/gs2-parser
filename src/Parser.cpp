@@ -1,4 +1,5 @@
 #include <cassert>
+#include <cstdint>
 #include "Parser.h"
 
 #include "gs2parser.tab.hh"
@@ -143,7 +144,7 @@ void ParserContext::addConstant(const std::string& ident, ExpressionIdentifierNo
 	}
 
 	ExpressionNode *constNode;
-	
+
 	// Map ident to the same constant pointed from the right hand identifier
 	auto rhIdent = node->toString();
 	constNode = getConstant(rhIdent);
@@ -171,7 +172,7 @@ void ParserContext::addConstant(const std::string& ident, ExpressionIdentifierNo
 			return;
 		}
 	}
-	
+
 	constantsTable[ident] = constNode;
 }
 
@@ -210,7 +211,7 @@ void ParserContext::addParserError(const std::string& errmsg)
 	{
 		msg = fmt::format("{} at line {}: {}", errmsg, lineNumber, lineText);
 	}
-	
+
 	addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Parser, std::move(msg) });
 }
 
