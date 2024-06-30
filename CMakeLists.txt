@@ -24,7 +24,10 @@ foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
 endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 
 link_directories(${PROJECT_SOURCE_DIR}/lib)
-
+if(WIN32)
+	set(CMAKE_SHARED_LIBRARY_PREFIX "")
+	set(CMAKE_STATIC_LIBRARY_PREFIX "lib")
+endif()
 
 if(WIN32 AND NOT MINGW)
 	execute_process(COMMAND ${CMAKE_COMMAND} -S${CMAKE_CURRENT_SOURCE_DIR}/dependencies/winflexbison -B${CMAKE_CURRENT_SOURCE_DIR}/dependencies/winflexbison/build-winflex-bison -GNinja -DCMAKE_BUILD_TYPE=Release)
