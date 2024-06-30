@@ -24,6 +24,7 @@ foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
 endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 
 link_directories(${PROJECT_SOURCE_DIR}/lib)
+
 if(WIN32)
 	set(CMAKE_SHARED_LIBRARY_PREFIX "")
 	set(CMAKE_STATIC_LIBRARY_PREFIX "lib")
@@ -95,6 +96,10 @@ if (STATIC)
 	add_library(gs2compiler STATIC ${SOURCES_ALL})
 else()
 	add_library(gs2compiler SHARED ${SOURCES_ALL})
+endif()
+
+if(WIN32 AND MINGW)
+	target_compile_options(gs2compiler PRIVATE "-fno-rtti")
 endif()
 
 set_property(TARGET gs2test PROPERTY CXX_STANDARD 23)

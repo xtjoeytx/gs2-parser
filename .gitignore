@@ -51,3 +51,6 @@ dist/
 .idea/
 obj/
 bin/
+
+# CLion
+cmake-build-*/
