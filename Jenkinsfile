@@ -96,7 +96,6 @@ def buildStepDocker() {
 	customImage.pull();
 
 	try {
-		checkout scm;
 
 		def buildenv = "";
 		def tag = '';
@@ -212,10 +211,12 @@ node('master') {
 
         dir("bindings/dotnet/cross-compile/${v.OSDir}/") {
             unstash(name: v.OSDir);
+            sh("ls -l");
         }
     }
 
     dir("bindings/dotnet/") {
+        sh("ls -l cross-compile/*");
         buildStepDocker();
     }
 }
