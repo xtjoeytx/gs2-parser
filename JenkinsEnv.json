@@ -2,9 +2,16 @@
 	"builds": [
 		{
 			"DockerImage": "amigadev/crosstools:x86_64-linux-stable",
-			"Generator":   "Unix Makefiles",
+			"Generator":   "Ninja",
 			"OS":          "Linux x86_64",
 			"OSDir":       "linux-x64",
+			"Defines":     ""
+		},
+		{
+			"DockerImage": "amigadev/crosstools:aarch64-linux-gnu",
+			"Generator":   "Ninja",
+			"OS":          "Linux arm64",
+			"OSDir":       "linux-arm64",
 			"Defines":     ""
 		},
 		{
@@ -12,6 +19,20 @@
 			"Generator":   "Unix Makefiles",
 			"OS":          "Windows x86_64",
 			"OSDir":       "win-x64",
+			"Defines":     ""
+		},
+		{
+			"DockerImage": "amigadev/crosstools:arm64-apple-darwin22.2",
+			"Generator":   "Ninja",
+			"OS":          "MacOS arm64",
+			"OSDir":       "osx-arm64",
+			"Defines":     ""
+		},
+		{
+			"DockerImage": "amigadev/crosstools:x86_64-apple-darwin22.2",
+			"Generator":   "Ninja",
+			"OS":          "MacOS x86_64",
+			"OSDir":       "osx-x64",
 			"Defines":     ""
 		}
 	]
