@@ -1,4 +1,4 @@
-﻿namespace Gs2Compiler
+﻿namespace GS2Compiler
 {
 	public struct CompilerResponse
 	{
