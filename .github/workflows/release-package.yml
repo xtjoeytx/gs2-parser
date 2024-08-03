@@ -23,7 +23,7 @@ jobs:
     - name: Build
       run: |
         npm run build
-    
+
     # Upload build artifacts
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
