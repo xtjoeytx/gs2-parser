@@ -9,8 +9,8 @@ EMSCRIPTEN_BINDINGS(module) {
 EMSCRIPTEN_BINDINGS(GS2Context_bindings) {
     class_<GS2Context>("GS2Context")
         .constructor<>()
-        .function("compile", select_overload<CompilerResponse(const std::string&, const std::string&, const std::string&, bool)>(&GS2Context::compile))
-        .function("compile", select_overload<CompilerResponse(const std::string&)>(&GS2Context::compile));
+        .function("compile", select_overload<CompilerResponse(const std::string&, const std::string&, const std::string&, bool)>(&GS2Context::compile), emscripten::return_value_policy::take_ownership())
+        .function("compile", select_overload<CompilerResponse(const std::string&)>(&GS2Context::compile), emscripten::return_value_policy::take_ownership());
 }
 
 emscripten::val getBytecodeFromBuffer(const CompilerResponse &response) {
@@ -32,6 +32,6 @@ EMSCRIPTEN_BINDINGS(CompilerResponse_bindings) {
     /* For now, let's just have a test property set to 1 */
     class_<CompilerResponse>("CompilerResponse")
         .property("success", &CompilerResponse::success)
-        .function("getBytecode", &getBytecodeFromBuffer)
-        .function("getErrors", &getErrors);
+        .function("getBytecode", &getBytecodeFromBuffer, emscripten::return_value_policy::take_ownership())
+        .function("getErrors", &getErrors, emscripten::return_value_policy::take_ownership());
 }

@@ -1,4 +1,5 @@
-namespace Gs2Compiler
+#pragma warning disable CS0649 // Field is never assigned to, and will always have its default value
+namespace GS2Compiler
 {
 	internal struct Response
 	{
