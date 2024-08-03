@@ -50,7 +50,7 @@ jobs:
     - name: Publish
       run: |
         # Assuming you're generating a npm package
-        npm version ${{ github.event.release.tag_name }}
+        npm version ${{ github.ref_name }}
         npm publish --access public
       env:
         NPM_CONFIG_TOKEN: ${{ secrets.GITHUB_TOKEN }}
