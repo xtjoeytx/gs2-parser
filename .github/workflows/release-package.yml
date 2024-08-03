@@ -50,6 +50,8 @@ jobs:
     - name: Publish
       run: |
         # Assuming you're generating a npm package
+        git config --global user.name "${{ github.actor }}"
+        git config --global user.email "github-action-${{ github.actor }}@users.noreply.github.com"		
         npm version ${{ github.ref_name }}
         npm publish --access public
       env:
