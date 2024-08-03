@@ -4,3 +4,6 @@
 [submodule "dependencies/winflexbison"]
 	path = dependencies/winflexbison
 	url = https://github.com/lexxmark/winflexbison.git
+[submodule "dependencies/emsdk"]
+	path = dependencies/emsdk
+	url = https://github.com/emscripten-core/emsdk.git
