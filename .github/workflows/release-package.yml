@@ -3,8 +3,11 @@ name: Build
 on:
   push:
     branches:
+      - feature/*
       - dev
       - main
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   build:
@@ -23,7 +26,7 @@ jobs:
     - name: Build
       run: |
         npm run build
-    
+
     # Upload build artifacts
     - name: Upload build artifacts
       uses: actions/upload-artifact@v2
@@ -33,7 +36,7 @@ jobs:
 
   publish:
     needs: build
-    if: github.ref == 'refs/heads/main'
+    if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -47,6 +50,7 @@ jobs:
     - name: Publish
       run: |
         # Assuming you're generating a npm package
-        npm publish
+        npm version ${{ github.event.release.tag_name }}
+        npm publish --access public
       env:
         NPM_CONFIG_TOKEN: ${{ secrets.GITHUB_TOKEN }}
