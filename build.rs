@@ -8,6 +8,12 @@ const DEBUG_SUFFIX_FMT: &str = "d";
 const STATIC_LIB_DIR: &str = "lib";
 
 fn main() {
+    // If the "use_cpp" feature is not enabled, skip building the C++ code and link it
+    if !std::env::var("CARGO_FEATURE_USE_CPP").is_ok() {
+        // First, check if the precompiled library is available
+        
+        return;
+    }
     let profile = env::var("PROFILE").unwrap_or_else(|_| "release".to_string());
     let target = env::var("TARGET").expect("TARGET environment variable not set");
 

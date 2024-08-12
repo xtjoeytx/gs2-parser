@@ -7,5 +7,12 @@ build = "build.rs"
 [dependencies]
 libc = "0.2.155"
 
+[features]
+default = []
+
+# Compile the C++ code from source without using the precompiled library
+use_cpp = []
+
+
 [build-dependencies]
 cmake = "0.1"
