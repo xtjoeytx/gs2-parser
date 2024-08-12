@@ -1,5 +1,4 @@
 use gs2compiler::Gs2Context;
-use gs2compiler::Gs2CompilerError;
 
 #[test]
 fn test_success() {

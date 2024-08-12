@@ -1,48 +1,61 @@
 use std::env;
+use std::path::PathBuf;
 use cmake::Config;
 
+// Constants for common library names
+const DEBUG_SUFFIX_GS2: &str = "_d";
+const DEBUG_SUFFIX_FMT: &str = "d";
+const STATIC_LIB_DIR: &str = "lib";
+
 fn main() {
-    // Determine the build profile
-    let profile = env::var("PROFILE").unwrap();
-    let gs2_compiler_lib = if profile == "debug" {
-        "gs2compiler_d"
+    let profile = env::var("PROFILE").unwrap_or_else(|_| "release".to_string());
+    let target = env::var("TARGET").expect("TARGET environment variable not set");
+
+    // Determine the appropriate library names based on the profile and platform
+    let gs2_compiler_lib = library_name("gs2compiler", &profile, DEBUG_SUFFIX_GS2, &target);
+    let fmt_lib = library_name("fmt", &profile, DEBUG_SUFFIX_FMT, &target);
+
+    let mut cmake_config = Config::new(".");
+    cmake_config.build_target("gs2compiler").define("STATIC", "ON");
+
+    let cpp_lib = configure_platform_specifics(&target, &mut cmake_config);
+
+    link_libraries(cmake_config.build(), cpp_lib, &gs2_compiler_lib, &fmt_lib);
+}
+
+fn library_name(base: &str, profile: &str, debug_suffix: &str, target: &str) -> String {
+    let name = if profile == "debug" {
+        format!("{}{}", base, debug_suffix)
     } else {
-        "gs2compiler"
+        base.to_string()
     };
 
-    let fmt_name = if profile == "debug" {
-        "fmtd"
+    if target.contains("windows") {
+        format!("lib{}", name)
     } else {
-        "fmt"
-    };
+        name
+    }
+}
 
-    let mut dst = Config::new(".");
-    dst.build_target("gs2compiler");
-    dst.define("STATIC", "ON");
-
-    let target = env::var("TARGET").unwrap();
-    let cpp = if target.contains("apple") {
+fn configure_platform_specifics(target: &str, cmake_config: &mut Config) -> &'static str {
+    if target.contains("apple") {
         "c++"
-    } else if target.contains("windows-gnu") {
-        "stdc++"
+    } else if target.contains("windows") {
+        cmake_config.define("WIN32", "ON");
+        "msvcrt"
     } else {
-        // We need to link to the C++ standard library like this on Linux
         println!("cargo:rustc-link-arg=-lstdc++");
         "stdc++"
-    };
+    }
+}
 
-    println!("cargo:rustc-link-lib=dylib={}", cpp);
-    
-    let lib_path = dst.build();
+fn link_libraries(lib_path: PathBuf, cpp_lib: &str, gs2_lib: &str, fmt_lib: &str) {
+    let lib_dir = env::current_dir().unwrap().join(STATIC_LIB_DIR);
+
+    println!("cargo:rustc-link-lib=dylib={}", cpp_lib);
     println!("cargo:rustc-link-search=native={}", lib_path.display());
+    println!("cargo:rustc-link-search=native={}", lib_dir.display());
 
-    // Link to the C++ library
-
-    // This is where the built library will be placed
-    let lib_path = env::current_dir().unwrap().join("lib");
-    println!("cargo:rustc-link-search=native={}", lib_path.display());
-
-    // Specify the name of the library to link against
-    println!("cargo:rustc-link-lib=static={}", gs2_compiler_lib);
-    println!("cargo:rustc-link-lib=static={}", fmt_name);
+    println!("cargo:rustc-link-lib=static={}", gs2_lib);
+    println!("cargo:rustc-link-lib=static={}", fmt_lib);
 }
