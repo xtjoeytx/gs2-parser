@@ -116,6 +116,7 @@ def publishRust() {
 
 		stage("Publishing Rust Package") {
 			customImage.inside("-u 0") {
+				sh("apt-get update && apt-get install -y cmake");
 				sh("cargo login ${env.PREAGONAL_RUST_TOKEN}");
 				sh("cargo publish --allow-dirty");
 			}
