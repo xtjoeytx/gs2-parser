@@ -12,6 +12,7 @@ const PRECOMPILED_DIR: &str = "precompiled";
 fn main() {
     let profile = env::var("PROFILE").unwrap_or_else(|_| "release".to_string());
     let target = env::var("TARGET").expect("TARGET environment variable not set");
+    let target_os_dir = get_target_os_dir(&target);
 
     let gs2_compiler_lib = library_name("gs2compiler", &profile, DEBUG_SUFFIX_GS2, &target);
     let fmt_lib = library_name("fmt", &profile, DEBUG_SUFFIX_FMT, &target);
@@ -20,7 +21,7 @@ fn main() {
     let mut cmake_config = Config::new(".");
     let cpp_lib = configure_platform_specifics(&target, &mut cmake_config);
 
-    let precompiled_lib_path = env::current_dir().unwrap().join(PRECOMPILED_DIR).join(&target).join(&profile);
+    let precompiled_lib_path = env::current_dir().unwrap().join(PRECOMPILED_DIR).join(&target_os_dir);
 
     if !env::var("CARGO_FEATURE_COMPILE_FROM_SOURCE").is_ok() {
         if !precompiled_lib_path.exists() {
@@ -77,6 +78,17 @@ fn link_libraries(lib_path: &Path, cpp_lib: &str, gs2_lib: &str, fmt_lib: &str) 
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
     println!("cargo:rustc-link-lib=static={}", gs2_lib);
     println!("cargo:rustc-link-lib=static={}", fmt_lib);
+}
+
+fn get_target_os_dir(target: &str) -> &'static str {
+    match target {
+        "aarch64-unknown-linux-gnu" => "linux-arm64",
+        "x86_64-unknown-linux-gnu" => "linux-x64",
+        "aarch64-apple-darwin" => "osx-arm64",
+        "x86_64-apple-darwin" => "osx-x64",
+        "x86_64-pc-windows-gnu" => "windows-x64",
+        _ => panic!("Unsupported target: {}", target),
+    }
 }
 
 fn copy_to_precompiled(precompiled_lib_path: &Path) {
