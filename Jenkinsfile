@@ -105,6 +105,30 @@ def buildStep(dockerImage, generator, os, osdir, defines) {
 	}
 }
 
+// publish rust package using PREAGONAL_RUST_TOKEN. we should use a container with cargo installed
+def publishRust() {
+	def split_job_name = env.JOB_NAME.split(/\/{1}/);
+	def fixed_job_name = split_job_name[1].replace('%2F',' ');
+
+	try {
+		def customImage = docker.image("rust:latest");
+		customImage.pull();
+
+		stage("Publishing Rust Package") {
+			customImage.inside("-u 0") {
+				sh("cargo login ${env.PREAGONAL_RUST_TOKEN}");
+				sh("cargo publish --allow-dirty");
+			}
+		}
+	} catch(err) {
+		currentBuild.result = 'FAILURE';
+		discordSend description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Rust Publish Failed: ${fixed_job_name} #${env.BUILD_NUMBER}", webhookURL: env.GS2EMU_WEBHOOK;
+
+		notify("Build Failed: ${fixed_job_name} #${env.BUILD_NUMBER}");
+		throw err;
+	}
+}
+
 def buildStepDocker() {
 	def split_job_name = env.JOB_NAME.split(/\/{1}/);
 	def fixed_job_name = split_job_name[1].replace('%2F',' ');
@@ -322,6 +346,7 @@ killall_jobs();
 	}
 
     buildStepDocker();
+	publishRust();
 	if (env.TAG_NAME) {
 		//def DESC = sh(returnStdout: true, script: 'cat RELEASE_DESCRIPTION.txt');
 		//discordSend description: "${DESC}", customUsername: "OpenGraal", customAvatarUrl: "https://pbs.twimg.com/profile_images/1895028712/13460_106738052711614_100001262603030_51047_4149060_n_400x400.jpg", footer: "OpenGraal Team", link: "https://github.com/xtjoeytx/gs2-parser/pkgs/nuget/GS2Compiler", result: "SUCCESS", title: "GS2Compiler v${env.TAG_NAME} NuGet Package", webhookURL: env.GS2EMU_RELEASE_WEBHOOK;

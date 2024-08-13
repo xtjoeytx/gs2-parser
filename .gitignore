@@ -59,3 +59,5 @@ cmake-build-*/
 # Added by cargo
 
 /target
+
+/precompiled
