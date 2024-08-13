@@ -1,32 +1,47 @@
 use std::env;
-use std::path::PathBuf;
+use std::path::Path;
 use cmake::Config;
+use std::fs;
 
 // Constants for common library names
 const DEBUG_SUFFIX_GS2: &str = "_d";
 const DEBUG_SUFFIX_FMT: &str = "d";
-const STATIC_LIB_DIR: &str = "lib";
+const LIB_DIR: &str = "lib";
+const PRECOMPILED_DIR: &str = "precompiled";
 
 fn main() {
-    // If the "use_cpp" feature is not enabled, skip building the C++ code and link it
-    if !std::env::var("CARGO_FEATURE_USE_CPP").is_ok() {
-        // First, check if the precompiled library is available
-        
-        return;
-    }
     let profile = env::var("PROFILE").unwrap_or_else(|_| "release".to_string());
     let target = env::var("TARGET").expect("TARGET environment variable not set");
 
-    // Determine the appropriate library names based on the profile and platform
     let gs2_compiler_lib = library_name("gs2compiler", &profile, DEBUG_SUFFIX_GS2, &target);
     let fmt_lib = library_name("fmt", &profile, DEBUG_SUFFIX_FMT, &target);
 
+    // Configure the CMake build
     let mut cmake_config = Config::new(".");
-    cmake_config.build_target("gs2compiler").define("STATIC", "ON");
-
     let cpp_lib = configure_platform_specifics(&target, &mut cmake_config);
 
-    link_libraries(cmake_config.build(), cpp_lib, &gs2_compiler_lib, &fmt_lib);
+    let precompiled_lib_path = env::current_dir().unwrap().join(PRECOMPILED_DIR).join(&target).join(&profile);
+
+    if !env::var("CARGO_FEATURE_COMPILE_FROM_SOURCE").is_ok() {
+        if !precompiled_lib_path.exists() {
+            panic!("Precompiled library {} not found in {} directory. Please enable the 'compile_from_source' feature.", gs2_compiler_lib, precompiled_lib_path.display());
+        }
+
+        link_precompiled_libraries(&precompiled_lib_path, cpp_lib, &gs2_compiler_lib, &fmt_lib);
+    }
+
+    cmake_config.build_target("gs2compiler").define("STATIC", "ON");
+    let lib_path = cmake_config.build();
+
+    link_libraries(&lib_path, cpp_lib, &gs2_compiler_lib, &fmt_lib);
+    copy_to_precompiled(&precompiled_lib_path);
+}
+
+fn link_precompiled_libraries(precompiled_lib_path: &Path, cpp_lib: &str, gs2_lib: &str, fmt_lib: &str) {
+    println!("cargo:rustc-link-search=native={}", precompiled_lib_path.display());
+    println!("cargo:rustc-link-lib=static={}", gs2_lib);
+    println!("cargo:rustc-link-lib=static={}", fmt_lib);
+    println!("cargo:rustc-link-lib=dylib={}", cpp_lib);
 }
 
 fn library_name(base: &str, profile: &str, debug_suffix: &str, target: &str) -> String {
@@ -45,9 +60,9 @@ fn library_name(base: &str, profile: &str, debug_suffix: &str, target: &str) -> 
 
 fn configure_platform_specifics(target: &str, cmake_config: &mut Config) -> &'static str {
     if target.contains("apple") {
+        cmake_config.define("CMAKE_OSX_DEPLOYMENT_TARGET", "10.13");
         "c++"
     } else if target.contains("windows") {
-        cmake_config.define("WIN32", "ON");
         "msvcrt"
     } else {
         println!("cargo:rustc-link-arg=-lstdc++");
@@ -55,13 +70,24 @@ fn configure_platform_specifics(target: &str, cmake_config: &mut Config) -> &'st
     }
 }
 
-fn link_libraries(lib_path: PathBuf, cpp_lib: &str, gs2_lib: &str, fmt_lib: &str) {
-    let lib_dir = env::current_dir().unwrap().join(STATIC_LIB_DIR);
-
+fn link_libraries(lib_path: &Path, cpp_lib: &str, gs2_lib: &str, fmt_lib: &str) {
+    let lib_dir = env::current_dir().unwrap().join(LIB_DIR);
     println!("cargo:rustc-link-lib=dylib={}", cpp_lib);
     println!("cargo:rustc-link-search=native={}", lib_path.display());
     println!("cargo:rustc-link-search=native={}", lib_dir.display());
-
     println!("cargo:rustc-link-lib=static={}", gs2_lib);
     println!("cargo:rustc-link-lib=static={}", fmt_lib);
+}
+
+fn copy_to_precompiled(precompiled_lib_path: &Path) {
+    let lib_dir = env::current_dir().unwrap().join(LIB_DIR);
+    fs::create_dir_all(precompiled_lib_path).expect("Failed to create precompiled directory");
+
+    for entry in fs::read_dir(lib_dir).expect("Failed to read lib directory") {
+        let entry = entry.expect("Failed to read directory entry");
+        let src_path = entry.path();
+        let file_name = src_path.file_name().expect("Failed to get file name");
+        let dst_path = precompiled_lib_path.join(file_name);
+        fs::copy(&src_path, &dst_path).expect("Failed to copy file");
+    }
 }

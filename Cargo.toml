@@ -3,6 +3,7 @@ name = "gs2compiler"
 version = "0.1.0"
 edition = "2021"
 build = "build.rs"
+include = ["/src/lib.rs", "/precompiled"]
 
 [dependencies]
 libc = "0.2.155"
@@ -11,7 +12,7 @@ libc = "0.2.155"
 default = []
 
 # Compile the C++ code from source without using the precompiled library
-use_cpp = []
+compile_from_source = []
 
 
 [build-dependencies]
