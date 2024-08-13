@@ -75,7 +75,7 @@ def buildStep(dockerImage, generator, os, osdir, defines) {
 				}
 
 				archiveArtifacts(artifacts: 'lib/*.dylib,lib/*.so,bin/*.dll', allowEmptyArchive: true);
-				stash(name: osdir, includes: 'lib/*.dylib,lib/*.so,bin/*.dll', allowEmpty: true, name: "dynamic");
+				stash(name: "dynamic-${osdir}", includes: 'lib/*.dylib,lib/*.so,bin/*.dll', allowEmpty: true);
 
 				discordSend(description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Build ${fixed_job_name} #${env.BUILD_NUMBER} Target: ${os} successful!", webhookURL: env.GS2EMU_WEBHOOK);
 
@@ -91,7 +91,7 @@ def buildStep(dockerImage, generator, os, osdir, defines) {
 				sh("mv build/*.lib lib/ || true");
 
 				// Archive static libraries
-				stash(name: osdir, includes: 'lib/*.a,lib/*.lib', allowEmpty: true, name: "static");
+				stash("static-${osdir}", includes: 'lib/*.a,lib/*.lib', allowEmpty: true);
 
 				archiveArtifacts(artifacts: 'lib/*.a,lib/*.lib', allowEmptyArchive: true);
 				discordSend(description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Build ${fixed_job_name} #${env.BUILD_NUMBER} Target: [static] ${os} successful!", webhookURL: env.GS2EMU_WEBHOOK);
@@ -289,7 +289,7 @@ killall_jobs();
 		sh("mkdir -p precompiled/${v.OSDir}/");
 
         dir("bindings/dotnet/cross-compile/${v.OSDir}/") {
-            unstash(name: v.OSDir, name: "dynamic");
+            unstash(name: "dynamic-${v.OSDir}");
             try {
                 sh("mv -fv bin/* .");
                 sh("rm -rf bin");
@@ -301,7 +301,7 @@ killall_jobs();
         }
 
 		dir("precompiled/${v.OSDir}/") {
-			unstash(name: v.OSDir, name: "static");
+			unstash(name: "static-${v.OSDir}");
 			try {
 				sh("mv -fv lib/* .");
 				sh("rm -rf lib");
