@@ -291,7 +291,8 @@ killall_jobs();
             unstash(name: v.OSDir);
             try {
                 sh("mv -fv bin/* .");
-                sh("rm -rf bin")
+                sh("rm -rf bin");
+				sh("ls -l")
             } catch(err) { }
             try {
                 sh("mv -fv lib/* .");
