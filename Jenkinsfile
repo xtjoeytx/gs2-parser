@@ -91,7 +91,7 @@ def buildStep(dockerImage, generator, os, osdir, defines) {
 				sh("mv build/*.lib lib/ || true");
 
 				// Archive static libraries
-				stash("static-${osdir}", includes: 'lib/*.a,lib/*.lib', allowEmpty: true);
+				stash(name: "static-${osdir}", includes: 'lib/*.a,lib/*.lib', allowEmpty: true);
 
 				archiveArtifacts(artifacts: 'lib/*.a,lib/*.lib', allowEmptyArchive: true);
 				discordSend(description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Build ${fixed_job_name} #${env.BUILD_NUMBER} Target: [static] ${os} successful!", webhookURL: env.GS2EMU_WEBHOOK);
