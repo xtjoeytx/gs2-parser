@@ -8,6 +8,7 @@ description = "Compile GS2 source code to bytecode"
 repository = "https://github.com/xtjoeytx/gs2-parser"
 readme = "README.md"
 website = "https://www.preagonal.net/"
+exclude = ["scripts", ".npmrc", "package-lock.json", "package.json", "lib", "bin"]
 
 [dependencies]
 libc = "0.2.155"
