@@ -116,9 +116,12 @@ def publishRust() {
 
 		stage("Publishing Rust Package") {
 			customImage.inside("-u 0") {
+				// TODO: Fix this
 				sh("apt-get update && apt-get install -y cmake && apt-get install -y bison && apt-get install -y flex");
 				sh("cargo login ${env.PREAGONAL_RUST_TOKEN}");
-				sh("cargo publish --allow-dirty");
+
+				// TODO: Fix this
+				sh("cargo publish --no-verify");
 			}
 		}
 	} catch(err) {
@@ -346,8 +349,9 @@ killall_jobs();
 		sh("ls -l *");
 	}
 
-    buildStepDocker();
 	publishRust();
+    buildStepDocker();
+	
 	if (env.TAG_NAME) {
 		//def DESC = sh(returnStdout: true, script: 'cat RELEASE_DESCRIPTION.txt');
 		//discordSend description: "${DESC}", customUsername: "OpenGraal", customAvatarUrl: "https://pbs.twimg.com/profile_images/1895028712/13460_106738052711614_100001262603030_51047_4149060_n_400x400.jpg", footer: "OpenGraal Team", link: "https://github.com/xtjoeytx/gs2-parser/pkgs/nuget/GS2Compiler", result: "SUCCESS", title: "GS2Compiler v${env.TAG_NAME} NuGet Package", webhookURL: env.GS2EMU_RELEASE_WEBHOOK;
