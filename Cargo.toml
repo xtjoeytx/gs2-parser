@@ -13,7 +13,7 @@ website = "https://www.preagonal.net/"
 libc = "0.2.155"
 
 [features]
-default = []
+default = ["compile_from_source"]
 
 # Compile the C++ code from source without using the precompiled library
 compile_from_source = []
