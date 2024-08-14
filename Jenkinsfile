@@ -119,7 +119,7 @@ def publishRust() {
 				// TODO: Fix this
 				sh("apt-get update && apt-get install -y cmake && apt-get install -y bison && apt-get install -y flex");
 				withCredentials([string(credentialsId: 'PREAGONAL_RUST_TOKEN', variable: 'CARGO_REGISTRY_TOKEN')]) {
-					sh("cargo login");
+					sh("echo ${CARGO_REGISTRY_TOKEN} | cargo login");
 
 					// TODO: Fix this
 					sh("cargo publish --no-verify");
