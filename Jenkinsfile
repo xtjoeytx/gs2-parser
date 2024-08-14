@@ -118,7 +118,7 @@ def publishRust() {
 			customImage.inside("-u 0") {
 				// TODO: Fix this
 				sh("apt-get update && apt-get install -y cmake && apt-get install -y bison && apt-get install -y flex");
-				sh("cargo login ${env.PREAGONAL_RUST_TOKEN}");
+				sh("echo "${env.PREAGONAL_RUST_TOKEN}" | cargo login");
 
 				// TODO: Fix this
 				sh("cargo publish --no-verify");
