@@ -256,7 +256,7 @@ killall_jobs();
 
 	project.builds.each { v ->
 		branches["Build ${v.DockerRoot}/${v.DockerImage}:${v.DockerTag}"] = {
-			node {
+			node("amd64") {
 				buildStep(v.DockerImage, v.Generator, v.OS, v.OSDir, v.Defines);
 			}
 		}
