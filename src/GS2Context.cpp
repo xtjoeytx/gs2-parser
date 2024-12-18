@@ -1,4 +1,3 @@
-#include <format>
 #include "GS2Context.h"
 #include "encoding/graalencoding.h"
 #include "visitors/GS2CompilerVisitor.h"

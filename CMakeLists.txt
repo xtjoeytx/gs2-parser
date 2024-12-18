@@ -4,11 +4,11 @@ set(CMAKE_VERBOSE_MAKEFILE ON)
 
 set(CMAKE_DEBUG_POSTFIX _d)
 
-set(BIN_DIR "bin" CACHE STRING "Binary output directory")
+# set(BIN_DIR "bin" CACHE STRING "Binary output directory")
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+# set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # TODO: @xtjoeytx, do we need this? It breaks the rust build. I think we should leave it
@@ -49,26 +49,6 @@ if(WIN32 AND NOT MINGW)
 	set(FLEX_FLAGS "--wincompat")
 endif()
 
-# Check for std::format support
-include(CheckCXXSourceCompiles)
-
-set(TEST_CODE "
-#include <format>
-#include <string>
-int main() {
-    std::string s = std::format(\"Hello, {}!\", \"World\");
-    return s.empty() ? 1 : 0;
-}
-")
-
-check_cxx_source_compiles("${TEST_CODE}" HAS_STD_FORMAT)
-
-if(HAS_STD_FORMAT)
-  message(STATUS "std::format is available and works.")
-else()
-  message(FATAL_ERROR "std::format not available or not functional, fallback needed.")
-endif()
-
 # Generate parser and scanner with Bison / Flex
 BISON_TARGET(GS2Parser generator/gs2parser.y ${CMAKE_CURRENT_BINARY_DIR}/gs2parser.tab.cc)
 FLEX_TARGET(GS2Scanner generator/gs2scanner.l ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.cc DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.h COMPILE_FLAGS "${FLEX_FLAGS}")
@@ -98,6 +78,7 @@ set(SOURCES_ALL
 	src/utils/EventHandler.h
 	src/exceptions/GS2CompilerError.h
 	src/utils/ContextThreadPool.h
+	src/utils/format_string.h
 	src/visitors/FunctionInspectVisitor.h
 	src/visitors/GS2CompilerVisitor.h
 	src/visitors/GS2SourceVisitor.h
@@ -114,17 +95,6 @@ set(SOURCES_ALL
 	${FLEX_GS2Scanner_OUTPUTS}
 )
 
-# Add fmtlib dependency
-# add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/fmtlib EXCLUDE_FROM_ALL)
-
-# If building for Emscripten, build a JS/WASM target
-# if(DEFINED EMSCRIPTEN)
-# 	add_executable(gs2test ${SOURCES_ALL} src/js_interface.cpp)
-# 	set_target_properties(gs2test PROPERTIES 
-# 		LINK_FLAGS "--embind-emit-tsd gs2test.d.ts -s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
-# else()
-#   add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
-# endif()
 add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
 
 # Add library (static or shared)
