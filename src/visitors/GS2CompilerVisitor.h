@@ -9,6 +9,7 @@
 #include <unordered_map>
 #include "ast/astvisitor.h"
 #include "GS2Bytecode.h"
+#include "utils/format_string.h"
 #include "GS2BuiltInFunctions.h"
 
 class ParserContext;

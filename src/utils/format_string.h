@@ -27,7 +27,7 @@
  * std::cout << result; // Output: Hello, Alice! You have 5 new messages.
  * ```
  */
-std::string printf_format_string(const char* fmt, ...) {
+inline std::string printf_format_string(const char* fmt, ...) {
     // Start variable arguments processing
     va_list args;
     va_start(args, fmt);
