@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <format>
 #include "ast/astvisitor.h"
 #include "GS2Bytecode.h"
 #include "GS2BuiltInFunctions.h"

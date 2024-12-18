@@ -12,7 +12,7 @@
 #include <unordered_set>
 #include <vector>
 
-#include <fmt/format.h>
+#include <format>
 #include "ast/ast.h"
 #include "exceptions/GS2CompilerError.h"
 

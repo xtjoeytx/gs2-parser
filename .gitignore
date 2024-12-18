@@ -57,5 +57,8 @@ cmake-build-*/
 
 
 # Added by cargo
-
 /target
+/lib
+
+# Ignore dependencies
+/dependencies
