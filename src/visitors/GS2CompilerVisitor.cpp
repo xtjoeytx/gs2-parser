@@ -86,7 +86,7 @@ void GS2CompilerVisitor::writeLabels()
 
 void GS2CompilerVisitor::Visit(Node *node)
 {
-	std::string errorMsg = format_string("unimplemented node type %s", node->NodeType());
+	std::string errorMsg = printf_format_string("unimplemented node type %s", node->NodeType());
 	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, errorMsg });
 
 #ifdef DBGEMITTERS
@@ -470,7 +470,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		}
 	}
 
-	std::string errorMsg = format_string("Undefined opcode in BinaryExpression %d: %s %s", static_cast<int>(node->op), ExpressionOpToString(node->op), node->toString().c_str());
+	std::string errorMsg = printf_format_string("Undefined opcode in BinaryExpression %d: %s %s", static_cast<int>(node->op), ExpressionOpToString(node->op), node->toString().c_str());
 	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 }
 
@@ -599,7 +599,7 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 		}
 	}
 
-	std::string errorMsg = format_string("Undefined opcode in UnaryExpression %d: %s", static_cast<int>(node->op), ExpressionOpToString(node->op));
+	std::string errorMsg = printf_format_string("Undefined opcode in UnaryExpression %d: %s", static_cast<int>(node->op), ExpressionOpToString(node->op));
 	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 }
 
@@ -1172,7 +1172,7 @@ void GS2CompilerVisitor::Visit(StatementBreakNode* node)
 {
 	if (break_label <= 0)
 	{
-		std::string errorMsg = format_string("`break` outside loop detected");
+		std::string errorMsg = printf_format_string("`break` outside loop detected");
 		parserContext.addError({ ErrorLevel::E_WARNING, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 		return;
 	}
@@ -1188,7 +1188,7 @@ void GS2CompilerVisitor::Visit(StatementContinueNode* node)
 {
 	if (continue_label <= 0)
 	{
-		std::string errorMsg = format_string("`continue` outside loop detected");
+		std::string errorMsg = printf_format_string("`continue` outside loop detected");
 		parserContext.addError({ ErrorLevel::E_WARNING, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 		return;
 	}

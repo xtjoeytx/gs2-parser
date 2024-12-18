@@ -23,11 +23,11 @@
  *
  * @example
  * ```cpp
- * std::string result = format_string("Hello, %s! You have %d new messages.", "Alice", 5);
+ * std::string result = printf_format_string("Hello, %s! You have %d new messages.", "Alice", 5);
  * std::cout << result; // Output: Hello, Alice! You have 5 new messages.
  * ```
  */
-std::string format_string(const char* fmt, ...) {
+std::string printf_format_string(const char* fmt, ...) {
     // Start variable arguments processing
     va_list args;
     va_start(args, fmt);
