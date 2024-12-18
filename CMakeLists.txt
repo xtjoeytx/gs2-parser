@@ -8,23 +8,7 @@ set(CMAKE_DEBUG_POSTFIX _d)
 
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 23)
-# set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-
-# TODO: @xtjoeytx, do we need this? It breaks the rust build. I think we should leave it
-# up to the user of the library to specify how the output should be built.
-# Set up output ditrectories
-# set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-# set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-# set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/${BIN_DIR})
-
-# # Second, for multi-config builds (e.g. msvc)
-# foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
-# 	string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-# 	set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/lib )
-# 	set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/lib )
-# 	set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/${BIN_DIR} )
-# endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
 
 link_directories(${PROJECT_SOURCE_DIR}/lib)
 
@@ -109,10 +93,6 @@ endif()
 if(WIN32 AND MINGW)
 	target_compile_options(gs2compiler PRIVATE "-fno-rtti")
 endif()
-
-# Link fmtlib
-#target_link_libraries(gs2test fmt::fmt)
-#target_link_libraries(gs2compiler fmt::fmt)
 
 set(GS2COMPILER_INCLUDE_DIRECTORY
 	"${PROJECT_SOURCE_DIR}/include"

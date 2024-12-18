@@ -58,11 +58,7 @@ fn configure_platform_specifics(target: &str, cmake_config: &mut Config) -> &'st
 }
 
 fn link_libraries(lib_path: PathBuf, cpp_lib: &str, gs2_lib: &str) {
-    // let lib_dir = env::current_dir().unwrap().join(STATIC_LIB_DIR);
-
     println!("cargo:rustc-link-lib=dylib={}", cpp_lib);
     println!("cargo:rustc-link-search=native={}", lib_path.display());
-    // println!("cargo:rustc-link-search=native={}", lib_dir.display());
-
     println!("cargo:rustc-link-lib=static={}", gs2_lib);
 }

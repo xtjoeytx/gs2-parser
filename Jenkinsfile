@@ -63,9 +63,8 @@ def buildStep(dockerImage, generator, os, osdir, defines) {
 				}
 
 				sh("mkdir -p build/");
-				// sh("mkdir -p lib/");
 				sh("rm -rfv build/*");
-				// sh("rm -rfv lib/*");
+				sh("rm -rfv build/lib/*");
 
 				discordSend(description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Starting ${os} build target...", webhookURL: env.GS2EMU_WEBHOOK);
 
