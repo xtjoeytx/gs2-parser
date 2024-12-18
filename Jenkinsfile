@@ -70,7 +70,7 @@ def buildStep(dockerImage, generator, os, osdir, defines) {
 				discordSend(description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Starting ${os} build target...", webhookURL: env.GS2EMU_WEBHOOK);
 
 				dir("build") {
-					sh("cmake -G\"${generator}\" -DCMAKE_BUILD_TYPE=Release ${defines} -DVER_EXTRA=\"-${fixed_os}-${fixed_job_name}\" .. || true"); // Temporary fix for Windows MingW builds
+					sh("cmake -G\"${generator}\" -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=bin -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=lib -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=lib -DCMAKE_BUILD_TYPE=Release ${defines} -DVER_EXTRA=\"-${fixed_os}-${fixed_job_name}\" .. || true"); // Temporary fix for Windows MingW builds
 					sh("cmake --build . --config Release --target all -- -j `nproc`");
 				}
 
