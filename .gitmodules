@@ -1,0 +1,3 @@
+[submodule "dependencies/winflexbison"]
+	path = dependencies/winflexbison
+	url = git@github.com:lexxmark/winflexbison.git
