@@ -118,13 +118,14 @@ set(SOURCES_ALL
 # add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/fmtlib EXCLUDE_FROM_ALL)
 
 # If building for Emscripten, build a JS/WASM target
-if(DEFINED EMSCRIPTEN)
-	add_executable(gs2test ${SOURCES_ALL} src/js_interface.cpp)
-	set_target_properties(gs2test PROPERTIES 
-		LINK_FLAGS "--embind-emit-tsd gs2test.d.ts -s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
-else()
-	add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
-endif()
+# if(DEFINED EMSCRIPTEN)
+# 	add_executable(gs2test ${SOURCES_ALL} src/js_interface.cpp)
+# 	set_target_properties(gs2test PROPERTIES 
+# 		LINK_FLAGS "--embind-emit-tsd gs2test.d.ts -s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
+# else()
+#   add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
+# endif()
+add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
 
 # Add library (static or shared)
 if(STATIC)

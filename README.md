@@ -21,22 +21,9 @@ cmake ..
 make -j $(nproc)
 ```
 
-# Building (Wasm)
-
-First, ensure you have Emscripten installed. Then, you can build the project using CMake:
-
-```sh
-mkdir build
-cd build
-emcmake cmake ..
-make -j $(nproc)
-```
-
-The resulting `gs2test.js` file can be imported into a webpage.
-
 # Running
 
-The non-wasm build can be run using the following command:
+You can use the following command:
 
 ```sh
 $ ./gs2test ../scripts/asd2.txt
