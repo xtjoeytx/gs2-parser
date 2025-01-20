@@ -57,5 +57,5 @@ cmake-build-*/
 
 
 # Added by cargo
-
 /target
+/lib

@@ -87,7 +87,7 @@ int main(int argc, const char *argv[]) {
 //  yydebug = 1;
 #endif
 
-//	auto ret = fmt::format("Test {}", 42);
+//	auto ret = std::format("Test {}", 42);
 //	printf("Test: %s\n", ret.c_str());
 	//auto ret = std::format("test {}", 3);
 	//printf("Test: %s\n", ret.c_str());

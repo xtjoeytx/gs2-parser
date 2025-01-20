@@ -12,8 +12,8 @@
 #include <unordered_set>
 #include <vector>
 
-#include <fmt/format.h>
 #include "ast/ast.h"
+#include "utils/format_string.h"
 #include "exceptions/GS2CompilerError.h"
 
 typedef void* yyscan_t;

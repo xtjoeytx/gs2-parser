@@ -62,20 +62,18 @@ def buildStep(dockerImage, generator, os, osdir, defines) {
 
 				}
 
+				sh("rm -rf build");
 				sh("mkdir -p build/");
-				sh("mkdir -p lib/");
-				sh("rm -rfv build/*");
-				sh("rm -rfv lib/*");
 
 				discordSend(description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Starting ${os} build target...", webhookURL: env.GS2EMU_WEBHOOK);
 
 				dir("build") {
-					sh("cmake -G\"${generator}\" -DCMAKE_BUILD_TYPE=Release ${defines} -DVER_EXTRA=\"-${fixed_os}-${fixed_job_name}\" .. || true"); // Temporary fix for Windows MingW builds
+					sh("cmake -G\"${generator}\" -DCMAKE_RUNTIME_OUTPUT_DIRECTORY=bin -DCMAKE_LIBRARY_OUTPUT_DIRECTORY=lib -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY=lib -DCMAKE_BUILD_TYPE=Release ${defines} -DVER_EXTRA=\"-${fixed_os}-${fixed_job_name}\" .. || true"); // Temporary fix for Windows MingW builds
 					sh("cmake --build . --config Release --target all -- -j `nproc`");
 				}
 
-				archiveArtifacts(artifacts: 'lib/*.dylib,lib/*.so,bin/*.dll', allowEmptyArchive: true);
-				stash(name: osdir, includes: 'lib/*.dylib,lib/*.so,bin/*.dll', allowEmpty: true);
+				archiveArtifacts(artifacts: 'build/lib/*.dylib,build/lib/*.so,build/bin/*.dll', allowEmptyArchive: true);
+				stash(name: osdir, includes: 'build/lib/*.dylib,build/lib/*.so,build/bin/*.dll', allowEmpty: true);
 
 				discordSend(description: "", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Build ${fixed_job_name} #${env.BUILD_NUMBER} Target: ${os} successful!", webhookURL: env.GS2EMU_WEBHOOK);
 			}
@@ -256,7 +254,7 @@ killall_jobs();
 
 	project.builds.each { v ->
 		branches["Build ${v.DockerRoot}/${v.DockerImage}:${v.DockerTag}"] = {
-			node {
+			node("amd64") {
 				buildStep(v.DockerImage, v.Generator, v.OS, v.OSDir, v.Defines);
 			}
 		}
@@ -273,12 +271,12 @@ killall_jobs();
         dir("bindings/dotnet/cross-compile/${v.OSDir}/") {
             unstash(name: v.OSDir);
             try {
-                sh("mv -fv bin/* .");
-                sh("rm -rf bin")
+                sh("mv -fv build/bin/* .");
+                sh("rm -rf build/bin")
             } catch(err) { }
             try {
-                sh("mv -fv lib/* .");
-                sh("rm -rf lib")
+                sh("mv -fv build/lib/* .");
+                sh("rm -rf build/lib")
             } catch(err) { }
         }
     }
