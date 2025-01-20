@@ -35,11 +35,11 @@ find_package(BISON 3.4 REQUIRED)
 find_package(FLEX REQUIRED)
 
 # Check for Bison and Flex availability
-if(NOT BISON_EXECUTABLE)
+if(NOT BISON_EXECUTABLE AND (WIN32 AND NOT MINGW))
     message(FATAL_ERROR "Bison not found. Please ensure winflexbison is available.")
 endif()
 
-if(NOT FLEX_EXECUTABLE)
+if(NOT FLEX_EXECUTABLE AND (WIN32 AND NOT MINGW))
     message(FATAL_ERROR "Flex not found. Please ensure winflexbison is available.")
 endif()
 
