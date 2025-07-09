@@ -83,8 +83,6 @@ set(SOURCES_ALL
 	${BISON_GS2Parser_OUTPUTS}
 	${FLEX_GS2Scanner_OUTPUTS})
 
-add_subdirectory(${PROJECT_SOURCE_DIR}/dependencies/fmtlib EXCLUDE_FROM_ALL)
-
 if (DEFINED EMSCRIPTEN)
 	add_executable(gs2test ${SOURCES_ALL} src/js_interface.cpp)
 	set_target_properties(gs2test PROPERTIES LINK_FLAGS "--embind-emit-tsd gs2test.d.ts -s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
@@ -104,9 +102,6 @@ endif()
 
 set_property(TARGET gs2test PROPERTY CXX_STANDARD 23)
 set_property(TARGET gs2compiler PROPERTY CXX_STANDARD 23)
-
-target_link_libraries(gs2test fmt::fmt)
-target_link_libraries(gs2compiler fmt::fmt)
 
 set(GS2COMPILER_INCLUDE_DIRECTORY
 	"${PROJECT_SOURCE_DIR}/include"
