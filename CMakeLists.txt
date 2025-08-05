@@ -30,6 +30,10 @@ if(WIN32 OR APPLE)
 	set(CMAKE_STATIC_LIBRARY_PREFIX "lib")
 endif()
 
+if(APPLE)
+	set(CMAKE_OSX_DEPLOYMENT_TARGET "13.3")
+endif()
+
 if(WIN32 AND NOT MINGW)
 	execute_process(COMMAND ${CMAKE_COMMAND} -S${CMAKE_CURRENT_SOURCE_DIR}/dependencies/winflexbison -B${CMAKE_CURRENT_SOURCE_DIR}/dependencies/winflexbison/build-winflex-bison -GNinja -DCMAKE_BUILD_TYPE=Release)
 	execute_process(COMMAND ${CMAKE_COMMAND} --build ${CMAKE_CURRENT_SOURCE_DIR}/dependencies/winflexbison/build-winflex-bison --parallel 8)
