@@ -256,7 +256,7 @@ killall_jobs();
 
 	project.builds.each { v ->
 		branches["Build ${v.DockerRoot}/${v.DockerImage}:${v.DockerTag}"] = {
-			node {
+			node("amd64") {
 				buildStep(v.DockerImage, v.Generator, v.OS, v.OSDir, v.Defines);
 			}
 		}
@@ -264,7 +264,7 @@ killall_jobs();
 
 	parallel(branches);
 
-	def customImage = docker.image("mcr.microsoft.com/dotnet/sdk:8.0");
+	def customImage = docker.image("mcr.microsoft.com/dotnet/sdk:9.0");
 	customImage.pull();
 
 	project.builds.each { v ->
