@@ -50,7 +50,10 @@ def buildStep(dockerImage, generator, os, osdir, defines) {
 			properties([pipelineTriggers([githubPush()])]);
 			def commondir = env.WORKSPACE + '/../' + fixed_job_name + '/';
 
-			docker.image("${dockerImage}").inside("") {
+			def dockerImageRef = docker.image("${dockerImage}");
+			dockerImageRef.pull();
+
+			dockerImageRef.inside("") {
 
 				checkout(scm);
 
@@ -132,7 +135,7 @@ def buildStepDocker() {
                 customImage.inside("-u 0") {
                     dir("bindings/dotnet/") {
                         sh("chmod 777 -R .");
-                        sh("dotnet pack Preagonal.Scripting.GS2Compiler.csproj.csproj -c Release ${VER}");
+                        sh("dotnet pack Preagonal.Scripting.GS2Compiler.csproj -c Release ${VER}");
                         sh("chmod 777 -R .");
                     }
                 }
