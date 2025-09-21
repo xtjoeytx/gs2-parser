@@ -118,7 +118,8 @@ HEXNUM		[a-fA-F0-9]
 	/*
 		Comments
 	*/
-"//".*"\n"			{ yyextra->lineNumber++;yyextra->columnNumber = 0; }
+"//".*\n			{ yyextra->lineNumber++;yyextra->columnNumber = 0; }
+"//".*				{ /* Comment at end of file */ }
 
 "/*"				{ BEGIN(C_COMMENT); }
 <C_COMMENT>"*/"		{ BEGIN(INITIAL); }
