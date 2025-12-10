@@ -276,7 +276,9 @@ stmt_caseblock:
 
 stmt_fndecl:
 	T_KWFUNCTION T_IDENTIFIER '(' expr_list_with_empty ')' stmt						{ $$ = parser->alloc<StatementFnDeclNode>($2, $4, parser->alloc<StatementBlock>($6)); }
+	| T_KWFUNCTION T_IDENTIFIER '(' expr_list_with_empty ')'						{ $$ = parser->alloc<StatementFnDeclNode>($2, $4, parser->alloc<StatementBlock>()); }
 	| T_KWFUNCTION T_IDENTIFIER '.' T_IDENTIFIER '(' expr_list_with_empty ')' stmt	{ $$ = parser->alloc<StatementFnDeclNode>($4, $6, parser->alloc<StatementBlock>($8), $2); }
+	| T_KWFUNCTION T_IDENTIFIER '.' T_IDENTIFIER '(' expr_list_with_empty ')'		{ $$ = parser->alloc<StatementFnDeclNode>($4, $6, parser->alloc<StatementBlock>(), $2); }
 	| T_KWPUBLIC stmt_fndecl																{ $$ = $2; $$->setPublic(true); }
 	;
 
