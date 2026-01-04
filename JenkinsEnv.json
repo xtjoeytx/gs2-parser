@@ -1,7 +1,7 @@
 {
 	"builds": [
 		{
-			"DockerImage": "amigadev/crosstools:x86_64-linux-stable",
+			"DockerImage": "amigadev/crosstools:x86_64-linux",
 			"Generator":   "Ninja",
 			"OS":          "Linux x86_64",
 			"OSDir":       "linux-x64",

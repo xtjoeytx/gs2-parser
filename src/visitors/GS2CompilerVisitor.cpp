@@ -470,7 +470,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		}
 	}
 
-	std::string errorMsg = std::format("Undefined opcode in BinaryExpression {}: {} {}", static_cast<int>(node->op), ExpressionOpToString(node->op), node->toString());
+	std::string errorMsg = std::format("Undefined opcode in BinaryExpression {}: {} {}", static_cast<int>(node->op), std::string{ExpressionOpToString(node->op)}, node->toString());
 	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 }
 
