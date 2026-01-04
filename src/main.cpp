@@ -293,7 +293,7 @@ int processDirectory(const std::filesystem::path& input_path, bool verbose)
 {
 	if (!std::filesystem::exists(input_path) || !std::filesystem::is_directory(input_path))
 	{
-		std::cerr << "Error: Invalid directory: " << input_path.c_str() << "\n";
+		std::cerr << "Error: Invalid directory: " << input_path << "\n";
 		return 1;
 	}
 
