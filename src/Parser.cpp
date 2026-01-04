@@ -106,7 +106,7 @@ std::string* ParserContext::saveString(const char* str, int length, bool unquote
 
 std::string * ParserContext::generateLambdaFuncName()
 {
-	std::string fnName = fmt::format("function_{}_1", 100 + lambdaFunctionCount);
+	std::string fnName = std::format("function_{}_1", 100 + lambdaFunctionCount);
 	lambdaFunctionCount++;
 	return saveString(fnName.c_str(), int(fnName.length()));
 }
@@ -139,7 +139,7 @@ void ParserContext::addConstant(const std::string& ident, ExpressionIdentifierNo
 	if (constant)
 	{
 		// report error - redefining constant
-		addParserError(fmt::format("redefinition of constant {}", ident));
+		addParserError(std::format("redefinition of constant {}", ident));
 		return;
 	}
 
@@ -168,7 +168,7 @@ void ParserContext::addConstant(const std::string& ident, ExpressionIdentifierNo
 		else
 		{
 			// report error - constant does not exist
-			addParserError(fmt::format("constant {} is undefined", ident));
+			addParserError(std::format("constant {} is undefined", ident));
 			return;
 		}
 	}
@@ -187,7 +187,7 @@ void ParserContext::addConstant(const std::string& ident, ExpressionNode *node)
 	auto constant = getConstant(ident);
 	if (constant)
 	{
-		addParserError(fmt::format("redefinition of constant {}", ident));
+		addParserError(std::format("redefinition of constant {}", ident));
 		return;
 	}
 
@@ -205,11 +205,11 @@ void ParserContext::addParserError(const std::string& errmsg)
 	std::string msg;
 	if (lineText.empty())
 	{
-		msg = fmt::format("parser error occurred near line {}: {}", lineNumber, errmsg);
+		msg = std::format("parser error occurred near line {}: {}", lineNumber, errmsg);
 	}
 	else
 	{
-		msg = fmt::format("{} at line {}: {}", errmsg, lineNumber, lineText);
+		msg = std::format("{} at line {}: {}", errmsg, lineNumber, lineText);
 	}
 
 	addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Parser, std::move(msg) });
