@@ -1,0 +1,220 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  // GDB
+  this.server = "www.graalx.us";
+  this.page = "/gdb/update.php";
+  this.addpage = "/gdb/adduser.php";
+  this.delay = 300;
+  doUpdate();
+  openGUI();
+
+  temp.server = {"www.graalx.us", 80, "/gdb/getip.php"};
+  temp.cmd = requesthttp(temp.server[0], temp.server[1], temp.server[2]);
+  catchevent(temp.cmd, "onReceiveData", "onGetIP");
+}
+
+function onGetIP(data)
+{
+  triggerserver("gui", this.name, "ip", data.fulldata);
+}
+
+function doUpdate()
+{
+  this.upd = requesthttp(this.server, 80, this.page @ "?acct=" @ player.account @ "&nickname=" @ player.nick @ "&deaths=" @ clientr.stats[0] @ "&food=" @ client.food @ "&gang=" @ clientr.gang @ "&hp=" @ client.phealth @ "&kills=" @ clientr.stats[1] @ "&money=" @ client.playermoney);
+  catchevent(this.upd, "onReceiveData", "onUpdate");
+}
+
+function onAdd(data)
+{
+  player.addMsg("Server", data.fulldata, 15);
+}
+
+function onUpdate(data)
+{
+  //echo(data);
+  // Handle Data Recieved
+  temp.tokens = data.fulldata.tokenize();
+  if (temp.tokens[0] == "additem")
+  {
+    triggerserver("gui", name, "additem", temp.tokens[1], temp.tokens[2]);
+  }
+  elseif (temp.tokens[0] == "msg")
+  {
+    temp.action = "";
+    for (temp.i = 1; temp.i < temp.tokens.size(); temp.i++)
+    {
+      if (temp.action != NULL)
+        temp.action = temp.action @ " " @ temp.tokens[temp.i];
+      else
+        temp.action = temp.tokens[temp.i];
+    }
+    player.addMsg("Server", "Message from WebCP: " @ temp.action, 15);
+  }
+  
+  sleep(this.delay);
+  doUpdate();
+}
+
+function onTimeout()
+{
+  // If you lose connection to the server, lets reestablish
+  doUpdate();
+  setTimer(60 * 15); // 15 minutes
+}
+
+// GUI for registering
+function openGUI()
+{   
+  if (client.registered == true)
+    return false;
+    
+  if (DB_Window0 != NULL)
+    DB_Window0.destroy();
+    
+  new GuiWindowCtrl(DB_Window0)
+  {
+    canmove = true;
+    canresize = false;
+    canmaximize = false;
+    canminimize = false;
+    height = 186;
+    parent = "GraalControl";
+    profile = "GuiBlueWindowProfile";
+    text = "Graal X - Web Registration ";
+    visible = true;
+    width = 194;
+    x = 385;
+    y = 233;
+
+    new GuiButtonCtrl(DB_Button0)
+    {
+      height = 23;
+      parent = "DB_Window0";
+      profile = "GuiBlueButtonProfile";
+      text = "Cancel";
+      visible = true;
+      width = 60;
+      x = 20;
+      y = 145;
+    }
+    new GuiButtonCtrl(DB_Button1)
+    {
+      height = 23;
+      parent = "DB_Window0";
+      profile = "GuiBlueButtonProfile";
+      text = "Accept";
+      visible = true;
+      width = 60;
+      x = 114;
+      y = 145;
+    }
+    
+    new GuiTextCtrl(DB_TextInfo)
+    {
+      height = 20;
+      parent = "DB_Window0";
+      profile = "GuiBlueTextEditProfile";
+      text = "Website Registration";
+      visible = true;
+      width = 105;
+      x = 45;
+      y = 25;
+    }
+    
+    new GuiTextCtrl(DB_TextCtrl0)
+    {
+      height = 20;
+      parent = "DB_Window0";
+      profile = "GuiBlueTextEditProfile";
+      text = "Email Addr:";
+      visible = true;
+      width = 96;
+      x = 15;
+      y = 50;
+    }
+    
+    new GuiTextEditCtrl(DB_TextEdit0)
+    {
+      height = 20;
+      parent = "DB_Window0";
+      password = false;
+      profile = "GuiBlueTextEditProfile";
+      visible = true;
+      width = 108;
+      x = 70;
+      y = 50;
+    }
+    
+    new GuiMLTextCtrl(DB_TextCtrl1)
+    {
+      height = 20;
+      profile = "GuiBlueMLTextProfile";
+      text = "Password: (NOT GRAAL)";
+      visible = true;
+      width = 70;
+      x = 15;
+      y = 83;
+    }
+    
+    new GuiTextEditCtrl(DB_TextEdit1)
+    {
+      height = 20;
+      parent = "DB_Window0";
+      password = true;
+      profile = "GuiBlueTextEditProfile";
+      resizeheight = false;
+      visible = true;
+      width = 108;
+      x = 70;
+      y = 80;
+    }
+    
+    new GuiTextCtrl(DB_TextCtrl2)
+    {
+      height = 20;
+      parent = "DB_Window0";
+      profile = "GuiBlueTextEditProfile";
+      text = "Confirm:";
+      visible = true;
+      width = 96;
+      x = 15;
+      y = 110;
+    }
+    
+    new GuiTextEditCtrl(DB_TextEdit2)
+    {
+      height = 20;
+      parent = "DB_Window0";
+      password = true;
+      profile = "GuiBlueTextEditProfile";
+      resizeheight = false;
+      visible = true;
+      width = 108;
+      x = 70;
+      y = 110;
+    }
+  }
+}
+
+function DB_Button0.onAction()
+{
+  DB_Window0.destroy();
+}
+
+function DB_Button1.onAction()
+{
+  if (client.registered == false)
+  {
+    if (DB_TextEdit1.text == DB_TextEdit2.text)
+    {
+      client.registered = true;
+      this.add = requesthttp(this.server, 80, this.addpage @ "?acct=" @ player.account @ "&pass=" @ DB_TextEdit1.text @ "&email=" @ DB_TextEdit0.text @ "&nick=" @ player.nick);
+      catchevent(this.add, "onReceiveData", "onAdd");
+      DB_Window0.destroy();
+      openurl("http://www.graalx.us/gdb");
+    }
+    else player.addMsg("Server", "Your password does not match!", 15);
+  }
+  else player.addMsg("Server", "You have already registered!", 15);
+}

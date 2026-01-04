@@ -1,0 +1,129 @@
+//#CLIENTSIDE
+function onCreated() {
+  removetiledefs(null);
+  if (player.account == "cadavre") {
+ //   addtiledef("dustynewpics1yb1.png", null, 0);
+  }
+ // addtiledef("g2k1_pics1.png", "", 0);
+ // addtiledef2("g2k1_pics1_3.png", "", 256*3, 0);
+  update();
+}
+
+function onPlayerEnters() {
+  update();
+}
+
+function onTimeout() {
+  update();
+}
+
+public function updateDayNightUi() {
+  update();
+}
+
+function drawDate() {
+  setarray(this.date,9);
+  this.date[0] = 15;
+  this.i = daysinmonth+1;
+  this.date[1] = int(this.i/10);
+  this.date[2] = this.i%10;
+  this.date[3] = 13;
+  this.i = (monthincyclus>=15? monthincyclus-15:monthincyclus)+1;
+  this.date[4] = int(this.i/10);
+  this.date[5] = this.i%10;
+  this.i = years % 100;
+  this.date[6] = 14;
+  this.date[7] = int(this.i/10);
+  this.date[8] = this.i%10;
+  
+  for (i=0; i<=8; i++) {
+    temp.imgindex = 1010+i;
+    showimg(temp.imgindex,"state.png",drawx,drawy);
+    changeimgpart(temp.imgindex,this.date[i]*14,81,14,16);
+    changeimgvis(temp.imgindex,4);
+    drawx += 12;
+    if (i in {0,3,6}) drawx += 2;
+  }
+}
+
+function drawTime() {
+  drawx += 6;
+  showimg(1020, "state.png", drawx, drawy);
+  changeimgpart(1020,162,60,14,14);
+  changeimgvis(1020,4);
+  drawx += 22;
+  
+  setarray(this.date,5);
+  this.i = int(hours);
+  this.date[0] = int(this.i/10);
+  this.date[1] = int(this.i%10);
+  this.date[2] = 11;
+  this.i = int(mins);
+  this.date[3] = int(this.i/10);
+  this.date[4] = int(this.i%10);
+  
+  for (temp.i=0; temp.i<5; temp.i++) {
+    temp.imgindex = 1021+temp.i;
+    showimg(temp.imgindex,"state.png",drawx, drawy);
+    changeimgpart(temp.imgindex,this.date[temp.i]*14,81,14,16);
+    changeimgvis(temp.imgindex,4);
+    drawx += 12;
+    if (temp.i == 2) drawx += 2;
+  }
+}
+
+function calcColors() {
+  redness = 0;
+  greenness = 0;
+  blueness = 0;
+  darkness = 0;
+  nightfactor = (abs(daymins - 12 * 60) - 1 * 60) / (12 * 60);
+  
+  if (nightfactor > 0) {
+    darkness = nightfactor * 0.8;
+    blueness = nightfactor * 0.2;
+  }
+
+  if (redfactor > 0) {
+    redness += redfactor;
+  }
+
+  redness = redness * (0.2);
+  greenness = greenness * (0.2);
+  blueness = blueness * (0.5);
+  darkness = darkness * (1.1);
+  seteffect(redness,greenness,blueness,darkness);
+}
+
+function update() {
+  mytimevar = timevar;
+  
+  daymins = (mytimevar % (30 * 24)) * 2;
+  days = int(mytimevar / (30 * 24));
+  months = int(days / 24);
+  daysinmonth = days % 24;
+  cyclus = int(months / 32);
+  monthincyclus = months % 32;
+  years = (1 + cyclus * 2 + (monthincyclus >= 15 ? 1 : 0));
+  hours = daymins / 60;
+  mins = daymins % 60;
+
+  // draw
+  hideimgs(1010, 1030);
+  if (!daynighticonshidden) {
+    drawx = 224;
+    drawy = 70;
+    drawDate();
+    drawTime();
+  }
+
+  // color effects
+  if (disabledaynight == false) {
+    if (!lighteffectsenabled) {
+      seteffect(0,0,0,0);
+    }
+    else calcColors();
+  }
+
+  setTimer(1);
+}

@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "abb4ab356dc77a6c6ff2ecb5d47d4889332138fb767b9ae1b2515dab553762b3",
+  "bytecode_size": 5137,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponSystems_Mail.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

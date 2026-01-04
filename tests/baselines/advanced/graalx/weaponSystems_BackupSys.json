@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "595453a37e9c5b749f27b71a0ace0c17eccf98ff94e96039fd1722d13bae7aa5",
+  "bytecode_size": 493,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponSystems_BackupSys.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "23235c7d2e5903a3c0d324e538db5eba216735879ab81b8b838593154929b0a3",
+  "bytecode_size": 935,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponStaff_Axe.gs2",
+    "generated_at": "2026-01-04 16:44:41",
+    "compiler_version": "modified_1767562734"
+  }
+}

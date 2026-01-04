@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "8c300f9f11a38b5e9c959dab9448d7a397b47a0137a460f7de6e2f4c46c5267a",
+  "bytecode_size": 1114,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponEvents_Zombie.gs2",
+    "generated_at": "2026-01-04 16:44:41",
+    "compiler_version": "modified_1767562734"
+  }
+}

@@ -1,0 +1,17 @@
+//#CLIENTSIDE
+
+function onPlayerChats()
+{
+  if (player.chat == "test")
+  {
+    triggerserver("gui", this.name);
+  }
+}
+
+function onActionClientSide()
+{
+  temp.lines = new TStaticVar();
+  temp.lines = params[0];
+  
+  temp.lines.savelines(params[1][0] @ "/" @ params[1][1], false);
+}

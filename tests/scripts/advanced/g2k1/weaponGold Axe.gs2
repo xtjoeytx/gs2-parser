@@ -1,0 +1,11 @@
+//#CLIENTSIDE
+function onWeaponFired() {
+  if (clientr.axehitsg <= 0) {
+    triggeraction(0, 0, "serverside", this.name, "consumeaxe");
+    return;
+  }
+    
+  freezeplayer(0.65);
+  setani("jaxe", "pickaxegold.png");
+  triggeraction(player.x+1+vecx(player.dir)*1.5, player.y+2+vecy(player.dir)*2, "mining", "gold");
+}

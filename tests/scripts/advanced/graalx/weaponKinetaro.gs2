@@ -1,0 +1,155 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  //onShowGUI();
+}
+
+function onShowGUI()
+{
+  Test_Bitmap.destroy();
+  
+  if (kPod_Bitmap != NULL) kPod_Bitmap.destroy();
+  
+  new GuiBitmapCtrl("kPod_Bitmap")
+  {
+    canmove = true;
+    
+    x = screenwidth  / 3;
+    y = screenheight / 3;
+    
+    width = 320;
+    height = 96;
+    
+    bitmap = "era_kpod-background.gif";
+    
+    new GuiBitmapButtonCtrl("kPod_RW")
+    {
+      x = 8;
+      y = 19;
+      
+      width = 21;
+      height = 60;
+    
+      normalbitmap = mouseoverbitmap = pressedbitmap = "era_kpod-rw.gif";
+    }
+    
+    new GuiBitmapButtonCtrl("kPod_FF")
+    {
+      x = 71;
+      y = 19;
+      
+      width = 21;
+      height = 60;
+    
+      normalbitmap = mouseoverbitmap = pressedbitmap = "era_kpod-ff.gif";
+    }
+    
+    new GuiBitmapButtonCtrl("kPod_Vol1")
+    {
+      x = 20;
+      y = 7;
+      
+      width = 60;
+      height = 21;
+    
+      normalbitmap = mouseoverbitmap = pressedbitmap = "era_kpod-volume1.gif";
+    }
+    
+    new GuiBitmapButtonCtrl("kPod_Vol2")
+    {
+      x = 20;
+      y = 70;
+      
+      width = 60;
+      height = 21;
+    
+      normalbitmap = mouseoverbitmap = pressedbitmap = "era_kpod-volume2.gif";
+    }
+    
+    new GuiBitmapButtonCtrl("kPod_Add")
+    {
+      x = 83;
+      y = 5;
+      
+      width = 15;
+      height = 15;
+    
+      normalbitmap = mouseoverbitmap = pressedbitmap = "era_kpod-add.gif";
+    }
+    
+    new GuiBitmapButtonCtrl("kPod_Remove")
+    {
+      x = 83;
+      y = 75;
+      
+      width = 15;
+      height = 15;
+    
+      normalbitmap = mouseoverbitmap = pressedbitmap = "era_kpod-remove.gif";
+    }
+    
+    new GuiScrollCtrl("kPod_ListScroll") {
+      profile = GuiBlueScrollProfile;
+      x = 100;
+      y = 4;
+      width = 215;
+      height = 86;
+      hScrollBar = "alwaysOff";
+      vScrollBar = "alwaysOff";
+   
+      new GuiTextListCtrl("kPod_List")
+      {
+        profile = GuiBlueTextListProfile;
+      
+        x = y = 0;
+      
+        fitparentwidth = true;
+      
+        clearrows();
+        
+        for (temp.var : client.kpod_list)
+        {
+          addrow(temp.I, temp.var);
+          
+          temp.I++;
+        }
+      }
+    }
+  }
+}
+
+// Button Functions - Insert Scripts below ;)
+function kPod_RW.onAction()
+{
+  player.chat = "Rewind";
+}
+
+function kPod_FF.onAction()
+{
+  player.chat = "Fast Foward";
+}
+
+function kPod_Vol1.onAction()
+{
+  player.chat = "Volume Up";
+}
+
+function kPod_Vol2.onAction()
+{
+  player.chat = "Volume Down";
+}
+
+function kPod_Add.onAction()
+{
+  player.chat = "Playlist Add";
+}
+
+function kPod_Remove.onAction()
+{
+  player.chat = "Playlist Remove";
+}
+
+function kPod_List.onDblClick(entryid, entrytext, entryindex)
+{
+  player.chat = "Current Selected: " @ entryindex;
+}

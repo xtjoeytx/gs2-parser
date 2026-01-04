@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "cc4dd9d1ced761c0e64a85dee0dd125adaddaae0d199e830939706b38b9486bf",
+  "bytecode_size": 1650,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponRadio.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

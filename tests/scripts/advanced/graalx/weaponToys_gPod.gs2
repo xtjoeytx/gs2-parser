@@ -1,0 +1,228 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  if (gPod_Window0 != NULL)
+  {
+    gPod_Window0.destroy();
+  }
+}
+
+function onWeaponFired()
+{
+  this.muditem = new TStaticVar();
+  this.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+
+  if (this.muditem.itemtype == "ARCHETYPE_TOY" && this.muditem.quantity >= 1 && this.muditem.weapon == name)
+  {
+    if (this.on == false)
+    {
+      if (this.muditem.battery >= 1)
+      {
+        if (this.muditem.songs.size() >= 0)
+        {
+          this.on = true;
+          this.gpod = client.selectedweapon;
+          onDisplayGui();
+          onTimeout();
+        }
+          else
+        {
+          player.addMsg("Server", "You should get some songs first!", 15);
+        }
+      }
+        else
+      {
+        player.addMsg("Server", "It seems the batteries are dead...", 15);
+      }
+    }
+      else
+    {
+      this.on = false;
+      stopmidi();
+      gPod_Window0.destroy();
+    }
+  }
+}
+
+function onDisplayGui()
+{       
+  this.muditem = new TStaticVar();
+  this.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+  
+  new GuiWindowCtrl("gPod_Window0")
+  {
+    extent   = {240, 180};
+      
+    profile = "GuiBlueWindowProfile";
+
+    text = "gPod Version 1.0 - Battery: " @ thiso.muditem.battery @ "%";
+
+    canresize = canmaximize = false;
+    closequery = true;
+
+    new GuiScrollCtrl("gPod_Scroll")
+    {
+      extent     = {227, 150};
+      position   = {7, 24};
+      
+      profile    = "GuiBlueScrollProfile";
+      
+      hscrollbar = "dynamic";
+      vscrollbar = "dynamic";
+
+      new GuiSliderCtrl("gPod_Slider0")
+      {
+        extent   = {90, 20};
+        position = {125, 15};
+        
+        profile  = "GuiBlueSliderProfile";
+        
+        range    = {0, 1};
+        ticks    = 1;
+        value    = 1;
+      }
+
+      new GuiButtonCtrl("gPod_Button_Stop")
+      {
+        extent   = {50, 20};
+        position = {65, 13};
+        
+        profile  = "GuiBlueButtonProfile";
+        
+        text     = "Stop";
+        
+        thiso.catchevent(name, "onAction", "onButtonEnter");
+      }
+      
+      new GuiButtonCtrl("gPod_Button_Play")
+      {
+        extent   = {50, 20};
+        position = {8, 13};
+        
+        profile = "GuiBlueButtonProfile";
+        
+        text    = "Play";
+        
+        thiso.catchevent(name, "onAction", "onButtonEnter");
+      }
+      
+      new GuiPopUpMenuCtrl("gPod_Song_List")
+      {
+        extent         = {200, 20};
+        position       = {12, 50};
+        
+        profile        = "GuiBluePopUpMenuProfile";
+        scrollprofile  = "GuiBluePopUpMenuProfile";
+       
+        text           = "Choose Song";
+        
+        rows           = "";
+      }
+      
+      for (temp.I = 0; temp.I < thiso.muditem.songs.size(); temp.I++) gPod_Song_List.addrow(temp.I, thiso.muditem.songs[temp.I][1]);
+      
+    }
+  }
+}
+
+function onTimeout()
+{
+  if (this.on == true)
+  {    
+    this.muditem = new TStaticVar();
+    this.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ this.gpod));
+    /*
+    play(this.cursongon);
+
+    if (musiclen == 0 && this.mtick <= 0 && this.mon == true)
+    {
+      this.mtick = 3;
+
+      if (gPod_Song_List.getselectedid() == gPod_Song_List.rowcount() - 1)
+      {
+        gPod_Song_List.setselectedbyid(0);
+      }
+        else
+      {
+        gPod_Song_List.setselectedbyid(gPod_Song_List.getselectedid() + 1);
+      }
+    
+      onButtonEnter("gPod_Button_Play");
+    }
+    */
+  
+    if (this.muditem.quantity >= 1)
+    {
+      if (this.btick <= 0)
+      {
+        this.btick = 40;
+        gPod_Window0.text = "gPod Version 1.0 - Battery: " @ this.muditem.battery @ "%";
+
+        triggerserver("gui", name, "battery", this.gpod);
+      }
+    }
+      else
+    {
+      stopmidi();
+      gPod_Window0.destroy();
+      this.mon = false;
+      this.on = false;
+    }
+    
+    if (this.btick > 0) this.btick -= 0.05;
+    if (this.mtick > 0) this.mtick -= 0.05;
+    
+    setTimer(0.05);
+  }
+}
+
+function convertTime(musicTime)
+{
+  temp.seconds = musicTime % 60000;
+  temp.minutes = int(musicTime / 60000);
+  
+  if (temp.seconds.length() <= 3)
+  {
+    temp.seconds = 0;
+  }
+    elseif (temp.seconds.length() == 4)
+  {
+    temp.seconds = "0" @ temp.seconds.substring(0, 1);
+  }
+    else
+  {
+    temp.seconds = temp.seconds.substring(0, 2);
+  }
+  
+  return format("%s:%s", temp.minutes, temp.seconds);;
+}
+
+function gPod_Slider0.onAction(newValue)
+{
+  setmusicvolume(newValue, newValue);
+}
+
+function onButtonEnter(obj)
+{
+  if (obj == "gPod_Button_Stop")
+  {
+    stopmidi();
+    this.mon = false;
+  }
+    elseif (obj == "gPod_Button_Play")
+  {
+    play(this.muditem.songs[gPod_Song_List.getselectedid()][0]);
+    setmusicvolume(gPod_Slider0.value, gPod_Slider0.value);
+
+    this.mon = true;
+  }
+}
+
+function gPod_Window0.onCloseQuery()
+{
+  stopmidi();
+  gPod_Window0.destroy();
+  this.on = false;
+  this.mon = false;
+  setTimer(0);
+}

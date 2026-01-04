@@ -1,0 +1,38 @@
+//#CLIENTSIDE
+
+function ChatBar.onAction()
+{
+  if (ChatBar.text == "/party leave")
+  {
+    triggerserver("gui", this.name, "leave");
+    
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text == "/party tag")
+  {
+    triggerserver("gui", this.name, "tag");
+    
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/party form"))
+  {
+    triggerserver("gui", this.name, "form", ChatBar.text.substring(12, -4));
+    
+    ChatBar.text = "";
+  }
+}
+
+function onActionClientSide(action)
+{
+  switch (action)
+  {
+    case "blah":
+    {
+      // SHIATGOHERE
+    
+      break;
+    }
+  }
+}

@@ -1,0 +1,21 @@
+// Arithmetic expressions
+function testArithmetic() {
+  // Basic operations
+  temp.add = 5 + 3;
+  temp.subtract = 10 - 4;
+  temp.multiply = 6 * 7;
+  temp.divide = 15 / 3;
+  temp.modulo = 17 % 5;
+  temp.power = 2 ^ 3;
+
+  // Unary operations
+  temp.negative = -temp.add;
+
+  // Mixed types
+  temp.mixed1 = 5 + 3.14;
+  temp.mixed2 = "Value: " @ temp.add;
+
+  // Parentheses
+  temp.grouped = (5 + 3) * 2;
+  temp.nested = ((10 - 2) / 2) + 1;
+}

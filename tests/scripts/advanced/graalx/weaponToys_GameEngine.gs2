@@ -1,0 +1,175 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.flash = {{"Pacman", "Pacman", "pacman.swf"},
+                {"MadnessInt", "Madness Interactive", "madnessinteractive.swf"},
+                {"Tetris", "Tetris", "tetris.swf"},
+                {"Galaga", "Galaga", "galaga.swf"},
+                {"Asteroids", "Asteroids", "asteroids.swf"},
+                {"PBJMovie", "Peanut Butter Jelly", "peanutbutter.swf"},
+                {"Mario_Overrun", "Mario World Overrun", "marioworldoverrun.swf"},
+                {"Defend_Castle", "Defend Your Castle", "defendcastle.swf"},
+                {"Alien_Hominid", "Alien Hominid", "alienhominid.swf"}};
+
+  if (client.gameengine == "")
+  {
+    client.gameengine = {screenwidth / 4, screenheight / 4};
+  }
+}
+
+function onWeaponFired()
+{
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+  
+  if (temp.muditem.itemtype == "ARCHETYPE_TOY" && temp.muditem.quantity >= 1 && temp.muditem.weapon == name)
+  {
+    if (GE_Window.visible == NULL)
+    {
+      onStartUp();
+    }
+  }
+}
+
+function onStartUp()
+{
+  this.items = 0;
+  
+  for (temp.var: this.flash)
+  {
+    if (player.Mud_FindItem(temp.var[0]))
+    {
+      this.items.add(temp.I);
+    }
+
+    temp.I++;
+  }
+  
+  onShowDisplayGui();
+  onTimeout();
+}
+
+function onShowDisplayGui()
+{
+  new GuiWindowCtrl(GE_Window)
+  {
+    canresize = canmaximize = false;
+    height = 400;
+    profile = "GuiBlueWindowProfile";
+    text = "GameEngine 1 (by KuJi)";
+    width = 600;
+    x = client.gameengine[0];
+    y = client.gameengine[1];
+    
+    new GuiScrollCtrl(GE_Scroll1)
+    {
+      height = 370;
+      hscrollbar = vscrollbar = "dynamic";
+      profile = "GuiBlueScrollProfile";
+      width = 158;
+      x = 6;
+      y = 24;
+      
+      for (temp.var: thiso.items)
+      {
+        new GuiRadioCtrl("GE_Select" @ temp.I)
+        {
+          height = 16;
+          hscrollbar = "alwaysOff";
+          vscrollbar = "dynamic";
+          profile = "GuiBlueRadioProfile";
+          width = 158;
+          text = thiso.flash[thiso.items[temp.I]][1];
+          x = 2;
+          y = 2 + (16 * temp.I);
+          
+          thiso.catchEvent(name, "onAction", "GE_Select");
+        }
+        
+        temp.I++;
+      }
+    }
+    
+    new GuiScrollCtrl(GE_Scroll2)
+    {
+      height = 370;
+      profile = "GuiBlueScrollProfile";
+      hscrollbar = vscrollbar = "alwaysOff";
+      width = 430;
+      x = 165;
+      y = 24;
+      
+      new GuiFlash(GE_Game)
+      {
+        width = 428;
+        height = 370;
+        loopmovie = false;
+        requiresactivex = true;
+        GE_Game.x = GE_Scroll2.x - 165;
+        y = 0;
+      }
+    }
+  }
+}
+
+function GE_Window.onMove(newx, newy)
+{
+  GE_Game.x = GE_Scroll2.x - 165;
+  client.gameengine = {GE_Window.x, GE_Window.y};
+}
+
+function GE_Select(obj)
+{
+  this.playmovie = this.flash[this.items[obj.substring(9, -4)]][2];
+  
+  if (GE_Game.moviename != this.playmovie)
+  {
+    GE_Window.destroy();
+    onShowDisplayGui();
+    
+    GE_Game.loadmovie(this.playmovie, true, 4);
+    GE_Game.playmovie();
+    
+    obj.checked = true;
+  }
+}
+
+function onTimeout()
+{
+  if (GE_Window.visible == true)
+  {
+    playerfreeze = 0.1;
+    setTimer(0.05);
+  }
+    else
+  {
+    GE_Window.destroy();
+    setTimer(0);
+  }
+}
+
+function onActionClientSide()
+{
+  onOpenGame(params[0]);
+}
+
+public function onOpenGame(gameName)
+{
+  if (GE_Window.visible == NULL)
+  {
+    this.items = 0;
+    
+    for (temp.var: this.flash)
+    {
+      if (temp.var[0] in gameName)
+      {
+        this.items.add(temp.I);
+      }
+    
+      temp.I++;
+    }
+  
+    onShowDisplayGui();
+    onTimeout();
+  }
+}

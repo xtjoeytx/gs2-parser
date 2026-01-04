@@ -1,0 +1,204 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  // [ Initialize Startup ] \\
+  disabledefmovement();
+  
+  // [ Initialize Variables ] \\
+  this.anis = {"idle", "walk", "swim", "push", "pull", "grab", "sit", "sleep", "map"};
+  this.basespeed = 0.82;
+  
+  this.dirgo = {0, -1, -1, 0, 0, 1, 1, 0, 0, 0};
+  
+  this.Gsitcheck = {1.25, 2, 1.75, 2};
+  
+  this.Csittiles =
+  {
+    0x150,0x151,0x152,0x153,0x154,0x155,0x156,0x157,0x158,0x159,0x15A,0x15B,0x15C,0x15D,0x15E,0x15F,
+    0x160,0x161,0x162,0x163,0x164,0x165,0x166,0x167,0x168,0x169,0x16A,0x16B,0x16C,0x16D,0x16E,0x16F
+  };
+    
+  this.Cwalltest = {
+                     0.525, 1, 1.475, 1, 1.525, 1, 2.475, 1, 2.525, 1, 0.475, 1,
+                     0.5, 1.025, 0.5, 1.975, 0.5, 2.025, 0.5, 2.975, 0.5, 3.025, 0.5, 0.975,
+                     0.525, 3, 1.475, 3, 1.525, 3, 2.475, 3, 2.525, 3, 0.475, 3,
+                     2.5, 1.025, 2.5, 1.975, 2.5, 2.025, 2.5, 2.975, 2.5, 3.025, 2.5, 0.975
+                   };
+                   
+  this.sidemove = {
+                    0.1, 0, -0.1, 0,
+                    0, 0.1, 0, -0.1,
+                    0.1, 0, -0.1, 0,
+                    0, 0.1, 0, -0.1
+                  };
+  
+  // [ Initialize Arrays ] \\  
+  setarray(this.key,   11);
+  setarray(this.slide, 4);
+
+  player.chat = "Movement Activated!";
+
+  destroy();
+  
+  onTimeout();
+}
+
+function onTimeout()
+{
+  // Must Stay at Top
+  onGetKeys();
+  
+  // Continue the Rest =)
+  if (!playerreading && playerfreeze <= 0 && !clientr.playerfroze && !client.playerfroze && !clientr.icar)
+  {
+    playermoved = false;
+  
+    if (onMovement())
+    {
+      temp.newcord = checkMovement();
+    
+      player.x   = temp.newcord[0];
+      player.y   = temp.newcord[1];
+      player.dir = temp.newcord[2];
+    }
+    
+    onGetSprite();
+    onASD();
+  }
+  
+  onGrab();
+  
+  if (playerfreeze >= 0) playerfreeze -= 0.05;
+  
+  setTimer(0.05);
+}
+
+function onMovement()
+{
+  for (temp.I = 0; temp.I < 4; temp.I++)
+  {
+    if (this.key[temp.I] == true || this.slide[temp.I] > 0)
+    {
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+function onASD()
+{
+  temp.ganis = {"swim", "carry", "push", "pull", "grab", "ride", "dead", "hurt"};
+ 
+  if (!weaponsenabled) return false;
+  
+  if (!contains(this.ganis, player.ani))
+  {
+    // S Weapon
+    if (this.key[5] == true)
+    {
+      onAttack();
+    }
+      else
+    {
+      this.satk = false;
+    }
+    
+    // D Weapon
+    if (this.key[4] == true)
+    {
+      onWeapon();
+    }
+      else
+    {
+      this.datk = false;
+    }
+  }
+}
+
+function onAttack()
+{
+  if (this.satk == false)
+  {
+    findWeapon("+Melee").onMeleeFired();
+
+    this.satk = true;
+  }
+}
+
+function onWeapon()
+{
+  if (selectedweapon >= 0 && this.datk == false && weaponsdisabled == false && player.ani != "swim")
+  {
+    callweapon(selectedweapon, "weaponfired");
+    
+    this.datk = true;
+  }
+}
+
+function onGetKeys()
+{
+  for (temp.I = 0; temp.I < 11; temp.I++)
+  {
+    this.key[temp.I] = keydown(temp.I);
+  }
+  
+  return true;
+}
+
+function onKeyPressed(keycode, keychar)
+{
+  if (keychar == "1")
+  {
+    if (strafedir == -1)
+    {
+      strafedir = playerdir;
+    }
+      else
+    {
+      strafedir = -1;
+    }
+  }
+  
+  if (keychar == "2")
+  {
+    echo("X: " @ player.x @ " | Y: " @ player.y);
+  }
+}
+
+// Specific Ganis
+public function changeAnis(idle, walk, swim, push, pull, grab, sit, sleepg, map)
+{
+  this.anis   = {idle, walk, swim, push, pull, grab, sit, sleepg, map};
+  client.anis = {idle, walk, swim, push, pull, grab, sit, sleepg, map};
+}
+
+// Change all to one gani
+public function changeAnis2(ganiname)
+{
+  this.anis   = {ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname};
+  client.anis = {ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname};
+}
+
+// Change back to default ganis
+public function changeAnis3()
+{
+  if (player.account in this.accounts)
+  {
+    this.anis   = {"ci_body-idle", "ci_body-walk", "ci_body-swim", "ci_body-push", "ci_body-pull", "ci_body-grab", "ci_body-sit", "ci_body-sleep", "ci_body-idle"};
+    client.anis = {"ci_body-idle", "ci_body-walk", "ci_body-swim", "ci_body-push", "ci_body-pull", "ci_body-grab", "ci_body-sit", "ci_body-sleep", "ci_body-idle"};
+  }
+    else
+  {
+    this.anis   = {"idle", "walk", "swim", "push", "pull", "grab", "sit", "sleep", "map"};
+    client.anis = {"idle", "walk", "swim", "push", "pull", "grab", "sit", "sleep", "map"};
+  }
+}
+
+function onActionClientSide(action, args)
+{
+  if (action == "freezetime")
+  {
+    playerfreeze += args;
+  }
+}

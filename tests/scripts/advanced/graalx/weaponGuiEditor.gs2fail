@@ -1,0 +1,893 @@
+//#CLIENTSIDE
+
+function onCreated()
+{
+  // GuiWindowProfile.bitmap = "stefan_window1.png";
+  //GuiButtonProfile.soundButtonDown = "sword.wav";
+  //GuiButtonProfile.soundButtonOver = "item.wav";
+}
+
+// Manager window (open, close editor)
+function addManagerWindow()
+{
+  new GuiWindowCtrl(GuiManager_Window)
+  {
+    profile = "GuiBlueWindowProfile";
+    position = {10, 10};
+    extent = {192, 52};
+    canMove = true;
+    canResize = true;
+    canMaximize = false;
+    canClose = true;
+    text = "GUI Editor";
+    destroyonhide = true;
+
+    new GuiButtonCtrl(GuiManager_Open) 
+    {
+      profile = "GuiGreenButtonProfile";
+      position = {6, 24};
+      extent = {60, 23};
+      text = "Open";
+      buttonType = "PushButton";
+      hint = "Opens the GUI Editor";
+    }
+    new GuiButtonCtrl(GuiManager_Close) 
+    {
+      profile = "GuiBlueButtonProfile";
+      position = {66, 24};
+      extent = {60, 23};
+      text = "Close";
+      buttonType = "PushButton";
+      hint = "Closes all windows from the GUI Editor";
+    }
+    new GuiButtonCtrl(GuiManager_Compile) 
+    {
+      profile = "GuiBlueButtonProfile";
+      position = {126, 24};
+      extent = {60, 23};
+      text = "Compile";
+      buttonType = "PushButton";
+      hint = "Generate the weapon script";
+    }
+  }
+}
+
+function GuiManager_Open.onAction() 
+{
+  if (this.editcontrols.size()<=0) 
+  {
+    resetEditorVars();
+    addEditorControls();
+  }
+}
+
+function GuiManager_Close.onAction() 
+{
+  GuiEdit_Window.destroy();
+  GuiDebug_Window.destroy();
+  for (obj: this.editcontrols) 
+  {
+    obj.destroy();
+  }
+  this.editcontrols.clear();
+  this.varedits.clear();
+  this.varnames.clear();
+  GuiView_Window.destroy();
+}
+
+function GuiManager_Compile.onAction() 
+{
+  compileScript();
+}
+
+// Editor window
+
+function resetEditorVars() 
+{
+  this.windowcount = 0;
+  this.bordercount = 0;
+  this.buttoncount = 0;
+  this.bitmapbuttoncount = 0;
+  this.textcount = 0;
+  this.texteditcount = 0;
+  this.checkboxcount = 0;
+  this.radiocount = 0;
+  this.popupcount = 0;
+  this.slidercount = 0;
+  this.progresscount = 0;
+  this.textlistcount = 0;
+  this.multilinecount = 0;
+  this.multilineeditcount = 0;
+  this.tabcount = 0;
+  this.container = null;
+  this.containers = null;
+  this.ignoredprops = {"position","extent","minSize"};
+}
+
+function addEditorControls() 
+{
+
+  new GuiBitmapBorderCtrl(GuiEdit_Window) 
+  {
+    profile = "GuiBlueBitmapBorderProfile";
+    position = {(screenwidth - 580), 15};
+    canResize = false;
+    canMove = true;
+
+    guitypes = {{"Window", "window"},
+                {"BitmapBorder", "border"},
+                {"Scroll", "scroll"},
+                {"Button", "button"},
+                {"BitmapButton", "bitmapbutton"},
+                {"Text", "text"},
+                {"TextEdit", "textedit"},
+                {"CheckBox", "checkbox"},
+                {"RadioButton", "radio"},
+                {"Popup", "popup"},
+                {"Slider", "slider"},
+                {"Progress", "progress"},
+                {"TextList", "textlist"},
+                {"MultiLine", "multiline"},
+                {"MultiLineEdit", "multilineedit"},
+                {"Tab", "tab"}
+               };
+               
+    for (i = 0; i < guitypes.size(); i ++)
+    {
+      new GuiBitmapButtonCtrl("GuiEdit_Add" @ guitypes[i][0]) 
+      {
+        profile = "GuiBlueButtonProfile";
+        x = 10 + (i * 37);
+        y = 15;
+        width = 32;
+        height = 32;
+        normalbitmap = "guiedit_" @ guitypes[i][1] @ "_normal.png";
+        mouseoverbitmap = "guiedit_" @ guitypes[i][1] @ "_mouseover.png";
+        pressedbitmap = "guiedit_" @ guitypes[i][1] @ "_down.png";
+        hint = guitypes[i][0];
+        thiso.catchEvent(this, "onAction", "onRequestNewObject");
+      }
+    }
+    
+    extent = {(i * 37) + 20, 60};
+  }
+
+  new GuiWindowCtrl(GuiView_Window) 
+  {
+    profile = "GuiBlueWindowProfile";
+    position = {10, 100};
+    extent = {200, 300};
+    minExtent = {160, 100};
+    canMove = true;
+    canResize = true;
+    canMaximize = false;
+    canClose = true;
+    text = "Object View";
+
+    new GuiPopUpMenuCtrl(GuiView_List) 
+    {
+      profile = "GuiBlueScrollProfile";
+      horizSizing = "width";
+      position = {6, 24};
+      extent = {188, 22};
+      maxPopupHeight = "200";
+      
+      useownprofile = true;
+      profile.fontcolor = {192, 224, 255};
+    }
+
+    new GuiTextCtrl(GuiView_NameLabel) 
+    {
+      profile = "GuiBlueTextProfile";
+      position = {30, 49};
+      extent = {60, 22};
+      minExtent = {8, 22};
+      text = "Name";
+    }
+    
+    new GuiTextCtrl(GuiView_ValueLabel) 
+    {
+      profile = "GuiBlueTextProfile";
+      position = {125, 49};
+      extent = {60, 20};
+      minExtent = {8, 20};
+      text = "Value";
+    }
+
+    new GuiScrollCtrl(GuiView_PropScroll) 
+    {
+      profile = "GuiBlueScrollProfile";
+      horizSizing = "width";
+      vertSizing = "height";
+      position = {5, 69};
+      extent = {189, 225};
+      willFirstRespond = true;
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      constantThumbHeight = false;
+      childMargin = {0, 0};
+      tile = true;
+
+      new GuiControl(GuiView_PropPanel)
+      {
+        // profile = "GuiBlueControlProfile";
+        horizSizing = "width";
+        position = {0, 0};
+        extent = {190, 221};
+        minExtent = {8, 8};
+        visible = true;
+      }
+    }
+  }
+
+  new GuiWindowCtrl(GuiDebug_Window)
+  {
+    profile = "GuiBlueWindowProfile";
+    position = {10, 420};
+    extent = {200, 170};
+    minExtent = {160, 100};
+    canMove = true;
+    canResize = true;
+    canMaximize = true;
+    canClose = true;
+    text = "Debug";
+
+    new GuiScrollCtrl(GuiDebug_Scroll)
+    {
+      profile = "GuiBlueScrollProfile";
+      position = {5, 25};
+      extent = {190, 140};
+      horizSizing = "width";
+      vertSizing = "height";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+
+      new GuiMLTextCtrl(GuiDebug_List)
+      {
+        profile = "GuiBlueMLTextProfile";
+        horizSizing = "width";
+        x = y = 0;
+        width = 170;
+      }
+    }
+  }
+  GuiDebug_List.setText("*** Editor Log ***");
+}
+
+// Actions when clicking on the controls-creation buttons
+function onRequestNewObject(obj)
+{
+  switch (obj.hint)
+  {
+    case "Window":
+    { 
+      newname = "Editor_Window" @ this.windowcount;
+      new GuiWindowCtrl(@newname) {
+        profile = "GuiBlueWindowProfile";
+        position = {(screenwidth - 240) / 2, (screenheight-160) / 2};
+        extent = {320, 240};
+        text = "Window " @ this.windowcount;
+        canMove = true;
+        canClose = true;
+      }
+        
+      break;
+    }
+    
+    case "BitmapBorder":
+    {
+      newname = "Editor_BitmapBorder" @ this.bordercount;
+      
+      new GuiBitmapBorderCtrl(@newname)
+      {
+        profile = "GuiBlueBitmapBorderProfile";
+        position = {(screenwidth-240) / 2, (screenheight - 160) / 2};
+        extent = {320, 240};
+        canMove = true;
+        canClose = true;
+      }
+
+      break;
+    }
+  
+    case "Scroll":
+    {
+      newname = "Editor_Scroll" @ this.scrollcount;
+    
+      with (this.container) {
+        new GuiScrollCtrl(@newname) {
+          profile = "GuiBlueScrollProfile";
+          position = {50, 50};
+          extent = {150, 120};
+          tile = true;
+          childMargin = {0, 0};
+          hScrollBar = "dynamic";
+          vScrollBar = "dynamic";
+          canMove = true;
+          canResize = true;
+          editing = true;
+        }
+      }
+    
+      break;
+    }
+    
+    case "Button":
+    {
+      newname = "Editor_Button" @ this.buttoncount;
+      with (this.container)
+      {
+        new GuiButtonCtrl(@newname)
+        {
+          profile = "GuiBlueButtonProfile";
+          position = {50, 50};
+          extent = {60, 23};
+          text = "Button " @ this.buttoncount;
+          buttonType = "PushButton";
+          canMove = true;
+          canResize = true;
+          editing = true;
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "BitmapButton":
+    {
+      newname = "Editor_BitmapButton" @ this.bitmapbuttoncount;
+      with (this.container) {
+        new GuiBitmapButtonCtrl(@newname) {
+          profile = "GuiBlueButtonProfile";
+          position = {50, 50};
+          extent = {32, 32};
+          normalbitmap = "guiedit_button_normal.png";
+          mouseoverbitmap = "guiedit_button_mouseover.png";
+          pressedbitmap = "guiedit_button_down.png";
+          canMove = true;
+          canResize = true;
+          editing = true;
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "Text":
+    {
+      newname = "Editor_Text" @ this.textcount;
+      with (this.container) {
+        new GuiTextCtrl(@newname) {
+          profile = "GuiBlueTextProfile";
+          position = {50, 50};
+          extent = {80, 20};
+          minExtent = {8, 20};
+          text = "Text " @ this.textcount;
+          canMove = true;
+          editing = true;
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "TextEdit":
+    {
+      newname = "Editor_TextEdit" @ this.texteditcount;
+      with (this.container) {
+        new GuiTextEditCtrl(@newname) {
+          profile = "GuiBlueTextEditProfile";
+          position = {50, 50};
+          extent = {80, 20};
+          minExtent = {8, 20};
+          historySize = 0;
+          password = false;
+          tabComplete = false;
+          canMove = true;
+          canResize = true;
+          resizeHeight = false;
+          editing = true;
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "CheckBox":
+    {
+      newname = "Editor_CheckBox" @ this.checkboxcount;
+      with (this.container) {
+        new GuiCheckBoxCtrl(@newname) {
+          profile = "GuiBlueCheckBoxProfile";
+          position = {50, 50};
+          extent = {100, 20};
+          minExtent = {8, 20};
+          text = "CheckBox " @ this.checkboxcount;
+          groupNum = "-1";
+          buttonType = "ToggleButton";
+          canMove = true;
+          editing = true;
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "RadioButton":
+    {
+      newname = "Editor_RadioButton" @ this.radiocount;
+      with (this.container) {
+        new GuiRadioCtrl(@newname) {
+          profile = "GuiBlueRadioProfile";
+          position = {50, 50};
+          extent = {100, 20};
+          minExtent = {8, 20};
+          text = "RadioButton " @ this.radiocount;
+          groupNum = "0";
+          buttonType = "RadioButton";
+          canMove = true;
+          editing = true;
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "Slider":
+    {
+      newname = "Editor_Slider" @ this.slidercount;
+      with (this.container) {
+        new GuiSliderCtrl(@newname) {
+          profile = "GuiBlueSliderProfile";
+          position = {50, 50};
+          extent = {120, 20};
+          range = {0, 100};
+          ticks = 100;
+          value = 75;
+          canMove = true;
+          canResize = true;
+          resizeHeight = false;
+          editing = true;
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "Popup":
+    {
+      newname = "Editor_Popup" @ this.popupcount;
+      with (this.container) {
+        new GuiPopUpMenuCtrl(@newname) {
+          profile = "GuiBluePopUpMenuProfile";
+          position = {50, 50};
+          extent = {80, 20};
+          maxPopupHeight = "200";
+          text = "Popup " @ this.popupcount;
+          canMove = true;
+          canResize = true;
+          resizeHeight = false;
+          editing = true;
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "Progress":
+    {
+      newname = "Editor_Progress" @ this.progresscount;
+      with (this.container) {
+        new GuiProgressCtrl(@newname) {
+          profile = "GuiBlueProgressProfile";
+          position = {50, 50};
+          extent = {120, 20};
+          progress = 0.5;
+          canMove = true;
+          canResize = true;
+          resizeHeight = false;
+          editing = true;
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "TextList":
+    {
+      newname = "Editor_TextList" @ this.textlistcount;
+      with (this.container) {
+        new GuiTextListCtrl(@newname) {
+          profile = "GuiBlueTextListProfile";
+          position = {50, 50};
+          extent = {120, 100};
+          canMove = true;
+          canResize = true;
+          editing = true;
+          addRow(0, "Text-");
+          addRow(1, "List " @ this.textlistcount);
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "MultiLine":
+    {
+      newname = "Editor_MultiLine" @ this.multilinecount;
+      with (this.container) {
+        new GuiMLTextCtrl(@newname) {
+          profile = "GuiBlueMLTextProfile";
+          x = 50;
+          y = 50;
+          width = 80;
+          canMove = true;
+          canResize = true;
+          resizeHeight = false;
+          editing = true;
+          text = "Multi Line Text Field Standard Content";
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "MultiLineEdit":
+    {
+      newname = "Editor_MultiLineEdit" @ this.multilineeditcount;
+      with (this.container) {
+        new GuiMLTextEditCtrl(@newname) {
+          profile = "GuiBlueMLTextEditProfile";
+          x = 50;
+          y = 50;
+          width = 80;
+          canMove = true;
+          canResize = true;
+          resizeHeight = false;
+          editing = true;
+          text = "Multi Line Text Edit Field Standard Content";
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+    
+    case "Tab":
+    {
+      newname = "Editor_TabSelect" @ this.tabcount;
+      with (this.container)
+      {
+        new GuiTabCtrl(@newname)
+        {
+          profile = "GuiBlueTabProfile";
+          position = {50, 50};
+          extent = {100, 24};
+          
+          canMove = true;
+          canResize = true;
+          editing = true;
+          
+          addRow(0, "Tab 1");
+        }
+      }
+      
+      temp.hmode = 1;
+      break;
+    }
+  }
+  
+  if (temp.hmode == 0)
+  {
+    obj = makevar(newname);
+    addEditorObject(obj);
+    this.container = obj;
+    this.containers.add(obj);
+  }
+    else
+  {
+    addEditorObject(makevar(newname));
+  }
+  
+  this.(obj.hint.lower() @ "count") ++;
+}
+
+function GuiView_List.onSelect(selid)
+{
+  newobj = this.editcontrols[selid];
+  if (newobj!=this.varobj)
+  {
+    showObjectProperties(newobj);
+  }
+}
+
+function addEditorObject(obj)
+{
+  this.editcontrols.add(obj);
+  GuiView_List.addText(obj.name.substring("Editor_".length()),
+    this.editcontrols.size()-1);
+  showObjectProperties(obj);
+  GuiDebug_List.addText("\nAdded control " @ obj, true);
+}
+
+// Update the attributes list to display
+// the attributes of the clicked control
+function showObjectProperties(obj)
+{
+  this.varobj = obj;
+  this.varnames = obj.geteditvarnames();
+  for (i = 0; i < this.ignoredprops.size(); i ++)
+  {
+    this.varnames.remove(this.ignoredprops[i]);
+  }
+
+  // Create enough edit controls
+  for (i = this.varedits.size(); i < this.varnames.size(); i ++)
+  {
+    with (GuiView_PropPanel)
+    {
+      new GuiTextCtrl("GuiView_VarName" @ i) 
+      {
+        profile = "GuiBlueTextProfile";
+        x = 5;
+        y = i * 20;
+        width = 80;
+        height = 20;
+        minExtent = {8, 20};
+      }
+      
+      new GuiTextEditCtrl("GuiView_VarEdit" @ i)
+      {
+        profile = "GuiBlueTextEditProfile";
+        horizSizing = "width";
+        x = 85;
+        y = i*20;
+        width = 83;
+        height = 20;
+        minExtent = {8, 20};
+        historySize = 0;
+        password = false;
+        tabComplete = false;
+      }
+    }
+    this.varedits.add("GuiView_VarEdit" @ i);
+    catchevent("GuiView_VarEdit" @ i, "onAction", "onPropertyChanged");
+    catchevent("GuiView_VarEdit" @ i, "onMouseDown", "onPropertyClicked");
+  }
+  
+  // Hide controls if we have too many
+  for (i = 0;  i < this.varedits.size(); i ++) {
+    if (i<this.varnames.size())
+    {
+      ("GuiView_VarName" @ i).show();
+      ("GuiView_VarEdit" @ i).show();
+    } 
+      else
+    {
+      ("GuiView_VarName" @ i).hide();
+      ("GuiView_VarEdit" @ i).hide();
+    }
+  }
+
+  // Display the attributes of the inspected object
+  for (i = 0;  i < this.varnames.size(); i ++) {
+    ("GuiView_VarName" @ i).text = this.varnames[i];
+    ("GuiView_VarEdit" @ i).text = @obj.(@this.varnames[i]);
+  }
+  GuiView_PropPanel.height = this.varnames.size() * 20;
+  GuiView_Window.extent = GuiView_Window.extent;
+  GuiView_List.setSelectedById(this.editcontrols.index(obj));
+  
+  catchevent(obj.name, "onMouseDown", "onObjectSelected");
+  catchevent(obj.name, "onMove", "onObjectMoved");
+  catchevent(obj.name, "onResize", "onObjectResized");
+  catchevent(obj.name, "onKeyDown", "onObjectKey");
+}
+
+// Catching events of edit controls
+function onPropertyChanged(obj,value)
+{
+  i = this.varedits.index(obj.name);
+  if (i >= 0)
+  {
+    this.varobj.(@this.varnames[i]) = value;
+    ("GuiView_VarEdit" @ i).text = @this.varobj.(@this.varnames[i]);
+  }
+}
+
+function onPropertyClicked(obj)
+{
+  i = this.varedits.index(obj.name);
+  if (i >= 0)
+  {
+    val = @this.varobj.(@this.varnames[i]);
+    if (val in {"false","true"})
+    {
+      this.varobj.(@this.varnames[i]) = 1 - val;
+      ("GuiView_VarEdit" @ i).text = @this.varobj.(@this.varnames[i]);
+    }
+  }
+}
+
+function onObjectSelected(obj, p2, p3, p4, p5, p6)
+{
+  if (obj!=this.varobj)
+  {
+    showObjectProperties(obj);
+  }
+  if (this.containers.index(obj)>=0)
+  {
+    this.container = obj;
+  }
+}
+
+function onObjectMoved(obj, newx, newy)
+{
+  if (obj != this.varobj)
+  {
+    return;
+  }
+  
+  ("GuiView_VarEdit" @ this.varnames.index("x")).text = obj.x;
+  ("GuiView_VarEdit" @ this.varnames.index("y")).text = obj.y;
+}
+
+function onObjectResized(obj, newwidth, newheight)
+{
+  if (obj != this.varobj)
+  {
+    return;
+  }
+  
+  ("GuiView_VarEdit" @ this.varnames.index("width")).text  = obj.width;
+  ("GuiView_VarEdit" @ this.varnames.index("height")).text = obj.height;
+}
+
+function onObjectKey(obj, code, text)
+{
+//  player.chat = "key: " @ code @ ", " @ text;
+  switch (code) 
+  {
+    case 46:
+    { // delete
+      this.editcontrols.remove(obj);
+      GuiDebug_List.addText("\nRemoved control " @ obj, true);
+      GuiDebug_List.scrollToBottom();
+      obj.destroy();
+      break;
+    }
+    
+    case 107:
+    {
+      obj.bringToFront(); 
+      break;
+    }
+    
+    case 109:
+    {
+      obj.pushToBack(); 
+      break;
+    }
+  }
+}
+
+function compileScript()
+{
+  script = "";
+  script.add("function onCreated() {");
+
+  for (con: this.containers)
+  {
+    addControlCreationScript(script.link(),con,0);
+  }
+
+  script.add("}");
+  script.savelines("weapon.txt", 0);
+
+  findweapon("RC/TextEditor").openRCWindow("", "", script);
+  
+  GuiDebug_List.text @= "\nScript output written to weapon.txt. If you have the TextEditor weapon, the script will now be displayed.";
+
+/*
+  funcs = ScriptEditor.getfunctions();
+  list = "";
+  list.add(ScriptEditor.objecttype());
+  for (func: funcs)
+    list.add(func @ "(" @ func.parameters @ ")");
+  list.savelines("funcs.txt",0);
+*/
+}
+
+function addControlCreationScript(script, obj, lev)
+{
+  temp.spaces = "";
+  for (i = 0; i <= lev; i ++)
+  {
+    temp.spaces @= "  ";
+  }
+  
+  temp.oldediting = obj.editing;
+  obj.editing = false;
+
+  objname = obj.name;
+  if (objname.beginswith("Editor_"))
+  {
+    objname = "MyGUI_" @ objname.substring("Editor_".length());
+  }
+
+  tempobj = new (obj.objecttype())();
+  tempobj.visible = false;
+
+  script.add(temp.spaces @ "new " @ obj.objecttype() @ "(" @ objname @ ") {");
+  varnames = obj.getvarnames();
+  
+  ignoredprops = {"position", "extent", "minsize", "controls", "name"};
+  for (varname: ignoredprops)
+  {
+    varnames.remove(varname);
+  }
+//  for (i=0; i<ignoredprops.size(); i++)
+//    varnames.remove(ignoredprops[i]);
+
+  for (varname: varnames)
+  {
+    if (obj.(@varname) == tempobj.(@varname))
+    {
+      continue;
+    }
+
+    str = temp.spaces @ "  " @ varname @ " = ";
+    val = obj.(@varname);
+    valstr = @obj.(@varname);
+    if (valstr in {"true", "false"})
+    {
+      str @= valstr;
+    }
+      else
+    if (val.type() == 0) // a number
+    {
+      str @= val;
+    }
+    else // string
+    {
+      str @= '"' @ val @ '"';
+    }
+    
+    str @= ";";
+    script.add(str);
+  }
+
+  tempobj.destroy();
+
+  if (obj.controls.size() > 0)
+  {
+    // Add sub-controls
+    script.add("");
+    for (temp.control: obj.controls)
+    {
+      addControlCreationScript(script.link(), temp.control,lev + 1);
+    }
+  }
+
+  script.add(temp.spaces @ "}");
+  obj.editing = temp.oldediting;
+}
+
+function onKeyPressed()
+{
+  if (params[1] == "3")
+  {
+    addManagerWindow();
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "ff0f0871dd2d9d5fcf8767fb96fe7251990559b6c59018fa7f73d82e2744888a",
+  "bytecode_size": 515,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponSystems_FoodSys.gs2",
+    "generated_at": "2026-01-04 16:44:41",
+    "compiler_version": "modified_1767562734"
+  }
+}

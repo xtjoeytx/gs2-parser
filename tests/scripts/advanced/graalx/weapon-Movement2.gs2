@@ -1,0 +1,392 @@
+//#CLIENTSIDE
+function onCreated() {
+  disabledefmovement();
+  strafedir = -1;
+  this.speed = 0.82;
+  this.bedtiles = {400, 401, 402};
+  this.key = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+  this.dirgo = {0, -1, -1, 0, 0, 1, 1, 0, 0, 0};
+  this.anis = {"idle", "walk", "swim", "push", "pull", "grab", "sit", "sleep", "map"};
+
+  this.Gsitcheck = {1.25, 2, 1.75, 2};
+  this.Csittiles = {
+    0x150,0x151,0x152,0x153,0x154,0x155,0x156,0x157,0x158,0x159,0x15A,0x15B,0x15C,0x15D,0x15E,0x15F,
+    0x160,0x161,0x162,0x163,0x164,0x165,0x166,0x167,0x168,0x169,0x16A,0x16B,0x16C,0x16D,0x16E,0x16F
+    };
+  this.Cwalltest = {
+                     0.525, 1, 1.475, 1, 1.525, 1, 2.475, 1, 2.525, 1, 0.475, 1,
+                     0.5, 1.025, 0.5, 1.975, 0.5, 2.025, 0.5, 2.975, 0.5, 3.025, 0.5, 0.975,
+                     0.525, 3, 1.475, 3, 1.525, 3, 2.475, 3, 2.525, 3, 0.475, 3,
+                     2.5, 1.025, 2.5, 1.975, 2.5, 2.025, 2.5, 2.975, 2.5, 3.025, 2.5, 0.975
+                   };
+  this.sidemove = {
+                    0.1, 0, -0.1, 0,
+                    0, 0.1, 0, -0.1,
+                    0.1, 0, -0.1, 0,
+                    0, 0.1, 0, -0.1
+                  };
+                   
+  this.ox = player.x;
+  this.oy = player.y;
+  onTimeout();
+}
+
+function onActionPull(temp.pacct, temp.pdir)
+{
+  this.checkMove = {{player.x, player.y + 0.5}, {player.x + 0.5, player.y}, {player.x, player.y - 0.5}, {player.x - 0.5, player.y}};
+
+  if (!onwall(this.checkMove[temp.pdir][0], this.checkMove[temp.pdir][1]))
+  {
+    //player.x = this.checkMove[temp.pdir][0];
+    //player.y = this.checkMove[temp.pdir][1];
+  }
+}
+
+function onTimeout() {
+  disabledefmovement();
+  
+  if (playerreading)
+    playerfreeze = 0.2;
+  
+  this.keydown = false;
+  for (i = 0; i < 4; i++) {
+    if (keydown(i)) {
+      this.key[i] = true;
+      this.keydown = true;
+      playerunstick = 30;
+    }
+    else this.key[i] = false;
+  }
+  
+  DoMovement();
+  onCheckPMove();
+  
+  if (playerfreeze >= 0) playerfreeze -= 0.05;
+  
+  if (client.playerfreeze > 0) {
+    playerfreeze += client.playerfreeze;
+    client.playerfreeze = 0;
+  }
+  
+  if (client.playerfreeze2 > 0) {
+    setani("idle", NULL);
+    playerfreeze += client.playerfreeze2;
+    client.playerfreeze2 = 0;
+  }
+  
+  setTimer(0.05);
+}
+
+function onCheckPMove() {
+  if (this.ptick <= 0) {
+    this.ptick = 1 + int(random(-0.15, 0.15) * 20) / 20;
+    this.dirpos = {player.x + 1.5 + vecx(player.dir) * 2, player.y + 1.5 + vecy(player.dir) * 2};
+    
+    if (player.ani == "push")
+    {
+      triggeraction(this.dirpos[0], this.dirpos[1], "Push", player.account, player.dir);
+    }
+      elseif (player.ani == "pull")
+    {
+      triggeraction(this.dirpos[0], this.dirpos[1], "pull", player.account, player.dir);
+      
+      this.checkMove = {{player.x, player.y + 0.5}, {player.x + 0.5, player.y}, {player.x, player.y - 0.5}, {player.x - 0.5, player.y}};
+
+      if (!onwall(this.checkMove[player.dir][0], this.checkMove[player.dir][1]))
+      {
+        //player.x = this.checkMove[player.dir][0];
+        //player.y = this.checkMove[player.dir][1];
+      }
+    }
+  }
+  
+  if (this.ptick > 0)
+    this.ptick -= 0.05;
+}
+
+function DoMovement() {
+  this.kx = player.x;
+  this.ky = player.y;
+  this.dir = player.dir;
+  if (!playerreading && playerfreeze <= 0 && !clientr.playerfroze && !client.playerfroze && !clientr.icar) {
+    this.oldkey = this.key;
+    for (i=0; i<11; i++)
+      this.key[i] = keydown(i);
+    Ccalcspeed();
+    Cmove();
+    Gsetsprite();
+  }
+  Ggrab();
+  this.ox = player.x;
+  this.oy = player.y;
+}
+
+function Cmove() {
+  playermoved = false;
+  Cwalkmove();
+  CcheckASD();
+  
+  player.x = this.kx;
+  player.y = this.ky;
+  
+  if (strafedir > -1)
+    player.dir = strafedir;
+  else
+    player.dir = this.dir;
+}
+
+function Ccalcspeed() {
+  this.weight = {client.weight, clientr.weightmax};
+  if (this.weight[0] > this.weight[1]) {
+    this.weight[0] = this.weight[1];
+  }
+  this.speed = 0.81;
+  if (!player.level.starts("g_event-"))
+    this.speed = 0.22 + (0.6 - (0.6 / this.weight[1] * this.weight[0]));
+  this.speed = this.speed + (clientr.speed / 85) + (client.speed2 / 85) + (clientr.speed2 / 85) + (clientr.speed3 / 85);
+  this.speed = int(this.speed * 1000) / 1000;
+  
+  if (player.level == "g_event-race.nw") this.speed = 0.7;
+  // Save to Client Speed
+  if (client.speed != this.speed) client.speed = this.speed;
+  if (player.account = "contiga") this.speed = client.speed = 0.9;
+}
+
+function Cwalkmove() {
+  this.beddirs = {1, 0, 1, 0};
+  for (i = 0; i < 4; i++)
+    if (this.key[i] == true) {
+      this.dir = i;
+      if ((this.beddirs[i] == false && this.mode[2] == true) || this.mode[2] == false) {
+        playermoved = true;
+        this.newx = this.kx + this.dirgo[i * 2] * this.speed;
+        this.newy = this.ky + this.dirgo[i * 2 + 1] * this.speed;
+        // Check for walls
+        setarray(wall, 6);
+        for (j = 0; j < 6; j++)
+          wall[j] = onwall(this.newx + this.Cwalltest[i * 12 + j * 2], this.newy + this.Cwalltest[i * 12 + j * 2 + 1]);
+        // Test for walls in front;
+        if (wall[0] == true || wall[1] == true || wall[2] == true || wall[3] == true) {
+          // Move the player outside of the wall
+          if (i == 0)
+            this.ky = int(this.ky);
+          elseif (i == 1) this.kx = int(this.kx + 0.5) - 0.5;
+          elseif (i == 2) {
+            if (this.ky != int(this.ky))
+              this.ky = int(this.ky + 1);
+          }
+          elseif (i == 3) {
+            if (this.kx + 0.5 != int(this.kx + 0.5))
+              this.kx = int(this.kx + 1.5) - 0.5;
+          }
+
+        } else {
+          // Apply new position
+          this.kx = this.newx;
+          this.ky = this.newy;
+        }
+
+        // Test 'sidemoves'
+        if (wall[0] == true && wall[2] == false && wall[3] == false && wall[4] == false) {
+          this.kx += this.sidemove[i * 4];
+          this.ky += this.sidemove[i * 4 + 1];
+        } elseif (wall[0] == false && wall[1] == false && wall[3] == true && wall[5] == false) {
+          this.kx += this.sidemove[i * 4 + 2];
+          this.ky += this.sidemove[i * 4 + 3];
+        }
+      }
+    }
+  // Fix for 1-field-bug (move to wall when near)
+  ry = this.ky - int(this.ky);
+  if (ry < 1 / 16 || ry > 15 / 16)
+    this.ky = int(this.ky + 1 / 16);
+  alignx = this.kx + 0.5;
+  rx = alignx - int(alignx);
+  if (rx < 1 / 16 || rx > 15 / 16)
+    this.kx = int(alignx + 1 / 16) - 0.5;
+}
+
+function CcheckASD() {
+  this.ganis = {"swim", "carry", "push", "pull", "grab", "ride", "dead", "hurt"};
+  if (!weaponsenabled)
+    return;
+  if (!contains(this.ganis, player.ani)) {
+    // S Weapon
+    if (this.key[5] == true)
+      CAttack();
+    else
+      this.sattack = false;
+    
+    // D Weapon
+    if (this.key[4] == true)
+      Cweapon();
+    else
+      this.attack = false;
+  }
+}
+
+function CAttack() {
+  if (this.sattack == false) {
+    for (i=0; i<weapons.size(); i++) {
+      if (weapons[i] == "+Melee") {
+        callweapon(i, "meleefired");
+        break;
+      }
+    }
+    this.sattack = true;
+  }
+}
+
+function Cweapon() {
+  if (selectedweapon>=0 && this.attack == false && weaponsdisabled == false) {
+    callweapon(selectedweapon, "weaponfired");
+    this.attack = true;
+  }
+}
+
+// --- Graphical ---
+function Ggrab() {
+  if (keydown(6) && client.playerfroze == false) {
+    this.dirpos = {{1, 0}, { -0.5, 1.5}, {1, 3}, {3, 1.5}};
+    for (g = 0;g < 4;g++) {
+      if (player.dir == g && onwall(player.x + this.dirpos[g][0], player.y + this.dirpos[g][1]))
+        Ggrab2();
+    }
+  } elseif (!keydown(6) && this.mode[4] == true) {
+    this.mode[4] = false;
+    this.mode[5] = 0;
+    if (player.ani == this.anis[5] || player.ani == this.anis[4])
+      setani(this.anis[0], NULL);
+  }
+}
+
+function Ggrab2() {
+  this.dircheck = {{0, 2}, {1, 3}, {2, 0}, {3, 1}};
+  if (keydown(this.dircheck[player.dir][1])) {
+    if (this.mode[5] != 2 && player.ani != this.anis[2] && !player.ani.starts("fishing"))
+      setani(this.anis[4], NULL);
+    this.mode[5] = 2;
+  } else {
+    if (this.mode[5] != 1 && player.ani != this.anis[2] && !player.ani.starts("fishing"))
+      setani(this.anis[5], NULL);
+    this.mode[5] = 1;
+  }
+  if (this.mode[4] == false && player.ani == this.anis[5] && playerfreeze <= 0) {
+    triggeraction(player.x + 1.5 + vecx(player.dir)*2, player.y + 1.5 + vecy(player.dir)*2, "grab", player.account, player.guild);
+    this.mode[4] = true;
+  } elseif (!keydown(6))
+    this.mode[4] = false;
+    
+  if (playerfreeze <= 0.05 && player.ani != this.anis[2])
+    playerfreeze = 0.1;
+}
+function Gsetsprite() {
+  // Modes
+  // 0 = Chair
+  // 1 = Water
+  // 2 = Bed
+  // 3 = Pushing
+  // 4 = Grabbing
+  // 5 = Pulling
+  this.mode = {0, 0, 0, 0, 0};
+  this.mode[1] = onwater(player.x + 1.5, player.y + 2);
+  for (i = 0; i < this.Gsitcheck.size() / 2; i++) {
+    this.tile = tiletype(int(this.kx + this.Gsitcheck[i * 2]), int(this.ky + this.Gsitcheck[i * 2 + 1]));
+    if (this.tile == 3 || board[int(this.kx + this.Gsitcheck[i * 2]) + int(this.ky + this.Gsitcheck[i * 2 + 1]) * 64] in this.Csittiles)
+      this.mode[0] = true;
+   // if (this.tile == 11)
+     // this.mode[1] = true;
+    break;
+  }
+  this.tile = tiletype(player.x + 0.5, player.y);
+  this.tile2 = tiletype(player.x + 1.5, player.y);
+
+  if (this.tile == 4 && this.tile2 == 4)
+    this.mode[2] = true;
+  else
+    this.mode[2] = false;
+
+  if (playermoved == true && this.mode[1] == false) {
+    if (player.x == this.ox && player.y == this.oy)
+      this.pushing += 0.05;
+    else
+      this.pushing = 0;
+  }
+  else this.pushing = 0;
+
+  if (this.pushing >= 1)
+    this.mode[3] = true;
+  else
+    this.mode[3] = false;
+
+  if (this.mode[3] == false && player.ani == this.anis[3])
+    setani(this.anis[0], NULL);
+  elseif (this.mode[2] == true && this.mode[1] == false)
+  setani(this.anis[7], NULL);
+  elseif (this.mode[0] == true)
+  setani(this.anis[6], NULL);
+  elseif (playermoved == true) {
+    if (this.mode[1] == false) {
+      if (this.mode[3] == false)
+        setani(this.anis[1], NULL);
+      else
+        setani(this.anis[3], NULL);
+    }
+    else setani(this.anis[2], NULL);
+  }
+  elseif (playermoved == false) {
+    if (player.ani == this.anis[1]) {
+      if (this.mode[1] == false) {
+        if (this.mode[3] == false)
+          setani(this.anis[0], NULL);
+        else
+          setani(this.anis[3], NULL);
+      }
+      else setani(this.anis[2], NULL);
+    }
+    elseif (player.ani == this.anis[3]) {
+      if (this.mode[1] == false) {
+        if (this.mode[3] == false)
+          setani(this.anis[0], NULL);
+      }
+      else setani(this.anis[1]);
+    }
+  }
+}
+
+function onKeyPressed(keycode, keychar) {
+  if (keychar == "1") {
+    if (strafedir == -1)
+      strafedir = playerdir;
+    else
+      strafedir = -1;
+  }
+  if (keychar == "2") {
+    echo("X: " @ player.x @ " | Y: " @ player.y);
+  }
+}
+// Specific Ganis
+public function changeAnis(idle, walk, swim, push, pull, grab, sit, sleepg, map)
+{
+  this.anis = {idle, walk, swim, push, pull, grab, sit, sleepg, map};
+  client.anis = {idle, walk, swim, push, pull, grab, sit, sleepg, map};
+}
+
+// Change all to one gani
+public function changeAnis2(ganiname)
+{
+  this.anis = {ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname};
+  client.anis = {ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname, ganiname};
+}
+
+// Change back to default ganis
+public function changeAnis3()
+{
+  this.anis = {"idle", "walk", "swim", "push", "pull", "grab", "sit", "sleep", "map"};
+  client.anis = {"idle", "walk", "swim", "push", "pull", "grab", "sit", "sleep", "map"};
+}
+
+function onActionClientSide() {
+  if (params[0] == "freezetime")
+    playerfreeze += params[1];
+}

@@ -1,0 +1,197 @@
+//#CLIENTSIDE
+function onCreated() {
+  if (Job_Window != NULL) {
+    triggerserver("gui", name, "unfreeze");
+    Job_Window.destroy();
+  }
+}
+
+function onOpenGui(jobName, jobInfo) {
+  new GuiWindowCtrl(Job_Window) {
+    height = 225;
+    parent = "GraalControl";
+    profile = "GuiBlueWindowProfile";
+    text = jobName @ " - Job Offer";
+    visible = true;
+    width = 227;
+    canmove = false;
+    canresize = false;
+    canmaximize = false;
+    canminimize = false;
+    closequery = true;
+    x = 444;
+    y = 267;
+
+    new GuiMLTextCtrl(Job_Text) {
+      height = 128;
+      parent = "Job_Window";
+      profile = "";
+      resizeheight = false;
+      text = jobInfo;
+      visible = true;
+      width = 200;
+      x = 16;
+      y = 45;
+    }
+    
+    new GuiButtonCtrl(Job_Button1) {
+      height = 23;
+      parent = "Job_Window";
+      profile = "GuiBlueButtonProfile";
+      text = "Take Job";
+      visible = true;
+      width = 80;
+      x = 19;
+      y = 185;
+      thiso.catchEvent(name, "onAction", "onActionTakeJob"); 
+    }
+    
+    new GuiButtonCtrl(Job_Button2) {
+      height = 23;
+      parent = "Editor_Window0";
+      profile = "GuiBlueButtonProfile";
+      text = "Reject Offer";
+      visible = true;
+      width = 80;
+      x = 128;
+      y = 185;
+      thiso.catchEvent(name, "onAction", "onActionRejectJob"); 
+    }
+    
+    new GuiButtonCtrl(Job_Button3) {
+      height = 23;
+      parent = "Editor_Window0";
+      profile = "GuiBlueButtonProfile";
+      text = "Close";
+      visible = false;
+      width = 80;
+      x = 75;
+      y = 185;
+      thiso.catchEvent(name, "onAction", "onActionClose"); 
+    }
+  }
+}
+
+function onActionTakeJob(obj) {
+  if (clientr.questjob == "") {
+    triggerserver("gui", name, "AcceptJob", this.char[0], this.char[1]);
+  }
+  elseif (clientr.questjob[0] == this.char[1]) {
+    Job_Text.text = "Alright, thank you.";
+  }
+  else {
+    Job_Text.text = "It seems like you are already doing a job for someone else! Come back later when you finish that job and I will find you something to do.";
+  }
+  Job_Button1.visible = false;
+  Job_Button2.visible = false;
+  Job_Button3.visible = true;
+}
+
+function onActionRejectJob(obj) {
+  triggerserver("gui", name, "RejectJob", this.char[1]);
+  Job_Button1.visible = false;
+  Job_Button2.visible = false;
+  Job_Button3.visible = true;
+  Job_Text.text = this.rejectmsg;
+}
+
+function onActionClose(obj) {
+  if (Job_Button3.text == "Delivery") {
+    if (clientr.questjob[2] == "pickup") {
+      Job_Button3.text = "Close";
+      Job_Text.text = "Thank you so much, here you go!";
+      triggerserver("gui", name, "Delivered");
+    } else {
+      Job_Button3.text = "Close";
+      Job_Text.text = "Thank you so much!";
+      triggerserver("gui", name, "Delivered2");
+    }
+  }
+  elseif (Job_Button3.text == "Pickup") {
+    triggerserver("gui", name, "Pickup");
+    Job_Window.destroy();  
+  } else {
+    Job_Window.destroy();
+  }
+  triggerserver("gui", name, "unfreeze");
+}
+
+function Job_Window.onCloseQuery() {
+  triggerserver("gui", name, "unfreeze");
+  Job_Window.destroy();
+} 
+
+function onActionClientSide(action) {
+  if (params[0] == "openWindow") {
+    setani("idle", NULL);
+    tokens = params[1].tokenize();
+    tokens2 = params[2].tokenize();
+    this.acceptmsg = tokens2[1];
+    this.rejectmsg = tokens2[2];
+    this.char = tokens;
+    temp.muditem = new TStaticVar();
+    temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ player.Mud_FindItem(clientr.questjob[3])));
+    
+    if (clientr.questjob[0] == this.char[1]) {
+      onOpenGui(tokens[0], tokens2[3]);
+      Job_Button1.visible = false;
+      Job_Button2.visible = false;
+      Job_Button3.visible = true;
+      if (clientr.questjob[2] == "pickup" && temp.muditem.quantity > 0) {
+        Job_Button3.text = "Delivery";
+      }
+      elseif (clientr.questjob[2] == "delivery") {
+        Job_Button3.text = "Delivered";
+      }
+      elseif (clientr.questjob[8] == 1) {
+        onOpenGui(tokens[0], "Thank you so much, have this.");
+        Job_Button3.text = "Close";
+        Job_Button1.visible = false;
+        Job_Button2.visible = false;
+        Job_Button3.visible = true;
+        triggerserver("gui", name, "Delivered3");
+      } else {
+        onOpenGui(tokens[0], tokens2[3]);
+        Job_Button1.text = "Not yet.";
+        Job_Button2.text = "Sorry, I can't";
+      }
+    }
+    elseif (clientr.questjob[4] == this.char[1]) {
+      onOpenGui(tokens[0], tokens2[4]);
+      Job_Button1.visible = false;
+      Job_Button2.visible = false;
+      Job_Button3.visible = true;
+      if (clientr.questjob[2] == "pickup") {
+        if (temp.muditem.quantity <= 0) {
+          Job_Button3.text = "Pickup";
+        } else {
+          Job_Button3.text = "Close";
+        }
+      }
+      elseif (clientr.questjob[2] == "deliver") {
+        if (clientr.questjob[8] != true)
+          Job_Button3.text = "Delivery";
+        else {
+          Job_Text.text = "I believe " @ clientr.questjob[1] @ " is looking for you.";
+          Job_Button3.text = "Close";
+        }
+      }
+    }
+    elseif (clientr.questjoblast != tokens[1])
+      onOpenGui(tokens[0], tokens2[0]);
+    else {
+      onOpenGui(tokens[0], "Hello, I currently do not have any jobs for you, sorry.");
+      Job_Button1.visible = false;
+      Job_Button2.visible = false;
+      Job_Button3.visible = true;
+    }
+  }
+  elseif (params[0] == "trigclient") {
+    if (clientr.questjob[2] == "deliver") {
+      Job_Text.text = "Alright, thank you. Please give this " @ clientr.questjob[6] @ " to " @ clientr.questjob[5] @ " and I will reward you.";
+    }
+    elseif (clientr.questjob[2] == "pickup") {
+      Job_Text.text = "Alright, thank you. Please get my " @ clientr.questjob[6] @ " back from " @ clientr.questjob[5] @ " and I will reward you.";
+    }
+  }
+}

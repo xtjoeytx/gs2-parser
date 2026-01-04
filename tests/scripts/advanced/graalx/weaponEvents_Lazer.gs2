@@ -1,0 +1,158 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  if (!player.level.starts("g_event-lazertag"))
+  {
+    destroy();
+  }
+  
+  this.equip         = false;
+  this.lasergun_red  = {"gx_lasergun-red.png",  "gx_laserred"};
+  this.lasergun_blue = {"gx_lasergun-blue.png", "gx_laserblue"};
+
+  triggerserver("gui", this.name, "SetUp");
+}
+
+function onTimeout()
+{
+  if (player.weapon != "Events/Lazer")
+  {
+    for (temp.I = 0; temp.I < weapons.size(); temp.I++)
+    {
+      if (weapons[temp.I].name == "Events/Lazer")
+      {
+        selectedweapon = temp.I;
+      }
+    }
+  }
+  
+  if (!player.level.starts("g_event-lazertag"))
+  {
+    onUnEquip();
+    
+    destroy();
+  }
+  
+  if (this.stick > 0) this.stick -= 0.05;
+  
+  setTimer(0.05);
+}
+
+function onWeaponFired()
+{
+  if (player.guild == "Red Team")
+  {
+    this.lasergun  = this.lasergun_red;
+    player.attr[2] = this.lasergun[0];
+  }
+    elseif (player.guild == "Blue Team")
+  {
+    this.lasergun  = this.lasergun_blue;
+    player.attr[2] = this.lasergun[0];
+  }
+    elseif (player.guild == "Loner")
+  {
+    this.lasergun  = this.lasergun_blue;
+    player.attr[2] = this.lasergun[0];
+  }
+    else
+  {
+    return false;
+  }
+    
+  if (this.equip == false)
+  {
+    this.equip = true;
+    setani("gx_laser-idle", NULL);
+    findWeapon("-Movement").changeAnis("gx_laser-idle", "gx_laser-walk", "swim", "push", "pull", "grab", "sit", "sleep", "map");
+  }
+    elseif (playerfreeze <= 0)
+  {
+    onFireGun(1);
+  }
+  
+  onTimeout();
+}
+
+function onGetDirs()
+{
+  if (strafedir > -1)
+  {
+    player.dir = strafedir;
+  }
+  
+  this.dirs = {{player.x + 0.4, player.y - 2.5},  // Direction 0 ( Up )
+               {player.x - 1.8, player.y - 0.8},  // Direction 1 ( Left )
+               {player.x - 0.5, player.y + 1.7},    // Direction 2 ( Down )
+               {player.x + 1.8, player.y - 0.6}}; // Direction 3 ( Right )
+}
+
+
+function onFireGun(temp.amt)
+{
+  playerfreeze = 0.25;
+  setani("gx_laser-fire", NULL);
+  onGetDirs();
+  
+  for (temp.I = 0; temp.I < temp.amt; temp.I++)
+  {
+    if (temp.amt > 3) temp.random = random(-4, 4);
+    
+    temp.ang = getangle(vecx(player.dir),vecy(player.dir)) + temp.random;
+    setshootparams(player.account, 1, player.guild, client.nopk, "laser", temp.ang, this.lasergun[1], false);
+  
+    shoot(this.dirs[player.dir][0], this.dirs[player.dir][1], 0, temp.ang, 1, 0, this.lasergun[1], NULL);
+ 
+    //playerfreeze += 0.1;
+    if (player.account != "KuJi") sleep(0.1);
+  }
+}
+
+function onKeyPressed(keycode, keychar)
+{
+  if (keychar == "s" && this.equip == true)
+  {
+    onUnEquip();
+  }
+  
+  if (keychar == "f" && playerfreeze <= 0 && this.stick <= 0 && this.equip == true)
+  {
+    if (player.account == "KuJi")
+    {
+      onFireGun(25);
+    }
+    
+    if (player.account == "KuJi") this.stick = 0; else this.stick = 3;
+  }
+}
+
+function onUnEquip()
+{
+  playerfreeze = 0.2;
+  setani("idle", NULL);
+  findWeapon("-Movement").changeAnis3();
+  play("nextpage.wav");
+  this.equip = false;
+}
+
+/*
+function onActionProjectile2()
+{
+  if (params[2] == player.account && params[9] == false)
+  {
+    temp.ang = params[7] + 3.14 + random(-0.1, 0.1);
+
+    if (player.guild == NULL)
+    {
+      temp.guild = "(none)";
+    }
+      else
+    {
+      temp.guild = player.guild;
+    }
+        
+    setshootparams(player.account, params[3], temp.guild, client.nopk, "laser", temp.ang, params[8], true);
+    shoot(params[0], params[1], 0, this.ang + random(params[8][0], params[8][1]), 1, -1, params[8], NULL);
+  }
+}
+*/

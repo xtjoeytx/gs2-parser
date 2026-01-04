@@ -1,0 +1,25 @@
+// Data type handling
+function testDataTypes() {
+  // Integers
+  temp.small = 0;
+  temp.negative = -42;
+  temp.large = 999999;
+
+  // Floats
+  temp.pi = 3.14159;
+  temp.small_decimal = 0.0001;
+  temp.negative_float = -0.5;
+
+  // Strings
+  temp.empty_string = "";
+  temp.simple = "hello";
+  temp.quoted = "He said \"hello\"";
+  temp.newline = "line1\nline2";
+
+  // Booleans
+  temp.true_val = true;
+  temp.false_val = false;
+
+  // Null
+  temp.null_val = null;
+}

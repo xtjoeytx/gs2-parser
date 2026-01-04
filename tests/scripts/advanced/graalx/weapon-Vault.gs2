@@ -1,0 +1,208 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.row = 0;
+  this.dinc = 0.1;
+  setTimer(0.05);
+  
+//  echo(extractFileExt(level.name));
+}
+
+function onTimeout() {
+  // Detect if Q is being Held Down
+  if (clientr.vault == true) {
+    if (!this.dontcount) {
+      if (!this.dragging)
+      {
+        this.amount = 1;
+      }
+       
+      onItemCount();
+      this.dontcount = true;
+    }
+    // Inventory Main Gui Show
+    showimg(200, "gx_bank-vault.png", screenwidth/4, screenheight/4);
+    changeimgvis(200, 4);
+    changeimgcolors(200, 1, 1, 1, 0.4);
+    changeimgmode(200, 1);
+    // Enable Functions for Linking
+    onPlayerInventory();
+  } else {
+    if (this.dontcount)
+      this.dontcount = false;
+    this.dragging = false;
+    hideimgs("199", "1201");
+  }
+
+  // Double Click check
+  if (this.lastclick > 0)
+   this.lastclick -= .05;
+    
+  // Dragging
+  if (this.dragging && leftmousebutton && this.lastmx2 != mousex && this.lastmy2 != mousey)
+    onDragging();
+
+  if (!leftmousebutton && this.dragging) {
+    this.dragging = false;
+    hideimg(199);
+    hideimgs(1200, 1201);
+    if (player.ani == "gx-lay1") {
+      temp.muditem = new TStaticVar();
+      temp.muditem.loadvarsfromarray(makevar("clientr.muditemv_" @ thiso.viewitem));
+      setani("lay", NULL);
+      findWeapon("-Movement").changeAnis3();
+      if (temp.muditem.cantdrop != 1) {
+        triggerserver("gui", name, "drop", thiso.viewitem, this.amount);
+      } else {
+        player.chat = "You can not drop this item!";
+      }
+    }
+  }
+
+  // Timeout
+  setTimer(0.05);
+}
+
+function onPlayerInventory() {
+  if (!this.dragging) {
+    if (mousewheeldelta < 0 || keydown(0)) {
+      if (this.row > 0) {
+        this.row --;
+        hideimgs(800, 824);
+      }
+    } else if (mousewheeldelta > 0 || keydown(2)) {
+      if (this.row * 6 + 24 < this.items.size()) {
+        this.row ++;
+        hideimgs(800, 824);
+      }
+    }
+  }
+  if (this.items.size() < 24)
+    max = this.items.size();
+  else
+    max = 24;
+    
+  for (i=0; i<max; i++) {
+    this.pos = i + (this.row*6);
+    temp.muditem = new TStaticVar();
+    temp.muditem.loadvarsfromarray(makevar("clientr.muditemv_" @ this.items[i+(this.row * 6)]));
+    temp.mudid = this.items[i+(this.row * 6)];
+    if (temp.muditem.quantity > 0) {
+      showimg(800+i, temp.muditem.iconimage, (screenwidth/4+8)+((i%6)*40),(screenheight/4+16)+(int(i/6)*39));
+      changeimgvis(800+i, 5);
+      changeimgpart(800+i, 0, 0, 32, 32);
+    }
+  }
+}
+
+// Other Functions
+
+public function onItemCount() {
+  hideimgs(800, 824);
+  this.items = 0;
+  temp.clientvarnames = clientr.getdynamicvarnames();
+  client.vaultweight = NULL;
+  for (temp.varname: temp.clientvarnames) {
+    if (temp.varname.starts("muditemv_")) {
+      if (makevar("clientr." @ temp.varname) != NULL) {
+        temp.muditem = new TStaticVar();
+        temp.muditem.loadvarsfromarray(makevar("clientr." @ temp.varname));
+        this.items.add(temp.varname.substring("muditemv_".length(),-1));
+        client.vaultweight = client.vaultweight + (temp.muditem.weight * temp.muditem.quantity);
+      }
+    }
+  }
+}
+
+function onDragging() {
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditemv_" @ thiso.viewitem));
+  showimg(1200, temp.muditem.iconimage, mousescreenx - 25, mousescreeny - 15);
+  changeimgvis(1200, 6);
+  playerfreeze = 0.1;
+  if (keydown(0) || keydown(2))
+    this.dspeed += this.dinc;
+  else
+    this.dspeed = 1;
+  if (keydown(0) && temp.muditem.quantity > this.amount)
+    this.amount += int(this.dspeed);
+  if (keydown(2) && this.amount > 1)
+    this.amount -= int(this.dspeed);
+  if (this.amount < 1)
+    this.amount = 1;
+  if (this.amount > temp.muditem.quantity)
+    this.amount = temp.muditem.quantity;
+  setani("gx-lay1", NULL);
+  showtext(1201, mousex - 2.2, mousey - 1.6, "Arial Bold", NULL, this.amount);
+  if (mousex in |playerx-7,playerx+7| && mousey in |playery-7,playery+7|){
+    this.dropimg = {player.x+.5+vecx(playerdir)*2, player.y+1.5+vecy(playerdir)*1.75};
+    showimg(199, temp.muditem.iconimage, this.dropimg[0], this.dropimg[1]);
+    changeimgpart(199, 0, 0, 48, 48);
+    changeimgvis(199, 1);
+      
+    this.msx = mousex - player.x - 1.5;
+    this.msy = mousey - player.y - 2;
+    if (clientr.vault == false) {
+      if (abs(this.msx) > abs(this.msy)) {
+        if (this.msx > 0)
+          player.dir = 3;
+        else
+          player.dir = 1;
+     } else {
+        if (this.msy > 0)
+          player.dir = 2;
+       else
+          player.dir = 0;
+      }
+    }
+  } else {
+    setani("idle", NULL);
+    hideimg(199);
+  }
+}
+
+function onMouseDown(type){
+  if (clientr.vault != true)
+    return;
+  if (this.item != -1)
+    this.item = -1;
+  for (i=0; i<max; i++) {
+    if (mousescreenx in |(screenwidth/4+8)+((i%6)*40),(screenwidth/4+8)+((i%6)*40)+32| && mousescreeny in |(screenheight/4+16)+(int(i/6)*39),(screenheight/4+16)+(int(i/6)*39)+32|) {
+      temp.muditem = new TStaticVar();
+      temp.muditem.loadvarsfromarray(makevar("clientr.muditemv_" @ this.items[i+(this.row * 6)]));
+      if (temp.muditem.quantity > 0) {
+        if (type == "left") {
+          this.dragging = true;
+          this.lastmx = this.lastmx2;
+          this.lastmy = this.lastmy2;
+          this.lastmx2 = mousex;
+          this.lastmy2 = mousey;
+          this.viewitem = thiso.items[i+(this.row * 6)];
+          this.amount = 1;
+        }
+        if (type == "double" && leftmousebutton && mousex == this.lastmx && mousey == this.lastmy) {
+          client.selectedweapon = this.items[i+(this.row * 6)];
+          if (temp.muditem.weapon == "") {
+            temp.muditem.weapon = "Blank";
+          }
+          for (i=0;i<weapons.size();i++) {
+            if (temp.muditem.weapon == weapons[i].name) {
+              selectedweapon = i;
+              break;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+function onActionClientSide() {
+  onItemCount();
+}
+
+function onKeyPressed(keycode, keychar) {
+  if (keychar == "S" && clientr.vault) {
+    triggeraction(playerx+1.5+vecx(playerdir)*2, playery+1.5+vecy(playerdir)*2, "closevault", NULL);
+    triggerserver("gui", name, "vault", "off");
+  }
+}

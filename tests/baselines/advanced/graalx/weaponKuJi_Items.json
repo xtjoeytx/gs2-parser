@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "bc06cdee5f0d7686d08b4a055cfb342acda5921dce70ff18d4f3be958551ddd5",
+  "bytecode_size": 1443,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponKuJi_Items.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

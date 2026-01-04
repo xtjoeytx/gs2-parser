@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "7f9bcf01ed415b54581de7b204f994ed62c660a2a2d8d10af26890e457d13cd4",
+  "bytecode_size": 356,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponItems_Land Mine.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

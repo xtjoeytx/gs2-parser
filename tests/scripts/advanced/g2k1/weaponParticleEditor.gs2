@@ -1,0 +1,1915 @@
+//#CLIENTSIDE
+//#GS2
+
+// Description:
+// A GUI editor for particle effects.
+// http://graal.net/index.php/Particle_Engine
+
+// Purpose:
+// 1. Allow coders to define particle effects without having to spam RC with "weapon added/updated" messages.
+// 2. Hopefully allow non-coders to create particle effects.
+
+// Known bugs:
+//   The effect resets when pressing the 'Generate Code' button.
+//   Analysis: Caused by the code relying on stupid architecture.
+
+function onPlayerChats()
+{
+  if (player.chat == "/openparticle") onWeaponFired();
+}
+
+function onCreated()
+{
+  this.debugging = false;
+  
+  // Gui controls persist between script updates.
+  destroyOldGuiControls();
+  
+  if (this.debugging)
+  {
+    F2LogWindow_Text0.setText(""); //Game tab
+    F2LogWindow_Text2.setText(""); //Scripts tab
+    
+    echo("-----------------------------------------------");
+  }
+  
+  // Just divides an otherwise large chunk of code into several smaller.
+  // This used to be the largest onCreated() function I have ever written.
+  declareParticleSystemEditor();
+  declareObjectList();
+  declareObjectEditor();
+  declareInputBuffer();
+  declareGlobals();
+}
+
+function onWeaponFired()
+{
+  if (this.debugging)
+  {
+    echo("-----------------------------------------------");
+  }
+  
+  destroyOldGuiControls();
+  
+  with (findImg(300))
+  {
+    x = playero.x;
+    y = playero.y;
+    
+    with (emitter)
+    {
+      delaymax = 0.5;
+      nrofparticles = 1;
+    }
+  }
+  
+  this.particleSystemEditor = new TParticleSystemEditor();
+  this.particleSystemEditor.initialize(findImg(300));
+  
+  //defineMasterControlWindow();
+  
+  unitTest();
+}
+
+function onMouseDown()
+{
+  if (leftmousebutton)
+  {
+    if (findImg(300).emitter.emitautomatically == false) findImg(300).emitter.emit();
+    onTimeout();
+  }
+}
+
+function onTimeout()
+{
+  if (leftmousebutton)
+  {
+    findImg(300).x = mousex;
+    findImg(300).y = mousey;
+  }
+  
+  setTimer(0.05);
+}
+
+function declareParticleSystemEditor()
+{
+  this.TParticleSystemEditor = new TStaticVar("TParticleSystemEditor");
+  this.TParticleSystemEditor.previewImage = null;
+  this.TParticleSystemEditor.imageEditor = null;
+  this.TParticleSystemEditor.emitterEditor = null;
+  this.TParticleSystemEditor.particleList = null;
+  this.TParticleSystemEditor.modifierList = null;
+  this.TParticleSystemEditor.weaponNPC = this;
+  //player.chat = "T: " @ this.TParticleSystemEditor.weaponNPC.name;
+  
+  this.TParticleSystemEditor.initialize = function(temp.previewImage)
+  {
+    //player.chat = "T: " @ this.weaponNPC.name;
+    this.previewImage = temp.previewImage;
+    this.emitterEditor = new TObjectEditor();
+    with (this.emitterEditor)
+    {
+      this.initialize();
+      this.setEditVariables(thiso.weaponNPC.emitterVariables);
+      this.attachObject(thiso.previewImage.emitter);
+      this.reflectObject(thiso.previewImage.emitter);
+    }
+    // Legacy code from when everything had its own window, rather than being in a tabbed menu.
+    //temp.scrolledWindow = this.weaponNPC.embedInScrolledWindow(this.emitterEditor.getGuiControl());
+    //temp.scrolledWindow.x = 0;
+    //temp.scrolledWindow.y = 0;
+    //temp.scrolledWindow.setText("Emitter");
+    
+    
+    this.imageEditor = new TObjectEditor();
+    with (this.imageEditor)
+    {
+      this.initialize();
+      this.setEditVariables({thiso.weaponNPC.newEditVariable("spin", "angle"), thiso.weaponNPC.newEditVariable("rotation", "angle")});
+      this.attachObject(thiso.previewImage);
+      this.reflectObject(thiso.previewImage);
+      this.addCallback("onChangedVariable", "onImageChanged");
+    }
+    //temp.scrolledWindow = this.weaponNPC.embedInScrolledWindow(this.imageEditor.getGuiControl());
+    //temp.scrolledWindow.x = 0;
+    //temp.scrolledWindow.y = screenheight - temp.scrolledWindow.height;
+    //temp.scrolledWindow.setText("Image");
+    
+    
+    //Will be attached to the particle editor below.
+    temp.leafParticle = new TParticleObject();
+    temp.leafParticle.image = "g4_particle_leaf.png";
+    temp.leafParticle.speed = 5;
+    temp.leafParticle.mode = 1;
+    temp.leafParticle.angle = 32;
+    
+    this.particleList = new TObjectList();
+    with (this.particleList)
+    {
+      this.initialize();
+      this.setEditVariables(thiso.weaponNPC.particleVariables);
+      this.addTemplates(thiso.weaponNPC.particleTemplates);
+      this.addObject(thiso.weaponNPC.newNamedObject("Leaf", temp.leafParticle));
+      this.objectEditor.addCallback("onChangedVariable", "onParticleChanged", this);
+      this.objectEditor.addCallback("onNewObject", "onNewParticle", this);
+      this.objectEditor.addCallback("onDeleteObject", "onDeleteParticle", this);
+    }
+    //temp.window = this.weaponNPC.embedInWindow(this.particleList.getGuiControl());
+    //temp.window.x = screenwidth - temp.window.width;
+    //temp.window.y = 0;
+    //temp.window.setText("Particles");
+    
+    
+    this.modifierList = new TObjectList();
+    with (this.modifierList)
+    {
+      this.initialize();
+      this.setEditVariables(thiso.weaponNPC.modifierVariables);
+      this.addTemplates(thiso.weaponNPC.modifierTemplates);
+      this.addObject(thiso.weaponNPC.newNamedObject("Wind", thiso.weaponNPC.newModifierObject("global", "impulse", 0.05, 0.05, "movex", "add", -0.1, -0.1)));
+      this.addObject(thiso.weaponNPC.newNamedObject("Random Angle", thiso.weaponNPC.newModifierObject("local", "once", 0, 0, "angle", "replace", -20, 20)));
+      this.objectEditor.addCallback("onChangedVariable", "onModifierChanged", this);
+      this.objectEditor.addCallback("onNewObject", "onNewModifier", this);
+      this.objectEditor.addCallback("onDeleteObject", "onDeleteModifier", this);
+    }
+    //temp.window = this.weaponNPC.embedInWindow(this.modifierList.getGuiControl());
+    //temp.window.x = screenwidth - temp.window.width;
+    //temp.window.y = screenheight - temp.window.height;
+    //temp.window.setText("Modifiers");
+    
+    this.weaponNPC.addModifiers(this.modifierList);
+    this.weaponNPC.updateParticles(this.particleList);
+    
+    
+    temp.guiPrefix = "ILC_MainEditor_" @ this.weaponNPC.getNewIndex() @ "_";
+    
+    new GuiWindowCtrl(temp.guiPrefix @ "Window")
+    {
+      this.setText("Particle System Editor");
+      this.extent = "355 304";
+      this.minExtent = "200 200";
+      
+      this.closeQuery = true;
+      thiso.weaponNPC.catchEvent(this, "onCloseQuery", "onParticleEditorWindowClose");
+      
+      new GuiMenuCtrl(temp.guiPrefix @ "Menu")
+      {
+        temp.window = makevar(temp.guiPrefix @ "Window");
+        this.x = 6;
+        this.y = 24;
+        this.height = 20;
+        
+        this.useOwnProfile = true;
+        this.profile.copyFrom(GuiMenuProfile);
+        this.profile.opaque = true;
+        
+        with (this.addMenu("File"))
+        {
+          this.addRow(0, "Generate Code");
+          this.addRow(0, "Quit");
+        }
+        
+        with (this.addMenu("Help"))
+        {
+          this.addRow(0, "The Tabs");
+          this.addRow(0, "Particle Systems");
+          this.addRow(0, "Modifiers");
+        }
+        
+        thiso.weaponNPC.catchEvent(this, "onSelect", "onMenuSelect");
+      }
+      
+      new GuiTabCtrl(temp.guiPrefix @ "Tab")
+      {
+        temp.window = makevar(temp.guiPrefix @ "Window");
+        temp.menu = makevar(temp.guiPrefix @ "Menu");
+        this.x = 6;
+        this.y = temp.menu.y + temp.menu.height;
+        this.width = temp.window.width - this.x - 6;
+        this.height = 25;
+        
+        this.horizSizing = "width";
+        
+        temp.tabs = {
+          {"Emitter", thiso.emitterEditor},
+          {"Particles", thiso.particleList},
+          {"Modifiers", thiso.modifierList},
+          {"Rotation", thiso.imageEditor},
+        };
+        
+        for (temp.tab: temp.tabs)
+        {
+          temp.tabControl = this.addRow(0, temp.tab[0]);
+          temp.tabControl.attachedControl = temp.tab[1].getGuiControl();
+        }
+        
+        thiso.weaponNPC.catchEvent(this, "onSelect", "onSelectCategory");
+        this.setSelectedRow(0);
+      }
+      
+      new GuiScrollCtrl(temp.guiPrefix @ "ContentContainer")
+      {
+        temp.tab = makevar(temp.guiPrefix @ "Tab");
+        temp.window = makevar(temp.guiPrefix @ "Window");
+        this.x = temp.tab.x;
+        this.y = temp.tab.y + temp.tab.height;
+        this.width = temp.window.width - this.x - 6;
+        this.height = temp.window.height - this.y - 6;
+        
+        this.horizSizing = "width";
+        this.vertSizing = "height";
+        this.hscrollbar = "dynamic";
+        this.vscrollbar = "dynamic";
+        
+        temp.editors = {
+          {thiso.emitterEditor, false},
+          {thiso.particleList, true},
+          {thiso.modifierList, true},
+          {thiso.imageEditor, false}
+        };
+        for (temp.editor: temp.editors)
+        {
+          temp.editorControl = temp.editor[0].getGuiControl();
+          
+          // Arbitrary customization
+          if (temp.editor[1] == true)
+          {
+            temp.editorControl.horizSizing = "width";
+            temp.editorControl.vertSizing = "height";
+          }
+          
+          this.addControl(temp.editorControl);
+        }
+      }
+    }
+  };
+}
+
+function onParticleEditorWindowClose()
+{
+  hideImg(300);
+  destroyOldGuiControls();
+}
+
+function onMenuSelect(temp.menuControl, menuName, entryId, entryText, entryIndex)
+{
+  if (temp.entryText == "Generate Code")
+  {
+    this.generateCode(this.particleSystemEditor.imageEditor,
+                      this.particleSystemEditor.emitterEditor,
+                      this.particleSystemEditor.particleList,
+                      this.particleSystemEditor.modifierList);
+  }
+  else if (temp.entryText == "Quit")
+  {
+    hideImg(300);
+    destroyOldGuiControls();
+  }
+  else if (temp.entryText == "The Tabs")
+  {
+    temp.guiPrefix = "ILC_Help_" @ getNewIndex() @ "_";
+    new GuiMLTextCtrl(temp.guiPrefix @ "Text")
+    {
+      this.extent = "200 300";
+      this.horizSizing = "width";
+      this.vertSizing = "height";
+      
+      this.setText("Tabs and what they do:<br><br>" @
+              "<b>Emitter</b><br>" @
+              "Specifies attributes of the emitter itself. The emitter is the object that 'shoots' particles.<br><br>" @
+              "<b>Particles</b><br>" @
+              "Lets you add and remove particle types. Every time the emitter emits a particle, it randomly selects one of the particles in this list.<br><br>" @
+              "<b>Modifiers</b><br>" @
+              "Modifiers are functions that can control what the particles do after they've been emitted. An exception is if you set scope to 'emit'; then it will change the starting variables of the particles instead.<br><br>" @
+              "<b>Rotation</b><br>" @
+              "Lets you change the rotation of the entire scene.");
+    }
+    
+    this.embedInScrolledWindow(makevar(temp.guiPrefix @ "Text")).setText("Help: " @ temp.entryText);
+  }
+  else if (temp.entryText == "Particle Systems")
+  {
+    temp.guiPrefix = "ILC_Help_" @ getNewIndex() @ "_";
+    new GuiMLTextCtrl(temp.guiPrefix @ "Text")
+    {
+      this.extent = "200 300";
+      this.horizSizing = "width";
+      this.vertSizing = "height";
+      
+      this.setText("When you use this editor, you're defining something called a 'particle system'.<br>" @
+              "There are some things that particle systems do well, and some things that particle systems can't do at all.<br>" @
+              "<br>" @
+              "A particle system can be used to simulate things like fires, waterfalls, explosions, rain, snow, and fountains.<br>" @
+              "There are some situations where it's inappropriate to use a particle system. The Graal particle engine has some of its own limits as well. For example, you can do better than to use a particle system to program hurling fireballs, intelligent particles, or physically simulated objects.<br>" @
+              "In the case of the fireball, it might be better to program a regular arrow, and then attach a fire effect on top of it. The fire effect is a suitable target for a particle system, but the arrow is not.<br>" @
+              "Overall you should 'work with the grain' and use particle systems for what they're good at.");
+    }
+    
+    this.embedInScrolledWindow(makevar(temp.guiPrefix @ "Text")).setText("Help: " @ temp.entryText);
+  }
+  else if (temp.entryText == "Modifiers")
+  {
+    temp.guiPrefix = "ILC_Help_" @ getNewIndex() @ "_";
+    new GuiMLTextCtrl(temp.guiPrefix @ "Text")
+    {
+      this.extent = "200 300";
+      this.horizSizing = "width";
+      this.vertSizing = "height";
+      
+      this.setText("A modifier is a function that modifies each individual particle after they've been emitted.<br>" @
+              "Many of the templates demonstrate how to use modifiers. You might want to play around with them and see if you can figure them out.");
+    }
+    
+    this.embedInScrolledWindow(makevar(temp.guiPrefix @ "Text")).setText("Help: " @ temp.entryText);
+  }
+}
+
+function onSelectCategory(temp.tabControl, temp.tabId, temp.tabText, temp.tabIndex)
+{
+  for (temp.row: temp.tabControl.rows)
+  {
+    if (temp.row == temp.tabControl.selected)
+      temp.row.attachedControl.show();
+    else
+      temp.row.attachedControl.hide();
+  }
+}
+
+
+// The following event functions do things that a simple TObjectEditor can't handle.
+
+// Convert degrees to radians.
+public function onImageChanged(objectEditor, variableName, newValue, someParam)
+{
+  // Users type in degrees, the engine uses radians.
+  for (temp.editVariable: temp.objectEditor.getEditVariables())
+  {
+    if (temp.editVariable.getType() == "angle")
+    {
+      temp.value = degtorad(temp.editVariable.getValue());
+      temp.objectEditor.attachedObject.(@temp.editVariable.getName()) = temp.value;
+    }
+  }
+}
+
+// Redefine all particle types.
+public function onNewParticle(objectEditor, particleList)
+{
+  if (temp.particleList == null)
+  {
+    echo("onNewParticle temp.particleList is null");
+    return;
+  }
+  
+  updateParticles(temp.particleList);
+}
+
+// Redefine all particle types.
+public function onDeleteParticle(objectEditor, particleList)
+{
+  if (temp.particleList == null)
+  {
+    echo("onDeleteParticle temp.particleList is null");
+    return;
+  }
+  
+  updateParticles(temp.particleList);
+}
+
+// Redefine all particle types.
+public function onParticleChanged(objectEditor, variableName, newValue, particleList)
+{
+  if (temp.particleList == null)
+  {
+    echo("onParticleChanged temp.particleList is null");
+    return;
+  }
+  
+  updateParticles(temp.particleList);
+}
+
+// Redefine all particle types.
+public function updateParticles(particleList)
+{
+  if (temp.particleList == null) echo("updateParticles - temp.particleList is null");
+  
+  findImg(300).emitter.particleTypes = temp.particleList.getNamedObjects().size();
+  
+  temp.particleIndex = 0;
+  for (temp.namedObject: temp.particleList.getNamedObjects())
+  {
+    temp.object = temp.namedObject.getObject();
+    
+    for (temp.editVariable: temp.particleList.getEditVariables())
+    {
+      temp.variableName = temp.editVariable.getName();
+      temp.value = temp.object.(@temp.variableName);
+      
+      if (temp.editVariable.getType() == "angle")
+        temp.value = degtorad(temp.value);
+      
+      findImg(300).emitter.particles[temp.particleIndex].(@temp.variableName) = temp.value;
+    }
+    
+    temp.particleIndex ++;
+  }
+}
+
+// Apply all modifiers
+public function onNewModifier(objectEditor, modifierList)
+{
+  if (temp.modifierList == null)
+  {
+    echo("onNewModifier modifierList is null");
+    return;
+  }
+  
+  addModifiers(temp.modifierList);
+}
+
+// Apply all modifiers
+public function onDeleteModifier(objectEditor, modifierList)
+{
+  if (temp.modifierList == null)
+  {
+    echo("onDeleteModifier modifierList is null");
+    return;
+  }
+  
+  addModifiers(temp.modifierList);
+}
+
+// Apply all modifiers
+public function onModifierChanged(objectEditor, variableName, newValue, modifierList)
+{
+  if (temp.modifierList == null)
+  {
+    echo("onModifierChanged modifierList is null");
+    return;
+  }
+  
+  addModifiers(temp.modifierList);
+}
+
+// Apply all modifiers
+public function addModifiers(modifierList)
+{
+  if (temp.modifierList == null) echo("addModifiers - modifierList is null");
+  
+  findImg(300).emitter.removeModifiers();
+  
+  for (temp.namedObject: temp.modifierList.getNamedObjects())
+  {
+    temp.object = temp.namedObject.getObject();
+    
+    if (!(temp.object.scope in {"local", "global", "emit"}))
+    {
+      echo("addModifiers - Invalid scope (" @ temp.object.scope @ ")");
+      continue;
+    }
+    
+    // Most people understand degrees better than radians.
+    // Degrees also makes it easier to express orthogonal directions. Radians requires multiples of Pi to do that.
+    if (temp.object.variable in {"angle", "zangle", "rotation", "spin"})
+    {
+      temp.object.valuemin = degtorad(temp.object.valuemin);
+      temp.object.valuemax = degtorad(temp.object.valuemax);
+    }
+    
+    findImg(300).emitter.(@"add" @ temp.object.scope @ "modifier")(
+      temp.object.timetype,
+      temp.object.rangemin,
+      temp.object.rangemax,
+      temp.object.variable,
+      temp.object.operator,
+      temp.object.valuemin,
+      temp.object.valuemax);
+  }
+}
+
+// Used to simplify addModifiers()
+public function newModifierObject(scope, timetype, rangemin, rangemax, variable, operator, valuemin, valuemax)
+{
+  temp.modifier = new TStaticVar();
+  temp.modifier.scope = scope;
+  temp.modifier.timetype = timetype;
+  temp.modifier.rangemin = rangemin;
+  temp.modifier.rangemax = rangemax;
+  temp.modifier.variable = variable;
+  temp.modifier.operator = operator;
+  temp.modifier.valuemin = valuemin;
+  temp.modifier.valuemax = valuemax;
+  return temp.modifier;
+}
+
+// Event functions end.
+
+
+
+function declareObjectList()
+{
+  // Provide a list of named objects that are attached to an TObjectEditor when selected.
+  this.TObjectList = new TStaticVar("TObjectList");
+  this.TObjectList.namedObjects = null;
+  this.TObjectList.namedTemplateObjects = null;
+  this.TObjectList.objectEditor = null;
+  this.TObjectList.guiControl = null;
+  this.TObjectList.weaponNPC = this;
+  
+  this.TObjectList.initialize = function()
+  {
+    this.objectEditor = new TObjectEditor();
+    this.objectEditor.initialize();
+    
+    this.namedObjects = new [0];
+  };
+  
+  this.TObjectList.setEditVariables = function(temp.editVariables)
+  {
+    this.objectEditor.setEditVariables(editVariables);
+    if (this.guiControl) this._buildGui();
+  };
+  
+  this.TObjectList.getEditVariables = function()
+  {
+    return this.objectEditor.getEditVariables();
+  };
+  
+  this.TObjectList.selectObject = function(temp.namedObject)
+  {
+    if (this.namedObjects.index(temp.namedObject) == -1)
+    {
+      this.weaponNPC.reportError("TObjectList.selectObject - temp.namedObject is not an elemenf of this.namedObjects");
+    }
+    
+    this.objectEditor.attachObject(temp.namedObject.getObjectReference());
+    this.objectEditor.refreshGui();
+    
+    temp.rowIndex = 0;
+    for (temp.row: this.getGuiControl().listControl.rows)
+    {
+      if (temp.row.attachedNamedObject == temp.namedObject)
+        this.getGuiControl().listControl.setSelectedRow(temp.rowIndex);
+      
+      temp.rowIndex ++;
+    }
+  };
+  
+  this.TObjectList.getNamedObjects = function()
+  {
+    return this.namedObjects;
+  };
+  
+  this.TObjectList.addObject = function(temp.namedObject)
+  {
+    if (temp.namedObject == null)
+    {
+      this.weaponNPC.reportError("TObjectList.addObject - temp.namedObject is null.");
+      return;
+    }
+    
+    this.namedObjects.add(temp.namedObject);
+    this.refreshObjectSelector();
+  };
+  
+  this.TObjectList.removeObject = function(temp.namedObject)
+  {
+    this.namedObjects.remove(namedObject);
+    this.refreshObjectSelector();
+  };
+  
+  this.TObjectList.renameObject = function(temp.namedObject, temp.newName)
+  {
+    if (this.namedObjects.index(temp.namedObject) == -1)
+    {
+      this.weaponNPC.reportError("TObjectList.renameObject - temp.namedObject is not an elemenf of this.namedObjects");
+    }
+    
+    // Objects are passed by reference.
+    // (There's also no explicit way of telling named objects apart since there can be two objects with the same name.)
+    temp.namedObject.setName(temp.newName);
+    
+    this.refreshObjectSelector();
+  };
+  
+  this.TObjectList.addTemplates = function(temp.templates)
+  {
+    for (temp.template: temp.templates)
+      this.addTemplate(temp.template);
+  };
+  
+  this.TObjectList.addTemplate = function(temp.namedTemplateObject)
+  {
+    this.namedTemplateObjects.add(namedTemplateObject);
+    this.refreshTemplateSelector();
+  };
+  
+  this.TObjectList.refreshObjectSelector = function()
+  {
+    if (this.getGuiControl() == null)
+    {
+      this.weaponNPC.reportError("TObjectList.refresh - this.guiControl is null.");
+      return;
+    }
+    
+    temp.listControl = this.getGuiControl().listControl;
+    temp.selectedRow = temp.listControl.getSelectedRow();
+    if (temp.selectedRow == -1) temp.selectedRow = 0;
+    temp.listControl.clearRows();
+    
+    for (temp.namedObject: this.namedObjects)
+    {
+      with (temp.listControl.addRow(0, temp.namedObject.getName()))
+      {
+        if (temp.namedObject.getObjectReference() == null)
+          thiso.weaponNPC.reportError("TObjectList.refresh - namedObject.getObjectReference() is null. Name: " @ temp.namedObject.getName());
+        
+        this.attachedObject = temp.namedObject.getObjectReference();
+        this.attachedNamedObject = temp.namedObject;
+      }
+    }
+    
+    // Gracefully select a new row if the previous was deleted.
+    temp.selectedRow = min(temp.selectedRow, temp.listControl.rows.size() - 1);
+    
+    temp.listControl.setSelectedRow(temp.selectedRow);
+  };
+  
+  this.TObjectList.refreshTemplateSelector = function()
+  {
+    if (this.getGuiControl() == null)
+    {
+      this.weaponNPC.reportError("TObjectList.refreshTemplateSelector - this.guiControl is null.");
+      return;
+    }
+    
+    temp.templateSelectorControl = this.getGuiControl().templateSelectorControl;
+    temp.templateSelectorControl.clearRows();
+    
+    for (temp.namedObject: this.namedTemplateObjects)
+    {
+      with (temp.templateSelectorControl.addRow(0, temp.namedObject.getName()))
+      {
+        if (temp.namedObject.getObjectReference() == null)
+          thiso.weaponNPC.reportError("TObjectList.refreshTemplateSelector - namedObject.getObjectReference() is null. Name: " @ temp.namedObject.getName());
+        
+        this.attachedObject = temp.namedObject.getObjectReference();
+        this.attachedNamedObject = temp.namedObject;
+      }
+    }
+    
+    temp.templateSelectorControl.setSelectedRow(0);
+  };
+  
+  this.TObjectList.getGuiControl = function()
+  {
+    if (this.guiControl == null) this._buildGui();
+    if (this.guiControl == null)
+    {
+      this.weaponNPC.reportError("TObjectList.getGuiControl - this.guiControl == null");
+      return null;
+    }
+    
+    return this.guiControl;
+  };
+  
+  this.TObjectList.getObjectEditor = function()
+  {
+    if (this.objectEditor == null)
+    {
+      this.weaponNPC.reportError("TObjectList.getObjectEditor - this.objectEditor == null");
+      return null;
+    }
+    
+    return this.objectEditor;
+  };
+  
+  this.TObjectList._buildGui = function()
+  {
+    temp.guiPrefix = "ILC_ObjectList_" @ this.weaponNPC.getNewIndex() @ "_";
+    
+    new GuiControl(temp.guiPrefix @ "Main")
+    {
+      this.height = 200;
+      
+      new GuiTextCtrl(temp.guiPrefix @ "NameLabel")
+      {
+        this.setText("Name:");
+        
+        // Legacy code: Setting color to black used to make it more visible.
+        this.useOwnProfile = true;
+        this.profile.copyFrom(GuiTextProfile);
+        //this.profile.fontColor = {0, 0, 0, 255};
+        
+        this.position = "5 2";
+        this.width = this.profile.getTextWidth(this.getText());
+      }
+      
+      new GuiTextEditCtrl(temp.guiPrefix @ "TextEdit")
+      {
+        temp.prevCtrl = makevar(temp.guiPrefix @ "NameLabel");
+        this.x = temp.prevCtrl.x + temp.prevCtrl.width + 5;
+        this.extent = "75 25";
+        this.setText("[Insert Name]");
+        
+        thiso.weaponNPC.catchEvent(this, "onAction", "onObjectNameEntered");
+        
+        this.nameControl = this;
+      }
+      
+      new GuiButtonCtrl(temp.guiPrefix @ "Button")
+      {
+        this.setText("New");
+        
+        temp.prevCtrl = makevar(temp.guiPrefix @ "TextEdit");
+        this.x = temp.prevCtrl.x + temp.prevCtrl.width;
+        this.extent = "50 25";
+        
+        thiso.weaponNPC.catchEvent(this, "onAction", "onNewObjectButtonClicked");
+        
+        this.nameControl = makevar(temp.guiPrefix @ "TextEdit");
+      }
+      
+      new GuiTextCtrl(temp.guiPrefix @ "TemplateLabel")
+      {
+        this.setText("Template:");
+        
+        // Legacy code: Setting color to black used to make it more visible.
+        this.useOwnProfile = true;
+        this.profile.copyFrom(GuiTextProfile);
+        //this.profile.fontColor = {0, 0, 0, 255};
+        
+        temp.prevCtrl = makevar(temp.guiPrefix @ "Button");
+        this.x = temp.prevCtrl.x + temp.prevCtrl.width + 10;
+        this.y = 2;
+        this.width = this.profile.getTextWidth(this.getText());
+      }
+      
+      new GuiPopUpMenuCtrl(temp.guiPrefix @ "PopUpMenu")
+      {
+        temp.prevCtrl = makevar(temp.guiPrefix @ "TemplateLabel");
+        this.x = temp.prevCtrl.x + temp.prevCtrl.width + 5;
+        this.extent = "75 25";
+        
+        thiso.weaponNPC.catchEvent(this, "onSelect", "onTemplateSelected");
+        
+        this.nameControl = makevar(temp.guiPrefix @ "TextEdit");
+      }
+      
+      new GuiScrollCtrl(temp.guiPrefix @ "Scroll")
+      {
+        this.position = "0 25";
+        this.extent = "150 200";
+        this.hScrollBar  = "alwaysOff";
+        
+        new GuiContextMenuCtrl(temp.guiPrefix @ "ContextMenu")
+        {
+          thiso.weaponNPC.catchEvent(this, "onSelect", "onOptionSelected");
+          
+          this.mainControl = makevar(temp.guiPrefix @ "Main");
+        }
+        
+        new GuiTextListCtrl(temp.guiPrefix @ "TextList")
+        {
+          this.extent = "140 190";
+          thiso.weaponNPC.catchEvent(this, "onSelect", "onObjectSelected");
+          thiso.weaponNPC.catchEvent(this, "onDeleteKey", "onObjectDeleted");
+          thiso.weaponNPC.catchEvent(this, "onOpenMenu", "onObjectMenuOpen");
+          
+          this.contextMenuControl = makevar(temp.guiPrefix @ "ContextMenu");
+        }
+      }
+      
+      this.listControl = makevar(temp.guiPrefix @ "TextList");
+      this.templateSelectorControl = makevar(temp.guiPrefix @ "PopUpMenu");
+      this.objectList = thiso;
+      this.objectEditor = thiso.objectEditor;
+    }
+    
+    this.guiControl = makevar(temp.guiPrefix @ "Main");
+    
+    temp.editorControl = this.weaponNPC.embedInScroll(this.objectEditor.getGuiControl());
+    temp.editorControl.position = "150 25";
+    temp.editorControl.height = 200;
+    temp.editorControl.hScrollBar  = "alwaysOff";
+    
+    this.guiControl.addControl(temp.editorControl);
+    
+    this.guiControl.width = temp.editorControl.x + temp.editorControl.width;
+    this.guiControl.height = temp.editorControl.y + temp.editorControl.height;
+    
+    temp.listControl = makevar(temp.guiPrefix @ "Scroll");
+    temp.listControl.vertSizing = "height";
+    temp.editorControl.horizSizing = "width";
+    temp.editorControl.vertSizing = "height";
+    
+    this.refreshObjectSelector();
+    this.refreshTemplateSelector();
+  };
+  
+  
+  
+  this.TNamedObject = new TStaticVar("TNamedObject");
+  this.TNamedObject.printName = "";
+  this.TNamedObject.object = null;
+  
+  this.TNamedObject.getName = function()
+  { return this.printName; };
+  
+  this.TNamedObject.setName = function(temp.newName)
+  { this.printName = temp.newName; };
+  
+  // Pass by copy because sometimes I try to do crazy things.
+  this.TNamedObject.getObject = function()
+  { temp.foo = new TStaticVar(); temp.foo.copyFrom(this.object); return temp.foo; };
+  
+  this.TNamedObject.getObjectReference = function()
+  { return this.object; };
+  
+  this.TNamedObject.setObject = function(temp.newObject)
+  { this.object = temp.newObject; };
+}
+
+public function newNamedObject(temp.objectName, temp.object)
+{
+  temp.namedObject = new TNamedObject();
+  temp.namedObject.setName(objectName);
+  temp.namedObject.setObject(object);
+  
+  return temp.namedObject;
+}
+
+function onObjectNameEntered(temp.textEditControl)
+  onNewObjectButtonClicked(temp.textEditControl);
+function onNewObjectButtonClicked(temp.buttonControl)
+{
+  temp.objectList = temp.buttonControl.parent.objectList;
+  temp.templateSelectorControl = temp.buttonControl.parent.templateSelectorControl;
+  temp.templateObject = temp.templateSelectorControl.selected.attachedObject;
+  
+  temp.namedObject = new TNamedObject();
+  temp.object = new TStaticVar();
+  temp.object.copyFrom(temp.templateObject);
+  temp.namedObject.setObject(temp.object);
+  temp.namedObject.setName(temp.buttonControl.nameControl.getText());
+  temp.objectList.addObject(temp.namedObject);
+  temp.objectList.selectObject(temp.namedObject);
+  
+  for (temp.callbackFunctionCall: temp.objectList.objectEditor.guiCallbacks.onNewObject)
+  {
+    temp.functionName = temp.callbackFunctionCall[0];
+    temp.someParameter = temp.callbackFunctionCall[1];
+    
+    this.(@temp.functionName)(
+      temp.objectList,
+      temp.someParameter);
+  }
+}
+
+function onObjectSelected(temp.textListControl)
+{
+  temp.attachedObject = temp.textListControl.selected.attachedObject;
+  temp.objectEditor = temp.textListControl.parent.parent.objectEditor;
+  
+  if (temp.attachedObject == null)
+    reportError("onObjectSelected - temp.attachedObject is null.");
+  if (temp.objectEditor == null)
+    reportError("onObjectSelected - temp.objectEditor is null.");
+  
+  temp.objectEditor.attachObject(temp.attachedObject);
+  temp.objectEditor.reflectObject();
+}
+
+function onTemplateSelected(temp.popUpControl)
+{
+  // Disabled because it hides the informative <Insert name>.
+  //temp.popUpControl.nameControl.setText(temp.popUpControl.getText());
+}
+
+function onObjectDeleted(temp.textListControl, temp.entryId, temp.entryText, temp.entryIndex)
+{
+  temp.objectList = temp.textListControl.parent.parent.objectList;
+  temp.namedObject = temp.textListControl.selected.attachedNamedObject;
+  temp.objectList.removeObject(temp.namedObject);
+  
+  for (temp.callbackFunctionCall: temp.objectList.objectEditor.guiCallbacks.onDeleteObject)
+  {
+    temp.functionName = temp.callbackFunctionCall[0];
+    temp.someParameter = temp.callbackFunctionCall[1];
+    
+    this.(@temp.functionName)(
+      temp.objectList,
+      temp.someParameter);
+  }
+}
+
+function onObjectMenuOpen(temp.textListControl, temp.entryId, temp.entryText, temp.entryIndex)
+{
+  with (temp.textListControl.contextMenuControl)
+  {
+    this.clearRows();
+    this.addRow(0, temp.textListControl.selected.getText());
+    this.addRow(0, "-");
+    this.addRow(0, "Rename");
+    this.addRow(0, "Delete");
+    
+    this.open(mousescreenx + 16, mousescreeny);
+  }
+}
+
+function onOptionSelected(temp.contextMenuControl, temp.entryId, temp.entryText, temp.entryIndex)
+{
+  temp.objectList = temp.contextMenuControl.mainControl.objectList;
+  temp.listControl = temp.contextMenuControl.mainControl.listControl;
+  temp.namedObject = temp.listControl.selected.attachedNamedObject;
+  
+  if (temp.contextMenuControl.selected.getText() == "Delete")
+  {
+    temp.objectList.removeObject(temp.namedObject);
+    
+    for (temp.callbackFunctionCall: temp.objectList.objectEditor.guiCallbacks.onDeleteObject)
+    {
+      temp.functionName = temp.callbackFunctionCall[0];
+      temp.someParameter = temp.callbackFunctionCall[1];
+      
+      this.(@temp.functionName)(
+        temp.objectList,
+        temp.someParameter);
+    }
+  }
+  
+  if (temp.contextMenuControl.selected.getText() == "Rename")
+  {
+    newRenameDialog(temp.objectList, temp.namedObject);
+  }
+}
+
+function newRenameDialog(temp.objectList, temp.namedObject)
+{
+  temp.guiPrefix = "ILC_RenameDialog_" @ this.getNewIndex() @ "_";
+  
+  new GuiControl(temp.guiPrefix @ "Main")
+  {
+    this.extent = "150 75";
+    
+    new GuiTextCtrl(temp.guiPrefix @ "Text")
+    {
+      this.setText("Type the new name here:");
+      
+      this.useOwnProfile = true;
+      this.profile.copyFrom(GuiTextProfile);
+      this.profile.fontColor = {0, 0, 0, 255};
+    }
+    
+    new GuiTextEditCtrl(temp.guiPrefix @ "TextEdit")
+    {
+      this.setText(temp.namedObject.getName());
+      
+      this.position = "0 25";
+      this.extent = "140 25";
+      
+      thiso.catchEvent(this, "onAction", "onNameEntered");
+    }
+    
+    new GuiButtonCtrl(temp.guiPrefix @ "OkButton")
+    {
+      this.position = "0 50";
+      this.extent = "50 25";
+      this.setText("Ok");
+      thiso.catchEvent(this, "onAction", "onOkButtonClicked");
+    }
+    
+    new GuiButtonCtrl(temp.guiPrefix @ "CancelButton")
+    {
+      this.position = "50 50";
+      this.extent = "50 25";
+      this.setText("Cancel");
+      thiso.catchEvent(this, "onAction", "onCancelButtonClicked");
+    }
+    
+    this.nameControl = makevar(temp.guiPrefix @ "TextEdit");
+    this.targetObjectList = temp.objectList;
+    this.targetNamedObject = temp.namedObject; //Object to be renamed.
+  }
+  
+  temp.windowControl = this.embedInWindow(makevar(temp.guiPrefix @ "Main"));
+  temp.windowControl.setText("Rename");
+  temp.windowControl.x = screenwidth / 2 - temp.windowControl.width / 2;
+  temp.windowControl.y = screenheight / 2 - temp.windowControl.height / 2;
+}
+
+function onNameEntered(temp.textControl) onOkButtonClicked(temp.textControl);
+function onOkButtonClicked(temp.buttonControl)
+{
+  temp.objectList = buttonControl.parent.targetObjectList;
+  temp.namedObject = buttonControl.parent.targetNamedObject;
+  temp.newName = buttonControl.parent.nameControl.getText();
+  temp.objectList.renameObject(temp.namedObject, temp.newName);
+  
+  onCancelButtonClicked(buttonControl);
+}
+
+function onCancelButtonClicked(temp.buttonControl)
+{
+  temp.buttonControl.parent.parent.destroy();
+}
+
+
+function declareObjectEditor()
+{
+  this.TObjectEditor = new TStaticVar("TObjectEditor");
+  this.TObjectEditor.inputBuffer = null;
+  this.TObjectEditor.attachedObject = null;
+  this.TObjectEditor.guiControl = null;
+  this.TObjectEditor.guiCallbacks = null;
+  this.TObjectEditor.guiIndex = -1;
+  this.TObjectEditor.weaponNPC = this;
+  
+  this.TObjectEditor.initialize = function()
+  {
+    this.inputBuffer = new TInputBuffer();
+    this.inputBuffer.initialize();
+    
+    this.guiCallbacks = new TStaticVar();
+  };
+  
+  this.TObjectEditor.attachObject = function(temp.object)
+  {
+    this.attachedObject = temp.object;
+  };
+  
+  this.TObjectEditor.addCallback = function(temp.eventName, temp.callbackFunctionName, temp.additionalParameter)
+  {
+    this.guiCallbacks.(@eventName).add({callbackFunctionName, additionalParameter});
+  };
+  
+  this.TObjectEditor.setEditVariables = function(temp.editVariables)
+  {
+    this.inputBuffer = new TInputBuffer();
+    this.inputBuffer.initialize();
+    this.inputBuffer.registerVariables(editVariables);
+    
+    if (this.guiControl) this._buildGui();
+  };
+  
+  this.TObjectEditor.getEditVariables = function()
+  {
+    if (this.inputBuffer == null)
+    {
+      this.weaponNPC.reportError("TObjectEditor.getEditVariables - this.inputBuffer is null");
+      return;
+    }
+    
+    return this.inputBuffer.getEditVariables();
+  };
+  
+  this.TObjectEditor.getEditVariable = function(temp.variableName)
+  {
+    return this.inputBuffer.getEditVariable(temp.variableName);
+  };
+  
+  // Copies object variables into input buffer.
+  this.TObjectEditor.reflectObject = function(temp.object)
+  {
+    if (temp.object == null) temp.object = this.attachedObject;
+    
+    this.inputBuffer.reflectObject(temp.object);
+    this.refreshGui();
+  };
+  
+  //Currently unused.
+  this.TObjectEditor.changeInputBuffer = function(temp.inputBuffer)
+  {
+    this.inputBuffer = temp.inputBuffer;
+  };
+  
+  // Updates the input buffer. Refresh the gui yourself.
+  this.TObjectEditor.setVariable = function(temp.variableName, temp.newValue)
+  {
+    this.inputBuffer.setVariable(variableName, newValue);
+    
+    //Causes an event recursion.
+    //this.refreshGuiVariable(temp.variableName);
+  };
+  
+  this.TObjectEditor.getVariable = function(temp.variableName)
+  {
+    return this.inputBuffer.getVariable(temp.variableName);
+  };
+  
+  // Copies input buffer into object.
+  this.TObjectEditor.updateObject = function(temp.object)
+  {
+    if (temp.object == null) temp.object = this.attachedObject;
+    if (temp.object == null)
+    {
+      this.weaponNPC.reportError("TObjectEditor.updateObject - temp.object is null.");
+      return;
+    }
+    
+    for (temp.editVariable: this.getEditVariables())
+      this.updateObjectVariable(temp.editVariable.getName());
+  };
+  
+  // Copies input buffer into object.
+  this.TObjectEditor.updateObjectVariable = function(temp.variableName)
+  {
+    if (this.attachedObject == null)
+    {
+      this.weaponNPC.reportError("TObjectEditor.updateObjectVariable - No attached object.");
+      return;
+    }
+    
+    temp.editVariable = this.inputBuffer.getEditVariable(temp.variableName);
+    temp.variableValue = temp.editVariable.getValue();
+    temp.variableType = temp.editVariable.getType();
+    
+    this.attachedObject.(@variableName) = temp.variableValue;
+  };
+  
+  // Used when the gui is suspected to be out of date.
+  this.TObjectEditor.refreshGui = function()
+  {
+    if (this.getGuiControl() == null)
+    {
+      this.weaponNPC.reportError("TObjectEditor.refresh - this.getGuiControl() is null.");
+      return;
+    }
+    
+    for (temp.editVariable: this.getEditVariables())
+      this.refreshGuiVariable(temp.editVariable.getName());
+  };
+  
+  // Updates the gui to correspond to the input buffer.
+  this.TObjectEditor.refreshGuiVariable = function(temp.variableName)
+  {
+    if (this.getGuiControl() == null)
+    {
+      this.weaponNPC.reportError("TObjectEditor.refreshVariable - this.getGuiControl() is null.");
+      return;
+    }
+    
+    // I might do some hash table thingie here later.
+    for (temp.editControlContainer: this.getGuiControl().controls)
+    {
+      if (temp.editControlContainer.variableName == temp.variableName)
+      {
+        temp.value = this.inputBuffer.getVariable(temp.variableName);
+        
+        // I was going to abstract variable types so I wouldn't need if-else clauses, but there are only three options anyway.
+        temp.variableType = this.inputBuffer.getEditVariable(temp.variableName).getType();
+        
+        temp.editControl = temp.editControlContainer.editControl;
+        if (temp.variableType == "boolean")
+          temp.editControl.checked = temp.value;
+        else if (temp.variableType.starts("multichoice"))
+        {
+          temp.editControl.hack_dont_update_object = true;
+          temp.editControl.setSelectedRow(temp.editControl.findText(temp.value));
+        }
+        else
+          temp.editControl.setText(temp.value);
+      }
+    }
+  };
+  
+  this.TObjectEditor.getGuiControl = function()
+  {
+    if (this.guiControl == null) this._buildGui();
+    if (this.guiControl == null)
+    {
+      this.weaponNPC.reportError("TObjectEditor.getGuiControl - this.guiControl == null");
+      return null;
+    }
+    
+    return this.guiControl;
+  };
+  
+  this.TObjectEditor._buildGui = function()
+  {
+    if (this.guiControl) this.guiControl.destroy();
+    
+    this.guiIndex = this.weaponNPC.getNewIndex();
+    temp.guiPrefix = "ILC_ObjectEditor_" @ this.guiIndex @ "_";
+    
+    if (makevar(temp.guiPrefix @ "Main").active)
+      makevar(temp.guiPrefix @ "Main").destroy();
+    
+    new GuiControl(temp.guiPrefix @ "Main")
+    {
+      this.width = 165;
+    }
+    
+    temp.position = 0;
+    for (temp.editVariable: thiso.getEditVariables())
+    {
+      temp.variableName = temp.editVariable.getName();
+      temp.variableEditControl = this._buildVariableEditControl(temp.variableName);
+      temp.variableEditControl.y = temp.position * 25;
+      
+      makevar(temp.guiPrefix @ "Main").addControl(temp.variableEditControl);
+      
+      temp.position ++;
+    }
+    
+    makevar(temp.guiPrefix @ "Main").height = temp.position * 25;
+    
+    this.guiControl = makevar(temp.guiPrefix @ "Main"); 
+  };
+  
+  this.TObjectEditor._buildVariableEditControl = function(variableName)
+  {
+    if (this.guiIndex == -1) return;
+    
+    temp.guiPrefix = "ILC_VariableEditor_" @ this.guiIndex @ "_";
+    
+    if (makevar(temp.guiPrefix @ "Main").active)
+      makevar(temp.guiPrefix @ "Main").destroy();
+    
+    new GuiControl(temp.guiPrefix @ temp.variableName)
+    {
+      this.extent = "165 24";
+      
+      new GuiTextCtrl(temp.guiPrefix @ temp.variableName @ "_Label")
+      {
+        this.setText(temp.variableName);
+        
+        this.variableName = temp.variableName;
+      }
+      
+      // I was going to abstract variable types so I wouldn't need if-else clauses, but there are only three options anyway.
+      temp.variableType = thiso.inputBuffer.getEditVariable(temp.variableName).getType();
+      
+      // Use different controls for different variable types.
+      // Warning: Code repetition.
+      if (temp.variableType == "boolean")
+      {
+        new GuiCheckBoxCtrl(temp.guiPrefix @ temp.variableName @ "_CheckBox")
+        {
+          this.x = 100;
+          this.extent = "65 24";
+          
+          thiso.weaponNPC.catchEvent(this, "onAction", "onChangedVariable");
+          
+          this.variableName = temp.variableName;
+        }
+        
+        this.editControl = makevar(temp.guiPrefix @ temp.variableName @ "_CheckBox");
+      }
+      else if (temp.variableType.starts("multichoice"))
+      {
+        temp.choices = temp.variableType.tokenize().subarray(1);
+        new GuiPopUpMenuCtrl(temp.guiPrefix @ temp.variableName @ "_PopUpMenu")
+        {
+          this.x = 100;
+          this.extent = "65 24";
+          
+          this.clearRows();
+          for (temp.choice: temp.choices)
+          {
+            this.addRow(0, temp.choice);
+          }
+          
+          thiso.weaponNPC.catchEvent(this, "onSelect", "onChangedVariable");
+          
+          this.variableName = temp.variableName;
+        }
+        
+        this.editControl = makevar(temp.guiPrefix @ temp.variableName @ "_PopUpMenu");
+      }
+      else
+      {
+        new GuiTextEditCtrl(temp.guiPrefix @ temp.variableName @ "_TextEdit")
+        {
+          this.x = 100;
+          this.extent = "65 24";
+          
+          thiso.weaponNPC.catchEvent(this, "onAction", "onChangedVariable");
+          thiso.weaponNPC.catchEvent(this, "onKeyDown", "onChangedVariable");
+          
+          this.variableName = temp.variableName;
+        }
+        
+        this.editControl = makevar(temp.guiPrefix @ temp.variableName @ "_TextEdit");
+      }
+      
+      this.variableName = temp.variableName;      
+      this.objectEditor = thiso;
+    }
+    
+    return makevar(temp.guiPrefix @ variableName);
+  };
+  
+  
+  this.TVariableType = new TStaticVar("TVariableType");
+  this.TVariableType.typeName = "";
+  this.TVariableType.weaponNPC = this;
+  
+  this.TVariableType.getName = function()
+  { return this.typeName; };
+  
+  this.TVariableType.buildGuiControl = function()
+  {
+    this.weaponNPC.reportError("TVariableTyoe.buildGuiControl - Not defined.");
+  };
+  
+}
+
+function onChangedVariable(temp.control)
+{
+  // Fixes a bug where selecting a modifier causes the emitter to reset.
+  // This may be fixed more properly in the future after some refactoring.
+  if (temp.control.hack_dont_update_object == true)
+  {
+    temp.control.hack_dont_update_object = false;
+    return;
+  }
+  
+  temp.variableName = temp.control.variableName;
+  
+  if (temp.control.name.ends("_CheckBox"))
+    temp.newValue = temp.control.checked;
+  else
+    temp.newValue = temp.control.text;
+  
+  temp.objectEditor = temp.control.parent.objectEditor;
+  temp.objectEditor.setVariable(temp.variableName, temp.newValue);
+  
+  temp.objectEditor.updateObject();
+  
+  for (temp.callbackFunctionCall: temp.objectEditor.guiCallbacks.onChangedVariable)
+  {
+    temp.functionName = temp.callbackFunctionCall[0];
+    temp.someParameter = temp.callbackFunctionCall[1];
+    
+    this.(@temp.functionName)(
+      temp.objectEditor,
+      temp.variableName,
+      temp.objectEditor.getVariable(temp.variableName),
+      temp.someParameter);
+  }
+}
+
+
+
+function declareInputBuffer()
+{
+  this.TInputBuffer = new TStaticVar("TInputBuffer");
+  this.TInputBuffer.orderedEditVariableList = null;
+  this.TInputBuffer.weaponNPC = this;
+  
+  this.TInputBuffer.initialize = function()
+  {
+    this.buffer = new TStaticVar();
+    this.orderedEditVariableList = new [0];
+  };
+  
+  this.TInputBuffer.reflectObject = function(temp.object)
+  {
+    for (temp.editVariable: this.getEditVariables())
+    {
+      temp.variableName = temp.editVariable.getName();
+      this.setVariable(temp.variableName, temp.object.(@temp.variableName));
+    }
+  };
+  
+  this.TInputBuffer.getEditVariables = function()
+  {
+    if (this.buffer == null) echo("Buffer is null - getVariables");
+    return this.orderedEditVariableList;
+    //return this.buffer.getDynamicVarNames(); //Caused stuff to be ordered alphabetically.
+  };
+  
+  this.TInputBuffer.registerVariables = function(temp.editVariables)
+  {
+    if (this.buffer == null) echo("Buffer is null - registerVariables");
+    for (temp.editVariable: editVariables)
+      this.registerVariable(temp.editVariable);
+  };
+  
+  this.TInputBuffer.registerVariable = function(temp.editVariable)
+  {
+    if (this.buffer == null) echo("Buffer is null - registerVariable");
+    
+    if (temp.editVariable.type != "TEditVariable")
+    {
+      this.weaponNPC.reportError("Argument is not a TEditVariable, it's a " @ temp.editVariable.type);
+      return;
+    }
+    
+    if (this.buffer.(@temp.editVariable.getName()).type == "TEditVariable")
+    {
+      this.weaponNPC.reportError(temp.editVariable.getName() @ " is already registered.");
+      return;
+    }
+    
+    this.buffer.(@temp.editVariable.getName()) = temp.editVariable;
+    this.orderedEditVariableList.add(temp.editVariable);
+  };
+  
+  this.TInputBuffer.getEditVariable = function(temp.variableName)
+  {
+    if (this.buffer == null)
+    {
+      this.weaponNPC.reportError("TInputBuffer.getEditVariable - Buffer is null");
+      return;
+    }
+    
+    if (this.buffer.(@temp.variableName).type != "TEditVariable")
+    {
+      this.weaponNPC.reportError("TInputBuffer.getEditVariable - " @ temp.variableName @ " isn't registered yet.");
+      return;
+    }
+    
+    return this.buffer.(@temp.variableName);
+  };
+  
+  this.TInputBuffer.getVariable = function(temp.variableName)
+  {
+    if (this.buffer == null)
+    {
+      this.weaponNPC.reportError("TInputBuffer.getVariable - Buffer is null");
+      return;
+    }
+    
+    if (this.buffer.(@variableName).type != "TEditVariable")
+    {
+      this.weaponNPC.reportError(variableName @ " isn't registered yet.");
+      return;
+    }
+    
+    return this.buffer.(@variableName).getValue();
+  };
+  
+  this.TInputBuffer.setVariable = function(temp.variableName, temp.newValue)
+  {
+    if (this.buffer == null) echo("Buffer is null - setVariable");
+    
+    if (this.buffer.(@temp.variableName).type != "TEditVariable")
+    {
+      this.weaponNPC.reportError(temp.variableName @ " isn't registered yet.");
+      return;
+    }
+    
+    this.buffer.(@temp.variableName).setValue(temp.newValue);
+  };
+  
+  /////////////////////////////////////////////////////
+  this.TEditVariable = new TStaticVar("TEditVariable");
+  this.TEditVariable.variableName = "";
+  this.TEditVariable.variableType = "none";
+  this.TEditVariable.variableValue = null;
+  this.TEditVariable.type = "TEditVariable";
+  
+  this.TEditVariable.getName = function()
+    { return this.variableName; };
+    
+  this.TEditVariable.getType = function()
+    { return this.variableType; };
+    
+  this.TEditVariable.getValue = function()
+    { return this.variableValue; };
+    
+  this.TEditVariable.setValue = function(temp.newValue)
+  {
+    if (this.variableType == "string") this.variableValue = (@temp.newValue);
+    else if (this.variableType == "integer") this.variableValue = shared.Roundto(temp.newValue, 1);
+    else if (this.variableType == "float") this.variableValue = float(temp.newValue);
+    else if (this.variableType == "array") this.variableValue = temp.newValue;
+    else this.variableValue = temp.newValue;
+  };
+}
+
+public function newEditVariable(temp.variableName, temp.variableType, temp.variableValue)
+{
+  temp.editVariable = new TEditVariable();
+  temp.editVariable.variableName = temp.variableName;
+  temp.editVariable.variableType = temp.variableType;
+  temp.editVariable.variableValue = temp.variableValue;
+  
+  return temp.editVariable;
+}
+
+
+function declareGlobals()
+{
+  this.emitterVariables = {
+    newEditVariable("delaymin", "float"),
+    newEditVariable("delaymax", "float"),
+    newEditVariable("nrofparticles", "integer"),
+    newEditVariable("emitautomatically", "boolean"),
+    newEditVariable("autorotation", "boolean"),
+    newEditVariable("firstinfront", "boolean"),
+    newEditVariable("emissionoffset", "array"),
+    newEditVariable("attachposition", "boolean"),
+    newEditVariable("checkbelowterrain", "boolean"),
+    newEditVariable("continueafterdestroy", "boolean"),
+    newEditVariable("maxparticles", "integer"),
+  };
+  
+  this.particleVariables = {
+    newEditVariable("image", "string"),
+    newEditVariable("zoom", "float"),
+    newEditVariable("red", "float"),
+    newEditVariable("green", "float"),
+    newEditVariable("blue", "float"),
+    newEditVariable("alpha", "float"),
+    newEditVariable("mode", "integer"),
+    newEditVariable("lifetime", "float"),
+    newEditVariable("angle", "angle"),
+    newEditVariable("zangle", "angle"),
+    newEditVariable("speed", "float"),
+    //newEditVariable("movementvector", "array"), //Overrides angle and speed.
+    newEditVariable("rotation", "angle"),
+    newEditVariable("spin", "angle"),
+    newEditVariable("partx", "float"),
+    newEditVariable("party", "float"),
+    newEditVariable("partw", "float"),
+    newEditVariable("parth", "float"),
+    newEditVariable("stretchx", "float"),
+    newEditVariable("stretchy", "float"),
+    newEditVariable("sound", "string"),
+    newEditVariable("layer", "integer"),
+  };
+  
+  this.modifierVariables = {
+    newEditVariable("scope", "multichoice local global emit"),
+    newEditVariable("timetype", "multichoice range impulse once"),
+    newEditVariable("rangemin", "float"),
+    newEditVariable("rangemax", "float"),
+    newEditVariable("variable", "multichoice x y z movex movey movez angle zangle speed rotation spin stretchx stretchy red green blue alpha zoom"),
+    newEditVariable("operator", "multichoice replace add multiply"),
+    newEditVariable("valuemin", "float"),
+    newEditVariable("valuemax", "float"),
+  };
+  
+  this.TParticleObject = new TStaticVar("TParticleObject");
+  this.TParticleObject.image = "block.png";
+  this.TParticleObject.zoom = 1;
+  this.TParticleObject.red = 1;
+  this.TParticleObject.green = 1;
+  this.TParticleObject.blue = 1;
+  this.TParticleObject.alpha = 1;
+  this.TParticleObject.mode = 0;
+  this.TParticleObject.lifetime = 5;
+  this.TParticleObject.angle = 0;
+  this.TParticleObject.zangle = 0;
+  this.TParticleObject.speed = 1;
+  //this.TParticleObject.movementvector = {1, 0, 0}; //Overrides angle and speed.
+  this.TParticleObject.rotation = 0;
+  this.TParticleObject.spin = 0;
+  this.TParticleObject.partx = 0;
+  this.TParticleObject.party = 0;
+  this.TParticleObject.partw = 0;
+  this.TParticleObject.parth = 0;
+  this.TParticleObject.stretchx = 1;
+  this.TParticleObject.stretchy = 1;
+  this.TParticleObject.sound = "";
+  this.TParticleObject.layer = 2;
+  
+  
+  temp.defaultParticle = new TParticleObject();
+  temp.defaultParticle.image = "block.png";
+  temp.blockParticle = new TParticleObject();
+  temp.blockParticle.copyFrom(temp.defaultParticle);
+  temp.blockParticle.speed = 4;
+  temp.blockParticle.mode = 1;
+  temp.leafParticle = new TParticleObject();
+  temp.leafParticle.image = "g4_particle_leaf.png";
+  temp.leafParticle.speed = 5;
+  temp.leafParticle.mode = 1;
+  
+  this.particleTemplates = {
+    newNamedObject("Default", temp.defaultParticle),
+    newNamedObject("Block", temp.blockParticle),
+    newNamedObject("Leaf", temp.leafParticle),
+  };
+  
+  this.modifierTemplates = {
+    newNamedObject("Default", newModifierObject("local", "once", 0, 0, "angle", "replace", 0, 0)),
+    newNamedObject("Fountain", newModifierObject("local", "once", 0, 0, "angle", "replace", 70, 110)),
+    newNamedObject("Explosion", newModifierObject("local", "once", 0, 0, "angle", "replace", 0, 360)),
+    newNamedObject("Fade in", newModifierObject("local", "range", 0, 0.25, "alpha", "replace", 0, 0.99)),
+    newNamedObject("Fade out", newModifierObject("local", "range", 0.25, 5, "alpha", "replace", 0.99, 0)),
+    newNamedObject("Wind", newModifierObject("global", "impulse", 0.05, 0.05, "movex", "add", -0.5, -0.5)),
+    newNamedObject("Gravity", newModifierObject("global", "impulse", 0.05, 0.05, "movey", "add", 0.5, 0.5)),
+    newNamedObject("Random rotation", newModifierObject("local", "once", 0, 0, "rotation", "replace", 0, 360)),
+    newNamedObject("Random spin", newModifierObject("local", "once", 0, 0, "spin", "replace", -360, 360)),
+    newNamedObject("Inertia", newModifierObject("local", "impulse", 0.05, 0.05, "speed", "multiply", 0.95, 0.95)),
+    newNamedObject("Sweep", newModifierObject("emit", "impulse", 0.05, 0.05, "angle", "add", 5, 5)),
+  };
+}
+
+// Old stuff. Kept in case I need to roll back.
+// It was used when all the windows where split and not in a tabbed window.
+function defineMasterControlWindow()
+{
+  new GuiControl("ILC_MasterControl")
+  {
+    this.extent = "100 50";
+    
+    new GuiButtonCtrl("ILC_Master_CodeButton")
+    {
+      this.setText("Generate Code");
+      this.extent = "100 25";
+    }
+    
+    new GuiButtonCtrl("ILC_Master_CloseButton")
+    {
+      this.setText("Close Editor");
+      this.position = "0 25";
+      this.extent = "100 25";
+    }
+  }
+  temp.window = this.embedInWindow(makevar("ILC_MasterControl"));
+  temp.window.x = screenwidth / 2 - temp.window.width / 2;
+  temp.window.y = 0;
+  temp.window.closeQuery = true;
+  this.catchEvent(temp.window, "onCloseQuery", "onMasterControlWindowClose");
+}
+
+function ILC_Master_CodeButton.onAction()
+{
+  this.generateCode(this.particleSystemEditor.imageEditor, this.particleSystemEditor.emitterEditor, this.particleSystemEditor.particleList, this.particleSystemEditor.modifierList);
+}
+
+function ILC_Master_CloseButton.onAction()
+{
+  hideImg(300);
+  destroyOldGuiControls();
+}
+
+function onMasterControlWindowClose()
+{
+  hideImg(300);
+  destroyOldGuiControls();
+}
+
+public function embedInScrolledWindow(temp.control)
+{
+  temp.scrollControl = embedInScroll(control);
+  temp.windowControl = embedInWindow(temp.scrollControl);
+  return temp.windowControl;
+}
+
+public function embedInWindow(temp.control)
+{
+  temp.windowName = "ILC_Window_" @ this.getNewIndex();
+  
+  if (makevar(temp.windowName))
+    makevar(temp.windowName).destroy();
+  
+  new GuiWindowCtrl(@temp.windowName)
+  {
+    temp.control.position = "6 24";
+    this.width = 6 + temp.control.width + 6;
+    this.height = 24 + temp.control.height + 6;
+    temp.control.horizSizing = "width";
+    temp.control.vertSizing = "height";
+    
+    this.destroyOnHide = true;
+    
+    this.addControl(temp.control);
+  }
+  
+  return makevar(temp.windowName);
+}
+
+public function embedInScroll(temp.control)
+{
+  temp.scrollName = "ILC_Scroll_" @ this.getNewIndex();
+  
+  if (makevar(temp.scrollName))
+    makevar(temp.scrollName).destroy();
+  
+  new GuiScrollCtrl(@temp.scrollName)
+  {
+    this.width = temp.control.x + temp.control.width + 24;
+    this.height = temp.control.y + temp.control.height + 24; 
+    
+    this.addControl(temp.control);
+  }
+  
+  return makevar(temp.scrollName);
+}
+
+
+
+function generateCode(temp.imageEditor, temp.emitterEditor, temp.particleList, temp.modifierList)
+{
+  temp.theCode = "";
+  temp.theCode @= "//#CLIENTSIDE\n";
+  temp.theCode @= "function onPlayerEnters()\n{\n";
+  temp.theCode @= "  if (!particleeffectsenabled) return;\n\n";
+  temp.theCode @= "  with (findimg(200))\n  {\n";
+  
+  temp.theCode @= this.generateCodeForObject(temp.imageEditor.getEditVariables(), "    ");
+  
+  temp.theCode @= "\n\n    with (emitter)\n    {\n";
+  
+  temp.theCode @= this.generateCodeForObject(temp.emitterEditor.getEditVariables(), "      ");
+  
+  temp.particleTypes = temp.particleList.getNamedObjects().size();
+  temp.theCode @= "\n\n      particleTypes = " @ temp.particleTypes @ ";\n";
+  
+  temp.particleIndex = 0;
+  for (temp.namedObject: temp.particleList.getNamedObjects())
+  {
+    temp.objectBuffer = new TInputBuffer();
+    temp.objectBuffer.initialize();
+    temp.objectBuffer.registerVariables(temp.particleList.getEditVariables());
+    temp.objectBuffer.reflectObject(temp.namedObject.getObject());
+    
+    temp.theCode @= "\n      // " @ temp.namedObject.getName();
+    temp.theCode @= "\n      with (particles[" @ temp.particleIndex @ "])\n      {\n";
+    temp.theCode @= this.generateCodeForObject(temp.objectBuffer.getEditVariables(), "        ");
+    temp.theCode @= "\n      }\n\n";
+    temp.particleIndex ++;
+  }
+  
+  for (temp.namedObject: temp.modifierList.getNamedObjects())
+  {
+    temp.modifierList.getObjectEditor().attachObject(temp.namedObject.getObjectReference());
+    temp.modifierList.getObjectEditor().reflectObject();
+    
+    temp.object = temp.namedObject.getObject();
+    if (!(temp.object.scope in {"local", "global", "emit"})) temp.theCode @= "//";
+    
+    if (temp.object.variable in {"angle", "zangle", "rotation", "spin"})
+    {
+      temp.object.valuemin = "degtorad(" @ temp.object.valuemin @ ")";
+      temp.object.valuemax = "degtorad(" @ temp.object.valuemax @ ")";
+    }
+    
+    temp.theCode @= "      add" @ temp.object.scope @ "modifier(\"" @
+      temp.object.timetype @ "\", " @
+      temp.object.rangemin @ ", " @
+      temp.object.rangemax @ ", \"" @
+      temp.object.variable @ "\", \"" @
+      temp.object.operator @ "\", " @
+      temp.object.valuemin @ ", " @
+      temp.object.valuemax @ "); " @ 
+      "// " @ temp.namedObject.getName() @ "\n";
+  }
+  
+  temp.theCode @= "    }\n";
+  temp.theCode @= "  }\n";
+  temp.theCode @= "}\n";
+  
+  temp.guiPrefix = "ILC_Code_" @ this.getNewIndex() @ "_";
+  new GuiWindowCtrl(temp.guiPrefix @ "Window")
+  {
+    this.setText("Code");
+    this.extent = "200 200";
+    
+    new GuiScrollCtrl(temp.guiPrefix @ "Scroll")
+    {
+      this.position = "6 24";
+      this.width = 200 - 12;
+      this.height = 200 - 24 - 6;
+      this.horizSizing = "width";
+      this.vertSizing = "height";
+      
+      new GuiMLTextEditCtrl(temp.guiPrefix @ "MLTextEdit")
+      {
+        this.setText(temp.theCode);
+        this.extent = "500 200";
+        this.syntaxHighLighting = true;
+      }
+    }
+  }
+}
+
+function generateCodeForObject(temp.editVariables, temp.indentation)
+{
+  temp.theCode = "";
+  
+  for (temp.editVariable: temp.editVariables)
+  {
+    temp.value = temp.editVariable.getValue();
+    if (temp.editVariable.getType() == "string") temp.value = "\"" @ value @ "\"";
+    else if (temp.editVariable.getType() == "array") temp.value = "{" @ temp.value @ "}";
+    else if (temp.editVariable.getType() == "boolean") temp.value = (temp.value == true) ? "true" : "false";
+    else if (temp.editVariable.getType() == "angle") temp.value = "degtorad(" @ temp.value @ ")";
+    else temp.value = temp.value;
+    
+    temp.theCode @= temp.indentation @ temp.editVariable.getName() @ " = " @ temp.value @ ";";
+    
+    //The last line shouldn't have a newline.
+    if (temp.editVariables[temp.editVariables.size()-1] != temp.editVariable) temp.theCode @= "\n";
+  }
+  
+  return temp.theCode;
+}
+
+
+public function getNewIndex()
+{
+  this.globalIndex ++;
+  return this.globalIndex;
+}
+
+
+
+function unitTest()
+{
+  if (!this.debugging) return;
+  
+  temp.buffa = new TInputBuffer();
+  temp.buffa.initialize();
+  temp.buffa.registerVariables({
+    newEditVariable("textor", "string", "foo"),
+    newEditVariable("amount", "integer")
+  });
+  
+  if (temp.buffa.getVariable("textor") != "foo") return echo("Failed test: textor == \"foo\" (textor = " @ temp.buffa.getVariable("textor") @ ")");
+  temp.buffa.setVariable("textor", "bar");
+  if (temp.buffa.getVariable("textor") != "bar") return echo("Failed test: textor == \"bar\" (textor = " @ temp.buffa.getVariable("textor") @ ")");
+  
+  temp.buffa.setVariable("amount", 4);
+  if (temp.buffa.getVariable("amount") != 4) return echo("Failed test: amount == 4 (amount = " @ temp.buffa.getVariable("amount") @ ")");
+  temp.buffa.setVariable("amount", -8.7341);
+  if (temp.buffa.getVariable("amount") != -9) return echo("Failed test: amount == -9 (amount = " @ temp.buffa.getVariable("amount") @ ")");
+  
+  echo("All tests passed.");
+}
+
+
+function destroyOldGuiControls()
+{
+  for (temp.i = GraalControl.controls.size() - 1; temp.i >= 0; temp.i --)
+  {
+    if (GraalControl.controls[temp.i].name.starts("ILC_"))
+    {
+      GraalControl.controls[temp.i].destroy();
+    }
+  }
+}
+
+
+public function reportError(temp.errorMessage)
+{
+  echo("Error: " @ temp.errorMessage);
+  
+  //This doesn't work at all inside TStaticVar objects apparently.
+  //this.dumpCallStack(temp.tempObject);
+}
+
+public function dumpCallStack()
+{
+  temp.stack = this.getCallStack();
+  
+  temp.stringStack = "";
+  for (temp.i=0; temp.i < stack.size() - 1; temp.i++)
+  {
+    //Get a useful name that tells us something.
+    temp.callerName = "unknown";
+    if (stack[i].scriptcallobject.name != "unknown") callerName = stack[i].scriptcallobject.name;
+    else if (stack[i].scriptcallobject.nick != null) callerName = stack[i].scriptcallobject.nick;
+    
+    stringStack @= "(" @ callerName @ ")" @ "." @ stack[i].name;
+    if (i < stack.size() - 2) stringStack @= " -> ";
+  }
+  
+  echo("CallStack: " @ stringStack);
+}

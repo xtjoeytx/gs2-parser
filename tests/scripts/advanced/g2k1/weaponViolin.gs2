@@ -1,0 +1,30 @@
+//#CLIENTSIDE
+function onBomyWeaponFired() {
+  onWeaponFired();
+}
+
+function onWeaponFired() {
+  // Check item qty
+  if (clientr.itemc15 <= 0) {
+    destroy();
+    return;
+  }
+  
+  temp.violin_animation = (player.isBomy() ? "bomy_playvio" : "playvio");
+  player.attr[2] = "violin0.png";
+  setani(temp.violin_animation, null);
+
+  while (!keydown(6)) {
+    for (temp.i = 0; temp.i < 4; temp.i++) {
+      if (keydown(temp.i)) {
+        if (keydown(4)) {
+        } else {
+          setani(temp.violin_animation @ "2", "violin" @ (1 + temp.i + (keydown(5) ? 4 : 0)) @ ".wav");
+        }
+      }
+    }
+
+    player.freeze(0.05);
+    sleep(0.05);
+  }
+}

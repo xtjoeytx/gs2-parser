@@ -1,0 +1,131 @@
+//#CLIENTSIDE
+function onCreated() {
+  npoptions.loadvars("notepadops.txt");
+}
+
+function onWeaponFired() {
+  this.muditemid = client.selectedweapon;
+  this.muditem = new TStaticVar();
+  this.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ this.muditemid));
+  if (this.muditem.realname != "Notebook")
+    return false;
+  new GuiWindowCtrl(Notepad_Window) {
+    profile = "GuiBlueWindowProfile";
+    position = screenwidth - 350 @ " 0";
+    extent = "350 300";
+    minextent = "350 300";
+    canMove = true;
+    canResize = false;
+    canClose = true;
+    tile = false;
+    text = "Personal Notepad V1.1 - by KuJi";
+    visible = true;
+    
+    new GuiCheckBoxCtrl(Notepad_Color) {
+      profile = "GuiBlueCheckBoxProfile";
+      position = "15 27";
+      extent = "78 16";
+      vertSizing = "bottom";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      text = "Color Coded";
+      checked = makevar("npoptions." @ name);
+      thiso.catchevent(name, "onAction", "onCheckBox");
+    }
+    
+    new GuiCheckBoxCtrl(Notepad_Wrap) {
+      profile = "GuiBlueCheckBoxProfile";
+      position = "100 27";
+      extent = "73 16";
+      vertSizing = "bottom";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      text = "Word Wrap";
+      checked = makevar("npoptions." @ name);
+      thiso.catchevent(name, "onAction", "onCheckBox");
+    }
+    
+    new GuiScrollCtrl(Notepad_Chat) {
+      profile = "GuiBlueScrollProfile";
+      position = "6 44";
+      extent = "338 225";
+      horizSizing = "width";
+      vertSizing = "height";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+
+      new GuiMLTextEditCtrl(Notepad_Edit) {
+        profile = "GuiMLTextEditProfile";
+        horizSizing = "width";
+        vertSizing = "height";
+        position = "6 6";
+        extent = "324 225";
+        syntaxHighlighting = client.notepadop[0];
+        wordwrap = client.notepadop[1];
+        if (thiso.muditem.content != "")
+          text = thiso.muditem.content;
+        else
+          text = "Nothing";
+      }
+    }
+    new GuiMLTextCtrl(Notepad_Text1) {
+      profile = "GuiTextProfile";
+      position = "15 275";
+      extent = "170 21";
+      horizSizing = "right";
+      vertSizing = "top";
+      tabComplete = false;
+      text = "<font color=000000>Don't forget to save your work!</font>";
+    }
+    new GuiButtonCtrl(Notepad_Save) {
+      profile = "GuiBlueButtonProfile";
+      x = 176;
+      y = Notepad_Window.height - 29;
+      horizSizing = "left";
+      vertSizing = "top";
+      extent = "80 21";
+      tabComplete = false;
+      text = "Save";
+      thiso.catchevent(name, "onAction", "onButtonEnter");
+    }
+    new GuiButtonCtrl(Notepad_Close) {
+      profile = "GuiBlueButtonProfile";
+      position = "260 271";
+      extent = "80 21";
+      horizSizing = "left";
+      vertSizing = "top";
+      tabComplete = false;
+      text = "Close";
+      thiso.catchevent(name, "onAction", "onButtonEnter");
+    }
+  }
+}
+
+function onCursorMoved(obj, line)
+  Notepad_Line.text = "Line: " @ (line+1);
+  
+function onButtonEnter(obj) {
+  this.muditem.content = Notepad_Edit.text;
+  if (obj == "Notepad_Close")
+    Notepad_Window.visible = !Notepad_Window.visible;
+  if (obj == "Notepad_Save") {
+    temp.itemstring = NULL;
+    for(temp.varname: this.muditem.getdynamicvarnames()) {
+      if(temp.varname != "scriptlogmissingfunctions" && temp.varname != "timeout") {
+        temp.itemstring.add(temp.varname @ "=" @ makevar("this.muditem." @ temp.varname));
+      }
+    }
+    triggerserver("gui", name, "updatepad", this.muditemid, temp.itemstring);
+  }
+}
+
+function onCheckBox(obj) {
+ // setarray(client.notepadop, 2);
+  "checked".(@obj) = @obj.checked;
+  checked.savevars("notepadops.txt", 0);
+  npoptions.loadvars("notepadops.txt");
+  
+  Notepad_Edit.extent = "324 225";
+  Notepad_Edit.syntaxHighlighting = makevar("npoptions.Notepad_Color");
+  Notepad_Edit.wordwrap = makevar("npoptions.Notepad_Wrap");
+}

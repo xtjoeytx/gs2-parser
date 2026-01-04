@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "4cc7c19fa658e6a0624fe8f8ebd896f9f4a2f4650459591b9566eb64e192df79",
+  "bytecode_size": 90,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponRope.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

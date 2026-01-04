@@ -1,0 +1,17 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated()
+{
+  initVariables();
+}
+
+function onServerLogin()
+{
+  initVariables();
+}
+
+function initVariables()
+{
+  Gs2Utils.destroyObject("Serverlist_Account_ProtectButton");
+  Gs2Utils.destroyObject("Serverlist_Account_UpgradeButton");
+}

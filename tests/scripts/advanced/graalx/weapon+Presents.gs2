@@ -1,0 +1,8 @@
+//#CLIENTSIDE
+function onWeaponFired()
+{
+  if (player.Mud_FindWeapon(client.selectedweapon, "ARCHETYPE_ITEM", this.name))
+  {
+    triggerserver("gui", this.name, "unwrap", {client.selectedweapon});
+  }
+}

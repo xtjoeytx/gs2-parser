@@ -1,0 +1,129 @@
+//#CLIENTSIDE
+function onCreated() {
+  // Hospital Beds
+  this.select = 0;
+  this.hospitals = {"GX Hospital"};
+  this.select_0 = {{"gx_city1in-hospital-room1.nw", 22, 42},   {"gx_city1in-hospital-room1.nw", 45, 42},
+                   {"gx_city1in-hospital-room2.nw", 22, 42},   {"gx_city1in-hospital-room2.nw", 45, 42},
+                   {"gx_city1in-hospital-room3.nw", 22, 42},   {"gx_city1in-hospital-room3.nw", 45, 42},
+                   {"gx_city1in-hospital-room4.nw", 22, 42},   {"gx_city1in-hospital-room4.nw", 45, 42},
+                   {"gx_city1in-hospital-room5.nw", 28, 31},   {"gx_city1in-hospital-room5.nw", 39, 31},
+                   {"gx_city1in-hospital-room6.nw", 28, 31},   {"gx_city1in-hospital-room6.nw", 39, 31},
+                                             
+                   {"gx_city1in-hospital-icroom1.nw", 28, 31}, {"gx_city1in-hospital-icroom1.nw", 39, 31},
+                   {"gx_city1in-hospital-icroom2.nw", 28, 31}, {"gx_city1in-hospital-icroom2.nw", 39, 31},
+                   {"gx_city1in-hospital-icroom3.nw", 28, 31}, {"gx_city1in-hospital-icroom3.nw", 39, 31},
+                   {"gx_city1in-hospital-icroom4.nw", 22, 42}, {"gx_city1in-hospital-icroom4.nw", 45, 42},
+                   {"gx_city1in-hospital-icroom5.nw", 22, 42}, {"gx_city1in-hospital-icroom5.nw", 45, 42},
+                   {"gx_city1in-hospital-icroom6.nw", 22, 42}, {"gx_city1in-hospital-icroom6.nw", 45, 42}};
+                   
+  //this.select_0 = {{"g_hospital2.nw", 23.5, 21}, {"g_hospital2.nw", 35.5, 21}, {"g_hospital2.nw", 54.5, 21}, {"g_hospital2.nw", 23.5, 42}, {"g_hospital2.nw", 35.5, 42}, {"g_hospital2.nw", 48.5, 42},
+  //                 {"g_hospital3.nw", 23.5, 21}, {"g_hospital3.nw", 35.5, 21}, {"g_hospital3.nw", 54.5, 21}, {"g_hospital3.nw", 23.5, 42}, {"g_hospital3.nw", 35.5, 42}, {"g_hospital3.nw", 48.5, 42}};
+  this.select_1 = {{"g_stokell_bum_house.nw", 38.5, 38}, {"g_stokell_bum_house.nw", 46.5, 38}, {"g_bum_house2.nw", 48.5, 24}};
+  // Hospital Beds End
+  this.gangsi = {"Takzhe", "Benichi Mafia", "Crime Syndicate"};
+  this.gangi = {{"", ""}, {"Takzhe", "g_takzhe"}, {"Benichi Mafia", "g_bm"}, {"Crime Syndicate", "g_crimesyn-"}};
+  onTimeout();
+}
+function onTimeout()
+{
+  if (clientr.health[0] <= 0)
+  {
+  //  client.disableq = true;
+    client.wepdisabled = true;
+    playerfreeze = 0.2;
+    if (player.ani != dead)
+    {     
+      /*if (this.gangsi.index(player.guild) >= 0)
+        this.hospitals = {"GX Old Hospital", "The Ghetto", "Your Gang Base"};
+      else
+        this.hospitals = {"GX Old Hospital", "The Ghetto"};
+      if (player.guild == "Benichi Mafia")
+        this.select_2 = {{"g_bmgunshop.nw", 15.5, 18}, {"g_bmgunshop.nw", 37.5, 18}, {"g_bmgunshop.nw", 15.5, 26}, {"g_bmgunshop.nw", 37.5, 26}, {"g_bmgunshop.nw", 15.5, 34}, {"g_bmgunshop.nw", 37.5, 34}};
+      if (player.guild == "Takzhe")
+        this.select_2 = {{"g_takzheheal2.nw", 10.5, 24}, {"g_takzheheal2.nw", 16.5, 24}, {"g_takzheheal2.nw", 22.5, 24}, {"g_takzheheal2.nw", 34.5, 24}, {"g_takzheheal2.nw", 40.5, 24}, {"g_takzheheal2.nw", 46.5, 24},
+                     {"g_takzheheal2.nw", 10.5, 29}, {"g_takzheheal2.nw", 16.5, 29}, {"g_takzheheal2.nw", 22.5, 29}, {"g_takzheheal2.nw", 34.5, 29}, {"g_takzheheal2.nw", 40.5, 29}, {"g_takzheheal2.nw", 46.5, 29}};
+      if (player.guild == "Crime Syndicate")
+        this.select_2 = {{"g_crimesyn-heal.nw", 18.5, 21}, {"g_crimesyn-heal.nw", 18.5, 27}, {"g_crimesyn-heal.nw", 18.5, 33}, {"g_crimesyn-heal.nw", 35.5, 33}, {"g_crimesyn-heal.nw", 43.5, 27}, {"g_crimesyn-heal.nw", 40.5, 20}, {"g_crimesyn-heal.nw", 46.5, 20}};
+      */
+      showpoly(210, {0, 0, screenwidth, 0, screenwidth, screenheight, 0, screenheight});
+      if (client.anis[0].starts("mbag"))
+        findWeapon("-Movement").changeAnis3();
+      setani("dead", NULL);
+      if (client.dead == 0)
+      {
+        this.select = 0;
+        for (temp.i = 0; temp.i <= 1; temp.i += 0.05)
+        {
+          changeimgcolors(210, 0, 0, 0, temp.i);
+          sleep(0.05);
+          playerfreeze = 0.1;
+        }
+      }
+      client.dead = 1;
+    }
+    
+    showtext(200, screenwidth / 4, screenheight / 4, "Arial Bold", "bu", "Choose the hospital you would like to spawn to:");
+    changeimgvis(200, 6);
+    showtext(201, screenwidth / 4 + 10, screenheight / 4 + 25 + (this.select*20), "Arial Bold", "b", ">");
+    changeimgvis(201, 6);
+
+    for (i = 0;i < this.hospitals.size();i++)
+    {
+      showtext(202 + i, screenwidth / 4 + 25, screenheight / 4 + 25 + (i*20), "Arial Bold", "b", this.hospitals[i]);
+      changeimgvis(202 + i, 6);
+    }
+    if (keydown(0) && this.select > 0) {
+      play("nextpage.wav");
+      this.select --;
+    }
+    elseif (keydown(2) && this.select < this.hospitals.size() - 1) {
+      play("nextpage.wav");
+      this.select ++;
+    }
+    if (keydown(5)) {
+      this.pcount = 0;
+      if (this.select == 2) {
+        for (o=0;o<allplayers.size();o++) {
+          with (allplayers[o]) {
+            if (player.level.starts(this.gangi[clientr.gangid][1]) && player.guild != this.gangi[clientr.gangid][0])
+              this.pcount ++;
+          }
+        }
+      }
+      if (this.pcount == 0) {
+        bedr = int(random(0, makevar("this.select_" @ this.select).size()));
+        bed = makevar("this.select_" @ this.select)[bedr];
+        hideimgs(200, 209);
+        triggerserver("gui", "-Death", "dead", bed);
+        for (temp.i = 1; temp.i >= 0; temp.i -= .05) {
+          changeimgcolors(210, 0, 0, 0, temp.i);
+          sleep(0.05);
+          playerfreeze = 0.1;
+          if (temp.i == 0) {
+            hideimgs(200, 210);
+            client.dead = 0;
+          }
+        }
+      }
+      else findWeapon("-Chat").addMsg("Server", "A non-member is in your base. You can not spawn there!", 15);
+      sleep(0.15);
+    }
+  } else  {
+    hideimgs(200, 210);
+    if (client.dead) {
+      client.dead = 0;
+      client.wepdisabled = false;
+      client.disableq = false;
+    }
+  }
+  setTimer(0.05);
+}
+
+function ChatBar.onAction()
+{
+  if (client.dead && ChatBar.text != "heal")
+  {
+     ChatBar.text = "";
+  }
+}

@@ -1,0 +1,5 @@
+//#CLIENTSIDE
+//#GS2
+function onWeaponFired() {
+  setani("skip", null);
+}

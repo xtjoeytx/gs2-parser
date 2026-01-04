@@ -1,0 +1,48 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.locations = {"Unstick Me", "Hospital", "The Ghetto Box"};
+  this.accounts = {"Joey_P2P", "Vulcan", "KuJi", "Sage_Shadowbane", "Lithium"};
+  if (this.accounts.index(player.account) <= -1)
+  {
+    player.chat = "Removing!";
+    destroy();
+  }
+}
+
+function onWeaponFired()
+  onDoAtk();
+
+function onKeyPressed(keycode, keychar) {
+  if (keychar == "Y") {
+    if (this.gselect == 0) {
+      this.gselect = 1;
+      this.selected++;
+      if (this.selected >= this.locations.size())
+        this.selected = 0;
+      findWeapon("-Chat").addMsg("Player", "Location Selected: " @ this.locations[this.selected], 15);
+      sleep(0.2);
+      this.gselect = 0;
+    }
+  }
+  if (keychar == "H") {
+    this.attackpos = {player.x + 1.5 + vecx(player.dir) * 2, player.y + 1.5 + vecy(player.dir) * 2};
+    onDoAtk();
+  }
+}
+
+function onDoAtk(TAtk) {
+  if (player.ani != "dead") {
+    if (TAtk != "Mouse") {
+      setani("gx_tph-staffaxe", NULL);
+      playerfreeze = 0.15;
+    }
+    triggeraction(this.attackpos[0], this.attackpos[1], "staffaxe", player.account, this.selected);
+  }
+}
+
+function onMouseDown(mtype) {
+  if (mtype == "double") {
+    this.attackpos = {mousex, mousey};
+   // onDoAtk("Mouse");
+  }
+}

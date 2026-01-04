@@ -1,0 +1,695 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  if (player.account == "Vulcan") serverwarp("Login");
+  player.z = 0;
+  
+  //if (player.account != "LycJr7") play("http://graalx.us/music/Lost%20prophets%20-%20last%20train%20home.mp3");
+    
+  disablepause();
+  showstats(256 + 512 + 1024);
+  client.stattick = 0;
+  
+  // Player-Joined
+  player.join("player");
+  player.join("mud-client"); // player.join("mudclient2");
+  
+  // Check Staff
+  
+  if (player.platform != "mac")
+  {
+    requesttext("clientrc", 1);
+  }
+  
+  /*
+  temp.curhat = player.attr[1];
+  
+  for (temp.I = 0; temp.I < 400; temp.I++)
+  {
+    player.attr[1] = "hat" @ temp.I @ ".png";
+    player.chat = "Hat: " @ player.attr[1];
+    sleep(0.1);
+  }
+  
+  player.attr[1] = temp.curhat;
+  */
+ 
+  //Flash_Window.destroy();
+  
+  /*
+  new GuiWindowCtrl("Flash_Window")
+  {
+    profile = GuiBlueWindowProfile;
+    text = "Flash";
+    x=0;
+    y=0;
+    width = 350;
+    height = 350;
+    destroyonhide = true;
+    canresize = true;
+    canclose = true;
+    canminimize = true;
+    canmaximize = true;
+
+    new GuiFlash("Flash_Ctrl")
+    {
+      tryactivex = true;
+      moviename = "madnessinteractive.swf";
+      width = 338;
+      height = 320;
+      position = {6, 24};
+      playmovie();
+    }  
+  }
+  */
+  // Tileset
+  onTileset();
+  
+//  openurl("http://www.graalx.us/forums/showthread.php?t=154");
+  
+  // Timeout
+  onTimeout();
+}
+
+function Flash_Window.onResize()
+{
+  Flash_Ctrl.width  = Flash_Window.width  - 12;
+  Flash_Ctrl.height = Flash_Window.height - 30;
+}
+
+function onTileset()
+{
+  removetiledefs;
+
+  // Older
+  addtiledef("picso4.png", "myworld_", 1);
+  addtiledef("pics1.png", "event_survivor", 0);
+  addtiledef("gx-oldtileset.png", "g_", 1);
+  addtiledef("tileset_x_6.png", "g_bm", 1);
+  addtiledef("gx-cavetileset.png", "g_mines", 1);
+  addtiledef2("SRWallGray.png", "g_sr", 672, 384);
+  addtiledef2("gx_srelectricbluefloor.png", "g_sr", 672, 64);
+  addtiledef("ci_tileset-main.png","gx_",1);
+  addtiledef2("ci_tileset-carpet.png", "gx_events-", 512, 0);
+  addtiledef2("ci_tileset-infloor.png", "gx_events-", 512, 96);
+  addtiledef2("ci_tileset-carpet.png", "gx_houses-", 512, 0);
+  addtiledef2("ci_tileset-infloor.png", "gx_houses-", 512, 96);
+
+  // Newer
+  for (temp.I = 1; temp.I < 3; temp.I++) {
+    // Outdoor Tiles
+    addtiledef2("ci_tiles-outdoorground" @ serverr.weathertile @ ".png","gx_city" @ temp.I @ "-",512,0);        // addtiledef2("ci_tiles-outdoorground-snow.png","gx_city" @ temp.I @ "-",512,0);
+    addtiledef2("ci_tiles-outdoorground2" @ serverr.weathertile @ ".png","gx_city" @ temp.I @ "-",512,128);     // addtiledef2("ci_tiles-outdoorground2-snow.png","gx_city" @ temp.I @ "-",512,128);
+    addtiledef2("ci_tileset-sideadd.png","gx_city" @ temp.I @ "-",704,128);
+    addtiledef2("ci_tileset-cliffmain" @ serverr.weathertile @ ".png","gx_city" @ temp.I @ "-",1376,320);       // addtiledef2("ci_tileset-cliffmain-snow.png","gx_city" @ temp.I @ "-",1376,320);
+    addtiledef2("ci_tileset-newroof.png","gx_city" @ temp.I @ "-",1024,256);
+    addtiledef2("ci_tileset-terrain" @ serverr.weathertile @ ".png","gx_city" @ temp.I @ "-",512,256);          // addtiledef2("ci_tileset-terrain-snow.png","gx_city" @ temp.I @ "-",512,256); 
+    addtiledef2("ci_tileset-clifftrans" @ serverr.weathertile @ ".png","gx_city" @ temp.I @ "-",1376,448);     // addtiledef2("ci_tileset-clifftrans-snow.png","gx_city" @ temp.I @ "-",1376,448);
+    
+    // Indoor Tiles
+    addtiledef2("ci_tileset-carpet.png","gx_city" @ temp.I @ "in",512,0);
+    addtiledef2("ci_tileset-infloor.png","gx_city" @ temp.I @ "in",512,96);
+  }
+  
+  // Cave Tiles
+
+  // All Tiles
+  addtiledef2("ci_tileset-walls1" @ serverr.weathertile @ ".png","gx_",512,320); // addtiledef2("ci_tileset-walls1-snow.png","gx_",512,320);
+  addtiledef2("ci_tileset-walls2.png","gx_",640,320);
+  addtiledef2("ci_tileset-walls3.png","gx_",720,320);
+  addtiledef2("ci_tileset-water1.png","gx_",0,64);
+  addtiledef2("ci_tileset-walls4.png","gx_",720,400);
+  addtiledef2("ci_tileset-tables1.png","gx_",512,432);
+  addtiledef2("ci_tileset-watersand2" @ serverr.weathertile @ ".png","gx_",256,368); // addtiledef2("ci_tileset-watersand2-snow.png","gx_",256,368);
+  addtiledef2("ci_tileset-chairs.png","gx_",0,320);
+  addtiledef2("ci_tileset-walls5.png","gx_",912,320);
+  addtiledef2("ci_tileset-walls6.png","gx_",1040,320);
+  addtiledef2("ci_tileset-walls7.png","gx_",1184,320);
+  addtiledef2("ci_tileset-metaltab.png","gx_",640,464);
+  addtiledef2("ci_tileset-miscbottom.png","gx_",912,464);
+  addtiledef2("ci_tileset-floorall.png","gx_",848,0);
+  addtiledef2("ci_tileset-floorq5.png","gx_",848,96);
+  addtiledef2("ci_tileset-grays.png","gx_",1472,256);
+  
+  // Gokart Tiles
+  addtiledef2("gx_tiles-gokart1.png", "gx_races-", 512,    0);
+  addtiledef2("gx_tiles-gokart2.png", "gx_races-", 1376, 320);
+}
+
+function onTimeout()
+{
+  if (player.level.starts("gx_city1-"))
+  {
+    enablefeatures(allfeatures - 1 - 2 - 4 - 8 - 0x10 - 0x20 - 0x100 - 0x800 - 0x2000 - 0x4000);
+  }
+    else
+  {
+    enablefeatures(allfeatures - 2 - 4 - 8 - 0x10 - 0x20 - 0x100 - 0x800 - 0x2000 - 0x4000);
+  }
+  
+  checkPK();
+  
+  // Variables Needed for Profiles
+  client.pdeaths = clientr.stats[0];
+  client.pkills = clientr.stats[1];
+  client.phealth = clientr.health[0] @ " / " @ clientr.health[1];
+  
+  // Variables Needed for Profiles
+  onStatShow();
+  
+  if (player.ani == "sleep" && clientr.health[0] < clientr.health[1])
+  {
+    if (this.btick <= 0 && client.dead == false)
+    {
+      this.btick = 17;
+      client.stattick = 3;
+      triggerserver("gui", "-System", "heal", 2.5);
+    }
+  }
+  
+  if (client.flashed > 0)
+  {
+    //showpoly(275, {0, 0, screenwidth, 0, screenwidth, screenheight, 0, screenheight});
+    
+    if (client.flashed <= 1)
+    {
+      this.randchg = client.flashed;
+      //changeimgcolors(275, this.randchg, this.randchg, this.randchg, this.randchg);
+    }
+      else
+    {
+      this.randchg = random(0.95, 0.97);
+      //changeimgcolors(275, this.randchg, this.randchg, this.randchg, this.randchg);
+    }
+    
+    seteffect(this.randchg, this.randchg, this.randchg, this.randchg);
+    
+    client.flashed -= 0.05;
+  }
+    else
+  {
+    hideimg(275);
+  }
+  
+  if (client.firetick > 0) client.firetick -= 0.05;
+  if (this.btick > 0) this.btick -= 0.5;
+  if (this.hittick > 0)  this.hittick -= 0.05;
+  
+  setTimer(0.05);
+}
+
+function onActionProjectile(Account, Damage, Guild, PK, Type, Angle)
+{
+  if (Account == player.account || Guild == player.guild || clientr.health[0] <= 0)
+  {
+    return false;
+  }
+  
+  client.attacker.insert(0, {Account, Damage, Guild, Type});
+  
+  if (client.attacker.size() >= 5)
+  {
+    client.attacker.delete(client.attacker.size());
+  }
+  
+  switch (Type)
+  {
+    case "explosion":
+    {
+      if (this.hittick <= 0)
+      {
+        this.hittick = 0.05;
+        triggerserver("gui", "-System", "DoDmg");
+      }
+    
+      break;
+    }
+    
+    case "laser":
+    {
+      if (this.hittick <= 0)
+      {
+        //this.hittick = 0.05;
+        triggerserver("gui", "Events/Lazer", "DoDmg");
+      }
+      
+      break;
+    }
+    
+    case "gun":
+    {
+      temp.plyr = findPlayer(Account);
+      temp.dirs = {{0, 2}, {1, 3}, {2, 0}, {3, 1}};
+      
+      if (player.ani == "blockaniomg")
+      {
+        for (temp.var: temp.dirs)
+        {
+          if (temp.plyr.dir == temp.var[0])
+          {
+            temp.odir = temp.var[1];
+           
+            break;
+          }
+        }
+      
+        if (player.dir == temp.odir)
+        {
+          this.ang = params[5] + 3.14 + random(-0.1, 0.1);
+
+          if (player.guild == NULL)
+          {
+            temp.guild = "(none)";
+          }
+            else
+          {
+            temp.guild = player.guild;
+          }
+        
+          setshootparams(player.account, params[1], temp.guild, client.nopk, "gun", this.ang, params[6]);
+          shoot(player.x, player.y, 0, this.ang + random(params[6][0], params[6][1]), 1, -1, "gx_bullets", NULL);
+          //shoot strtofloat(#p(0))-1.5,strtofloat(#p(1))-2,0,this.ang,0,0,era_shuriken,;
+        }
+          else
+        {
+          triggerserver("gui", "-System", "DoDmg");
+        }
+      }
+        else
+      {
+        triggerserver("gui", "-System", "DoDmg");
+      }
+    
+      break;
+    }
+  }
+}
+
+function ChatBar.onAction()
+{
+  if (ChatBar.text == "") return false;
+  
+  if (ChatBar.text.starts("warpto") && player.level.starts("gx_races"))
+  {
+    ChatBar.text = "Not allowed!";
+  }
+  
+  if (clientr.loggedplyr == true || clientr.showchat == true || player.account in serverr.sendplayers)
+  {
+    if (ChatBar.text == client.lasttext) return false;
+    
+    client.lasttext = ChatBar.text;
+    
+    triggerserver("gui", name, "logplyr", player.account, ChatBar.text, clientr.showchat);
+  }
+  
+  if (ChatBar.text.starts("!select"))
+  {
+    temp.find = ChatBar.text.substring(8);
+    
+    for (temp.I = 0; temp.I < weapons.size(); temp.I++)
+    {
+      if (player.weapons[temp.I] == temp.find)
+      {
+        selectedweapon = temp.I;
+        
+        temp.found = true;
+        
+        break;
+      }
+    }
+    
+    if (temp.found == true)
+    {
+      player.addMsg("Server", temp.find SPC "was found!", 15);
+    }
+      else
+    {
+      player.addMsg("Server", temp.find SPC "was not found!", 15);
+    }
+    
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("!hat"))
+  {
+    temp.toks = ChatBar.text.tokenize();
+    
+    triggerserver("gui", this.name, "hat", temp.toks[1], temp.toks[2]);
+    ChatBar.text = "";
+    
+    player.addMsg("Server", "Hat Added!", 15);
+  }
+  
+  if (ChatBar.text.starts("/md5"))
+  {
+    ChatBar.text = md5(ChatBar.text.substring(5));
+  }
+  
+  if (ChatBar.text == ":newidea") showIdea();
+  
+  if (ChatBar.text.starts("setnick") && player.account == "KuJi")
+  {
+    triggerserver("gui", "-System", "nickname", ChatBar.text.substring(8));
+  }
+}
+
+function onActionClientSide(action, args)
+{
+  switch (action)
+  {
+    case "hat":
+    {
+      temp.nvar.loadstring("hats.txt");
+      temp.nvar = temp.nvar SPC format("{%s, \"%s\"},", args[0], args[1]);
+      temp.nvar.savestring("hats.txt", 0);
+      
+      break;
+    }
+    
+    case "openwindow":
+    {
+      player.openGuiSign(params[1], params[2]);
+      
+      break;
+    }
+    
+    case "reconnect":
+    {
+      serverwarp(params[1]);
+        
+      break;
+    }
+    
+    case "tileset":
+    {
+      onTileset();
+    
+      break;
+    }
+    
+    case "hurt":
+    {
+      hitplayer(0, 0, params[1], params[2]);
+        
+      break;
+    }
+  }
+}
+function onStatShow()
+{
+  if (client.stattick > 0)
+  {
+    player.attr[4] = "gx_stats.gani";
+    player.attr[5] = "HP: " @ clientr.health[0] @ "/" @ clientr.health[1];
+    player.attr[6] = "Armor: " @ clientr.health[3] @ "/" @ clientr.health[4];
+    
+    client.stattick -= 0.05;
+  }
+    else
+  {
+    player.attr[4] = "";
+    player.attr[5] = "";
+    player.attr[6] = "";
+  }
+}
+
+function onActionStaffAxe()
+{
+  this.locations = {{"gx_city1in-hospital1.nw", 31.5, 46}, {"g_hospital1.nw", 31, 51}, {"g_hobobox1.nw", 31.5, 26}};
+  this.selected = params[1];
+  
+  triggerserver("gui", name, "unstick", this.locations[this.selected][0], this.locations[this.selected][1], this.locations[this.selected][2], params[0]);
+}
+
+function onPlayerEnters()
+{
+  if (player.level.starts("gx_city1-") && (clientr.staff == "None" && player.guild != "Visitor"))
+  {
+    triggerserver("gui", this.name, "warpback");
+  }
+}
+
+function checkPK() {
+  this.guilds = {"Working", "FAQ", clientr.staff, "Immortal"};
+  
+  if (player.guild in this.guilds)
+  {
+    client.nopk = true;
+    
+    return false;
+  }
+  
+  if (player.level == "g_event-spar1.nw") {
+    if (player.y in | 33, 64 |) {
+      client.nopk = true;
+      weaponsdisabled = true;
+    } else {
+      client.nopk = false;
+      weaponsdisabled = false;
+    }
+  }
+  elseif (player.level == "gx_city1in-sparbig.nw") {
+    if (player.y in | 44, 64 |) {
+      client.nopk = true;
+      weaponsdisabled = true;
+    } else {
+      client.nopk = false;
+      weaponsdisabled = false;
+    }
+  }
+  elseif (player.level == "gx_city1in-sparsmall.nw") {
+    if (player.y in | 47, 64 |) {
+      client.nopk = true;
+      weaponsdisabled = true;
+    } else {
+      client.nopk = false;
+      weaponsdisabled = false;
+    }
+  }
+  elseif (player.level == "g_event-lms.nw" || player.level == "g_event-grenadefight.nw") {
+    if (player.y in | 0, 13 |) {
+      client.nopk = true;
+      weaponsdisabled = true;
+    } else {
+      client.nopk = false;
+      weaponsdisabled = false;
+    }
+  }
+  elseif (player.level == "gx_city1in_policestation_2.nw") {
+    if (player.y in | 0, 21 |) {
+      client.nopk = true;
+      weaponsdisabled = true;
+    } else {
+      client.nopk = false;
+      weaponsdisabled = false;
+    }
+  }
+  //  elseif (player.level == "gx_city1in-heal.nw")
+  //{
+  //    client.nopk = false;
+  //    weaponsdisabled = false;
+  //}
+  elseif (player.level == "gx_city1in-policestation-jsendplayersail.nw") {
+    if (player.x in | 14.5, 51.5| && player.y in | 20, 47 |) {
+      client.nopk = true;
+      weaponsdisabled = true;
+    } else {
+      client.nopk = false;
+      weaponsdisabled = false;
+    }
+  }
+    elseif (player.level.starts("g_mines") || player.level == "g_event-koth.nw" || player.level == "gx_city1-g01.nw" || player.level == "gx_city1-i08.nw")
+  {
+    client.nopk = true;
+  }
+    elseif (player.level.starts("gx_race"))
+  {
+    client.nopk = true;
+   // noplayerkilling();
+  // serverwarp("Graal X");
+  }
+    else
+  {
+    client.nopk = nopkzone;
+    weaponsdisabled = false;
+  }
+}
+
+function onActionProjectile2(Attackx, Attacky, Owner)
+{
+  if (params[7] == "grenade" || params[7] == "etnade")
+  {
+    play("explosion_123.wav");
+    
+    if (player.account == params[2])
+    {
+      if (params[10] != true && params[9] > 0 && random(0, 100) >= 60)
+      {
+        for (temp.I = 0; temp.I < players.size(); temp.I++)
+        {
+          if (players[temp.I].x in |Attackx - 3, Attackx + 3| && players[temp.I].y in |Attacky - 3, Attacky + 3| && players[temp.I].ani != "dead")
+          {
+            temp.pfound = true;
+            
+            temp.ang = params[8] + 3.14;
+            
+            if (players[temp.I].guild != NULL)
+            {
+              setshootparams(players[temp.I].account, 15, players[temp.I].guild, players[temp.I].client.nopk, false, "grenade", temp.ang, params[9], true);
+            }
+              else
+            {
+              setshootparams(players[temp.I].account, 15, "(none)", players[temp.I].client.nopk, false, "grenade", temp.ang, params[9], true); 
+            }
+            
+            shoot(Attackx - 1.5, Attacky - 1.5, player.z, temp.ang, 1.57 / 2, params[9], "gx_grenadetest", NULL);
+    
+            break;
+          }
+        }
+      }
+    
+      if (temp.pfound == false)
+      {
+        triggerserver("gui", this.name, "grenade", params[0], params[1]);
+      }
+    }
+  }
+  
+  if (params[7] == "smoke")
+  {
+    play("explosion_123.wav");
+    
+    if (player.account == params[2])
+    {
+      triggerserver("gui", this.name, "smoke", params[0], params[1]);
+    }
+  }
+  
+  if (params[7] == "flashbang")
+  {
+    if (player.account == params[2])
+    {
+      triggerserver("gui", this.name, "flash", params[0], params[1]);
+    }
+  }
+}
+
+function onReceiveText() echo("T: " @ params);
+
+function showIdea()
+{
+  if (Idea_Window0 != NULL) Idea_Window0.destroy();
+  
+  new GuiWindowCtrl(Idea_Window0)
+  {
+    canmaximize = canminimize = canresize = false;
+    
+    height = 252;
+    profile = "GuiBlueWindowProfile";
+    text = "Submit your Idea to Graal X!";
+    width = 256;
+    x = 302;
+    y = 180;
+
+    new GuiTextEditCtrl(Idea_TextEdit0)
+    {
+      height = 20;
+      profile = "GuiBlueTextEditProfile";
+      width = 158;
+      x = 83;
+      y = 85;
+    }
+    
+    new GuiMLTextCtrl(Idea_MultiLine0)
+    {
+      profile = "GuiBlueMLTextProfile";
+      text = "If you have an idea for an event or a new system to come to Graal X you can submit it here! Just fill out this form and click Send!";
+      width = 220;
+      x = 12;
+      y = 26;
+    }
+    
+    new GuiTextCtrl(Idea_Text0)
+    {
+      height = 20;
+      profile = "GuiBlueTextProfile";
+      text = "Idea Name:";
+      width = 24;
+      x = 14;
+      y = 85;
+    }
+    
+    new GuiTextCtrl(Idea_Text1)
+    {
+      height = 20;
+      profile = "GuiBlueTextProfile";
+      text = "Idea Description / Summary:";
+      width = 24;
+      x = 14;
+      y = 105;
+    }
+    
+    new GuiScrollCtrl(Idea_Frame)
+    {
+      profile        = "GuiBlueScrollProfile";
+      extent         = {233, 87};
+      position       = {12, 125};
+      
+      hScrollBar     = "alwaysOff";
+      vScrollBar     = "dynamic";
+      horizSizing    = "width";
+      vertSizing     = "height";
+      
+      new GuiMLTextEditCtrl(Idea_TextEdit1)
+      {
+        profile  = "GuiBlueMLTextEditProfile";
+        extent   = {220, 300};
+        position = {6, 6};
+      
+        wordwrap = true;
+      }
+    }
+    
+    new GuiButtonCtrl(Idea_Close)
+    {
+      profile     = "GuiBlueButtonProfile";
+      extent      = {65, 25};
+      position    = {85, 217};
+      
+      text        = "Close";
+    }
+    
+    new GuiButtonCtrl(Idea_Send)
+    {
+      profile     = "GuiBlueButtonProfile";
+      extent      = {65, 25};
+      position    = {170, 217};
+      
+      text        = "Send";
+    }
+  }
+}
+
+function Idea_Close.onAction()
+{
+  Idea_Window0.destroy();
+}
+
+function Idea_Send.onAction()
+{
+  if (Idea_TextEdit0.text != "" && Idea_TextEdit1.text != "")
+  {
+    triggerserver("gui", this.name, "idea", {player.getRealTime(timevar), Idea_TextEdit0.text, Idea_TextEdit1.text});
+ 
+    Idea_Window0.destroy();
+    
+    player.addMsg("Server", "Your idea has been sent!", 15);
+  }
+    else
+  {
+    player.addMsg("Server", "Please complete the form first!", 15);
+  }
+}
+// serverwarp("Theed");

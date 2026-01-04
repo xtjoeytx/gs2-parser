@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "751291d76aad8f873b0266223a8dea63f279357b32018176ce0306c7a31ab278",
+  "bytecode_size": 2544,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-Events.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

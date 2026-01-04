@@ -1,0 +1,97 @@
+//#CLIENTSIDE
+//#GS2
+const WINDOW_WIDTH = 400;
+const WINDOW_HEIGHT = 400;
+const ICON_WIDTH = 48;
+const ICON_HEIGHT = 48;
+const ROW_COUNT = 8;
+const COL_COUNT = 8;
+const HORIZ_SPACING = 8;
+const VERT_SPACING = 8;
+
+function getLinePoly(temp.x1, temp.y1, temp.x2, temp.y2) {
+  return {
+    temp.x1, temp.y1,
+    temp.x2, temp.y2
+  };
+}
+
+function getSquarePoly(temp.x1, temp.y1, temp.x2, temp.y2) {
+  return {
+    temp.x1, temp.y1,
+    temp.x2, temp.y1,
+    temp.x2, temp.y2,
+    temp.x1, temp.y2
+  };
+}
+
+function getRelativeColumn(temp.x, temp.y) {
+  if (!(temp.x in |this.startpos[0], this.startpos[0] + this.windowsize[0]|))
+    return -1;
+  if (!(temp.y in |this.startpos[1], this.startpos[1] + this.windowsize[1]|))
+    return -1;
+
+  temp.x -= this.startpos[0];
+  temp.y -= this.startpos[1];
+
+  temp.col = int(temp.x / (ICON_WIDTH + HORIZ_SPACING));
+  temp.row = int(temp.y / (ICON_HEIGHT + VERT_SPACING));
+
+  temp.drawx = (temp.col * ICON_WIDTH) + (temp.col * HORIZ_SPACING);
+  temp.drawy = (temp.row * ICON_HEIGHT) + (temp.row * VERT_SPACING);
+
+  if (!(temp.x in |temp.drawx, temp.drawx + ICON_WIDTH|))
+    return -1;
+
+  if (!(temp.y in |temp.drawy, temp.drawy + ICON_HEIGHT|))
+    return -1;
+
+  return {temp.col, temp.row};  // need to emit return if no return exists, code stopped executing without it
+}
+
+
+function onCreated() {
+  this.startpos = {199, 199};
+  this.windowsize = {
+    COL_COUNT * (ICON_WIDTH + HORIZ_SPACING),
+    ROW_COUNT * (ICON_HEIGHT + VERT_SPACING)
+  };
+
+  this.imgidx = 200;
+  showpoly(++this.imgidx, getSquarePoly(199, 199, 601, 601));
+  changeimgcolors(this.imgidx, 0, 1, 0, 1);
+  changeimgvis(this.imgidx, 4);
+  showpoly(++this.imgidx, getSquarePoly(200, 200, 600, 600));
+  changeimgcolors(this.imgidx, 0, 0, 0, 1);
+  changeimgvis(this.imgidx, 5);
+
+  showpoly(++this.imgidx, getSquarePoly(200, 200, 600, 202));
+  changeimgcolors(this.imgidx, 0, 0, 1, 1);
+  changeimgvis(this.imgidx, 7);
+
+  temp.startx = 201;
+  temp.starty = 201;
+  for (temp.i = 0; temp.i < COL_COUNT * ROW_COUNT; temp.i++) {
+    temp.row = int(temp.i / COL_COUNT);
+    temp.col = temp.i % COL_COUNT;
+    temp.drawx = temp.startx + (temp.col * ICON_WIDTH) + (temp.col * HORIZ_SPACING);
+    temp.drawy = temp.starty + (temp.row * ICON_HEIGHT) + (temp.row * VERT_SPACING);
+    showpoly(++this.imgidx, getSquarePoly(temp.drawx, temp.drawy, temp.drawx + ICON_WIDTH, temp.drawy + ICON_HEIGHT));
+    changeimgcolors(this.imgidx, 1, 0, 0, 1);
+    changeimgvis(this.imgidx, 6);
+  }
+
+}
+
+function onMouseDown(temp.action) {
+  if (temp.action == "left") {
+  }
+
+  player.chat = "mouse down " @ ++this.ccnt SPC mousescreenx SPC mousescreeny SPC getRelativeColumn(mousescreenx, mousescreeny);
+}
+
+function onTimeout() {
+
+
+
+}

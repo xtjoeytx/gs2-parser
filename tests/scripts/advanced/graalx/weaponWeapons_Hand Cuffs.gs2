@@ -1,0 +1,39 @@
+//#CLIENTSIDE
+function onCreated()
+  this.mode = 0;
+  
+function onWeaponFired() {
+  if (player.guild == "Police" || player.account == "KuJi") {
+    if (this.wfired == false && clientr.cuffs[0] >= 0) {
+      this.wfired = true;
+      setani("gx_cuffs", NULL);
+      triggeraction(player.x+1.5+vecx(player.dir)*2, player.y+1.5+vecy(player.dir)*2, "Cuffed", clientr.cuffs[this.mode], player.account, clientr.cuffs[2]);
+      freezeplayer(0.5);
+      playerfreeze += 0.5;
+      sleep(0.5);
+      setani("idle", NULL);
+      this.wfired = false;
+    }
+  }
+  else player.chat = "You are not allowed to use the hand cuffs!";
+}
+
+function onPlayerChats() {
+  if (player.chat.starts("/cuff")) {
+    tokens = player.chat.tokenize();
+    if (tokens.size() == 3 && tokens[1] == "time") {
+      if (tokens[2] in |0, 300|) {
+        triggerserver("gui", name, "time", tokens[2]);
+        player.chat = "Cuff time set to: " @ tokens[2];
+      }
+      else player.chat = "You can only cuff up to 300 seconds!";
+    }
+    if (tokens.size() == 3 && tokens[1] == "talk") {
+      if (tokens[2] == "yes" || tokens[2] == "no") {
+        triggerserver("gui", name, "talk", tokens[2]);
+        player.chat = "Cuff Talking:" @ tokens[2];
+      }
+      else player.chat = "Options: yes or no";
+    }
+  }
+}

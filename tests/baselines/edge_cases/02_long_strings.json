@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "1503129ae6e529ff96dcf524bd360e521732c2c2047c56874c7b8ba866f2a346",
+  "bytecode_size": 707,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "edge_cases/02_long_strings.gs2",
+    "generated_at": "2026-01-04 16:44:39",
+    "compiler_version": "modified_1767562734"
+  }
+}

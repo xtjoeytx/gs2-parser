@@ -1,0 +1,638 @@
+// 2021-09-18 - started translating IRC/Login2
+
+//#CLIENTSIDE
+//#GS2
+function onCreated()
+{
+	echo("----------");
+	Adventure_setAllowedSocketsConnect("listserver.graal.in:14922");
+	Adventure_setAllowedSocketsConnect("graalserver.com:80");
+	Adventure_setAllowedSocketsConnect("graalserver.com:443");
+	loadingscreenenabled = false;
+	//enablefeatures(allfeatures);
+	this.smartphone = false;//(player.platform in {"iphone","android","bada"});
+	StartConnectMessage_text.text = "Welcome!";
+	
+	if (serverstartconnect == "liveshare")
+	{
+		if (isObject("Serverlist_ConnectMessage"))
+		{
+			Serverlist_ConnectMessage.visible = false;
+			return;
+		}
+	}
+
+	if (isgraalplugin)
+	{
+		if (graalplugincookie == "")
+		{
+			MessageBoxDialog_Window.text = "Error";
+			MessageBoxDialog_Text.text = "<b>The plugin cannot be used from this site.</b>";
+			pushDialog(MessageBoxDialog);
+			serverstartconnect = "";
+			return;
+		}
+
+		if (findweapon("-Rescripted/Serverlist") != null)
+		{
+			if (!isObject("Serverlist_Panel"))
+			{
+				("-Rescripted/Serverlist").initServerlist();
+			}
+		}
+
+		return;
+	}
+
+	removeOldControls();
+	addGUIControls();
+	retrieveAccountFields();
+
+	if (serverstartconnect != "")
+	{
+		StartPasswordCheck.checked = !$pref::Graal::dontsavepasswords;
+		StartMemberCheck.checked = true;
+		StartGuestCheck.checked = !StartMemberCheck.checked;
+
+		retrieveAccountFields();
+		//updateAccountFieldsVisibility();
+
+		if (!PassEdit.isEmpty())
+		{
+			doLogin();
+			return;
+		}
+	}
+	
+	MainMenuGui2D.visible = false;
+	//MainMenuGui2D_Window.show();
+}
+
+function removeOldControls()
+{  
+	if (isObject("Serverlist_Panel"))
+	{
+		//Serverlist_Panel.destroy();
+	}
+}
+
+function removeControl(control)
+{
+	if (isObject("" @ control))
+	{
+		("" @ control).destroy();
+	}
+}
+
+function onDefaultStyleChanges(newstyle)
+{
+	MainMenuGui2D.style = newstyle;
+	//MainMenuGui2D_Window.style = newstyle;
+}
+
+function onDpiChanged(par)
+{
+	echo("eventtest" SPC par);
+}
+
+function addGUIControls()
+{
+	new GuiControlProfile("MainMenuGui2D_BackgroundProfile") {
+		opaque = true;
+		fillcolor = "25,255,25,255";
+	}
+	addSubControls();
+	removeControl("MainMenuGui2D_Background");
+	if (!this.smartphone) {
+
+		//scheduleevent(0.05, "onGraal3DLoginStep", 1);
+		
+		with (GUIContainer)
+		{
+			new GuiControl("MainMenuGui2D") {
+				profile = MainMenuGui2D_BackgroundProfile;
+				position = {0, 0};
+				extent = GUIContainer.clientextent;
+				horizSizing = "width";
+				vertSizing = "height";
+				visible = true;
+				text = "G r a a l";
+				//style = $pref::Video::defaultguistyle;
+			}
+		}		
+	} else {
+		createSmartphoneUI();
+	}
+}
+
+function onPlayerLanguageChanges()
+{
+	if (!this.smartphone)
+		addSubControls();
+}
+
+function addSubControls()
+{
+ 	new GuiControlProfile("gui2001_window")
+	{
+		fillColor = {0, 0, 0};
+		fontColor = {0, 0, 0};
+
+		opaque = false;
+		transparency = 1;
+		bitmap = "gui2001_window.png";
+	}
+	
+  //with (MainMenuGui2D_Background)
+  {
+	new GuiWindowCtrl("MainMenuGui2D_Window") {
+	  profile = "gui2001_window";
+	  useownprofile = false;
+	  profile.transparency = 1;
+	  style = "trueclassic.wba";
+	  clientrelative = true;
+	  clientextent = {577, 416};
+	  x = (clientwidth - width) / 2;
+	  y = (clientheight - height) / 2;
+	  horizSizing = "center";
+	  vertSizing = "center";
+	  canmaximize = false;
+	  canminimize = false;
+	  canresize = false;
+	  canclose = false;
+	  text = "G r a a l";
+	  isexternal = true;
+
+	  new GuiTextCtrl("StartPlayAsLabel") {
+		profile = GuiBlueTextProfile;
+		horizSizing = "right";
+		vertSizing = "bottom";
+		visible = false;
+		position = "15 5";
+		extent = "150 18";
+		text = "Play as:"; // _("Nickname:"); -> add translate
+		maxLength = "255";
+		visible = false;
+	  }
+
+	  new GuiRadioCtrl("StartGuestCheck") {
+		profile = GuiBlueRadioProfile;
+		horizSizing = "right";
+		vertSizing = "bottom";
+		position = "15 28";
+		extent = "150 20";
+		text = "Guest"; // _("Guest:");
+		groupNum = 1;
+		visible = true;
+	  }
+
+	  new GuiRadioCtrl("StartMemberCheck") {
+		profile = GuiBlueRadioProfile;
+		horizSizing = "right";
+		vertSizing = "bottom";
+		position = "15 50";
+		extent = "150 20";
+		text = "Member"; // _("Member:");
+		groupNum = 1;
+		useownprofile = true;
+		profile.tab = false;
+		visible = false;
+	  }
+
+			new GuiShowImgCtrl("Test_StretchContent1")
+			{
+				x = 0;
+				y = 0;
+				image = "gui2001_graalscreen.png";
+				extent = {577, 416};
+				
+		new GuiScrollCtrl("StartNickLangPanel") {
+		  useownprofile = true;
+		  style = "none";
+		  profile = "myprofile2";
+		  profile.transparency = 1;
+		  profile.border = 0;
+		  position = "26 139";
+		  extent = "527 127";
+		  hScrollBar = "alwaysOff";
+		  vScrollBar = "alwaysOff";
+
+		  removeControl("StartBlurb");
+		  new GuiMLTextCtrl("StartBlurb") {
+			profile = GuiBlueTextProfile;
+			profile.fontType = "gui2001_w95fa";
+			profile.fontSize = 16;
+			horizSizing = "right";
+			vertSizing = "bottom";
+			position = "0 0";
+			extent = "148 58";
+			//justify = "center";
+			align = "center";
+			wordwrap = true;
+			text = "<center>Welcome to Graal! Press 'Training' f" @
+			  "or some offline training levels, or 'Start' for the online mode" @
+			  ".</center>";
+		  }
+
+		  new GuiTextEditCtrl("NickEdit") {
+			useownprofile = true;
+			style = "none";
+					  profile = "guiwinwin_window_text";
+					  profile.bitmap = "gui2001_textedit.png";
+					  profile.border = 3;
+					  profile.fillColor = {0, 128, 0};
+					  profile.fontColor = {0, 255, 0};
+
+					  profile.opaque = true;
+					  //profile.transparency = 1;
+					  height = 24;
+					  width = 209;
+			x = StartNickLangPanel.width-(width+2+16);
+			y = 14;
+		  }
+		  
+		  new GuiTextCtrl("StartNickLabel") {
+			profile = GuiBlueTextProfile;
+			horizSizing = "right";
+			vertSizing = "bottom";
+			position = "15 10";
+			extent = "53 18";
+			x = NickEdit.x - (width + 51);
+			y = 22-8;
+			text = "Nick Name:"; // _("Nickname:"); -> add translate
+		  }
+		  
+		  new GuiPopUpEditCtrl("LanguageEdit") {
+			useownprofile = true;
+			profile = "gui2001_myprofilepopupmenu2";
+			textprofile = "myprofiletext";
+			scrollprofile = "myprofilescroll";
+			horizSizing = "right";
+			vertSizing = "bottom";
+			//position = "134 8";
+			//extent = "150 22";
+			//minExtent = "8 22";
+			historySize = "10";
+			profile.border = 3;
+					  profile.fillColor = {0, 128, 0};
+					  profile.fontColor = {0, 255, 0};
+					  textprofile.fillColor = {0, 128, 0, 1};
+					  textprofile.fontColor = {0, 255, 0};
+					  scrollprofile.border = 1;
+					  textprofile.transparency = 1;
+					  textprofile.bitmap = "";
+					  profile.bitmap = "gui2001_scroll.png";
+					  scrollprofile.fillColor = {0, 128, 0};
+					  scrollprofile.fontColor = {0, 255, 0};
+					  scrollprofile.transparency = 1;
+					  scrollprofile.bitmap = "gui2001_textedit.png";
+					  
+					  height = 24;
+					  width = 209;
+			x = StartNickLangPanel.width-(width+2+16);
+			y = 42;
+		  }
+		  
+		  new GuiTextCtrl("StartLanguageLabel") {
+			useownprofile = true;
+			profile = GuiBlueTextProfile;
+			horizSizing = "right";
+			vertSizing = "bottom";
+			//position = "15 10";
+			//profile.fontSize = 15;
+			
+			extent = "53 18";
+			
+			x = LanguageEdit.x - (width + 51);
+			y = 50 - 8;
+			text = "Language:"; // _("Nickname:"); -> add translate
+		  }
+
+		  removeControl("StartConnectButton2");
+		  new GuiBitmapButtonCtrl("StartConnectButton2") {
+			useownprofile = true;
+					profile.fontColor = {0, 0, 0};
+					profile.fontcolorhl = {0, 0, 0};
+			profile.fontType = "gui2001_w95fa";
+			profile.fontSize = 16;
+					profile.fontStyle = "bc";
+					profile.justify = "center";
+					normalbitmap = "gui2001_button.png";
+					mouseoverbitmap = "gui2001_button.png";
+					pressedbitmap = "gui2001_button_pressed.png";
+					width = 105;
+  				height = 26;
+			text = "Training";
+			x = StartNickLangPanel.width - width;
+			y = StartNickLangPanel.height - height;
+		  }
+
+		  removeControl("StartOptionsButton");
+		  new GuiBitmapButtonCtrl("StartOptionsButton") {
+			useownprofile = true;
+					profile.fontColor = {0, 0, 0};
+					profile.fontcolorhl = {0, 0, 0};
+			profile.fontType = "gui2001_w95fa";
+			profile.fontSize = 16;
+					profile.fontStyle = "bc";
+					profile.justify = "center";
+					normalbitmap = "gui2001_button.png";
+					mouseoverbitmap = "gui2001_button.png";
+					pressedbitmap = "gui2001_button_pressed.png";
+					width = 105;
+  				height = 26;
+			text = "Options";
+			x = StartNickLangPanel.width - (width + StartOptionsButton.width + 23);
+			y = StartNickLangPanel.height - height;
+		  }
+		}
+
+		removeControl("StartAccountPanel");  
+		new GuiScrollCtrl("StartAccountPanel") {
+		  useownprofile = true;
+		  style = "none";
+		  profile = "myprofile";
+		  profile.transparency = 0;
+		  profile.border = 0;
+		  position = "10 283";
+		  extent = "558 127";
+		  hScrollBar = "alwaysOff";
+		  vScrollBar = "alwaysOff";
+
+		  removeControl("StartAccountLabel");
+		  new GuiTextCtrl("StartAccountLabel") {
+			profile = GuiBlueTextProfile;
+			horizSizing = "right";
+			vertSizing = "bottom";
+			position = "46 38";
+			extent = "73 18";
+			text = "Account:  "; // _("User:  ");
+		  }
+
+		  removeControl("AccountEdit");
+		  new GuiPopUpEditCtrl("AccountEdit") {
+			useownprofile = true;
+			profile = "gui2001_myprofilepopupmenu2";
+			textprofile = "myprofiletext";
+			scrollprofile = "myprofilescroll";
+			horizSizing = "right";
+			vertSizing = "bottom";
+			position = "134 38";
+			extent = "150 22";
+			minExtent = "8 22";
+			historySize = "10";
+			profile.border = 3;
+					  profile.fillColor = {0, 128, 0};
+					  profile.fontColor = {0, 255, 0};
+					  textprofile.fillColor = {0, 128, 0, 1};
+					  textprofile.fontColor = {0, 255, 0};
+					  scrollprofile.border = 1;
+					  textprofile.transparency = 1;
+					  textprofile.bitmap = "";
+					  profile.bitmap = "gui2001_scroll.png";
+					  scrollprofile.fillColor = {0, 128, 0};
+					  scrollprofile.fontColor = {0, 255, 0};
+					  scrollprofile.transparency = 1;
+					  scrollprofile.bitmap = "gui2001_textedit.png";
+		  }
+
+		  new GuiTextCtrl("StartPassLabel") {
+			useownprofile = true;
+			profile = GuiBlueTextProfile;
+			horizSizing = "right";
+			vertSizing = "bottom";
+			position = "311 38";
+			extent = "120 18";
+			text = "Password:"; // _("Password:");
+			profile.fontColor = {0, 255, 0};
+		  }
+		  
+		  new GuiAccountPasswordCtrl("PassEdit") {
+			useownprofile = true;
+			style = "none";
+					  profile = "guiwinwin_window_text";
+					  profile.bitmap = "gui2001_textedit.png";
+					  profile.border = 3;
+					  profile.fillColor = {0, 128, 0};
+					  profile.fontColor = {0, 255, 0};
+					  profile.opaque = true;
+			horizSizing = "right";
+			vertSizing = "bottom";
+			//position = "250 28";
+			x = StartAccountPanel.width-165;
+					y = 38;
+			extent = "150 22";
+			minExtent = "8 22";
+			password = true;
+		  }
+
+		  new GuiCheckBoxCtrl("StartPasswordCheck") {
+			profile = GuiBlueCheckBoxProfile;
+			horizSizing = "right";
+			vertSizing = "bottom";
+			profile.fontColor = {0, 255, 0};
+			position = { player.platform == "iphone" ? 130 : 394, 60 };
+			extent = { player.platform == "iphone" ? 120 : 320, 20 };
+			text = "Save password"; // _("Save password");
+		  }
+		  
+		  new GuiBitmapButtonCtrl("StartConnectButton") {
+			useownprofile = true;
+					profile.fontColor = {0, 0, 0};
+					profile.fontcolorhl = {0, 0, 0};
+			profile.fontType = "gui2001_w95fa";
+			profile.fontSize = 16;
+					profile.fontStyle = "bc";
+					profile.justify = "center";
+					normalbitmap = "gui2001_button.png";
+					mouseoverbitmap = "gui2001_button.png";
+					pressedbitmap = "gui2001_button_pressed.png";
+					width = 105;
+  				height = 26;
+					text = "Start";
+					x = StartAccountPanel.width-120;
+					y = StartAccountPanel.height-34;
+		  }
+
+		  new GuiButtonCtrl("StartGetAccountButton") {
+			profile = GuiBlueButtonProfile;
+			horizSizing = "right";
+			vertSizing = "top";
+			position = "80 415";
+			extent = "150 25";
+			text = "Become a Member";
+		  }
+		}
+	  }
+	}
+  }
+  
+  if (this.smartphone)
+	MainMenuGui2D_Window.extent = GUIContainer.clientextent;
+}
+
+function MainMenuGui2D.onWake()
+{
+  StartPasswordCheck.checked = !$pref::Graal::dontsavepasswords;
+  StartMemberCheck.checked = true;
+  StartGuestCheck.checked = !StartMemberCheck.checked;
+  
+  if (serverstartconnect != "" && StartMemberCheck.checked && !PassEdit.isEmpty())
+  {
+	doLogin();
+  }
+  else
+  {
+	StartAni1.ani = "human2_walk";
+	StartAni2.ani = "startmenu_lamps_wood";
+	StartAni6.ani = "g2k2dievil_attack,spell_firelaunch.wav";
+
+	retrieveAccountFields();
+	//updateAccountFieldsVisibility();
+	setTimer(0.2);
+  }
+}
+
+function MainMenuGui2D.onSleep()
+{
+  setTimer(0);
+}
+
+function onServerLogin()
+{
+  if (servername.starts("login")) {
+	onTimeout();
+  } else {
+	setTimer(0);
+  }
+}
+
+function onTimeout()
+{
+
+}
+
+function StartGuestCheck.onAction()
+{
+  updateAccountFieldsVisibility();
+}
+
+function StartMemberCheck.onAction()
+{
+  updateAccountFieldsVisibility();
+}
+
+function AccountEdit.onSelect()
+{
+  PassEdit.setPasswordOfAccount(AccountEdit.text);
+}
+
+function LanguageEdit.onSelect()
+{
+  $pref::graal::language = LanguageEdit.text;
+  Adventure_saveGraalOptions();
+}
+
+function LanguageEdit.onKeyDown()
+{
+  $pref::graal::language = LanguageEdit.text;
+  Adventure_saveGraalOptions();
+}
+
+function AccountEdit.onKeyDown()
+{
+  PassEdit.setPasswordOfAccount(AccountEdit.text);
+}
+
+function StartConnectButton.onAction()
+{
+  doLogin();
+}
+
+function StartConnectButton2.onAction()
+{
+  Adventure_startOfflineMode();
+}
+
+function StartGetAccountButton.onAction()
+{
+  openURL("https://graal.in");
+}
+
+function StartOptionsButton.onAction()
+{
+  if (!Adventure_openExternalOptions())
+  {
+	if (graalversion >= 5.2) {
+	  ("-Serverlist_Options").showOptions();
+	}
+	else
+	{
+	  pushDialog(OptionsDlg2D);
+	}
+  }
+}
+
+function retrieveAccountFields()
+{
+
+
+  NickEdit.text = Adventure_getEditNickName();
+  temp.accounts = Adventure_getEditAccountNames();
+
+  with (LanguageEdit)
+  {
+	text = $pref::graal::language;
+
+	clearRows();
+	for (temp.i = 0; temp.i < installedlanguages.size(); temp.i++)
+	  addRow(temp.i, installedlanguages[temp.i]);
+  }
+
+  with (AccountEdit)
+  {
+	text = temp.accounts[0];
+
+	clearRows();
+	for (temp.i = 0; temp.i < temp.accounts.size(); temp.i++)
+	  addRow(temp.i, temp.accounts[temp.i]);
+  }
+
+  PassEdit.setPasswordOfAccount(AccountEdit.text);
+}
+
+function updateAccountFieldsVisibility()
+{
+  showaccountfields = StartMemberCheck.checked;
+  
+  AccountEdit.visible = showaccountfields;
+  PassEdit.visible = showaccountfields;
+  StartAccountLabel.visible = showaccountfields;
+  StartPassLabel.visible = showaccountfields;
+  StartPasswordCheck.visible = showaccountfields;
+}
+
+function Adventure_startOfflineMode() {
+	//if (!StartMemberCheck.checked || AccountEdit.text == "")
+	{
+		Adventure_setAccountName("guest");
+		PassEdit.clearPassword();
+		("-Rescripted/Serverlist").initServerlist();
+		MainMenuGui2D_Window.hide();
+		return;
+	}
+}
+
+function doLogin()
+{
+  $pref::Graal::dontsavepasswords = !StartPasswordCheck.checked;
+
+  Adventure_setNickName(NickEdit.text);
+
+  Adventure_setAccountName(AccountEdit.text);
+  PassEdit.applyPassword();
+  PassEdit.clearPassword();
+  //MainMenuGui2D.visible = false;
+  MainMenuGui2D_Window.hide();
+  Adventure_reconnect();
+}

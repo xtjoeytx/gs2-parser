@@ -1,0 +1,110 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated()
+{
+    initVariables();
+}
+
+function onServerLogin()
+{
+    initVariables();
+}
+
+function onPlayerEnters()
+{
+    initVariables();
+}
+
+function initVariables()
+{
+    //StartConnectMessage.bitmap = "graalreborn_background.jpg";
+    //StartConnectMessage.showtop();
+    loadingscreenenabled = false;
+
+    //addGuiControls();
+
+    setTimer(0.001);
+}
+
+function addGuiControls()
+{
+    Gs2Utils.destroyObject("StartConnectMessage_Text");
+
+    new GuiMLTextCtrl(StartConnectMessage_Text)
+    {
+        acceptdropfiles = "0";
+        active = "1";
+        allowedtags = { "a", "blink", "body", "b", "br", "center", "cite", "dd", "del", "dfn", "div", "dl", "!doctype", "dt", "em", "font", "form", "head", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "html", "ignorelinebreaks", "img", "ins", "i", "just", "label", "linkcolor", "linkcolorhl", "li", "lmargin", "lmargin%", "object", "ol", "p", "rmargin", "rmargin%", "s", "sbreak", "script", "select", "shadow", "shadowcolor", "span", "spush", "spop", "strike", "strong", "tab", "table", "td", "tr", "textformat", "u", "ul", "var" };
+        alpha = "1";
+        areaclickpriority = "0";
+        awake = "1";
+        bitmapcache = "0";
+        blue = "1";
+        bounds = { "20", "40", "280", "90" };
+        canmove = "0";
+        canresize = "0";
+        clientextent = { "280", "90" };
+        clientheight = "90";
+        clientwidth = "280";
+        clipchildren = "1";
+        clipmove = "1";
+        cliptobounds = "1";
+        color = { "255", "255", "255" };
+        cursor = "default";
+        cursorposition = "0";
+        deniedsound = "";
+        disallowedtags = "";
+        editing = "0";
+        extent = { "280", "90" };
+        fastchildrender = "0";
+        firstresponder = "";
+        flickerbasetime = "0";
+        flickering = "0";
+        flickertime = "1";
+        green = "1";
+        height = "90";
+        hint = "";
+        hinttime = "0.5";
+        horizsizing = "right";
+        htmlcompatibility = "0";
+        htmllinks = "0";
+        initialized = "0";
+        isinanimation = "0";
+        isininoutanimation = "0";
+        ispaused = "0";
+        joinedclasses = "";
+        lockmousedown = "0";
+        maxchars = "-1";
+        maxlooplimit = "10000";
+        minextent = { "8", "8" };
+        minsize = { "8", "8" };
+        mode = "1";
+        name = "StartConnectMessage_Text";
+        parsetags = "1";
+        plaintext = "Connecting to the login server...";
+        position = { "20", "40" };
+        profile = GuiBlueMLTextProfile;
+        red = "1";
+        resizeheight = "1";
+        resizewidth = "1";
+        rotation = "0";
+        rotationcenter = { "0", "0" };
+        scripterrors = "";
+        scriptlogmissingfunctions = "0";
+        scrolllinex = "30";
+        scrollliney = "10";
+        showhint = "1";
+        style = "";
+        syntaxhighlighting = "0";
+        text = "Connecting to the login server...";
+        timeout = "0";
+        urlbase = "";
+        useownprofile = "1";
+        vertsizing = "bottom";
+        visible = "1";
+        width = "280";
+        wordwrap = "1";
+        x = "20";
+        y = "40";
+    };
+}

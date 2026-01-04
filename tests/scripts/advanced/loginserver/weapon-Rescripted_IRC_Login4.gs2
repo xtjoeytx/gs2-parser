@@ -1,0 +1,12 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated() {
+  //Adventure_startOfflineMode();
+  //echo("-IRC_Login4");
+  //Adventure_setGraalControlRecreate(1);
+}
+
+function onServerLogin(asd) {
+  //echo("HELLO FROM IRC4" @ asd);
+  //loadingscreenenabled = false;
+}

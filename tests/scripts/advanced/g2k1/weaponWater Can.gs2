@@ -1,0 +1,43 @@
+//#CLIENTSIDE
+function onCreated() {
+  setTimer(1);
+}
+
+function onBomyWeaponFired() {
+  if (client.watercan >= 1) {
+    dowatering();
+    player.freeze(1.5);
+    setani("bomy_watercanspread", null);
+  } else {
+    player.freeze(1.5);
+    setani("bomy_watercan", null);
+  }
+}
+
+function onWeaponFired() {
+  if (onwater(player.x+1.5+vecx(player.dir)*1.5,player.y+2+vecy(player.dir)*1.5)) {
+    player.freeze(1.5);
+    setani("watercanfill", null);
+    client.watercan = 4;
+  } else if (client.watercan >= 1) {
+    dowatering();
+    player.freeze(1.5);
+    setani("watercanspread", null);
+  } else {
+    player.freeze(0.5);
+    setani("watercan", null);
+  }
+}
+
+function onTimeout() {
+  if (player.isBomy()) {
+    if (onwater(player.x + 1.5, player.y + 2))
+      client.watercan = 4;
+    timeout = 1;
+  }
+}
+
+function dowatering() {
+  triggeraction(player.x+1.5+vecx(player.dir)*2, player.y+2+vecy(player.dir)*2, "water", "");
+  client.watercan -= 1;
+}

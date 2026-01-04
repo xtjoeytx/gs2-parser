@@ -1,0 +1,38 @@
+//#CLIENTSIDE
+function onCreated() {
+  //this.accounts = {"KuJi", "Joey_P2P", "Veteranspy", "porsche_2", "Admin-Playerworld135"};
+  /*if (this.accounts.index(player.account) >= 0) {
+  with (findimg(1))  {
+    x = screenwidth - 1;
+    y = 0;
+    layer = 4;
+    emitter.delaymin = 0;
+    emitter.delaymax = 1;
+    emitter.nrofparticles = 35;
+    emitter.maxparticles = 1000;
+    // Basic particle attributes
+    emitter.particle.lifetime = 5;
+    emitter.particle.image = "gx_rain.png";
+    emitter.particle.zoom = 1;
+    emitter.particle.mode = 0;
+    emitter.particle.red = 0;
+    emitter.particle.green = 0;
+    emitter.particle.blue = 1;
+    emitter.particle.alpha = 1;
+    // Movement
+    emitter.particle.angle = degtorad(90);
+    emitter.particle.speed = 150;
+ //   emitter.addlocalmodifier("once",0,0,"zoom","replace",.7,2);
+    emitter.addlocalmodifier("once", 0, 0, "movex", "add", 0, -screenwidth);
+    emitter.addlocalmodifier("once", 0, 0, "movey", "add", 0, screenheight);
+ //   emitter.addlocalmodifier("once", 1, 1, "spin", "replace", 0, 0);
+    emitter.addlocalmodifier("range",.7,2,"alpha","add",25,-10);
+  }
+  }
+  onTimeout();
+}
+
+function onTimeout() {
+  findweapon("-Gui").callThunder();
+  setTimer(0.05);
+}

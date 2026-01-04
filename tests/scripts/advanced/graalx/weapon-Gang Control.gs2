@@ -1,0 +1,280 @@
+//#CLIENTSIDE
+function onPlayerChats(chat){
+  if (player.chat == "/showganggui")
+    start();
+  if (player.chat.starts("/gang")){
+    tokens = player.chat.tokenize();
+    triggerserver("gui","-Gang Control", tokens[1], tokens[2], tokens[3], tokens[4]);
+  }
+}
+
+function onActionClientside(command){
+  if (command == "test"){
+    client.ganginfo = params[1];
+    player.chat = params[1];
+  }
+  if (command == "setinfo") {
+    this.gang = new TStaticVar(); 
+    this.gang.loadvarsfromarray(params[1]);
+    GangText_Name.setText(this.gang.gangname);
+    GangText_Members.setText(this.gang.members);
+    GangText_Ranks.setText(this.gang.ranks);
+    GangText_Allies.setText(this.gang.allies);
+    GangText_Enemies.setText(this.gang.enemies);
+    
+    this.gangmembers = new TStaticVar(); 
+    this.gangmembers.loadvarsfromarray(params[2]);
+    Gang_Members.clear();
+    this.gmembers = "";
+    for (i=0; i<params[2].size(); i++) {
+      if (params[2][i] != "joinedclasses=" && params[2][i] != "scriptlogmissingfunctions=false" && params[2][i] != "timeout=0")
+       this.gmembers.add(params[2][i]);
+    }
+    for (i=0; i<this.gmembers.size(); i++)
+      Gang_Members.addRow(i, this.gmembers[i].substring(0, this.gmembers[i].pos("=")) @ "\t" @ this.gmembers[i].substring(this.gmembers[i].pos("=")+1, -4));
+    
+    this.gangranks = new TStaticVar(); 
+    this.gangranks.loadvarsfromarray(params[3]);
+   
+    Gang_Tree.addvars(this.gangranks, true);
+    Gang_Tree.sortorder = "asc";
+    Gang_Tree.sort();
+  }
+}
+
+function onCreated()
+  start();
+
+function onKeyPressed(key){
+//  if (key == 71) //G
+//    start();
+}
+
+function start(){
+  if (Gang_Window != NULL)
+    Gang_Window.destroy();
+    
+  this.selected = 0;
+  allgangs = serverr.allgangs;
+  
+   new GuiScrollCtrl("Test_TreeScroll") {
+   profile = GuiBlueScrollProfile;
+   x = 10;
+   y = 10;
+   width = 160;
+   height = 80;
+   hScrollBar = "dynamic";
+   vScrollBar = "dynamic";
+
+   new GuiTreeViewCtrl("Test_Tree") {
+     profile = GuiBlueTreeViewProfile;
+     x = y = 0;
+     width = 140;
+     fitparentwidth = true;
+     
+     clearnodes();
+     addnodebypath("Tree/View","/");
+     with (addnodebypath("Tree/Control","/")) {
+       image = selectedimage = 2;
+     }
+   }
+ }
+ 
+  new GuiWindowCtrl(Gang_Window){
+    profile = "GuiBlueWindowProfile";
+    width = 350;
+    height = 300;
+    x = screenwidth/2 - width / 2;
+    y = screenheight/2 - height / 2;
+    text = "Gang Control";
+    canmaximize = false;
+    canresize = false;
+    canclose = true;
+
+
+  new GuiControl(Gang_Buttons){
+    width = Gang_Window.width;
+    height = Gang_Window.height;
+
+    for (i=0; i<allgangs.size(); i++){
+      new GuiButtonCtrl("Gang_Button_" @ i){
+        profile = "GuiBlueButtonProfile";
+        x = Gang_Window.width/2 - 46 + sin((i/allgangs.size())*6.2831+3.1415)*125;
+        y = Gang_Window.height/2 + cos((i/allgangs.size())*6.2831+3.1415)*110;
+//        y = 30 + i*35;
+        width = 92;
+        height = 18;
+        text = allgangs[i];
+        thiso.catchevent(name, "onAction", "test");
+      }
+    }
+   }
+   new GuiControl(Gang_Tabs){
+     visible = false;
+     profile = "GuiBlueTabProfile";
+     position = "6 24";
+     width = Gang_Window.width - 13;
+     height = 30;
+     new GuiButtonCtrl(Gang_Button_Ranks){
+       profile = "GuiBlueButtonProfile";
+       width = 100;
+       height = 15;
+       x = 5;
+       y = 7;
+       text = "Ranks";
+     }
+     new GuiButtonCtrl(Gang_Button_Members){
+       profile = "GuiBlueButtonProfile";
+       width = 100;
+       height = 15;
+       x = 115;
+       y = 7;
+       text = "Members";
+     }
+     new GuiButtonCtrl(Gang_Button_Alliance){
+       profile = "GuiBlueButtonProfile";
+       width = 100;
+       height = 15;
+       x = 230;
+       y = 7;
+       text = "Alliance";
+     }
+   }
+
+    new GuiControl(Gang_Screen0){
+      visible = false;
+      position = "6 54";
+      width = Gang_Window.width - 13;
+      height = Gang_Window.height - 62;
+      horizSizing = "width";
+      vertSizing = "height";      
+      new GuiTextCtrl(GangText_NameLabel){
+        text = "Name:";
+        x = 15;
+        y = 15;
+      }
+      new GuiTextCtrl(GangText_Name){
+        text = "";
+        x = 150;
+        y = 15;
+      }
+      new GuiTextCtrl(GangText_MembersLabel){
+        text = "Members:";
+        x = 15;
+        y = 40;
+      }
+      new GuiTextCtrl(GangText_Members){
+        text = "";
+        x = 150;
+        y = 40;
+      }
+      new GuiTextCtrl(GangText_RanksLabel){
+        text = "Ranks:";
+        x = 15;
+        y = 65;
+      }
+      new GuiTextCtrl(GangText_Ranks){
+        text = "";
+        x = 150;
+        y = 65;
+      }
+      new GuiTextCtrl(GangText_AlliesLabel){
+        text = "Allies:";
+        x = 15;
+        y = 90;
+      }
+      new GuiTextCtrl(GangText_Allies){
+        text = "";
+        x = 150;
+        y = 90;
+      }
+      new GuiTextCtrl(GangText_EnemiesLabel){
+        text = "Enemies:";
+        x = 15;
+        y = 115;
+      }
+      new GuiTextCtrl(GangText_Enemies){
+        text = "";
+        x = 150;
+        y = 115;
+      }
+    }
+    
+    //MEMBERS
+    new GuiScrollCtrl(Gang_Screen2){
+      profile = "GuiBlueScrollProfile";
+      visible = false;
+      position = "6 54";
+      width = Gang_Window.width - 13;
+      height = Gang_Window.height - 62;
+      horizSizing = "width";
+      vertSizing = "height";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      new GuiTextListCtrl(Gang_Members){
+        profile = "GuiBlueTextListProfile";
+        position = "0 0";
+        width = Gang_Window.width - 13;
+        height = Gang_Window.height - 62;
+        columns = "0 185";
+      }
+    }
+    
+    new GuiScrollCtrl(Gang_Screen1){
+      visible = false;
+      profile = "GuiBlueScrollProfile";
+      position = "6 54";
+      width = Gang_Window.width - 13;
+      height = Gang_Window.height - 62;
+      horizSizing = "width";
+      vertSizing = "height";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+
+      new GuiTreeViewCtrl("Gang_Tree") {
+        profile = GuiBlueTreeViewProfile;
+        x = y = 0;
+        width = 140;
+        fitparentwidth = true;
+     
+        clearnodes();
+      }
+    }
+  }
+}
+
+function Gang_Tree.onDoubleClick(var){
+  triggeraction(0,0,"serverside","-Gang Control", "test", var);
+}
+
+function Gang_Button_Ranks.onAction()
+  gangSwitchScreens(1);
+
+function Gang_Button_Members.onAction()
+  gangSwitchScreens(2);
+
+function Gang_Button_Alliance.onAction()
+  gangSwitchScreens(3);
+
+function Gang_Button_Members()
+
+function gangSwitchScreens(var){
+  makevar("Gang_Screen" @ this.selected @ ".visible") = false;
+  this.selected = var;
+  makevar("Gang_Screen" @ this.selected @ ".visible") = true;
+}
+
+function Gang_Members.onMouseOver(var){
+  this.member = Gang_Members.getselectedtext();
+  this.v = this.member;
+  triggeraction(0,0,"serverside","-Gang Control", "test", this.v);
+}
+
+function test(gangIndex) {
+  gangIndex = gangIndex.substring(12);
+  Gang_Buttons.visible = false;
+  Gang_Tabs.visible = true;
+  gangSwitchScreens(0);
+  triggerserver("gui", "-Gang Control", "getinfo", serverr.allgangs[gangIndex]);
+  //player.chat = "Gang Selected: " @ this.gang;
+}

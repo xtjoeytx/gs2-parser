@@ -1,0 +1,28 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated()
+{
+  temp.wep = findweapon("-Rescripted/Serverlist");
+  if (temp.wep == null)
+  {
+    temp.wep = findweapon("-Serverlist");
+  }
+    if (temp.wep == null)
+  {
+    temp.wep = findweapon("-ServerListScreen");
+  }
+
+  if (temp.wep != null && !isObject("Serverlist_Panel"))
+  {
+    temp.wep.initServerlist();
+  }
+
+  GuiRC.visible = true;
+  gr_LoginScreen.visible = false;
+  echo("IRC/Login3 created");
+}
+
+function onPlayerEnters()
+{
+  onCreated();
+}

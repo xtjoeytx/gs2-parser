@@ -1,0 +1,61 @@
+//#CLIENTSIDE
+function onCreated() {
+  if (client.radio[0] == "on")
+    triggerserver("gui", name, "getinfo", client.radio[1]);
+  setTimer(0.05);
+}
+
+function onActionClientside() {
+  if (params[0] == "playsong")
+    play(clientr.radio_song);
+    
+  if (params[0] == "both") {
+    play(clientr.radio_song);
+    text();
+  }
+  
+  if (params[0] == "writetext")
+    text();
+}
+function text() {
+  this.text = clientr.radio_chat;
+  this.nick = clientr.radio_nick;
+  if (this.nick.starts("*"))
+    this.nick = this.nick.substring(1,-4);
+  showimg(200, clientr.radio_head, 177, 0);
+  showtext(201, 212, 1, "arial", "bu", this.nick);
+  showtext(202, 212, 20, "arial", "b", this.text.substring(0,30));
+  showtext(203, 212, 40,"arial", "b", this.text.substring(30,30));
+  showtext(204, 212, 60, "arial", "b", this.text.substring(60,30));
+  showtext(205, 212, 80, "arial", "b", this.text.substring(90,30));
+  showtext(206, 212, 100, "arial", "b", this.text.substring(120,30));
+  for (i=0;i<6;i++)
+    changeimgvis("20" @ i,4);
+  changeimgpart(200,"0","63","32","28");
+}
+
+function onPlayerchats() {
+  if ((player.account == "KuJi" || player.account == "Glock" || player.account == "Projectshifter") && client.radio[0] == "on") {
+    if (player.chat.starts("/psong"))
+      triggerserver("gui", name, "setsong", client.radio[1], player.chat.substring(7,-4), player.nick, player.headimg);
+    if (player.chat.starts("/pmsg"))
+      triggerserver("gui", name, "setchat", client.radio[1], player.chat.substring(6,-4), player.nick, player.headimg);
+  }
+  elseif (player.account == "auronn" && client.radio[0] == "on") {
+    if (player.chat.starts("/psong"))
+      triggerserver("gui", name, "setsong", 1, player.chat.substring(7,-4), player.nick, player.headimg);
+    if (player.chat.starts("/pmsg"))
+      triggerserver("gui", name, "setchat", 1, player.chat.substring(6,-4), player.nick, player.headimg);
+  }
+  if (player.chat.starts("/radio")) {
+    if (client.radio[1] != player.chat.substring(7,2)) {
+      client.radio = {"on",player.chat.substring(7,2)};
+      triggerserver("gui", name, "getinfo", client.radio[1]);
+    } else {
+      hideimgs(200,1000);
+      stopmidi();
+      client.radio = "off";
+      player.chat = "*Turns radio off*";
+    }
+  }
+}

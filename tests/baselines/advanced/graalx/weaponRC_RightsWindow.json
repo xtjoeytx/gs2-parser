@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "755d2774ea3a7d73fdd8ec41cd5fc7eb8aa71a3d85854dae45db2cb31b3e2772",
+  "bytecode_size": 3257,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponRC_RightsWindow.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

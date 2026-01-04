@@ -1,0 +1,64 @@
+//#CLIENTSIDE
+/*function onCreated(){
+  this.worldwidth = 9;
+  this.worldheight = 6;
+  this.pad = 63;
+  onTimeout();
+}
+
+function onTimeout(){
+  this.startx = 6;
+  this.starty = screenheight-132;
+
+  this.ix = int(player.x * 0.875);
+  this.iy = int(player.y * 0.875);
+
+  if (this.ix in |this.pad, this.worldwidth*64*.875-this.pad|)
+    this.mx = this.ix - this.pad;
+  else if (this.ix < this.pad)
+    this.mx = 0;
+  else
+    this.mx = this.worldwidth*64*.875-this.pad*2;
+
+  if (this.iy in |this.pad, this.worldheight*64*.875-this.pad|)
+    this.my = this.iy - this.pad;
+  else if (this.iy < this.pad)
+    this.my = 0;
+  else
+    this.my = this.worldheight*64*.875-this.pad*2;
+
+  this.hx = (this.ix - this.mx)-16;
+  this.hy = (this.iy - this.my)-16;
+  for (f=1;f<allplayerscount;f++) {
+    with (allplayers[f]) {
+      if (players[f].level.starts("g_oldcity-")){      
+        makevar("this.lastx_" @ f) = this.startx+(players[f].x*.875-this.mx)-16;
+        makevar("this.lasty_" @ f) = this.starty+(players[f].y*.875-this.my)-16;
+        changeimgzoom(205+f, 0.5);
+      } else changeimgzoom(205+f, 0.45);
+      //players[1].chat = this.lastx_2;
+      showimg(205+f, players[f].head, makevar("this.lastx_" @ f), makevar("this.lasty_" @ f));
+      changeimgpart(205+f, 0, 64, 32, 32);
+      changeimgvis(205+f, 6);
+    }
+  }
+  if (isonmap) {
+    if (this.on == false)
+      onStartup();
+    showimg(205, player.head, this.startx+this.hx, this.starty+this.hy);
+    changeimgvis(205, 7);
+    changeimgzoom(205, 0.5);
+    changeimgpart(205, 0, 64, 32, 32);
+    changeimgpart(200, this.mx, this.my, 126, 126);
+  } else changeimgzoom(205, 0.45);  
+  setTimer(0.05);
+}
+
+function onStartup() {
+  showimg(200, "gx_map.png", 6, screenheight - 132);
+  changeimgvis(200, 5);
+  showpoly(201, {5, screenheight - 133, 133, screenheight - 133, 133, screenheight - 5, 5, screenheight - 5});
+  changeimgvis(201, 4);
+  changeimgcolors(201, 0, 0, 0, 1);
+  this.on = true;
+}

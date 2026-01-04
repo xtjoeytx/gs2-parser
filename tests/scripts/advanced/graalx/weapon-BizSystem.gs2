@@ -1,0 +1,272 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.btypes = {{"Ammo", 2000, {"ammo"}}, {"Guns", 2000, {"gun"}}, {"Explosives", 2000, {"explosives"}}, {"Melee", 1500, {"melee"}}, {"Music", 1500, {"music"}}, {"", "", {""}},
+                 {"Ammo/Gun", 4000, {"ammo", "gun"}}, {"Ammo/Melee", 3500, {"ammo", "melee"}}, {"Gun/Melee", 3500, {"gun", "melee"}}, {"Explosives/Melee", 3000, {"explosives", "melee"}}};
+  this.selected = -1;
+  
+  if (Biz_Window0 != NULL) Biz_Window0.destroy();
+}
+
+function ChatBar.onAction()
+{
+  if (ChatBar.text == "/biz tag")
+  {
+    triggerserver("gui", name, "tag");
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text == "/biz balance")
+  {
+    triggerserver("gui", name, "balance");
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz ban"))
+  {
+    triggerserver("gui", name, "ban", ChatBar.text.substring(9, -4));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz buy"))
+  {
+    triggerserver("gui", name, "buy", ChatBar.text.substring(9, -4));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text == "/biz close")
+  {
+    triggerserver("gui", name, "close");
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text == "/biz destroy")
+  {
+    triggerserver("gui", name, "destroy");
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz deposit"))
+  {
+    triggerserver("gui", name, "deposit", ChatBar.text.substring(13, -4));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz donate"))
+  {
+    triggerserver("gui", name, "deposit", ChatBar.text.substring(12, -4));
+    ChatBar.text = "";
+  }
+  
+  
+  if (ChatBar.text.starts("/biz fire"))
+  {
+    triggerserver("gui", name, "fire", ChatBar.text.substring(10, -4));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz give"))
+  {
+    triggerserver("gui", name, "give", ChatBar.text.substring(10, -4));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text == "/biz help")
+  {
+    triggerserver("gui", name, "help");
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz hire"))
+  {
+    triggerserver("gui", name, "hire", ChatBar.text.substring(10, -4));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text == "/biz info")
+  {
+    triggerserver("gui", name, "info");
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz kick"))
+  {
+    triggerserver("gui", name, "kick", ChatBar.text.substring(10, -4));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text == "/biz leave")
+  {
+    triggerserver("gui", name, "leave");
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text == "/biz licenses")
+  {
+    triggerserver("gui", name, "licenses");
+    ChatBar.text = "";
+  }
+
+  if (ChatBar.text == "/biz list")
+  {
+    triggerserver("gui", name, "list");
+    ChatBar.text = "";
+  }
+
+  if (ChatBar.text.starts("/biz name"))
+  {
+    triggerserver("gui", name, "name", ChatBar.text.substring(10, 17));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text == "/biz open")
+  {
+    triggerserver("gui", name, "open");
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz price"))
+  {
+    this.itemname = "";
+    
+    tokens = ChatBar.text.tokenize();
+    for (temp.i = 3; temp.i < tokens.size(); temp.i++)
+    {
+      this.itemname = this.itemname @ " " @ tokens[temp.i];
+    }
+    triggerserver("gui", name, "price", tokens[2], this.itemname.substring(1, -1));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz produce"))
+  {
+    triggerserver("gui", name, "produce", ChatBar.text.substring(13, -4));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz sellshop"))
+  {
+    triggerserver("gui", name, "sellshop", ChatBar.text.substring(14, -4));
+    ChatBar.text = "";
+  }
+  elseif (ChatBar.text.starts("/biz sell"))
+  {
+    triggerserver("gui", name, "sell", ChatBar.text.substring(10, -4));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz unban"))
+  {
+    triggerserver("gui", name, "unban", ChatBar.text.substring(11, -4));
+    ChatBar.text = "";
+  }
+  
+  if (ChatBar.text.starts("/biz withdraw"))
+  {
+    triggerserver("gui", name, "withdraw", ChatBar.text.substring(14, -4));
+    ChatBar.text = "";
+  }
+}
+
+function onActionClientSide()
+{  
+  new GuiWindowCtrl(Biz_Window0) {
+    canmaximize = false;
+    canminimize = false;
+    canmove = false;
+    canresize = false;
+    closequery = true;
+    height = 184;
+    parent = "GraalControl";
+    profile = "GuiBlueWindowProfile";
+    text = "Buy Business";
+    visible = true;
+    width = 223;
+    x = 387;
+    y = 246;
+
+    new GuiScrollCtrl(Biz_Scroll) {
+      height = 117;
+      hscrollbar = "dynamic";
+      parent = "Biz_Window0";
+      profile = "GuiBlueScrollProfile";
+      visible = true;
+      vscrollbar = "dynamic";
+      width = 211;
+      x = 6;
+      y = 24;
+      
+      for (temp.i = 0; temp.i < thiso.btypes.size(); temp.i++)
+      {
+        if (thiso.btypes[temp.i][0] != "")
+        {
+          new GuiRadioCtrl("Biz_RadioButton" @ temp.i) {
+            groupnum = 0;
+            height = 20;
+            parent = "Biz_Scroll";
+            profile = "GuiBlueRadioProfile";
+            text = thiso.btypes[temp.i][0];
+            visible = true;
+            width = 100;
+            if (temp.i / 6 >= 1)
+              x = 100;
+           // x = 6 + (temp.i / 6);
+            y = 6 + (temp.i % 6 * 15);
+            thiso.catchevent(name, "onAction", "onRadioSelect");
+          }
+        }
+      }
+    }
+    
+    new GuiButtonCtrl(Biz_Button0) {
+      height = 23;
+      parent = "Biz_Window0";
+      profile = "GuiBlueButtonProfile";
+      text = "Purchase";
+      visible = true;
+      width = 60;
+      x = 154;
+      y = 149;
+    }
+    
+    new GuiMLTextCtrl(Job_Text) {
+      height = 128;
+      parent = "Biz_Window0";
+      profile = "GuiBlueTextProfile";
+      profile.fontsize = "16";
+      text = "";
+      visible = true;
+      width = 100;
+      x = 16;
+      y = 150;
+    }
+  }
+}
+
+function onRadioSelect(obj)
+{
+  for (temp.i = 0; temp.i < this.btypes.size(); temp.i++)
+  {
+    if (this.btypes[temp.i][0] == obj.text)
+    {
+      Job_Text.text = "<color:000000>Price: <color:FF0000>" @ this.btypes[temp.i][1] @ "$";
+      this.selected = temp.i;
+    }
+  }
+}
+
+function Biz_Button0.onAction()
+{
+  if (this.selected >= 0)
+  {
+    triggerserver("gui", name, "buyshop", this.btypes[this.selected][2], this.btypes[this.selected][1]);
+    client.playerfroze = false;
+    Biz_Window0.destroy();
+  }
+}
+
+function Biz_Window0.onCloseQuery()
+{
+  client.playerfroze = false;
+  Biz_Window0.destroy();
+}

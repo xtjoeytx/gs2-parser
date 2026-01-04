@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "f0f788cabcb6e95a9a2384b7aa4526e78335dc8bec30f0cca329a64ecb104d80",
+  "bytecode_size": 898,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "functions/03_lambdas.gs2",
+    "generated_at": "2026-01-04 16:44:39",
+    "compiler_version": "modified_1767562734"
+  }
+}

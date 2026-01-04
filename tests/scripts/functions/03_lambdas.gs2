@@ -1,0 +1,45 @@
+// Lambda functions and closures
+function testLambdas() {
+  // Simple lambda
+  temp.lambda1 = function() {
+    return "hello from lambda";
+  };
+
+  // Lambda with parameters
+  temp.lambda2 = function(x, y) {
+    return x + y;
+  };
+
+  // Lambda capturing variables
+  temp.multiplier = 3;
+  temp.lambda3 = function(x) {
+    return x * temp.multiplier;
+  };
+
+  // Call lambdas
+  temp.result1 = temp.lambda1();
+  temp.result2 = temp.lambda2(5, 10);
+  temp.result3 = temp.lambda3(7);
+
+  // Lambda passed as parameter
+  processWithCallback(temp.lambda2);
+
+  // Inline lambda
+  processWithCallback(function(a, b) {
+    return a * b;
+  });
+}
+
+function processWithCallback(callback) {
+  temp.callback_result = callback(3, 4);
+}
+
+function higherOrderFunction(func, value) {
+  return func(value);
+}
+
+function testHigherOrder() {
+  // Function as parameter
+  temp.squared = higherOrderFunction(function(x) { return x * x; }, 5);
+  temp.doubled = higherOrderFunction(function(x) { return x * 2; }, 10);
+}

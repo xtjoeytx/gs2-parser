@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "3cc2667630e0287307b93b47a4c489a5e99446ed41fb2bdf1ae7274439d39ff6",
+  "bytecode_size": 1256,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon+Melee.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

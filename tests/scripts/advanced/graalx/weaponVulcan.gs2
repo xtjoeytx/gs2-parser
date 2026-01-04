@@ -1,0 +1,24 @@
+//#CLIENTSIDE
+destroy();
+
+/*function onCreated()
+{
+  for (temp.i = 1; temp.i > 0.2; temp.i -= 0.1)
+  {
+    tilelayers[0].alpha = temp.i;
+    sleep(0.05);
+  }
+  
+  onTimeout();
+}
+
+function onTimeout()
+{
+  setfocus(player.x - random(0.05, 0.20),player.y - random(0.05, 0.20));
+  setTimer(0.05);
+}
+
+function onPlayerEnters()
+{
+  onCreated();
+}

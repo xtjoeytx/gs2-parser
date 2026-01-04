@@ -1,0 +1,86 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.accounts = serverr.newbody;
+  this.defmelee = {"punch", 0.25, 2, 0, 0};
+}
+
+public function onMeleeFired()
+{
+  if (meleedisabled == true || clientr.zombie) return false;
+  
+  if (client.meleewep > 0)
+  {
+    temp.muditem = new TStaticVar();
+    temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.meleewep));
+  
+    if (temp.muditem.quantity >= 1 && temp.muditem.itemtype == "ARCHETYPE_MELEE" && temp.muditem.damage >= 1)
+    {
+      doAtk(temp.muditem.melee);
+    }
+      else
+    {
+      client.meleewep = 0;
+      doAtk(this.defmelee);
+    }
+  }
+    else
+  {
+    doAtk(this.defmelee);
+  }
+}
+
+function onWeaponFired()
+{
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+ 
+  if (temp.muditem.itemtype == "ARCHETYPE_MELEE" && temp.muditem.quantity >= 1)
+  {
+    if (client.meleewep == client.selectedweapon)
+    {
+      client.meleewep = 0;
+      this.display = "Fist";
+    }
+      else
+    {
+      client.meleewep = client.selectedweapon;
+      this.display = temp.muditem.displayname;
+    }
+    
+    player.addMsg("Player", "You have switched your melee weapon to the " @ this.display @ "!", 15);
+  }
+}
+
+function doAtk(meleeInfo)
+{
+  if (playerfreeze <= 0 && !client.playerfroze && !clientr.playerfroze)
+  {
+    if (player.guild != NULL)
+    {
+      this.guildn = player.guild;
+    }
+      else
+    {
+      this.guildn = "(no guild)";
+    }
+      
+    if (player.account in this.accounts)
+    {
+      setani("ci_body-punch", client.bparams);
+    }
+      else
+    {
+      setani(meleeInfo[0], NULL);
+    }
+      
+    playerfreeze = meleeInfo[1];
+    triggeraction(0, 0, "serverattack", player.account, meleeInfo[2], this.guildn, client.nopk, "melee");
+   
+    if (player.account in this.accounts)
+    {
+      sleep(0.4);
+      setani("ci_body-idle", client.bparams);
+    }
+  }
+}

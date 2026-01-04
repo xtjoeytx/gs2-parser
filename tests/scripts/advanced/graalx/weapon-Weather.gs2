@@ -1,0 +1,114 @@
+//#CLIENTSIDE
+destroy();
+
+function onPlayerEnters() {
+  onTimeout();
+}
+
+function Rain() {
+  if (player.level.starts("gx_city1-")) {
+    if (random(0, 1) > 0.6)
+    {
+      triggeraction(random(player.x - 32, player.x + 32), random(player.y - 32, player.y + 32), "water", "Rain");
+    }
+    with (findimg(255)) {
+      playlooped("gx_rainloop.wav");
+      x = screenwidth;
+      y = 50;
+      alpha = 0;
+      layer = 4;
+      this.shootAngle2 = pi * 1.5;
+      this.shootAngle = this.shootAngle2 + this.angle;
+      emitter.autorotation = false;
+      emitter.attachposition = false; // If the image's x and y move, would the entire emitter, every single particle at once, move along with the image? If true, every sprite moves when the image movies. If false, then only the point of origin, where the particles are created, move when the image is moved.
+      emitter.delaymin = 0; // This is the minimum delay between emissions.
+      emitter.delaymax = 0; // This is the maximum delay between emissions, both of these are in seconds.
+      emitter.emissionoffset = {0, -40, 0}; // In format of "{float, float, float}", it's the offset from the x, y, and z that an emission will show. It's the delta variables for the location, basically.
+      emitter.firstinfront = 1; // Should the first emitted particle be in front of every other particle?
+      emitter.nrofparticles = 10; // The number of particles to be released at the same exact time when the emitter emits. For example, set this to two, and you'll have two particles released every time instead of the default 1.
+      emitter.maxparticles = 80; // The maximum number of particles that can exist at one time. If this limit is reached, the script will wait until one of the particles runs out before emitting another one.
+      emitter.particle.lifetime = 1; // How long, in seconds, the emitter lasts.
+      emitter.particle.image = "gx_rain.png"; // The imagename of the emitter
+      emitter.particle.mode = 0; // Either 0, 1, or 2, the same as changeimgmode. 0 = add, 1 = trans, 2 = subtract. Use this for a blacklight effect if you wish.
+      emitter.particle.alpha = .3; // Between 0 and 1, the alpha colour for transparancy
+      emitter.particle.zoom = .6; // The zoom effect of the particle
+      emitter.particle.red = .6;
+      emitter.particle.green = .6;
+      emitter.particle.blue = 1; // These three are between 0 and 1, and they're the colours of the individual particles
+      emitter.particle.zangle = 0; // Between 0 and pi*2, it's the upward angle of the particles. Remember zangle from the shoot() function? Same basic idea.
+      emitter.particle.angle = this.shootAngle; // Again, between 0 and pi*2, it's the angle that the particle should flow.
+      emitter.particle.speed = 1500; // I'm not sure if this is measured in Tiles per second or what, but it's the speed. Higher = faster, obviously
+      emitter.particle.stretchx = 1; // This is how 'stretched' each particle will be, relative to width.
+      emitter.particle.stretchy = 1; // This is how 'stretched' each particle will be, relative to height.
+      emitter.addLocalModifier("once", 0, .1, "angle", "replace", pi*1.5, pi*1.5 + .3);
+      emitter.addLocalModifier("once", 0, 0, "x", "replace", -600, screenwidth + 20);
+    }
+  }
+  else hideimg(255);
+}
+
+function Lightning() {
+  if (player.level.starts("gx_city1-")) {
+    if (random(0, 1) >= clientr.thunder[0] && random(0, 1) >= clientr.thunder[1]) {
+      play("thunder.wav");
+      this.thunder = true;
+      if (random(0, clientr.thunderk[0]) >= clientr.thunderk[1]) {
+        damage = random(0, 2);
+        if (damage >= 1)
+          damage = 0.5;
+        else
+          damage = 0;
+        client.attacker = {"Lightning", "Death"};
+        triggerserver("gui", "-System", "dodmg", int(random(25, 45)) + damage, true);
+        findWeapon("-Chat").addMsg("Server", "You have been hit by lightning!", 15);
+      }
+    }
+  }
+  elseif (!player.level.starts("g_event-")) {
+    if (random(0, 1) > 0.98 && random(0, 1) > 0.98)
+      play("thunder.wav");
+  }
+}
+
+function onTimeout() {
+  if (server.activity in |3, 5|)
+  {
+    with (findimg(255)) {
+      x = player.x;
+      y = player.y;
+      z = player.z;
+    }
+  }
+  
+  if (serverr.activity == 3 || serverr.activity == 4)
+    Rain();
+  else
+    hideimg(255);
+    
+  if (serverr.activity == 3 || serverr.activity == 5)
+    Lightning();
+    
+  onCheckTime();
+  if (this.ttick > 0)
+    this.ttick -= 0.5;
+  setTimer(0.05);
+}
+
+function onCheckTime() {
+  if (player.level.starts("gx_city1-")) {
+    if (this.thunder == true) {
+      seteffect(0.4, 0.4, random(0.4, 0.55), random(0.5, 0.75));
+      this.thunder = false;
+    }
+    elseif (serverr.activity == 1 || serverr.activity == 2 || serverr.activity == 3 || serverr.activity == 4 || serverr.activity == 5)
+      seteffect(0, 0, 0, serverr.neffect);
+    else
+      seteffect(0, 0, 0, serverr.daynight);
+  }
+  elseif (player.level.starts("g_mines"))
+    seteffect(0, 0, 0, 0.6);
+  elseif (player.level.starts("gx_airplane"))
+    seteffect(0, 0, 0, random(0.15, 0.2));
+  else
+    seteffect(0, 0, 0, 0);
+}

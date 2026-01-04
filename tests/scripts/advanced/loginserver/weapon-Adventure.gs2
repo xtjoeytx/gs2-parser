@@ -1,0 +1,28 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated() {
+  initVariables();
+}
+
+function onServerLogin() {
+  initVariables();
+}
+
+function initVariables() {
+  WorldsF = this;
+}
+
+public function getWorldsFunctions() {
+  temp.names = this.getdynamicvarnames();
+  temp.names.removestring("onCreated");
+  temp.names.removestring("initVariables");
+  temp.names.removestring("onServerLogin");
+  return temp.names;
+}
+
+public function setFrameTick(temp.tick) {
+  if (temp.tick == null) {
+    temp.tick = 0;
+  }
+  Adventure_setFrameTick(temp.tick);
+}

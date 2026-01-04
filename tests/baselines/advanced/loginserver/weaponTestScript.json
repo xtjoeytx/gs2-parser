@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "dd7413457a4f1269edfabd3af5eef41f427d710ae81146556c2e9506e72658e6",
+  "bytecode_size": 90,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/loginserver/weaponTestScript.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

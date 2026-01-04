@@ -1,0 +1,61 @@
+//#CLIENTSIDE
+function onCreated() {
+  new GuiWindowCtrl(Vote_Window0)
+  {
+    awake = true;
+    height = 263;
+    parent = "GraalControl";
+    profile = "";
+    scriptlogmissingfunctions = true;
+    text = "Window ";
+    visible = true;
+    width = 334;
+    x = 444;
+    y = 402;
+
+    new GuiMLTextEditCtrl(Editor_MultiLineEdit0)
+    {
+      awake = true;
+      canmove = true;
+      canresize = true;
+      height = 16;
+      parent = "Editor_Window0";
+      profile = "";
+      resizeheight = false;
+      scriptlogmissingfunctions = true;
+      text = "Multi Line Text Edit Field Standard Content";
+      visible = true;
+      width = 314;
+      x = 10;
+      y = 26;
+    }
+    new GuiButtonCtrl(Editor_Button0) {
+      awake = true;
+      canmove = true;
+      canresize = true;
+      height = 22;
+      parent = "Editor_Window0";
+      profile = "";
+      scriptlogmissingfunctions = true;
+      text = "Button ";
+      visible = true;
+      width = 60;
+      x = 210;
+      y = 160;
+    }
+    new GuiMLTextEditCtrl(Editor_MultiLineEdit1) {
+      awake = true;
+      canmove = true;
+      canresize = true;
+      parent = "Editor_Window0";
+      profile = "";
+      resizeheight = false;
+      scriptlogmissingfunctions = true;
+      text = "Multi Line Text Edit Field Standard Content";
+      visible = true;
+      width = 80;
+      x = 36;
+      y = 66;
+    }
+  }
+}

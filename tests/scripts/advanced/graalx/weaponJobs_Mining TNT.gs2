@@ -1,0 +1,13 @@
+//#CLIENTSIDE
+function onWeaponFired() {
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+  
+  this.aimx = player.x + 1.5 + vecx(player.dir) * 2;
+  this.aimy = player.y + 1.5 + vecy(player.dir) * 2;
+  if (temp.muditem.quantity >= 1) {
+    playerfreeze = 0.3;
+    setani("lay", NULL);
+    triggeraction(player.x + 1.5 + vecx(player.dir)*2, player.y + 1.5 + vecy(player.dir)*2, "tnt", player.account, player.guild);
+  }
+}

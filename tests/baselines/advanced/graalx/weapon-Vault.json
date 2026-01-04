@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "df993ef3a9c989a4e1a3e5ffc1255235e3f5f574d94e3645334c2adea566c02c",
+  "bytecode_size": 3720,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-Vault.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

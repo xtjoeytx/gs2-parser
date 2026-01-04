@@ -1,0 +1,127 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.staffrights = {{"wepadd", "Add Weapon"}, {"flag", "Change Flags"}, {"food", "Change Food"}, {"ani", "Change Gani's"}, {"hat", "Change Hat"}, {"hp", "Change HP"}, {"nick", "Change Nicknames"}, {"tag", "Change Tags"}, {"mouse", "Click Warp"}, {"create", "Create Items"}, {"removestaff", "Fire Staff"}, {"heal", "Heal Players"}, {"addstaff", "Hire Staff"}, {"levelhp", "Level HP"}, {"leveltag", "Level Tag"}, {"levelwarp", "Level Warp"}, {"wepremove", "Remove Weapons"}, {"connect", "Serverwarp Players"}, {"staffaxe", "Staff Axe"}, {"staffblock", "Staff Block"}, {"boots", "Staff Boots"}, {"summon", "Summon Players"}, {"warp", "Warp Players"}};
+}
+
+function onPlayerChats()
+{
+  if (player.chat.starts(":openstaff"))
+  {
+    triggerserver("gui", this.name, "load", {player.chat.substring(11), player.account});
+    
+    player.chat = "";
+  }
+}
+
+function onOpenGui(temp.user, temp.rights)
+{
+  if (Staff_Window0 != NULL) Staff_Window0.destroy();
+  
+  new GuiWindowCtrl(Staff_Window0)
+  {
+    canminimize = canmaximize = canresize = false;
+    height  = 261;
+    profile = "GuiBlueWindowProfile";
+    text    = "Acc: " @ temp.user;
+    width   = 152;
+    x       = 400;
+    y       = 350;
+
+    new GuiScrollCtrl(Staff_Scroll0)
+    {
+      height     = 202;
+      hscrollbar = "dynamic";
+      profile    = "GuiBlueScrollProfile";
+      vscrollbar = "dynamic";
+      width      = 139;
+      x          = 6;
+      y          = 24;
+      
+      for (temp.var: thiso.staffrights)
+      {
+        new GuiCheckBoxCtrl("Staff_CheckBox" @ temp.I)
+        {
+          height = 20;
+          text   = temp.var[1];
+          width  = 115;
+          x      = 0;
+          y      = -3 + (temp.I * 20);
+          
+          if (temp.var[0] in temp.rights)
+          {
+            checked = true;
+          }
+            else
+          {
+            checked = false;
+          }
+        }
+        
+        temp.I++;
+      }
+    }
+    
+    new GuiButtonCtrl(Staff_Button0)
+    {
+      height  = 29;
+      profile = "GuiBlueButtonProfile";
+      text    = "Cancel";
+      width   = 65;
+      x       = 6;
+      y       = 226;
+    }
+    
+    new GuiButtonCtrl(Staff_Button1)
+    {
+      height  = 29;
+      profile = "GuiBlueButtonProfile";
+      text    = "Apply";
+      width   = 65;
+      x       = 81;
+      y       = 226;
+    }
+  }
+}
+
+function Staff_Button0.onAction()
+{
+  Staff_Window0.destroy();
+}
+
+function Staff_Button1.onAction()
+{
+  for (temp.var: this.staffrights)
+  {
+    if (makevar("Staff_CheckBox" @ temp.I).checked == true)
+    {
+      temp.newstring.add(temp.var[0]);
+    }
+    
+    temp.I++;
+  }
+  
+  triggerserver("gui", this.name, "save", {Staff_Window0.text.substring(5), temp.newstring});
+}
+
+
+function onActionClientSide(temp.action, temp.args)
+{
+  switch (temp.action)
+  {
+    case "load":
+    {
+      onOpenGui(temp.args[0], temp.args[1]);
+      
+      break;
+    }
+    
+    case "save":
+    {
+      player.addMsg("Server", Staff_Window0.text.substring(5) @ " has been saved successfully", 15);
+      Staff_Window0.destroy();
+
+      break;
+    }
+  }
+}

@@ -1,0 +1,11 @@
+//#CLIENTSIDE
+/*function onWeaponFired() {
+  if (clientr.health[3] <= 0) {
+    if (!player.level.starts("g_event")) {
+      triggerserver("gui", name);
+      findWeapon("-Chat").addMsg("Server", "You have put on Armor!", 15);
+    }
+    else findWeapon("-Chat").addMsg("Server", "You can't put armor during an event!", 15);
+  }
+  else findWeapon("-Chat").addMsg("Server", "You already are wearing armor!", 15);
+}*/

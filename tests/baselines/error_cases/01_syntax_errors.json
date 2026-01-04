@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "",
+  "bytecode_size": 0,
+  "compilation_success": false,
+  "expected_failure": true,
+  "error_message": "Compilation reported success but no output file found: /Users/joey/projects/gs2/gs2-parser/tests/scripts/error_cases/01_syntax_errors.gs2bc",
+  "metadata": {
+    "script_path": "error_cases/01_syntax_errors.gs2",
+    "generated_at": "2026-01-04 16:44:39",
+    "compiler_version": "modified_1767562734"
+  }
+}

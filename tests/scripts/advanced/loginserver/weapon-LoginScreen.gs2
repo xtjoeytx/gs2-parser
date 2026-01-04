@@ -1,0 +1,700 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated()
+{
+    loadingscreenenabled = false;
+
+    addGuiControls();
+    retrieveAccountFields();
+
+	if (serverstartconnect != "")
+	{
+		StartPasswordCheck.checked = !$pref::Graal::dontsavepasswords;
+		StartMemberCheck.checked = true;
+		StartGuestCheck.checked = !StartMemberCheck.checked;
+
+        retrieveAccountFields();
+
+        if (!gr_LoginScreen_PassEdit.isEmpty())
+        {
+            doLogin();
+            return;
+        }
+    }
+
+    setTimer(0.001);
+}
+
+function addGuiControls()
+{
+    Gs2Utils.destroyObject("gr_LoginScreenProfile");
+    new GuiControlProfile("gr_LoginScreenProfile")
+    {
+        fillColor = { 0, 0, 0 };
+        fontColor = { 255, 255, 255 };
+
+        opaque = true;
+        transparency = 0.5;
+    }
+
+    Gs2Utils.destroyObject("gr_LoginScreen_backgroundProfile");
+    new GuiControlProfile("gr_LoginScreen_backgroundProfile")
+    {
+        fillColor = { 0, 0, 0 };
+        fontColor = { 255, 255, 255 };
+
+        opaque = false;
+        transparency = 0.3;
+    }
+
+    Gs2Utils.destroyObject("gr_LoginScreen");
+    new GuiControl("gr_LoginScreen")
+    {
+        profile = gr_LoginScreenProfile;
+        useownprofile = true;
+        clientwidth = screenwidth;
+        clientheight = screenheight;
+        minextent = { clientwidth, clientheight };
+        x = 0;
+        isexternal = false;
+        visible = true; // External is too buggy.  
+        maximized = true;
+        canmaximize = canminimize = canclose = false;
+        modal = true;
+        profile.border = 0;
+
+        Gs2Utils.destroyObject("gr_LoginScreen_background");
+        new GuiBitmapCtrl("gr_LoginScreen_background")
+        {
+            profile = "gr_LoginScreen_backgroundProfile";
+            bitmap = "bg_11.png"; //"graalreborn_background.jpg";
+            extent = { screenwidth, screenheight };
+            x = (screenwidth - width) / 2;
+        }
+
+        Gs2Utils.destroyObject("gr_LoginScreen_logo");
+        new GuiBitmapCtrl("gr_LoginScreen_logo")
+        {
+            bitmap = "graalreborn_logo.png";
+            extent = { 1100 / 1.5, 271 / 1.5 };
+            x = (screenwidth - width) / 2;
+        }
+
+        Gs2Utils.destroyObject("gr_LoginScreen_credentials");
+        new GuiBitmapCtrl("gr_LoginScreen_credentials")
+        {
+            profile = "gr_LoginScreenProfile";
+            useownprofile = true;
+            profile.opaque = true;
+            profile.transparency = 0.9;
+            profile.fillColor = { 0, 0, 0, 120 };
+            extent = { 640, 480 };
+            x = (screenwidth - width) / 2;
+            y = 0;
+            modal = true;
+
+            /* NICK START */
+            Gs2Utils.destroyObject("gr_LoginScreen_StartNickLabel");
+            new GuiTextCtrl("gr_LoginScreen_StartNickLabel") {
+                useownprofile = true;
+                profile = GuiBlueTextProfile;
+                profile.fontType = "friz";
+                horizSizing = "right";
+                vertSizing = "bottom";
+                position = "15 10";
+                extent = "53 18";
+                x = NickEdit.x - (width + 51);
+                y = 22 - 8;
+                text = _("Nickname:");
+            }
+
+            Gs2Utils.destroyObject("gr_LoginScreen_NickEdit");
+            new GuiTextEditCtrl("gr_LoginScreen_NickEdit") {
+                style = "none";
+                profile = "guiwinwin_window_text";
+                useownprofile = true;
+                profile.bitmap = "gui2001_textedit3.png";
+                profile.fontType = "friz";
+                profile.border = 1;
+                profile.borderthickness = 1;
+                profile.fillColor = { 0, 0, 0, 100 };
+                profile.fontColor = { 255, 255, 255 };
+                profile.textshadow = true;
+                profile.shadowcolor = { 0, 0, 0, 255 };
+                profile.shadowoffset = {2, 2};
+                profile.textoffset = {0,0};
+                profile.fontsize = 26;
+                profile.opaque = true;
+                profile.tab = true;
+                profile.modal = true;
+                //profile.transparency = 1;
+                height = 24;
+                width = 209;
+                x = (width + 2 + 16);
+                y = 14;
+            }
+            /* NICK END */
+
+            /* ACCOUNT START */
+            Gs2Utils.destroyObject("gr_LoginScreen_StartAccountLabel");
+            new GuiTextCtrl("gr_LoginScreen_StartAccountLabel") {
+                profile = GuiBlueTextProfile;
+                useownprofile = true;
+                profile.fontType = "friz";
+                profile.textshadow = true;
+                profile.shadowcolor = { 0, 0, 0, 255 };
+                profile.shadowoffset = {2, 2};
+                horizSizing = "right";
+                vertSizing = "bottom";
+                position = "46 38";
+                extent = "73 18";
+                text = _("Account:");
+            }
+
+            Gs2Utils.destroyObject("gr_LoginScreen_AccountEdit");
+            new GuiPopUpEditCtrl("gr_LoginScreen_AccountEdit") {
+                profile = "gui2001_myprofilepopupmenu2";
+                useownprofile = true;
+                profile.fontType = "friz";
+                textprofile = "myprofiletext";
+                scrollprofile = "myprofilescroll";
+                horizSizing = "right";
+                vertSizing = "bottom";
+                position = "134 38";
+                extent = "150 22";
+                minExtent = "8 22";
+                historySize = "10";
+                resizecell = true;
+                profile.border = 1;
+                profile.fillColor = { 0, 0, 0, 100 };
+                profile.fontColor = { 255, 255, 255 };
+                profile.textshadow = true;
+                profile.shadowcolor = { 0, 0, 0, 255 };
+                profile.shadowoffset = {2, 2};
+                profile.tab = true;
+                profile.modal = true;
+                textprofile.fillColor = { 0, 128, 0, 1 };
+                textprofile.fontColor = { 255, 255, 255 };
+                scrollprofile.border = 1;
+                textprofile.transparency = 1;
+                textprofile.bitmap = "";
+                profile.bitmap = "gui2001_scroll2.png";
+                scrollprofile.fillColor = { 0, 128, 0 };
+                scrollprofile.fontColor = { 0, 255, 0 };
+                scrollprofile.transparency = 1;
+                scrollprofile.bitmap = "gui2001_textedit.png";
+            }
+            /* ACCOUNT END */
+
+            /* PASSWORD START */
+            Gs2Utils.destroyObject("gr_LoginScreen_StartPassLabel");
+            new GuiTextCtrl("gr_LoginScreen_StartPassLabel") {
+                profile = GuiBlueTextProfile;
+                useownprofile = true;
+                profile.fontType = "friz";
+                profile.textshadow = true;
+                profile.shadowcolor = { 0, 0, 0, 255 };
+                profile.shadowoffset = {2, 2};
+                horizSizing = "right";
+                vertSizing = "bottom";
+                position = "311 38";
+                extent = "120 18";
+                text = _("Password:");
+                profile.fontColor = { 0, 255, 0 };
+            }
+
+            Gs2Utils.destroyObject("gr_LoginScreen_PassEdit");
+            new GuiAccountPasswordCtrl("gr_LoginScreen_PassEdit") {
+                style = "";
+                profile = "guiwinwin_window_text";
+                useownprofile = true;
+                profile.fontType = "friz";
+                profile.bitmap = "gui2001_textedit3.png";
+                profile.border = 1;
+                profile.bordercolor = { 255, 255, 255, 0 };
+                profile.fillColor = { 0, 0, 0, 100 };
+                profile.fontColor = { 255, 255, 255 };
+                profile.textshadow = true;
+                profile.shadowcolor = { 0, 0, 0, 255 };
+                profile.shadowoffset = {2, 2};
+                profile.tab = true;
+                profile.modal = true;
+                profile.opaque = true;
+                horizSizing = "right";
+                vertSizing = "bottom";
+                //position = "250 28";
+                x = StartAccountPanel.width - 165;
+                y = 38;
+                extent = "150 22";
+                minExtent = "8 22";
+                password = true;
+            }
+            /* PASSWORD END */
+
+            /* LANGUAGE START */
+            Gs2Utils.destroyObject("gr_LoginScreen_StartLanguageLabel");
+            new GuiTextCtrl("gr_LoginScreen_StartLanguageLabel") {
+                useownprofile = true;
+                profile = GuiBlueTextProfile;
+                profile.fontType = "friz";
+                horizSizing = "right";
+                vertSizing = "bottom";
+                extent = "53 18";
+
+                x = LanguageEdit.x - (width + 51);
+                y = 50 - 8;
+                text = _("Language:");
+            }
+            Gs2Utils.destroyObject("gr_LoginScreen_LanguageEdit");
+            new GuiPopUpEditCtrl("gr_LoginScreen_LanguageEdit") {
+                profile = "gui2001_myprofilepopupmenu2";
+                textprofile = "myprofiletext";
+                scrollprofile = "myprofilescroll";
+                useownprofile = true;
+                horizSizing = "right";
+                vertSizing = "bottom";
+                historySize = "10";
+                profile.bitmap = "";
+                profile.fontType = "friz";
+                profile.border = 1;
+                profile.fillColor = { 0, 0, 0, 100 };
+                profile.fontColor = { 255, 255, 255 };
+                profile.tab = true;
+                profile.modal = true;
+                profile.textshadow = true;
+                profile.shadowcolor = { 0, 0, 0, 255 };
+                profile.shadowoffset = {2, 2};
+                textprofile.fillColor = { 0, 0, 0, 100 };
+                textprofile.fontColor = { 255, 255, 255 };
+                textprofile.fontType = "friz";
+                scrollprofile.border = 1;
+                textprofile.transparency = 1;
+                textprofile.bitmap = "";
+                profile.bitmap = "gui2001_scroll2.png";
+                profile.opaque = false;
+                profile.transparency = 0.5;
+                scrollprofile.fillColor = { 0, 0, 0, 100 };
+                scrollprofile.fontColor = { 255, 255, 255 };
+                scrollprofile.transparency = 1;
+                scrollprofile.bitmap = ""; //"gui2001_textedit.png";
+
+                height = 24;
+                width = 209;
+                x = StartNickLangPanel.width - (width + 2 + 16);
+                y = 42;
+            }
+            /* LANGUAGE END */
+
+            Gs2Utils.destroyObject("gr_LoginScreen_StartPasswordCheck");
+            new GuiCheckBoxCtrl("gr_LoginScreen_StartPasswordCheck") {
+                profile = GuiBlueCheckBoxProfile;
+                useownprofile = true;
+                profile.fontType = "friz";
+                horizSizing = "right";
+                vertSizing = "bottom";
+                profile.fontColor = { 0, 255, 0 };
+                profile.tab = false;
+                position = { player.platform == "iphone" ? 130 : 394, 60 };
+                extent = { player.platform == "iphone" ? 120 : 320, 20 };
+                text = _("Save pass");
+            }
+
+            Gs2Utils.destroyObject("gr_LoginScreen_StartOptionsButton");
+            new GuiButtonCtrl("gr_LoginScreen_StartOptionsButton") {
+                profile = GuiBlueButtonProfile;
+                useownprofile = true;
+                //profile.fontColor = { 0, 0, 0 };
+                //profile.fontcolorhl = { 0, 0, 0 };
+                profile.fontType = "friz";
+                profile.fontSize = 16;
+                profile.fontStyle = "bc";
+                profile.justify = "center";
+                profile.bitmap = "";
+                profile.border = 1;
+                profile.bordercolor = { 255, 255, 255 };
+                profile.fillColor = { 0, 0, 0, 100 };
+                profile.fontColor = { 255, 255, 255, 190 };
+                profile.fontcolorhl = { 255, 255, 255 };
+                profile.fontcolorsel = { 255, 255, 255 };
+                profile.tab = true;
+                normalbitmap = "gui2001_button.png";
+                mouseoverbitmap = "gui2001_button.png";
+                pressedbitmap = "gui2001_button_pressed.png";
+                width = 105;
+                height = 26;
+                text = "&Options";
+                x = StartNickLangPanel.width - (width + StartOptionsButton.width + 23);
+                y = StartNickLangPanel.height - height;
+            }
+
+            Gs2Utils.destroyObject("gr_LoginScreen_StartConnectButton2");
+            new GuiButtonCtrl("gr_LoginScreen_StartConnectButton2") {
+                profile = GuiBlueButtonProfile;
+                useownprofile = true;
+                //profile.fontColor = { 0, 0, 0 };
+                //profile.fontcolorhl = { 0, 0, 0 };
+                profile.fontType = "friz";
+                profile.fontSize = 16;
+                profile.fontStyle = "bc";
+                profile.justify = "center";
+                profile.bitmap = "";
+                profile.border = 1;
+                profile.bordercolor = { 255, 255, 255 };
+                profile.fillColor = { 0, 0, 0, 100 };
+                profile.fontColor = { 255, 255, 255, 190 };
+                profile.fontcolorhl = { 255, 255, 255 };
+                profile.fontcolorsel = { 255, 255, 255 };
+                profile.tab = true;
+                //profile.textoffset = "5";
+                normalbitmap = "gui2001_button.png";
+                mouseoverbitmap = "gui2001_button.png";
+                pressedbitmap = "gui2001_button_pressed.png";
+                width = 105;
+                height = 26;
+                text = "&Guest";
+                x = StartNickLangPanel.width - width;
+                y = StartNickLangPanel.height - height;
+            }
+
+            Gs2Utils.destroyObject("gr_LoginScreen_StartConnectButton");
+            new GuiButtonCtrl("gr_LoginScreen_StartConnectButton") {
+                profile = GuiBlueButtonProfile;
+                useownprofile = true;
+                //profile.fontColor = { 0, 0, 0 };
+                //profile.fontcolorhl = { 0, 0, 0 };
+                profile.fontType = "friz";
+                profile.fontSize = 16;
+                profile.fontStyle = "bc";
+                profile.justify = "center";
+                profile.bitmap = "";
+                profile.border = 1;
+                profile.bordercolor = { 255, 255, 255 };
+                profile.fillColor = { 0, 0, 0, 100 };
+                profile.fontColor = { 255, 255, 255, 190 };
+                profile.fontcolorhl = { 255, 255, 255 };
+                profile.fontcolorsel = { 255, 255, 255 };
+                profile.tab = true;
+                normalbitmap = "gui2001_button.png";
+                mouseoverbitmap = "gui2001_button.png";
+                pressedbitmap = "gui2001_button_pressed.png";
+                width = 105;
+                height = 26;
+                text = "&Start";
+                x = StartAccountPanel.width - 120;
+                y = StartAccountPanel.height - 34;
+            }
+
+            Gs2Utils.destroyObject("gr_LoginScreen_StartGetAccountButton");
+            new GuiButtonCtrl("gr_LoginScreen_StartGetAccountButton") {
+                profile = GuiBlueButtonProfile;
+                useownprofile = true;
+                //profile.fontColor = { 0, 0, 0 };
+                //profile.fontcolorhl = { 0, 0, 0 };
+                profile.fontType = "friz";
+                profile.fontSize = 16;
+                profile.fontStyle = "bc";
+                profile.justify = "center";
+                profile.bitmap = "";
+                profile.border = 1;
+                profile.bordercolor = { 255, 255, 255 };
+                profile.fillColor = { 0, 0, 0, 100 };
+                profile.fontColor = { 255, 255, 255, 190 };
+                profile.fontcolorhl = { 255, 255, 255 };
+                profile.fontcolorsel = { 255, 255, 255 };
+                profile.tab = true;
+                horizSizing = "right";
+                vertSizing = "top";
+                position = "80 415";
+                extent = "150 25";
+                text = "&Become a Member";
+            }
+        }
+    };
+    gr_LoginScreen.show();
+    gr_LoginScreen_StartPasswordCheck.checked = !$pref::Graal::dontsavepasswords;
+}
+
+function gr_LoginScreen.onWake()
+{
+    gr_LoginScreen_StartPasswordCheck.checked = !$pref::Graal::dontsavepasswords;
+}
+
+function gr_LoginScreen_AccountEdit.onSelect()
+{
+    gr_LoginScreen_PassEdit.setPasswordOfAccount(AccountEdit.text);
+}
+
+function gr_LoginScreen_LanguageEdit.onSelect()
+{
+  $pref::graal::language = gr_LoginScreen_LanguageEdit.text;
+  Adventure_saveGraalOptions();
+}
+
+function gr_LoginScreen_LanguageEdit.onKeyDown()
+{
+  $pref::graal::language = gr_LoginScreen_LanguageEdit.text;
+  Adventure_saveGraalOptions();
+}
+
+function gr_LoginScreen_AccountEdit.onKeyDown()
+{
+  gr_LoginScreen_PassEdit.setPasswordOfAccount(gr_LoginScreen_AccountEdit.text);
+}
+
+function gr_LoginScreen_StartConnectButton.onAction()
+{
+  doLogin();
+}
+
+function gr_LoginScreen_StartConnectButton2.onAction()
+{
+  Adventure_startOfflineMode();
+}
+
+function gr_LoginScreen_StartGetAccountButton.onAction()
+{
+  openURL("https://www.graalserver.com/accountcreator.php");
+}
+
+function gr_LoginScreen_StartOptionsButton.onAction()
+{
+  if (!Adventure_openExternalOptions())
+  {
+	if (graalversion >= 5.2) {
+	  ("-Serverlist_Options").showOptions();
+	}
+	else
+	{
+	  pushDialog(OptionsDlg2D);
+	}
+  }
+}
+
+function onTimeout()
+{
+    with(gr_LoginScreen)
+    {
+        clientwidth = screenwidth;
+        clientheight = screenheight;
+        minextent = { clientwidth, clientheight };
+    }
+
+    // Original image size
+    temp.original_width = 1456; // 1500; // 2048;
+    temp.original_height = 816; // 681; // 1365;
+
+    // Scale to cover the screen
+    temp.scale_x = screenwidth / temp.original_width;
+    temp.scale_y = screenheight / temp.original_height;
+    temp.scale_factor = max(temp.scale_x, temp.scale_y); // Use the larger scale to fill
+
+    temp.new_width = temp.original_width * temp.scale_factor;
+    temp.new_height = temp.original_height * temp.scale_factor;
+
+    with(gr_LoginScreen_background)
+    {
+        extent = { temp.new_width, temp.new_height };
+        x = (screenwidth - temp.new_width) / 2;
+        y = (screenheight - temp.new_height) / 2;
+    }
+
+    with(gr_LoginScreen_logo)
+    {
+        extent = { (1100 * temp.scale_factor) / 2, (271 * temp.scale_factor) / 2 };
+        x = (screenwidth - width) / 2;
+        y = (screenheight - height) / 11;
+    }
+
+    with(gr_LoginScreen_credentials)
+    {
+        extent = { (450 * temp.scale_factor), (185 * temp.scale_factor) };
+        x = (screenwidth - width) / 2;
+        y = (screenheight - height) / 2;
+    }
+
+    temp.editctrl_height = 25;
+    temp.label_width = 73;
+
+    with (gr_LoginScreen_NickEdit)
+    {
+        useownprofile = true;
+        profile.fontsize = 17 * temp.scale_factor;
+        extent = { 255 * temp.scale_factor, temp.editctrl_height * temp.scale_factor};
+        x = (gr_LoginScreen_credentials.width - width) / 2;
+    }
+
+    with (gr_LoginScreen_StartNickLabel)
+    {
+        useownprofile = true;
+        profile.fontsize = 17 * temp.scale_factor;
+        profile.fontcolor = {255, 255, 255};
+        extent = { temp.label_width * temp.scale_factor, temp.editctrl_height * temp.scale_factor};
+        x = ((gr_LoginScreen_credentials.width - width) / 2) - width*2.5;
+    }
+
+    with (gr_LoginScreen_AccountEdit)
+    {
+        useownprofile = true;
+        profile.fontsize = 17 * temp.scale_factor;
+        scrollprofile.fontsize = 17 * temp.scale_factor;
+        textprofile.fontsize = 17 * temp.scale_factor;
+        extent = { 255 * temp.scale_factor, temp.editctrl_height * temp.scale_factor};
+        x = (gr_LoginScreen_credentials.width - width) / 2;
+        y = gr_LoginScreen_NickEdit.y + gr_LoginScreen_NickEdit.height + (5 * temp.scale_factor);
+    }
+
+    with (gr_LoginScreen_StartAccountLabel)
+    {
+        useownprofile = true;
+        profile.fontsize = 17 * temp.scale_factor;
+        profile.fontcolor = { 255, 255, 255};
+        extent = { temp.label_width * temp.scale_factor, temp.editctrl_height * temp.scale_factor};
+        x = ((gr_LoginScreen_credentials.width - width) / 2) - width * 2.5;
+        y = gr_LoginScreen_NickEdit.y + gr_LoginScreen_NickEdit.height + (5 * temp.scale_factor);
+    }
+
+    with (gr_LoginScreen_PassEdit)
+    {
+        useownprofile = true;
+        profile.fontsize = 17 * temp.scale_factor;
+        extent = { 255 * temp.scale_factor, temp.editctrl_height * temp.scale_factor};
+        x = (gr_LoginScreen_credentials.width - width) / 2;
+        y = gr_LoginScreen_AccountEdit.y + gr_LoginScreen_AccountEdit.height + (5 * temp.scale_factor);
+    }
+
+    with (gr_LoginScreen_StartPassLabel)
+    {
+        useownprofile = true;
+        profile.fontsize = 17 * temp.scale_factor;
+        profile.fontcolor = { 255, 255, 255};
+        extent = { temp.label_width * temp.scale_factor, temp.editctrl_height * temp.scale_factor};
+        x = ((gr_LoginScreen_credentials.width - width) / 2) - width * 2.5;
+        y = gr_LoginScreen_AccountEdit.y + gr_LoginScreen_AccountEdit.height + (5 * temp.scale_factor);
+    }
+
+    with (gr_LoginScreen_StartPasswordCheck)
+    {
+        useownprofile = true;
+        profile.fontsize = 15 * temp.scale_factor;
+        profile.fontcolor = { 255, 255, 255};
+        text = "Save pass";
+        extent = { 70 * temp.scale_factor, temp.editctrl_height * temp.scale_factor};
+        x = ((gr_LoginScreen_credentials.width - width) / 2) + (gr_LoginScreen_PassEdit.width/2) + (width/2) + (5 * temp.scale_factor);
+        y = gr_LoginScreen_AccountEdit.y + gr_LoginScreen_AccountEdit.height + (5 * temp.scale_factor);
+    }
+
+    with (gr_LoginScreen_LanguageEdit)
+    {
+        useownprofile = true;
+        profile.fontsize = 17 * temp.scale_factor;
+        scrollprofile.fontsize = 17 * temp.scale_factor;
+        textprofile.fontsize = 17 * temp.scale_factor;
+        extent = { 255 * temp.scale_factor, temp.editctrl_height * temp.scale_factor};
+        x = (gr_LoginScreen_credentials.width - width) / 2;
+        y = gr_LoginScreen_PassEdit.y + gr_LoginScreen_PassEdit.height + (5 * temp.scale_factor);
+    }
+
+    with (gr_LoginScreen_StartLanguageLabel)
+    {
+        useownprofile = true;
+        profile.fontsize = 17 * temp.scale_factor;
+        profile.fontcolor = { 255, 255, 255};
+        extent = { temp.label_width * temp.scale_factor, temp.editctrl_height * temp.scale_factor};
+        x = ((gr_LoginScreen_credentials.width - width) / 2) - width * 2.5;
+        y = gr_LoginScreen_PassEdit.y + gr_LoginScreen_PassEdit.height + (5 * temp.scale_factor);
+    }
+
+    temp.button_width = 83;
+    temp.button_height = 25;
+    temp.button_fontsize = 18;
+    with (gr_LoginScreen_StartConnectButton2)
+    {
+        useownprofile = true;
+        profile.fontsize = temp.button_fontsize * temp.scale_factor;
+        extent = { temp.button_width * temp.scale_factor, temp.button_height * temp.scale_factor};
+        x = (gr_LoginScreen_credentials.width - width) / 2;
+        y = gr_LoginScreen_LanguageEdit.y + gr_LoginScreen_LanguageEdit.height + (5 * temp.scale_factor);
+    }
+    with (gr_LoginScreen_StartOptionsButton)
+    {
+        useownprofile = true;
+        profile.fontsize = temp.button_fontsize * temp.scale_factor;
+        extent = { temp.button_width * temp.scale_factor, temp.button_height * temp.scale_factor};
+        x = ((gr_LoginScreen_credentials.width - width) / 2) - gr_LoginScreen_StartConnectButton2.width - (5 * temp.scale_factor);
+        y = gr_LoginScreen_LanguageEdit.y + gr_LoginScreen_LanguageEdit.height + (5 * temp.scale_factor);
+    }
+    with (gr_LoginScreen_StartConnectButton)
+    {
+        useownprofile = true;
+        profile.fontsize = temp.button_fontsize * temp.scale_factor;
+        extent = { temp.button_width * temp.scale_factor, temp.button_height * temp.scale_factor};
+        x = ((gr_LoginScreen_credentials.width - width) / 2) + gr_LoginScreen_StartConnectButton2.width + (5 * temp.scale_factor);
+        y = gr_LoginScreen_LanguageEdit.y + gr_LoginScreen_LanguageEdit.height + (5 * temp.scale_factor);
+    }
+    with (gr_LoginScreen_StartGetAccountButton)
+    {
+        useownprofile = true;
+        profile.fontsize = temp.button_fontsize * temp.scale_factor;
+        extent = { (temp.button_width*2) * temp.scale_factor, temp.button_height * temp.scale_factor};
+        x = (gr_LoginScreen_credentials.width - width) / 2;
+        y = gr_LoginScreen_StartConnectButton2.y + gr_LoginScreen_StartConnectButton2.height + (5 * temp.scale_factor);
+    }
+
+    setTimer(0.001);
+}
+
+function retrieveAccountFields()
+{
+  gr_LoginScreen_NickEdit.text = Adventure_getEditNickName();
+  temp.accounts = Adventure_getEditAccountNames();
+
+  with (gr_LoginScreen_LanguageEdit)
+  {
+	text = $pref::graal::language;
+
+	clearRows();
+	for (temp.i = 0; temp.i < installedlanguages.size(); temp.i++)
+	  addRow(temp.i, installedlanguages[temp.i]);
+  }
+
+  with (gr_LoginScreen_AccountEdit)
+  {
+	text = temp.accounts[0];
+
+	clearRows();
+	for (temp.i = 0; temp.i < temp.accounts.size(); temp.i++)
+	  addRow(temp.i, temp.accounts[temp.i]);
+  }
+
+  gr_LoginScreen_PassEdit.setPasswordOfAccount(gr_LoginScreen_AccountEdit.text);
+}
+
+function Adventure_startOfflineMode()
+{
+	//if (!StartMemberCheck.checked || AccountEdit.text == "")
+	{
+		Adventure_setAccountName("guest");
+		gr_LoginScreen_PassEdit.clearPassword();
+        if(isObject("-ServerListScreen"))
+            ("-ServerListScreen").initServerlist();
+        if(isObject("-Rescripted/Serverlist"))
+            ("-Rescripted/Serverlist").initServerlist();
+		//MainMenuGui2D_Window.hide();
+        gr_LoginScreen.hide();
+
+		return;
+	}
+}
+
+function doLogin()
+{
+    $pref::Graal::dontsavepasswords = !StartPasswordCheck.checked;
+    Adventure_saveGraalOptions();
+    Adventure_setNickName(gr_LoginScreen_NickEdit.text);
+    Adventure_setAccountName(gr_LoginScreen_AccountEdit.text);
+    gr_LoginScreen_PassEdit.applyPassword();
+    gr_LoginScreen_PassEdit.clearPassword();
+    //MainMenuGui2D_Window.hide();
+    gr_LoginScreen.hide();
+    Adventure_reconnect();
+}

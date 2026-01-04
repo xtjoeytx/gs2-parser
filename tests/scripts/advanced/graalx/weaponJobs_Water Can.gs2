@@ -1,0 +1,78 @@
+//#CLIENTSIDE
+function onWeaponFired() {
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+  
+  if (temp.muditem.quantity >= 1 && temp.muditem.tool == "Watercan")
+  {
+    if (onwater(player.x + 1.5 + vecx(player.dir) * 2, player.y + 1.5 + vecy(player.dir) * 2))
+    {
+      playerfreeze = 1.55;
+      setani("watercanfill", NULL);
+      if (temp.muditem.water < 4)
+      {
+        triggerserver("gui", name, "refill", client.selectedweapon, 4);
+      }
+    }
+      elseif (temp.muditem.water > 0)
+    {
+      onUseWater();
+      playerfreeze = 1.55;
+      setani("watercanspread", NULL);
+    }
+      else
+    {
+      playerfreeze = 0.55;
+      setani("watercan", NULL);
+    }
+    
+    onTimeout();
+  }
+}
+
+function onTimeout()
+{
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+ 
+  if (temp.muditem.weapon == name)
+  {
+    if (player.ani == "swim")
+    {
+      if (this.ttick <= 0 && temp.muditem.water < 4)
+      {
+        triggerserver("gui", name, "refill", client.selectedweapon, 1);
+        this.ttick = 1.25;
+      }
+      
+      if (this.ttick > 0)
+      {
+        this.ttick -= 0.05;
+      }
+    }
+    
+    showimg(200, "gx_watergui.png", 5, 105);
+    changeimgpart(200, 0, 0, 15, 33);
+    changeimgvis(200, 4);
+    
+    if (temp.muditem.water > 0)
+    {
+      showimg(201, "gx_watergui.png", 8, 108);
+      changeimgpart(201, 32, 3, 9, 27 * (temp.muditem.water / 4));
+      changeimgvis(201, 5);
+    }
+      else
+    {
+      hideimg(201);
+    }
+    
+    setTimer(0.05);
+  }
+  else hideimgs(200, 201);
+}
+
+function onUseWater()
+{
+  triggeraction(player.x + 1.5 + vecx(player.dir) * 2, player.y + 2 + vecy(player.dir) * 2, "water", player.account);
+  triggerserver("gui", name, "use", client.selectedweapon);
+}

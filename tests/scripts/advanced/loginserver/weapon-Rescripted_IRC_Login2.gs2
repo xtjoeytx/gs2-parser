@@ -1,0 +1,447 @@
+// 2021-09-18 - started translating IRC/Login2
+
+//#CLIENTSIDE
+//#GS2
+function onCreated()
+{
+  if (serverstartconnect == "liveshare")
+  {
+    if (isObject("Serverlist_ConnectMessage"))
+    {
+      Serverlist_ConnectMessage.visible = false;
+      return;
+    }
+  }
+  
+  if (isgraalplugin)
+  {
+    if (graalplugincookie == "")
+    {
+      MessageBoxDialog_Window.text = "Error";
+      MessageBoxDialog_Text.text = "<b>The plugin cannot be used from this site.</b>";
+      pushDialog(MessageBoxDialog);
+      serverstartconnect = "";
+      return;
+    }
+
+    if (findweapon("-Serverlist") != null)
+    {
+      if (!isObject("Serverlist_Panel"))
+      {
+        ("-Serverlist").initServerlist();
+      }
+    }
+
+    return;
+  }
+
+  removeOldControls();
+  addGUIControls();
+  
+  if (serverstartconnect != "")
+  {
+    StartPasswordCheck.checked = !$pref::Graal::dontsavepasswords;
+    StartMemberCheck.checked = true;
+    StartGuestCheck.checked = !StartMemberCheck.checked;
+
+    retrieveAccountFields();
+    updateAccountFieldsVisibility();
+
+    if (!PassEdit.isEmpty())
+    {
+      doLogin();
+      return;
+    }
+  }
+  
+  MainMenuGui2D.visible = true;
+}
+
+function removeOldControls()
+{
+  if (isObject("Serverlist_Panel"))
+  {
+    Serverlist_Panel.destroy();
+  }
+}
+
+function onDefaultStyleChanges(newstyle)
+{
+  MainMenuGui2D.style = newstyle;
+  MainMenuGui2D_Window.style = newstyle;
+}
+
+function addGUIControls()
+{
+  new GuiControlProfile("MainMenuGui2D_BackgroundProfile") {
+    opaque = false;
+  }
+  
+  with (GUIContainer)
+  {
+    new GuiControl("MainMenuGui2D") {
+      profile = MainMenuGui2D_BackgroundProfile;
+      position = {0, 0};
+      extent = GUIContainer.clientextent;
+      horizSizing = "width";
+      vertSizing = "height";
+      visible = false;
+      style = $pref::Video::defaultguistyle;
+
+      new GuiBitmapCtrl("MainMenuGui2D_Background") {
+        x = y = 0;
+        extent = MainMenuGui2D.extent;
+        horizSizing = "width";
+        vertSizing = "height";
+        bitmap = "login_gradient_blue.png";
+      }
+    }
+  }
+
+  addSubControls();
+}
+
+function onPlayerLanguageChanges()
+{
+  addSubControls();
+}
+
+function addSubControls()
+{
+  with (MainMenuGui2D_Background)
+  {
+    new GuiWindowCtrl("MainMenuGui2D_Window") {
+      profile = GuiBlueWindowProfile;
+      useownprofile = true;
+      profile.transparency = 1;
+      style = $pref::Video::defaultguistyle;
+      clientrelative = true;
+      clientextent = {555, 463};
+      x = (MainMenuGui2D_Background.clientwidth - width) / 2;
+      y = (MainMenuGui2D_Background.clientheight - height) / 2;
+      horizSizing = "center";
+      vertSizing = "center";
+      canmaximize = false;
+      canminimize = false;
+      canresize = false;
+      canclose = false;
+      text = "Login";
+
+      new GuiBitmapCtrl("StartTitle") {
+        bitmap = "graalv4title.png";
+        position = "85 0";
+        extent = "385 172";
+      }
+      
+      new GuiScrollCtrl("StartNickPanel") {
+        profile = GuiBlueScrollProfile;
+        position = "135 155";
+        extent = "290 50";
+        hScrollBar = "alwaysOff";
+        vScrollBar = "alwaysOff";
+        
+        new GuiTextCtrl("StartNickLabel") {
+          profile = GuiBlueTextProfile;
+          horizSizing = "right";
+          vertSizing = "bottom";
+          position = "15 10";
+          extent = "53 18";
+          text = "Nickname:"; // _("Nickname:"); -> add translate
+        }
+        
+        new GuiTextEditCtrl("NickEdit") {
+          profile = GuiBlueTextEditProfile;
+          horizSizing = "right";
+          vertSizing = "bottom";
+          position = "119 8";
+          extent = "150 22";
+          minExtent = "8 22";
+        }
+      }
+      
+      new GuiScrollCtrl("StartAccountPanel") {
+        profile = GuiBlueScrollProfile;
+        position = "70 220";
+        extent = "415 80";
+        hScrollBar = "alwaysOff";
+        vScrollBar = "alwaysOff";
+        
+        new GuiTextCtrl("StartPlayAsLabel") {
+          profile = GuiBlueTextProfile;
+          horizSizing = "right";
+          vertSizing = "bottom";
+          position = "15 5";
+          extent = "150 18";
+          text = "Play as:"; // _("Nickname:"); -> add translate
+          maxLength = "255";
+        }
+
+        new GuiRadioCtrl("StartGuestCheck") {
+          profile = GuiBlueRadioProfile;
+          horizSizing = "right";
+          vertSizing = "bottom";
+          position = "15 28";
+          extent = "150 20";
+          text = "Guest"; // _("Guest:");
+          groupNum = 1;
+        }
+
+        new GuiRadioCtrl("StartMemberCheck") {
+          profile = GuiBlueRadioProfile;
+          horizSizing = "right";
+          vertSizing = "bottom";
+          position = "15 50";
+          extent = "150 20";
+          text = "Member"; // _("Member:");
+          groupNum = 1;
+          useownprofile = true;
+          profile.tab = false;
+        }
+        
+        new GuiTextCtrl("StartAccountLabel") {
+          profile = GuiBlueTextProfile;
+          horizSizing = "right";
+          vertSizing = "bottom";
+          position = "130 5";
+          extent = "73 18";
+          text = "User:  "; // _("User:  ");
+        }
+        
+        new GuiPopUpEditCtrl("AccountEdit") {
+          profile = GuiBluePopUpMenuProfile;
+          scrollprofile = profile;
+          listprofile = GuiBlueTextListProfile;
+          horizSizing = "right";
+          vertSizing = "bottom";
+          position = "250 3";
+          extent = "150 22";
+          minExtent = "8 22";
+          historySize = "10";
+        }
+        
+        new GuiTextCtrl("StartPassLabel") {
+          profile = GuiBlueTextProfile;
+          horizSizing = "right";
+          vertSizing = "bottom";
+          position = "130 30";
+          extent = "120 18";
+          text = "Password:"; // _("Password:");
+        }
+        
+        new GuiAccountPasswordCtrl("PassEdit") {
+          profile = GuiBlueTextEditProfile;
+          horizSizing = "right";
+          vertSizing = "bottom";
+          position = "250 28";
+          extent = "150 22";
+          minExtent = "8 22";
+          password = true;
+        }
+
+        new GuiCheckBoxCtrl("StartPasswordCheck") {
+          profile = GuiBlueCheckBoxProfile;
+          horizSizing = "right";
+          vertSizing = "bottom";
+          position = { player.platform == "iphone" ? 130 : 250, 55 };
+          extent = { player.platform == "iphone" ? 120 : 320, 20 };
+          text = "Save password"; // _("Save password");
+        }
+      }
+
+      new GuiButtonCtrl("StartConnectButton") {
+        profile = GuiBlueButtonProfile;
+        horizSizing = "right";
+        vertSizing = "bottom";
+        position = "250 330";
+        extent = "50 35";
+        text = "Start";
+      }
+      
+      new GuiButtonCtrl("StartConnectButton2") {
+        profile = GuiBlueButtonProfile;
+        horizSizing = "right";
+        vertSizing = "bottom";
+        position = "215 370";
+        extent = "120 35";
+        text = "Offline mode";
+      }
+      
+      new GuiButtonCtrl("StartGetAccountButton") {
+        profile = GuiBlueButtonProfile;
+        horizSizing = "right";
+        vertSizing = "top";
+        position = "80 415";
+        extent = "150 25";
+        text = "Become a Member";
+      }
+      
+      new GuiButtonCtrl("StartOptionsButton") {
+        profile = GuiBlueButtonProfile;
+        horizSizing = "right";
+        vertSizing = "top";
+        position = "330 415";
+        extent = "120 25";
+        text = "Options";
+      }
+      
+      new GuiShowImgCtrl("StartAni6") {
+        position = "380 50";
+        extent = "200 150";
+        active = false;
+        offsetx = 100;
+        ani = "g2k2dievil_attack,spell_firelaunch.wav";
+        actor.attr[1] = "g2k2_dievil.png";
+        actor.attr[2] = "g2k2monster_fire.png";
+      }
+    }
+  }
+}
+
+function MainMenuGui2D.onWake()
+{
+  StartPasswordCheck.checked = !$pref::Graal::dontsavepasswords;
+  StartMemberCheck.checked = true;
+  StartGuestCheck.checked = !StartMemberCheck.checked;
+  
+  if (serverstartconnect != "" && StartMemberCheck.checked && !PassEdit.isEmpty())
+  {
+    doLogin();
+  }
+  else
+  {
+    StartAni1.ani = "human2_walk";
+    StartAni2.ani = "startmenu_lamps_wood";
+    StartAni6.ani = "g2k2dievil_attack,spell_firelaunch.wav";
+
+    retrieveAccountFields();
+    updateAccountFieldsVisibility();
+    setTimer(0.2);
+  }
+}
+
+function MainMenuGui2D.onSleep()
+{
+  setTimer(0);
+}
+
+function onServerLogin()
+{
+  if (servername.starts("login")) {
+    onTimeout();
+  } else {
+    setTimer(0);
+  }
+}
+
+function onTimeout()
+{
+  this.firebomycnt++;
+  if (this.firebomycnt % 12 == 0) {
+    if (random(0, 100) < 40) {
+      StartAni6.ani = "g2k2dievil_idle";
+      StartAni6.dir = int(random(1, 3));
+    } else {
+      StartAni6.ani = "g2k2dievil_attack,spell_firelaunch.wav";
+      setTimer(0.2);
+    }
+  }
+}
+
+function StartGuestCheck.onAction()
+{
+  updateAccountFieldsVisibility();
+}
+
+function StartMemberCheck.onAction()
+{
+  updateAccountFieldsVisibility();
+}
+
+function AccountEdit.onSelect()
+{
+  PassEdit.setPasswordOfAccount(AccountEdit.text);
+}
+
+function AccountEdit.onKeyDown()
+{
+  PassEdit.setPasswordOfAccount(AccountEdit.text);
+}
+
+function StartConnectButton.onAction()
+{
+  doLogin();
+}
+
+function StartConnectButton2.onAction()
+{
+  Adventure_startOfflineMode();
+}
+
+function StartGetAccountButton.onAction()
+{
+  openURL("https://graal.in");
+}
+
+function StartOptionsButton.onAction()
+{
+  if (!Adventure_openExternalOptions())
+  {
+    if (graalversion >= 5.2) {
+      ("-Serverlist_Options").showOptions();
+    }
+    else
+    {
+      pushDialog(OptionsDlg2D);
+    }
+  }
+}
+
+function retrieveAccountFields()
+{
+  NickEdit.text = Adventure_getEditNickName();
+  temp.accounts = Adventure_getEditAccountNames();
+
+  with (AccountEdit)
+  {
+    text = temp.accounts[0];
+
+    clearRows();
+    for (temp.i = 0; temp.i < temp.accounts.size(); temp.i++)
+      addRow(temp.i, temp.accounts[temp.i]);
+  }
+
+  PassEdit.setPasswordOfAccount(AccountEdit.text);
+}
+
+function updateAccountFieldsVisibility()
+{
+  showaccountfields = StartMemberCheck.checked;
+  
+  AccountEdit.visible = showaccountfields;
+  PassEdit.visible = showaccountfields;
+  StartAccountLabel.visible = showaccountfields;
+  StartPassLabel.visible = showaccountfields;
+  StartPasswordCheck.visible = showaccountfields;
+}
+
+function doLogin()
+{
+  $pref::Graal::dontsavepasswords = !StartPasswordCheck.checked;
+
+  Adventure_setNickName(NickEdit.text);
+
+  if (!StartMemberCheck.checked || AccountEdit.text == "")
+  {
+    Adventure_setAccountName("guest");
+    PassEdit.clearPassword();
+    MainMenuGui2D.visible = false;
+    ("-Serverlist").initServerlist();
+    return;
+  }
+
+  Adventure_setAccountName(AccountEdit.text);
+  PassEdit.applyPassword();
+  PassEdit.clearPassword();
+  MainMenuGui2D.visible = false;
+  Adventure_reconnect();
+}

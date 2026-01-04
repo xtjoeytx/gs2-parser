@@ -1,0 +1,309 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  requesttext("clientrc", 1);
+  
+  onShowGUI();
+}
+
+function onShowGUI()
+{ 
+  if (NC_Window != NULL)
+  {
+    NC_Window.destroy();
+  }
+  
+  new GuiWindowCtrl(NC_Window)
+  {
+    height               = 460;
+    profile              = GuiBlueWindowProfile;
+    text                 = "NC Control (V1.0 by KuJi) ";
+    width                = 577;
+    x                    = 150;
+    y                    = 150;
+    
+    visible              = false;
+    
+    new GuiTabCtrl(NC_Tab)
+    {
+      profile = "GuiBlueTabProfile";
+      extent = {380, 25};
+      position = {183, 35};
+      
+      horizSizing = "width";
+      clearrows();
+    }
+    
+    new GuiScrollCtrl(NC_Frame1)
+    {
+      profile        = GuiBlueScrollProfile;
+      extent         = {175, 431};
+      position       = {6, 23};
+      
+      hScrollBar     = "dynamic";
+      vScrollBar     = "dynamic";
+      vertSizing     = "height";
+      
+      useownprofile  = true;
+      profile.opaque = false;
+      
+      new GuiTreeViewCtrl(NC_Tree)
+      {
+        profile = GuiBlueTreeViewProfile;
+        x = y = 0;
+        fitparentwidth = true;
+       
+        clearnodes();
+        addnodebypath("Classes", "/");
+        addnodebypath("NPCS", "/");
+        addnodebypath("Weapons", "/");
+      }
+    }
+    
+    new GuiScrollCtrl(NC_Frame2)
+    {
+      profile        = GuiBlueScrollProfile;
+      extent         = {388, 355};
+      position       = {182, 60};
+      
+      hScrollBar     = "dynamic";
+      vScrollBar     = "dynamic";
+      horizSizing    = "width";
+      vertSizing     = "height";
+      
+      useownprofile  = true;
+      profile.opaque = false;
+    }
+    
+    new GuiButtonCtrl(NC_Close)
+    {
+      profile     = GuiBlueButtonProfile;
+      extent      = {65, 25};
+      position    = {360, 423};
+      
+      horizSizing = "left";
+      vertSizing  = "top";
+      text        = "Close";
+      
+      thiso.catchevent(this.name, "onAction", "onActionButton");
+    }
+    
+    
+    new GuiButtonCtrl(NC_Reload)
+    {
+      profile     = GuiBlueButtonProfile;
+      extent      = {65, 25};
+      position    = {430, 423};
+      
+      horizSizing = "left";
+      vertSizing  = "top";
+      
+      text        = "Reload";
+      
+      thiso.catchevent(this.name, "onAction", "onActionButton");
+    }
+    
+    new GuiButtonCtrl(NC_Save)
+    {
+      profile     = GuiBlueButtonProfile;
+      extent      = {65, 25};
+      position    = {500, 423};
+      
+      horizSizing = "left";
+      vertSizing  = "top";
+      
+      text        = "Save";
+      
+      thiso.catchevent(this.name, "onAction", "onActionButton");
+    }
+  }
+}
+
+function NC_Tab.onSelect(tabid, tabtext, tabindex)
+{
+  for (temp.var: NC_Tab.rows)
+  {
+    if (temp.var.text == tabtext)
+    {
+      temp.var.scriptedit.visible = true;
+    }
+  }
+}
+
+function NC_Tab.onDeselect(tabid, tabtext, tabindex)
+{
+  for (temp.var: NC_Tab.rows)
+  {
+    if (temp.var.text == tabtext)
+    {
+      temp.var.scriptedit.visible = false;  
+    }
+  }
+}
+
+
+function NC_Tree.onDblClick(node, nodeslashpath, nodedotpath)
+{
+  if (nodeslashpath.starts("Classes/"))
+  {
+    requesttext("class", nodeslashpath.substring(8));
+  }
+    elseif (nodeslashpath.starts("Weapons/"))
+  {
+    requesttext("weapon", nodeslashpath.substring(8));
+  }
+    elseif (nodeslashpath.starts("NPCS/"))
+  {
+    requesttext("npc", nodeslashpath.substring(5));
+  }
+}
+
+function onReceiveText(texttype, textoption, textlines)
+{
+  if (texttype in {"classlist", "npclist", "weaponlist"})
+  {
+    onAddScripts(textoption, textlines);
+  }
+    elseif (texttype in {"class", "npc", "weapon"})
+  {
+    onViewScript(texttype, textoption, textlines);
+  }
+}
+
+function onAddScripts(temp.prefix, temp.textlines)
+{
+  if (temp.prefix != NULL)
+  {
+    for (temp.var: temp.textlines)
+    {
+      if (temp.var != NULL)
+      {
+        with (NC_Tree.addnodebypath(temp.prefix @ temp.var, "/"))
+        {
+          image = selectedimage = 2;
+        }
+      }
+    }
+  }
+}
+
+function onViewScript(temp.texttype, temp.textoption, temp.textlines)
+{
+  temp.found = NC_Tab.findtextid(temp.textoption);
+  
+  if (temp.found >= 0)
+  {
+    NC_Tab.setselectedbyid(temp.found);
+    
+    for (temp.var: NC_Tab.rows)
+    {
+      if (temp.var.id == temp.found)
+      {
+        temp.var.scriptedit.setlines(temp.textlines);
+      }
+    }
+    
+    return true;
+  }
+    else
+  {
+    
+    with (NC_Frame2)
+    {
+      new GuiMLTextEditCtrl("NC_Edit_" @ temp.texttype @ "_" @ temp.textoption)
+      {
+        profile            = "TextEditorProfile";
+        extent             = {365, 225};
+        position           = {6, 6};
+        
+        horizSizing        = "width";
+        vertSizing         = "height";
+        
+        syntaxHighlighting = true;
+        wordwrap           = false;
+      
+        this.edittype      = temp.texttype;
+        this.editoption    = temp.textoption;
+        
+        setlines(temp.textlines);
+      }
+    }
+  
+    with (NC_Tab.addrow(this.tabid++, temp.textoption))
+    {
+      this.scriptedit = makevar("NC_Edit_" @ temp.texttype @ "_" @ temp.textoption);
+      NC_Tab.setselectedbyid(this.id);
+    }
+  } 
+}
+
+function onActionButton(obj)
+{
+  temp.ncid = NC_Tab.getselectedid();
+  
+  if (temp.ncid <= -1)
+  {
+    return false;
+  }
+  
+  switch (obj.substring(3))
+  {
+    case "Close":
+    {
+      for (temp.var: NC_Tab.rows)
+      {
+        if (temp.var.id == temp.ncid)
+        {
+          temp.var.scriptedit.destroy();
+          NC_Tab.removerowbyid(temp.ncid);
+          NC_Frame2.extent = {388, 355};
+          
+          break;
+        }
+      }
+    
+      break;
+    }
+    
+    case "Reload":
+    {
+      for (temp.var: NC_Tab.rows)
+      {
+        if (temp.var.id == temp.ncid)
+        {
+          requesttext(temp.var.scriptedit.edittype, temp.var.scriptedit.editoption);
+          
+          break;
+        }
+      }
+      
+      break;
+    }
+    
+    case "Save":
+    {
+      for (temp.var: NC_Tab.rows)
+      {
+        if (temp.var.id == temp.ncid)
+        {
+          sendtext(temp.var.scriptedit.edittype, temp.var.scriptedit.editoption, temp.var.scriptedit.getLines());
+
+          break;
+        }
+      }
+    }
+  }
+}
+
+function onKeyPressed(keycode, keychar)
+{
+  if (keychar == '`')
+  {
+    NC_Tree.clearnodes();
+    requesttext("classlist", "Classes/");
+    requesttext("npclist", "NPCS/");
+    requesttext("weaponlist", "Weapons/");
+    
+    NC_Window.visible = !NC_Window.visible;
+  }
+}

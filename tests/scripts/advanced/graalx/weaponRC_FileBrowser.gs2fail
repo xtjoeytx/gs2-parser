@@ -1,0 +1,350 @@
+//#CLIENTSIDE
+function onActionClientside() {
+  if(params[0] == "getlines") {
+    openWindow(params[1], params[2]);
+  }
+}
+
+public function openFileBrowser() {
+  requesttext("folders","") ;
+  new GuiWindowCtrl(FileBrowser_Screen) {
+    profile = "GuiBlueTransWindowProfile";
+    x = 50, y = 50;
+    width = 500, height = 450;
+    canMove = true;
+    canResize = true;
+    canClose = true;
+    text = "File Browser";
+    tile = true;
+    destroyonhide = true;
+
+    new GuiScrollCtrl(FileBrowser_TreeScroll) {
+      profile = "GuiBlueScrollProfile";
+      horizSizing = "right";
+      vertSizing = "height";
+      x = 5;
+      y  = 23;
+      width = 136;
+      height = 335;
+      hScrollBar = "dynamic";
+      vScrollBar = "dynamic";
+      tile = true;
+
+      new GuiTreeViewCtrl(FileBrowser_Tree) {
+        profile = "GuiBlueTreeViewProfile";
+        horizSizing = "width";
+        x = y = 0;
+        width = 120;
+        fitParentWidth = false;
+        sortmode = "name";
+        thiso.catchevent(name,"onSelect","onTreeView");
+      }
+    }
+    new GuiTextCtrl(FileBrowser_NameLabel) {
+      profile = "GuiLightTextProfile";
+      position = "170 24";
+      extent = "60 22";
+      minExtent = "8 22";
+      text = "Name";
+    }
+    new GuiTextCtrl(FileBrowser_RightsLabel) {
+      profile = "GuiLightTextProfile";
+      position = "285 24";
+      extent = "40 22";
+      minExtent = "8 22";
+      text = "Rights";
+    }
+    new GuiTextCtrl(FileBrowser_SizeLabel) {
+      profile = "GuiLightTextProfile";
+      position = "325 24";
+      extent = "50 22";
+      minExtent = "8 22";
+      text = "Size";
+    }
+    new GuiTextCtrl(FileBrowser_ModifiedLabel) {
+      profile = "GuiLightTextProfile";
+      position = "375 24";
+      extent = "60 22";
+      minExtent = "8 22";
+      text = "Modified";
+    }
+
+    new GuiScrollCtrl(FileBrowser_FilesScroll) {
+      profile = "GuiBlueScrollProfile";
+      horizSizing = "width";
+      vertSizing = "height";
+      x = 144;
+      y  = 44;
+      width = 351;
+      height = 311;
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      tile = true;
+
+      new GuiTextListCtrl(FileBrowser_FilesList) {
+        profile = "GuiBlueTextListProfile";
+        horizSizing = "width";
+        vertSizing = "height";
+        x = y = 0;
+        width = 330;
+        fitParentWidth = true;
+        sortMode = "name";
+        clipColumnText = true;
+        lineSpacing = 20;
+        fontSize = 18;
+        setIconSize(16,18);
+        columns = {0,120,160,230};
+      }
+    }
+    new GuiScrollCtrl(FileBrowser_Scroll) {
+      profile = "GuiBlueScrollProfile";
+      x = 5;
+      y = 360;
+      width = 490;
+      height = 85;
+      horizSizing = "width";
+      vertSizing = "top";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+
+      new GuiMLTextCtrl(FileBrowser_DebugText) {
+        profile = "GuiBlueMLTextProfile";
+        horizSizing = "width";
+        x = y = 0;
+        width = 470;
+      }
+    }
+  }
+  new GuiContextMenuCtrl(FileBrowser_Menu) {
+    profile = "GuiBluePopUpMenuProfile";
+    textprofile = "GuiBlueTextListProfile";
+    width = 20;
+//    setIconSize(16,16);
+
+    clearRows();
+    addRow(0,"Download");
+    addRow(1,"Edit As Text");
+    addRow(2,"Upload File(s)");
+    addRow(-1,"-");
+    addRow(3,"Reload");
+    addRow(4,"Move");
+    addRow(5,"Rename");
+    addRow(-1,"-");
+    addRow(6,"Delete");
+  }
+
+  FileBrowser_DebugText.addText("Welcome to the filebrowser!", true);
+  FileBrowser_Screen.bringToFront();
+}
+
+function FileBrowser_FilesList.onResize(newwidth, newheight) {
+  if (newwidth<320) newwidth = 320;
+  FileBrowser_FilesList.columns = {0,newwidth-210,newwidth-170,newwidth-100};
+  widthdiff = newwidth-330;
+  FileBrowser_RightsLabel.x = 285+widthdiff;
+  FileBrowser_SizeLabel.x = 325+widthdiff;
+  FileBrowser_ModifiedLabel.x = 395+widthdiff;
+}
+
+function FileBrowser_FilesList.onRightMouseDown(modifier,mx,my,mcount) {
+  this.fileid = FileBrowser_FilesList.getRowIdAtPoint(mx,my);
+  if (this.fileid>=0) {
+    FileBrowser_FilesList.setSelectedById(this.fileid);
+    this.selectedfile = FileBrowser_FilesList.getSelectedText();
+    i = this.selectedfile.pos("\t");
+    if (i>=0)
+      this.selectedfile = this.selectedfile.substring(0,i);
+    FileBrowser_Menu.open(mx,my);
+  }
+}
+
+function FileBrowser_Menu.onSelect(entryid,text) {
+  switch (text) {
+    case "Download": {
+        selectFileForDownload(this.selectedfile);
+        break;
+      }
+    case "Edit As Text": {
+        triggerserver("gui", "RC/FileBrowser", "getlines", this.showfolder @ "/" @ this.selectedfile);
+        break;
+      }
+    case "Upload File(s)": {
+        selectFileForUpload();
+        break;
+      }
+    case "Reload": {
+        triggerserver("gui", "Editor","updatefile",this.selectedfile);
+        break;
+      }
+    case "Move": {
+        TextEditor.openTextInput("MoveFiles","Move Files","Enter the target folder:","Move");
+        if (MoveFiles_Field.text=="")
+          MoveFiles_Field.text = this.showfolder;
+        if (!MoveFiles_Field.text.ends("/"))
+          MoveFiles_Field.text @= "/";
+        break;
+      }
+    case "Rename": {
+        TextEditor.openTextInput("RenameFile","Rename File","Enter the new filename:","Rename");
+        RenameFile_Field.text = this.selectedfile;
+        break;
+      }
+    case "Delete": {
+        requestFileDeletion(this.selectedfile);
+        requesttext("folder",this.showfolder);
+        break;
+      }
+  }
+}
+
+function MoveFiles_Button.onAction() {
+  targetfolder = MoveFiles_Field.text;
+  if (!targetfolder.ends("/"))
+    targetfolder @= "/";
+  echo("moving files to : " @ targetfolder);
+  requestFilesMove(targetfolder,this.selectedfile);
+  requesttext("folder",this.showfolder);
+  MoveFiles_Window.hide();
+}
+
+function RenameFile_Button.onAction() {
+  newfilename = RenameFile_Field.text;
+  echo("renaming file to: " @ newfilename);
+  requestFileRename(this.selectedfile,newfilename);
+  requesttext("folder",this.showfolder);
+  RenameFile_Window.hide();
+}
+
+function onFolderLog(text) {
+  echo("folderlog: " @ text);
+  FileBrowser_DebugText.addText("\n" @ text, true);
+  FileBrowser_DebugText.scrollToBottom();
+}
+
+function onReceiveText(texttype,textoption,textlines) {
+  switch (texttype) {
+    case "folders":
+      FileBrowser_Tree.clearNodes();
+      for (foldername: textlines) {
+        subnode = FileBrowser_Tree.addNodeByPath(foldername,"/");
+        subnode.sortgroup = 1;
+        subnode.expanded = false;
+      }
+      FileBrowser_Tree.sort();
+      break;
+    case "folder":
+      FileBrowser_FilesList.clearRows();
+      this.displayedfiles = textlines;
+      for (i=0; i<textlines.size(); i++) {
+        fileentry = textlines[i];
+
+        // Add the file entry
+        str = fileentry[0] @ '\t' @ fileentry[1] @ '\t' @ fileentry[2] @ '\t' @ fileentry[3];
+        FileBrowser_FilesList.addRow(i,str);
+
+        // Set icon
+        dotpos = fileentry[0].positions(".");
+        imgfilename = dotpos.size() > 0 ? "fileicon_" @ fileentry[0].substring(dotpos[dotpos.size()-1] + 1, -1) @ ".png" : "";
+        lastRow().icon.drawimagerectangle(0,0,imgfilename,0,0,16,16);
+      }
+      FileBrowser_FilesList.sort();
+      break;
+  }
+}
+
+function onTreeView(obj,node,path,dot) {
+  this.showfolder = path;
+  requesttext("folder",path);
+}
+
+function lastRow() return FileBrowser_FilesList.rows[FileBrowser_FilesList.rows.size()-1];
+
+
+
+function openWindow(textlines, filename){
+  temp.filename = filename;
+
+  this.buttons = {{"Cancel","Send"},{"Add","Delete","Edit","Close"}};
+  this.button_position = {{{285,318},{335,318}},{{12,318},{62,318},{285,318},{335,318}}};
+
+  windownum = editwindows++;
+  windowname = "FileBrowserText" @ windownum @ "_";
+//  player.chat = "new window: " @ windowname;
+  new GuiWindowCtrl(windowname @ "Window") {
+    profile = "GuiBlueTransWindowProfile";
+    x = (screenwidth/2)-200 + 35;
+    y = (screenheight/2)-175 + 35;
+    width = 400;
+    height = 350;
+    canMaximize = true;
+    canClose = true;
+    text = "Text Editor";
+    tile = true;
+    destroyOnHide = true;
+
+    for (k=0; k<thiso.buttons[0].size(); k++){
+      new GuiButtonCtrl(windowname @ thiso.buttons[0][k]){
+        profile = "GuiBlueButtonProfile";
+        x = thiso.button_position[0][k][0];
+        y = thiso.button_position[0][k][1];
+        width = 50;
+        height = 25;
+        horizSizing = (x<150? "right" : "left");
+        vertSizing = "top";
+        visible = true;
+        text = thiso.buttons[0][k];
+
+        this.filename = temp.filename;
+        this.editname = windowname @ "Text";
+
+        thiso.catchevent(name, "onAction", "on" @ thiso.buttons[0][k]);
+      }
+    }
+
+    new GuiTextCtrl(windowname @ "Line") {
+      profile = "GuiLightTextProfile";
+      x = 20;
+      y = 318;
+      text = "Line: ";
+      vertSizing = "top";
+    }
+
+    new GuiPopUpMenuCtrl(windowname @ "TemplateBox") {
+      profile = "GuiBluePopUpMenuProfile";
+      horizSizing = "width";
+      vertSizing = "top";
+      x = 100;
+      y = 318;
+      extent = "125 20";
+      visible = false;
+    }
+
+    new GuiScrollCtrl(windowname @ "Scroll") {
+      profile = "TextEditorScrollProfile";
+      horizSizing = "width";
+      vertSizing = "height";
+      x = 5;
+      y = 24;
+      width = 390;
+      height = 290;
+      hScrollBar = "dynamic";
+      vScrollBar = "dynamic";
+      tile = true;
+      willFirstRespond = true;
+
+      new GuiMLTextEditCtrl(windowname @ "Text") {
+        profile = "TextEditorProfile";
+        width = 1024;
+        height = 1024;
+        wordWrap = false;
+        syntaxHighlighting = true;
+      }
+    }
+  }
+  (windowname @ "Text").setLines(textlines);
+  return windowname;
+}
+
+function onSend(obj) {
+  triggerserver("gui", "RC/FileBrowser", "savelines", makevar(obj.editname).getLines(), obj.filename);
+}

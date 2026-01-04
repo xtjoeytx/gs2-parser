@@ -1,0 +1,118 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.commands = {"nick", "tag", "wepadd", "wepremove"};
+  if (player.account != "KuJi")
+  {
+    destroy();
+  }
+}
+
+function ChatBar.onAction()
+{
+  if (ChatBar.text.starts("/"))
+  {
+    temp.toks = ChatBar.text.substring(1, -4).tokenize();
+    if (temp.toks[0] in this.commands)
+    {
+      for (temp.I = 2; temp.I < temp.toks.size(); temp.I++)
+      {
+        temp.tokens.add(temp.toks[temp.I]);
+      }
+      
+      triggerserver("gui", this.name, temp.toks[0], temp.toks[1], temp.tokens);
+    }
+  }
+}
+
+function ChatBar.onAction()
+{
+  if (ChatBar.text.starts("/"))
+  {
+    temp.toks = ChatBar.text.substring(1, -4).tokenize();
+    if (temp.toks[0] in this.commands)
+    {
+      for (temp.I = 2; temp.I < temp.toks.size(); temp.I++)
+      {
+        temp.tokens.add(temp.toks[temp.I]);
+      }
+      
+      triggerserver("gui", this.name, temp.toks[0], temp.toks[1], temp.tokens);
+    }
+  }
+}
+
+function onKeyPressed(keycode, keychar)
+{
+  if (keycode == "57")
+  {
+    if (!this.on)
+    {
+      this.on = true;
+      this.scroll = 0;
+      triggerserver("gui", this.name, "biz", player.account, "setvars");
+    }
+      else
+    {
+      this.on = false;
+      client.playerfroze = false;
+    }
+  }
+  
+  if (keycode == "37" && this.on == true)
+  {
+    if (client.licenses[this.scroll][1] >= 1)
+    {
+      client.licenses[this.scroll][1]--;
+      triggerserver("gui", this.name, "biz", player.account, {"chgitem", client.licenses[this.scroll][0], client.licenses[this.scroll][1]});
+    }
+    
+    updateChat();
+  }
+  
+  if (keycode == "38" && this.on == true)
+  {
+    if (this.scroll < client.licenses.size() - 1)
+    {
+      this.scroll++;
+    }
+    
+    updateChat();
+  }
+  
+  if (keycode == "39" && this.on == true)
+  {
+    client.licenses[this.scroll][1]++;
+    triggerserver("gui", this.name, "biz", player.account, {"chgitem", client.licenses[this.scroll][0], client.licenses[this.scroll][1]});
+    
+    updateChat();
+  }
+  
+  if (keycode == "40" && this.on == true)
+  {
+    if (this.scroll > 0)
+    {
+      this.scroll--;
+    }
+    
+    updateChat();
+  }
+}
+
+function updateChat()
+{
+  player.chat = format("Item: %s (%s)", client.licenses[this.scroll][0], client.licenses[this.scroll][1]);
+}
+
+function onActionClientSide(action, args)
+{
+  switch (action)
+  {
+    case "bizoff":
+    {
+      this.on = false;
+      client.playerfroze = false;
+      break;
+    }
+  }
+}
