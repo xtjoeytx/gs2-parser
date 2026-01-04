@@ -85,7 +85,7 @@ set(SOURCES_ALL
 
 if (DEFINED EMSCRIPTEN)
 	add_executable(gs2test ${SOURCES_ALL} src/js_interface.cpp)
-	set_target_properties(gs2test PROPERTIES LINK_FLAGS "--embind-emit-tsd gs2test.d.ts -s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
+	set_target_properties(gs2test PROPERTIES LINK_FLAGS "--embind-emit-tsd=gs2test.d.ts -s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
 else()
 	add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
 endif()
