@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "a4baec54fe9f559461534bdeb2c40a64ab5a42b893b545b762b51e1cee301b1e",
+  "bytecode_size": 1534,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-StaffTool.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

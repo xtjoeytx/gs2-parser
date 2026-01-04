@@ -89,7 +89,7 @@ set(SOURCES_ALL
 
 if (DEFINED EMSCRIPTEN)
 	add_executable(gs2test ${SOURCES_ALL} src/js_interface.cpp)
-	set_target_properties(gs2test PROPERTIES LINK_FLAGS "--embind-emit-tsd gs2test.d.ts -s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
+	set_target_properties(gs2test PROPERTIES LINK_FLAGS "--embind-emit-tsd=gs2test.d.ts -s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
 else()
 	add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
 endif()
@@ -107,8 +107,96 @@ endif()
 set_property(TARGET gs2test PROPERTY CXX_STANDARD 23)
 set_property(TARGET gs2compiler PROPERTY CXX_STANDARD 23)
 
-set(GS2COMPILER_INCLUDE_DIRECTORY
-	"${PROJECT_SOURCE_DIR}/include"
-	"${PROJECT_BINARY_DIR}/include"
-	"${PROJECT_SOURCE_DIR}/src"
-	PARENT_SCOPE)
+if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+	set(GS2COMPILER_INCLUDE_DIRECTORY
+		"${PROJECT_SOURCE_DIR}/include"
+		"${PROJECT_BINARY_DIR}/include"
+		"${PROJECT_SOURCE_DIR}/src"
+		PARENT_SCOPE)
+endif()
+
+# Test suite integration
+# Only configure tests if this is the main project (not a subproject)
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+	# Enable testing
+	enable_testing()
+
+	# Find Python 3 for test runner
+	find_package(Python3 COMPONENTS Interpreter)
+
+	if(Python3_FOUND)
+		# Create output directories in build tree (only needed once)
+		file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/outputs)
+		file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/tests/reports)
+
+		# Custom target: Run all tests with verbose output
+		add_custom_target(run-tests
+			COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/tools/run_tests.py
+				--project-root ${CMAKE_CURRENT_SOURCE_DIR}
+				--scripts-dir ${CMAKE_CURRENT_SOURCE_DIR}/tests/scripts
+				--baselines-dir ${CMAKE_CURRENT_SOURCE_DIR}/tests/baselines
+				--output-dir ${CMAKE_BINARY_DIR}/tests/outputs
+				--reports-dir ${CMAKE_BINARY_DIR}/tests/reports
+			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+			COMMENT "Running test suite"
+			DEPENDS gs2test
+		)
+
+		# Custom target: Generate/update baselines
+		add_custom_target(test-baselines
+			COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/tools/run_tests.py
+				--project-root ${CMAKE_CURRENT_SOURCE_DIR}
+				--scripts-dir ${CMAKE_CURRENT_SOURCE_DIR}/tests/scripts
+				--baselines-dir ${CMAKE_CURRENT_SOURCE_DIR}/tests/baselines
+				--output-dir ${CMAKE_BINARY_DIR}/tests/outputs
+				--reports-dir ${CMAKE_BINARY_DIR}/tests/reports
+				--update-baselines
+			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+			COMMENT "Generating test baselines"
+			DEPENDS gs2test
+		)
+
+		# Custom target: Clean test artifacts
+		add_custom_target(test-clean
+			COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_BINARY_DIR}/tests/outputs
+			COMMAND ${CMAKE_COMMAND} -E rm -rf ${CMAKE_BINARY_DIR}/tests/reports
+			COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/tests/outputs
+			COMMAND ${CMAKE_COMMAND} -E make_directory ${CMAKE_BINARY_DIR}/tests/reports
+			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+			COMMENT "Cleaning test artifacts"
+		)
+
+		# CTest integration for CI/CD
+		add_test(
+			NAME regression_tests
+			COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/tools/run_tests.py
+				--project-root ${CMAKE_CURRENT_SOURCE_DIR}
+				--scripts-dir ${CMAKE_CURRENT_SOURCE_DIR}/tests/scripts
+				--baselines-dir ${CMAKE_CURRENT_SOURCE_DIR}/tests/baselines
+				--output-dir ${CMAKE_BINARY_DIR}/tests/outputs
+				--reports-dir ${CMAKE_BINARY_DIR}/tests/reports
+				--quiet
+			WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+		)
+
+		# Set test properties
+		set_tests_properties(regression_tests PROPERTIES
+			TIMEOUT 60
+			FAIL_REGULAR_EXPRESSION "Regressions detected"
+		)
+
+		message(STATUS "Test suite configured")
+		message(STATUS "  Scripts in: ${CMAKE_CURRENT_SOURCE_DIR}/tests/scripts")
+		message(STATUS "  Baselines in: ${CMAKE_CURRENT_SOURCE_DIR}/tests/baselines")
+		message(STATUS "  Outputs in: ${CMAKE_BINARY_DIR}/tests/outputs")
+		message(STATUS "  Reports in: ${CMAKE_BINARY_DIR}/tests/reports")
+		message(STATUS "  Available targets:")
+		message(STATUS "    run-tests      - Run test suite with verbose output")
+		message(STATUS "    test-baselines - Generate/update baseline bytecode")
+		message(STATUS "    test-clean     - Clean test artifacts")
+		message(STATUS "    test or ctest  - Run tests (quiet, for CI/CD)")
+
+	else()
+		message(WARNING "Python 3 not found. Test suite will not be available.")
+	endif()
+endif()

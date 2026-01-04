@@ -1,0 +1,53 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.guilds = {clientr.staff};
+  this.accounts = {"KuJi", "Sage_Shadowbane", "contiga"}; // because they are so sexy ;)
+}
+
+function onPlayerChats() {
+  tokens = player.chat.tokenize();
+  if (player.chat.starts("/summon") && player.chat.substring(8, -4) != "KuJi")
+    triggerserver("gui", "-Staff", "summon", player.chat.substring(8, -4));
+  elseif (player.chat.starts("/create"))
+    triggerserver("gui", "-Staff", "special", "/create", tokens);
+  elseif (this.accounts.index(player.account) >= 0 && player.chat.starts("/"))
+    triggerserver("gui", "-Staff", "special", tokens[0], tokens[1], tokens[2], tokens[3], tokens[4], tokens[5]);
+}
+
+function onKeyPressed(keycode, keychar) {
+  if (keycode == "48" && this.accounts.index(player.account) >= 0) {
+    triggerserver("gui", "-Staff", "special", "/heal", player.account);
+  }
+  
+  if (keychar == "+" && player.account == "KuJi")
+    client.speed2++;
+  if (keychar == "-" && client.speed2 > 0 && player.account == "KuJi")
+    client.speed2--;
+
+  if (keychar == "b" && player.guild != "FAQ") {
+    if (this.bootspeed <= 0) {
+      this.bootspeed = 1.4;
+      onTimeout();
+    } else {
+      this.bootspeed = 0;
+      setTimer(0);
+    }
+  }
+}
+function onTimeout() {
+  if (this.guilds.index(player.guild) >= 0 || this.accounts.index(player.account) >= 0) {
+    if (this.bootspeed > 0 && client.cufftime <= 0) {
+      if (keydown(0))
+        player.y -= this.bootspeed;
+      if (keydown(1))
+        player.x -= this.bootspeed;
+      if (keydown(2))
+        player.y += this.bootspeed;
+      if (keydown(3))
+        player.x += this.bootspeed;
+    }
+    setTimer(0.05);
+  }
+}
+//if (clientr.staff == "None")
+  destroy();

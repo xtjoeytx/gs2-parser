@@ -1,0 +1,11 @@
+//#CLIENTSIDE
+function onBomyWeaponFired() {
+  onWeaponFired();
+}
+
+function onWeaponFired() {
+  triggeraction(player.x, player.y, "dive", player.level, player.account);
+  if (client.divedown) {
+    triggeraction(0, 0, warp, "");
+  }
+}

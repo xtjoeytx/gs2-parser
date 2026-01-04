@@ -1,0 +1,363 @@
+//#CLIENTSIDE
+function onCreated() {
+  rcoptions.loadvars("rcoptions.txt");
+  createVars();
+  createBackround();
+
+  setTimer(1);
+}
+
+function createBackround() {
+  requesttext("clientrc", 1);
+
+  new GuiWindowCtrl("RemoteControl_Window") {
+    profile = "GuiBlueTransWindowProfile";
+    position = "0 0";
+    extent = "500 350";
+    canMove = true;
+    canResize = true;
+    canClose = true;
+    tile = true;
+    text = "Scripted Remote Control 2005/12/26 - By Okiesmokie";
+    visible = false;
+
+    new GuiBitmapCtrl("RemoteControl_Bitmap") {
+      profile = "GuiBlueTextProfile";
+      horizSizing = "width";
+      position = "5 24";
+      extent = "490 144";
+      wrap = false;
+      bitmap = "rc_graalonline.jpg";
+    }
+
+    new GuiMLTextCtrl("RemoteControl_Server") {
+      profile = "GuiBlueMLTextProfile";
+      position = "15 110";
+      extent = "350 22";
+      minExtent = "100 22";
+      text = "<shadow:1:1><shadowcolor:000000>Server: Graal X";
+    }
+    new GuiMLTextCtrl("RemoteControl_Players") {
+      profile = "GuiBlueMLTextProfile";
+      position = "15 125";
+      extent = "350 22";
+      minExtent = "100 22";
+      text = "<shadow:1:1><shadowcolor:000000>Players: " @ allplayers.size();
+    }
+    i = 0;
+    for (button: thiso.buttons) {
+      if (thiso.buttontype[i] == 2 && thiso.hasnc == false) continue;
+      new GuiBitmapButtonCtrl("RemoteControl_Button_" @ button) {
+        profile = "GuiButtonProfile";
+        horizSizing = (thiso.buttontype[i]==0? "right" : "left");
+        x = thiso.buttonpos[i][0];
+        y = thiso.buttonpos[i][1];
+        width = 32;
+        height = 32;
+        normalbitmap = "rc_" @ thiso.imgs[i] @"_normal.png";
+        mouseoverbitmap = "rc_" @ thiso.imgs[i] @"_normal.png";
+        pressedbitmap = "rc_" @ thiso.imgs[i] @"_pressed.png";
+        hint = button;
+        thiso.catchevent(name,"onAction","on" @ button);
+      }
+      i++;
+    }
+
+    // Chat display
+    new GuiScrollCtrl("RemoteControl_ChatScroll") {
+      profile = "GuiBlueScrollProfile";
+      position = "6 167";
+      extent = "488 158";
+      horizSizing = "width";
+      vertSizing = "height";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+
+      new GuiMLTextCtrl("RemoteControl_ChatList") {
+        profile = "GuiBlueMLTextProfile";
+        horizSizing = "width";
+        x = y = 0;
+        width = 470;
+      }
+    }
+
+    // Chat edit field
+    new GuiTextEditCtrl("RemoteControl_Chat") {
+      profile = "GuiBlueTextEditProfile";
+      horizSizing = "width";
+      vertSizing = "top";
+      position = "6 324";
+      extent = "488 20";
+      historySize = 100;
+      tabComplete = true;
+    }
+  }
+  rchelpmsg = {
+    "Welcome to Graal X's RC"
+  };
+  RemoteControl_ChatList.setLines(rchelpmsg);
+}
+
+function onKeyPressed(keycode, character) {
+  if (character == '`' || character == "~") {
+    RemoteControl_Window.visible = !RemoteControl_Window.visible;
+  }
+}
+
+function createVars() {
+  // Does the player have NC?
+  this.hasnc = true; // has NC
+
+  // Object that is the text for players online
+  this.playerscount = "RemoteControl_Players";
+
+  // chat field
+  this.chat = "RemoteControl_Chat";
+
+  // needed for easy checking if this is true/false to log RC chat
+  this.LogRcChat = "RemoteControl_Options_LogChat";
+
+  // Button Control Gui Object Endings
+  if (this.hasnc == true)
+  this.buttons = {"Options","ServerFlags","FolderConfig","ServerOptions",
+    "NPCList","Data Blocks","ClassList","GuiScripts",
+    "ScriptHelp","FileBrowser","PlayerList"};
+  else
+  this.buttons = {"Options","ServerFlags","FolderConfig","ServerOptions",
+    "ScriptHelp","FileBrowser","PlayerList"};
+
+  // Image Ending for Gui Button Controls
+  if (this.hasnc == true)
+  this.imgs = {"options","serverflags","folderoptions","serveroptions",
+    "npclist","datablocks","classlist","guiscripts",
+    "help","filebrowser","playerlist"};
+  else
+  this.imgs = {"options","serverflags","folderoptions","serveroptions",
+    "help","filebrowser","playerlist"};
+
+  // Type of Button (0 = dont move on resize, 1 = move on resize,2 = move on resize + shownc)
+  if (this.hasnc == true)
+    this.buttontype = {1,1,1,1,1,1,1,1,0,0,0};
+  else
+    this.buttontype = {1,1,1,1,0,0,0};
+
+  // position on the backround of the buttons
+  if (this.hasnc == true)
+  this.buttonpos = {{389,38},{422,38},{455,38},{455,71},
+    {356,121},{389,121},{422,121},{455,121},
+    {46,38},{13,71},{13,38}};
+  else
+  this.buttonpos = {{389,38},{422,38},{455,38},{455,71},
+    {46,38},{13,71},{13,38}};
+
+  // Options Checkbox Gui Object Endings
+  this.options_checkbox = {
+    "LogChat",
+    "DontShowRCSignOnOff",
+    "NoPMs",
+    "highlighting"};
+
+  // Options Checkbox Gui Object Descriptions
+  this.options_checkbox_text = {
+    "Log RC Chat",
+    "Don't Show RC Signons and Signoffs",
+    "Do not receive PMs",
+    "Enable message highlighting"};
+}
+
+function RemoteControl_Chat.onAction(text) {
+  if(text.starts("/openrights")) {
+    findWeapon("RC/RightsWindow").OpenRightsWindow(text.substring(11, -1).trim());
+  } else if(text.starts("/flags")) {
+    findWeapon("RC/AttributesWindow").openFlags(text.substring(6,-1).trim());
+  } else {
+    sendtorc(text);
+  }
+
+  RemoteControl_Chat.text = "";
+}
+
+function RemoteControl_Options_NickEditText.onAction(text) {
+//  triggeraction(0,0,"serverside","RC","setnick",text);
+  player.chat = "setnick " @ text;
+}
+
+function onFileBrowser(obj) {
+  findWeapon("RC/FileBrowser").openFileBrowser();
+}
+
+function onOptions(obj) {
+  rcoptions.loadvars("rcoptions.txt");
+  new GuiWindowCtrl(RemoteControl_Options_Screen) {
+    profile = "GuiBlueTransWindowProfile";
+    position = "1 1";
+    extent = "240 160";
+    canMove = true;
+    canMaximize = false;
+    canResize = false;
+    canClose = true;
+    text = "Options";
+    destroyonhide = true;
+    tile = true;
+
+    new GuiControl(RemoteControl_Options_Pane) {
+      profile = "GuiBlueTransWindowProfile";
+      horizSizing = "right";
+      vertSizing = "bottom";
+      position = "9 30";
+      extent = "222 120";
+      minExtent = "8 8";
+      visible = "1";
+
+      i = 0;
+      for (checkbox: thiso.options_checkbox) {
+        new GuiCheckBoxCtrl("RemoteControl_Options_" @ checkbox){
+          profile = "GuiBlueCheckBoxProfile";
+          x = 10;
+          y = 10 + 20*i;
+          extent = "200 20";
+          minExtent = "8 20";
+          text = thiso.options_checkbox_text[i];
+          groupNum = "-1";
+          buttonType = "ToggleButton";
+          checked = makevar("rcoptions." @ name);
+          thiso.catchevent(name,"onAction","onCheckBox");
+        }
+        i++;
+      }
+      new GuiMLTextCtrl(RemoteControl_Options_NickText) {
+        profile = "GuiBlueMLTextProfile";
+        x = 10;
+        y = 13 + 20*i;
+        width = 50;
+        resizeHeight = false;
+        text = "Nickname:";
+      }
+      new GuiTextEditCtrl(RemoteControl_Options_NickEditText) {
+        profile = "GuiBlueTextEditProfile";
+        x = 70;
+        y = 10 + 20*i;
+        extent = "100 20";
+        minExtent = "100 20";
+        tabComplete = false;
+        text = player.nick;
+      }
+    }
+  }
+}
+
+function onPlayerList(obj) {
+  PlayerList_Window.visible = true;
+  PlayerList_Window.bringToFront();
+}
+
+function onScriptHelp(obj) {
+  DocumentSystem.openDocSystem();
+}
+
+function onServerFlags(obj) {
+  requesttext("serverflags","");
+}
+
+function onServerOptions(obj) {
+  requesttext("options","");
+}
+
+function onClassList(obj) {
+  requesttext("classlist","");
+}
+
+function onGuiScripts(obj) {
+  requesttext("weaponlist","");
+}
+
+function onNPCList(obj) {
+  requesttext("npclist","");
+  //ObjectList.openWindow();
+}
+
+function onFolderConfig(obj) {
+  requesttext("folderconfig", "");
+}
+
+function onTimeout() {
+  temp.playercount = 0;
+
+  for(temp.pl: allplayers) {
+    if(!temp.pl.account.starts("irc:")) {
+      if(!(temp.pl.nick.pos("(on ") >= 0)) {
+        temp.playercount++;
+      }
+    }
+  }
+
+  (@this.playerscount).text =  "Players: " @ temp.playercount;
+
+  setTimer(1);
+}
+
+
+/*
+function onRCChat(text) {
+  RemoteControl_ChatList.addText("\n" @ text, true);
+  RemoteControl_ChatList.scrollToBottom();
+  text @= "\n";
+  //if (rcoptions.(@this.LogRcChat) == true)
+    text.savestring("rclog.txt",1);
+}
+*/
+
+// Modified RC chat to support highlighting
+function onRCChat(text) {
+  normalcolor="limegreen";
+  RemoteControl_RCText.width = RC_MainWindow.width-32;
+  tcolon = text.pos(":");
+  if (player.nick.substring(0,1)=="*") chknick = player.nick.substring(1,-1);
+  else chknick = player.nick;
+  if (rcoptions.RemoteControl_Options_highlighting==true) {
+    if (!contains(text.substring(tcolon+1,-1),chknick)) {
+      ntext = "<font color=\""@normalcolor@"\">";
+    } else {
+      play("chest.wav");
+      ntext = "<font color=\"yellow\">";
+    }
+  } else {
+    ntext = "<font color=\""@normalcolor@"\">";
+  }
+  ntext @= text.substring(0,tcolon+1) @ "</font>" @ text.substring(tcolon+1,-1);
+  text @= "\n";
+  RemoteControl_ChatList.addtext("\n" @ ntext, true);
+  RemoteControl_ChatList.scrolltobottom();
+}
+
+function onCheckBox(obj) {
+  "checked".(@obj) = @obj.checked;
+  checked.savevars("rcoptions.txt",0);
+  rcoptions.loadvars("rcoptions.txt");
+}
+
+function onReceiveText(texttype,textoption,textlines) {
+  switch (texttype) {
+    case "options":
+    case "folderconfig":
+    case "serverflags":
+      findWeapon("RC/TextEditor").openRCWindow(texttype,textoption,textlines);
+      break;
+
+    case "weaponlist":
+    case "classlist":
+    case "datablocks":
+    case "npclist":
+      findWeapon("RC/TextEditor").openRCList(texttype,textoption,textlines);
+      break;
+
+
+    case "playerflags":
+      RemoteControl_ChatList.addtext("\nTesting..", true);
+      for(line: textlines) {
+        RemoteControl_ChatList.addtext("\n" @ line, true);
+      }
+      RemoteControl_ChatList.scrolltobottom();
+      break;
+  }
+}

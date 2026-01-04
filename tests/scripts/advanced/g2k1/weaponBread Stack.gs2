@@ -1,0 +1,53 @@
+//#CLIENTSIDE
+
+function onCreated() {
+  this.valid_levels = {
+    "worldx-13_applebakery.nw",
+    "worldx-14_bakery.nw"
+  };
+
+  init();
+}
+
+function onPlayerEnters() {
+  init();
+}
+
+function init() {
+  if (!contains(this.valid_levels, player.level)) {
+    endani();
+  } else if (!player.ani.starts("stack_")) {
+    startani();
+  }
+
+  setTimer(0.05);
+}
+
+function startani() {
+  replaceani("idle", "stack_idle");
+  replaceani("walk", "stack_walk");
+  setani("stack_idle", null);
+  player.attr[2] = "";
+}
+
+function endani() {
+  replaceani("idle", "idle");
+  replaceani("walk", "walk");
+  if (player.ani.starts("stack_")) {
+    setani("idle", null);
+  }
+  
+  destroy();
+}
+
+function onTimeout() {
+  if (player.weapon == this.name && player.ani.starts("stack_")) {
+    setTimer(0.05);
+  } else {
+    endani();
+  }
+}
+
+function onWeaponFired() {
+  triggeraction(player.x+2+vecx(player.dir)*2, player.y+vecy(player.dir)*2, "laybread", player.account);
+}

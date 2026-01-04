@@ -1,0 +1,278 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.badanis = {"grab", "pull", "push", "swim"};
+  this.CarSeats = {{0.1, -0.6}, {3, 0, 1, 2}, {1.2, -0.6, -2}, {1.2, 0.6, -3}};
+}
+
+function onWeaponFired()
+{
+  this.muditem = new TStaticVar();
+  this.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+  
+  if (this.muditem.itemtype == "ARCHETYPE_GUN")
+  {
+    if (this.gunout <= 0)
+    {
+      onEquip();
+    }
+      else
+    {
+      if (this.burst != 2)
+      {
+        onFire();
+      }
+    }
+    
+    onTimeout();
+  }
+}
+
+function onTimeout()
+{
+  if (this.gunout == client.selectedweapon)
+  {
+    this.muditem = new TStaticVar();
+    this.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+    client.ammo = this.muditem.loaded - client.ammosave;
+    
+    if (this.changed == true && (this.muditem.loaded - client.ammosave) != this.oldvalue)
+    {
+      this.changed = false;
+    }
+    
+    if (clientr.car)
+    {
+      onUnequip();
+    }
+
+    if (this.shot <= 0)
+    {
+      if (player.weapon != "+Guns" || player.ani == "swim")
+      {
+        onUnequip();
+      }
+      
+      if (keydown(4))
+      {
+        if (this.burst == 2)
+        {
+          onFire();
+        }
+      }
+      
+      if (keydown(5))
+      {
+        onUnequip();
+      }
+      
+      if (keydown(6))
+      {
+        onReload();
+      }
+    }
+  }
+    elseif (this.gunout != -1)
+  {
+    onUnequip();
+  }
+    
+  if (this.shot > 0) this.shot -= 0.05;
+  
+  setTimer(0.05);
+}
+
+function onKeyPressed(keycode, keychar)
+{
+  if (this.gunout > 0)
+  {
+    if (keychar == "F" && this.muditem.dual == false)
+    {
+      player.chat = "CAN DUEL";
+      
+     // onDualGuns();
+    }
+    
+    if (keychar == "G")
+    {
+      onChgBurst();
+    }
+  }
+}
+
+function onDualGuns()
+{
+  temp.find = player.Mud_FindAllItems("realname", this.muditem.realname);
+  player.chat = "Found: " @ temp.find;
+}
+
+function onChgBurst()
+{
+  this.burst++;
+  
+  while (this.burstmodes[this.burst] == 0)
+  {
+    if (this.burst == this.burstmodes.size())
+    {
+      this.burst = 0;
+    }
+      else
+    {
+      this.burst++;
+    }
+  }
+}
+
+function onEquip()
+{
+  this.gunout = client.selectedweapon;
+  this.burstmodes = this.muditem.gun[3];
+  setani(this.muditem.gun[0] @ "-idle", NULL);
+  findWeapon("-Movement").changeAnis(this.muditem.gun[0] @ "-idle", this.muditem.gun[0] @ "-walk", "swim", "push", "pull", "grab", "sit", "sleep", "map");
+  onChgBurst();
+  this.shot = 0.25;
+  
+  if (this.muditem.loaded - client.ammosave > this.muditem.gun[2])
+  {
+    onAddUp();
+  }
+  
+  client.ammo = this.muditem.loaded - client.ammosave;
+  client.ammomax = this.muditem.gun[2];
+  onTimeout();
+}
+
+function onFire()
+{
+  if (this.muditem.loaded - client.ammosave > 0)
+  {
+    if (this.shot <= 0 && clientr.health > 0)
+    {
+      if (this.burst == 0 || this.burst == 2)
+      {
+        this.maxbullets = 1;
+      }
+        else
+      {
+        if (this.burst == 1)
+        {
+          this.maxbullets = 3;
+          if (this.muditem.loaded - client.ammosave < this.maxbullets)
+            this.maxbullets = this.muditem.loaded- client.ammosave;
+        }
+      }
+      
+      // Actual Gun Firing
+      if (clientr.icar)
+      {
+      //  player.dir = this.CarSeats[clientr.icar[1]][client.carhold];
+        return false;
+      }
+        elseif (strafedir > -1)
+      {
+        player.dir = strafedir;
+      }
+      
+      playerfreeze = this.muditem.sfreeze[this.burst][0];
+      this.shot = this.muditem.sfreeze[this.burst][1];
+      setani(this.muditem.gun[0] @ "-fire", NULL);
+
+      for (temp.i = 0; temp.i < this.maxbullets; temp.i++)
+      {
+        if (this.muditem.realname == "XM8S" && random(0, 1) >= 0.75)
+        {
+          newx = random(player.x - 8, player.x + 8);
+          newy = random(player.y - 8, player.y + 8);
+          if (!onwall2(newx, newy, 4, 4))
+          {
+            player.x = newx;
+            player.y = newy;
+          }
+        }
+        
+        client.ammosave++;
+        this.angle = getangle(vecx(player.dir), vecy(player.dir)) + random(this.muditem.gunrand[this.burst][0], this.muditem.gunrand[this.burst][1]);
+        
+        if (player.guild != NULL)
+        {
+          setshootparams(player.account, this.muditem.damage[this.burst], player.guild, client.nopk, "gun", this.angle, {this.muditem.gunrand[this.burst][0], this.muditem.gunrand[this.burst][1]});
+        }
+          else
+        {
+          setshootparams(player.account, this.muditem.damage[this.burst], "(none)", client.nopk, "gun", this.angle, {this.muditem.gunrand[this.burst][0], this.muditem.gunrand[this.burst][1]});
+        }
+        
+        shoot(player.x + this.muditem.gundir[player.dir][0], player.y + this.muditem.gundir[player.dir][1], 0, this.angle, 1, -1, "gx_bullets", NULL);
+        sleep(0.01);
+      }
+      // Above
+    }
+  }
+  else
+  {
+    onNoLoad();
+  }
+}
+
+function onNoLoad()
+{
+  playerfreeze = this.muditem.freeze[2];
+  setani(this.muditem.gun[0] @ "-noload", NULL);
+  sleep(this.muditem.freeze[3]);
+}
+
+function onReload()
+{
+  if (!contains(this.badanis, player.ani))
+  {
+    if (this.shot <= 0 && this.changed == false)
+    {
+      if (this.muditem.loaded - client.ammosave < this.muditem.gun[2])
+      {
+        this.diff = this.muditem.gun[2] - (this.muditem.loaded - client.ammosave);
+        if (makevar("clientr.ammo_" @ this.muditem.gun[1]) <= this.diff)
+        {
+          this.adiff = this.diff;
+          this.adiff -= makevar("clientr.ammo_" @ this.muditem.gun[1]);
+          this.diff = this.muditem.gun[2] - this.adiff;
+        }
+        
+        if (this.diff > 0 && makevar("clientr.ammo_" @ this.muditem.gun[1]) >= this.diff)
+        {
+          playerfreeze = this.muditem.freeze[0];
+          this.shot = this.muditem.freeze[1];
+          setani(this.muditem.gun[0] @ "-reload", NULL);
+          this.newammo = makevar("clientr.ammo_" @ this.muditem.gun[1]) - this.diff;
+          this.oldvalue = this.muditem.loaded - client.ammosave;
+          this.changed = true;
+          triggerserver("gui", name, "globalammo", client.selectedweapon, this.muditem.gun[1], this.newammo, this.diff, client.ammosave);
+          client.ammosave = 0;
+        }
+      }
+    }
+  }
+}
+
+function onUnequip()
+{
+  triggerserver("gui", name, "loseammo", this.gunout, client.ammosave); 
+  client.ammosave = 0;
+  this.burstmodes = -1;
+  this.burst = -1;
+  this.gunout = -1;
+  
+  if (player.ani != "swim") setani("idle", NULL);
+  
+  play("nextpage.wav");
+  findWeapon("-Movement").changeAnis3();
+  playerfreeze = 0.1;
+  setTimer(0);
+}
+
+function onAddUp()
+{
+  this.diff = (this.muditem.loaded - client.ammosave) - this.muditem.gun[2];
+  this.holder = makevar("clientr.ammo_" @ this.muditem.gun[1]);
+  this.newammo = makevar("clientr.ammo_" @ this.muditem.gun[1]) += this.diff;
+  triggerserver("gui", name, "fixammo", client.selectedweapon, this.muditem.gun[1], this.newammo);
+}

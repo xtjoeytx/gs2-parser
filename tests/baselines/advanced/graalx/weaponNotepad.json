@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "db8f9d35a3384248283a814886b69c951df24ed85245ef79d3ab303186ff999c",
+  "bytecode_size": 2599,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponNotepad.gs2",
+    "generated_at": "2026-01-04 16:44:41",
+    "compiler_version": "modified_1767562734"
+  }
+}

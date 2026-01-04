@@ -1,0 +1,11 @@
+//#CLIENTSIDE
+function onWeaponFired()
+{
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+
+  if (temp.muditem.quantity >= 1 && temp.muditem.cardnum != "")
+  {
+    triggeraction(player.x + 1.5 + vecx(player.dir) * 2, player.y + 1.5 + vecy(player.dir) * 2, "atm", temp.muditem.cardnum);
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "6f630a95434120e832c8251d91252c09e3d8c9c7b42bd7bec67f2270e426fbb2",
+  "bytecode_size": 3300,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon+Guns_Shotgun.gs2",
+    "generated_at": "2026-01-04 16:44:41",
+    "compiler_version": "modified_1767562734"
+  }
+}

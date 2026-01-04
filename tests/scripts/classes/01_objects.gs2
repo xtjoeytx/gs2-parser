@@ -1,0 +1,35 @@
+// Object creation and manipulation
+function testObjects() {
+  // Create new object
+  temp.obj = new TStaticVar();
+
+  // Set object properties
+  temp.obj.x = 10;
+  temp.obj.y = 20;
+  temp.obj.name = "test object";
+  temp.obj.active = true;
+
+  // Access object properties
+  temp.obj_x = temp.obj.x;
+  temp.obj_name = temp.obj.name;
+
+  // Nested object properties
+  temp.player = new TPlayer();
+  temp.player.position = new TVector();
+  temp.player.position.x = 100;
+  temp.player.position.y = 200;
+
+  // Object method calls (if supported)
+  temp.player.move(5, -3);
+  temp.player.setHealth(100);
+
+  // Array of objects
+  temp.objects = {};
+  temp.objects[0] = new TStaticVar();
+  temp.objects[1] = new TStaticVar();
+  temp.objects[0].id = 1;
+  temp.objects[1].id = 2;
+
+  // Object property chains
+  temp.deep_value = temp.player.inventory.items[0].properties.durability;
+}

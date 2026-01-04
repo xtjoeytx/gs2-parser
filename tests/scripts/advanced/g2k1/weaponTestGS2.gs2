@@ -1,0 +1,40 @@
+//#CLIENTSIDE
+//#GS2
+//player.join("testclass");
+
+//#CLIENTSIDE
+function getWeaponId(temp.weaponName) {
+  temp.i = 0;
+  for (temp.weapon : player.weapons) {
+    if (temp.weapon.name == temp.weaponName) {
+      return temp.i;
+    }
+    temp.i++;
+  }
+  
+  return -1;
+}
+
+function onCreated() {
+  this.weaponIds = {};
+  this.weaponIds.insert("asd", "ee"); //["asd"] = "ee";
+  
+  temp.sp = "";
+  for (temp.v : player.weapons)
+    temp.sp @= temp.v SPC "";
+  selectedweapon = getWeaponId("Candies");
+  player.chat = "Test: " @ this.weaponIds.getvarnames();
+}
+
+function onWeaponFired()
+{
+  temp.incr = 2;
+  temp.i = 0;
+
+  while (temp.i < 100)
+  {
+    temp.i += temp.incr;
+    player.chat = temp.i;
+    sleep(1);
+  }
+}

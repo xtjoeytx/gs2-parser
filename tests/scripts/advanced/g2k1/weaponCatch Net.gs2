@@ -1,0 +1,40 @@
+//#CLIENTSIDE
+
+function onBomyWeaponFired() {
+  onFired();
+}
+
+function onWeaponFired() {
+  onFired();
+}
+
+function onFired() {
+  if (player.isBomy()) {
+    setani("bomy_copnet", null);
+  } else {
+    setani("copnet", null);
+  }
+
+  triggeraction(player.x + 1.5 + vecx(player.dir) * 2, player.y + 2 + vecy(player.dir) * 2, "catchnet", player.account);
+  player.freeze(0.3);
+}
+
+function onActionCatchNet(temp.catcher) {
+  if (this.on == true)
+    return;
+
+  if (client.catchgamestart < timevar + 2) {
+    this.on = true;
+    if (player.isBomy()) {
+      setani("bomy_copnetcaught", null);
+    } else {
+      setani("copnetcaught", null);
+    }
+
+    player.chat = "Caught by " @ catcher;
+    player.freeze(5);
+    sleep(5);
+    this.on = false;
+  }
+  else player.chat = "*game starts 10 seconds after taking the item*";
+}

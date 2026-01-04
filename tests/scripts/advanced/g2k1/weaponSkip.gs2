@@ -1,0 +1,4 @@
+//#CLIENTSIDE
+function onWeaponFired() {
+  setani("skip", null);
+}

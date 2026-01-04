@@ -1,0 +1,6 @@
+//#CLIENTSIDE
+function onWeaponFired() {
+  freezeplayer(0.65);
+  setani("jaxe", "pickaxediamond.png");
+  triggeraction(player.x+1+vecx(player.dir)*1.5, player.y+2+vecy(player.dir)*1.5, "mining", "diamond");
+}

@@ -1,0 +1,94 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.bootson = false;
+  this.bootsdefspeed = 0.5;
+  this.showpositions = false;
+}
+
+function onKeyPressed(code, key) {
+  // character: b
+  if (code == 66) {
+    this.bootson = !this.bootson;
+    if (this.bootspeed == 0) {
+      this.bootspeed = this.bootsdefspeed;
+    }
+
+    setTimer(0.05);
+  }
+
+  // character: [
+  else if (code == 219) {
+    if (this.bootspeed > 0.1) {
+      this.bootspeed -= 0.1;
+    } else {
+      this.bootson = false;
+      this.bootspeed = 0;
+    }
+  }
+  // character: ]
+  else if (code == 221) {
+    this.bootspeed += 0.1;
+  }
+  // character: \ for v2, numpad+1 for v5
+  else if (code == 220 || code == 97) {
+    this.showpositions = !this.showpositions;
+    hideimgs(200,300);
+    setTimer(0.05);
+  }
+}
+
+function onPlayerChats() {
+  if (player.chat == "/stafftag") {
+    player.chat = "";
+    triggerserver("gui", this.name, "stafftag");
+  }
+}
+
+function onMouseDown() {
+  if (middlemousebutton) {
+    enabledefmovement();
+    player.x = mousex - 0.5;
+    player.y = mousey - 1;
+  }
+}
+
+function onTimeout() {
+  if (this.bootson == 1) {
+    this.speed = this.bootspeed;
+    if (keydown(0)) {
+      player.dir = 0;
+      player.y -= this.speed;
+    }
+    if (keydown(1)) {
+      player.dir = 1;
+      player.x -= this.speed;
+    }
+    if (keydown(2)) {
+      player.dir = 2;
+      player.y += this.speed;
+    }
+    if (keydown(3)) {
+      player.dir = 3;
+      player.x += this.speed;
+    }
+  }
+
+  if (this.showpositions == true) {
+    hideimgs(200,300);
+    this.showidx = 0;
+    for (this.i=0;this.i<players.size();this.i++) {
+      if (players[this.i].id > -1) {
+        showimg(200+this.showidx, format("@TimesRoman@bc@(%f,  %f)", players[this.i].x, players[this.i].y), players[this.i].x + 1.5, players[this.i].y + 3.5);
+        changeimgzoom(200+this.showidx,0.7);
+        changeimgcolors(200+this.showidx,0,0,0,1);
+        this.showidx++;
+      }
+    }
+
+    //player.chat = players.size() @ " or " @ this.showidx;
+  }
+  
+  if (this.bootson == true || this.showpositions == true) {
+    setTimer(0.05);
+  }
+}

@@ -1,0 +1,256 @@
+// 2022-04-14 - started translating F2LogWindow w/
+// no intentions of completing
+
+//#CLIENTSIDE
+//#GS2
+
+function onCreated() {
+	if (servername.starts("login"))
+	{
+		this.logtypes = { "game", "files", "scripts", "net", "graphics", "sounds" };
+	}
+
+	with("IRC_Test_UpdateWindow") {
+		isexternal	= true;
+		visible = false;
+	}
+
+	with("DownloadProgress_Window") {
+		isexternal = true;
+		visible = false;
+	}
+
+	with("PlayerList_Window") {
+		isexternal = true;
+		visible = false;
+	}
+
+	with("F2LogWindow_Window") {
+		text                 = "LogWindow";
+		isexternal           = true;
+		profile              = "gui2001_log_window";
+		useownprofile        = true;
+		profile.transparency = 1;
+		style                = "trueclassic.wba";
+		clientrelative       = true;
+		clientextent         = {500, 200};
+		x = (MainMenuGui2D_Background.clientwidth - width) / 2;
+		y = (MainMenuGui2D_Background.clientheight - height) / 2;
+		horizSizing = "center";
+		vertSizing = "center";
+		canmaximize = false;
+		canminimize = false;
+		canresize = true;
+		canclose = true;
+		visible = false;
+		//if (isObject("F2LogWindow_Tab")) F2LogWindow_Tab.destroy();
+		/*
+		new GuiTabCtrl("F2LogWindow_Tab") { 
+			profile = GuiBlueTabProfile;
+			x = 0;
+			y = 0;
+			width = 500;
+			height = 24;
+			tabwidth = 70;
+				
+			clearrows();
+			
+			addrow(0,"game");
+			addrow(1,"files");
+			addrow(2,"scripts");
+			addrow(3,"net");
+			addrow(4,"graphics");
+			addrow(5,"sounds");
+			addrow(6,"debug");
+			
+			setSelectedRow(6);
+		}
+		new GuiScrollCtrl("Test_ScrollField") {
+			profile = GuiBlueScrollProfile;
+			profile.border = 4; 
+			clientextent  = {500, 200-30};
+			x = 0;
+			y = 30;
+			childmargin = {0,0};
+
+			hScrollBar = "dynamic";
+			vScrollBar = "alwaysOn";
+			new GuiMLTextCtrl("F2LogWindow_logtype_sounds") {
+				text            = "";
+				visible         = false;
+				allowcolorchars = true;
+				position        = { 0 , 0 };
+				clientextent    = {499, 10};
+			}
+			new GuiMLTextCtrl("F2LogWindow_logtype_graphics") {
+				text            = "";
+				visible         = false;
+				allowcolorchars = true;
+				position        = { 0 , 0 };
+				clientextent    = {499, 10};
+			}
+			new GuiMLTextCtrl("F2LogWindow_logtype_net") {
+				text            = "";
+				visible         = false;
+				allowcolorchars = true;
+				position        = { 0 , 0 };
+				clientextent    = {499, 10};
+			}
+			new GuiMLTextCtrl("F2LogWindow_logtype_scripts") {
+				text            = "";
+				visible         = false;
+				allowcolorchars = true;
+				position        = { 0 , 0 };
+				clientextent    = {499, 10};
+			}
+			new GuiMLTextCtrl("F2LogWindow_logtype_files") {
+				text            = "";
+				visible         = false;
+				allowcolorchars = true;
+				position        = { 0 , 0 };
+				clientextent    = {499, 10};
+			}
+			new GuiMLTextCtrl("F2LogWindow_logtype_game") {
+				text            = "";
+				visible         = false;
+				allowcolorchars = true;
+				position        = { 0 , 0 };
+				clientextent    = {499, 10};
+			}
+			new GuiMLTextCtrl("F2LogWindow_logtype_debug") {
+				text            = "";
+				visible         = false;
+				allowcolorchars = true;
+				position        = { 0 , 0 };
+				clientextent    = {499, 10};
+			}
+			
+		}
+		*/
+	}
+}
+
+
+/*
+function F2LogWindow_Window.onResize(newwidth,newheight) {
+	F2LogWindow_Tab.width = newwidth;
+	Test_ScrollField.width = newwidth;
+	Test_ScrollField.height = newheight-30;
+
+	F2LogWindow_logtype_sounds.width = newwidth-30;
+	F2LogWindow_logtype_graphics.width = newwidth-30;
+	F2LogWindow_logtype_net.width = newwidth-30;
+	F2LogWindow_logtype_scripts.width = newwidth-30;
+	F2LogWindow_logtype_files.width = newwidth-30;
+	F2LogWindow_logtype_game.width = newwidth-30;
+	F2LogWindow_logtype_debug.width = newwidth-30;
+}
+*/
+
+function onDefaultStyleChanges() {
+}
+
+function onTimeout() {
+}
+
+function addGuiControls() {
+}
+
+/*
+function F2LogWindow_Tab.onSelect(tabid,tabtext,tabindex) {
+	("F2LogWindow_logtype_" @ tabtext).visible = true;
+	("F2LogWindow_logtype_" @ tabtext).scrolltobottom();
+	//echo(tabid SPC tabtext SPC tabindex);
+}
+
+function F2LogWindow_Tab.onDeselect(tabid,tabtext,tabindex) {
+	("F2LogWindow_logtype_" @ tabtext).visible = false;
+	//echo(tabid SPC tabtext SPC tabindex);
+}
+
+function onLogMessage(logMessage, red, green, blue, logType) {
+	// event - log message: text, red, green, blue, log type
+	//echo(logMessage);
+	
+	with ("F2LogWindow_logtype_debug") {
+		addtext(logMessage SPC (red*255) SPC green SPC blue SPC logType NL "", true);
+		scrolltobottom();
+	}
+
+
+	if (logType == "echo") logType = "game";
+	if (logType == "tiles") logType = "graphics";
+	if (logType == "scripterrors") logType = "scripts";
+	
+	with ("F2LogWindow_logtype_" @ logType) {
+		text = text @ logMessage @ "<br>";
+		scrolltobottom();
+		scrolltobottom();
+	}
+}
+*/
+
+function onKeyPressed(keycode, keystring, scancode) {
+	//echo(keycode);
+	if (keycode == 113)
+		onOpenLogWindow();
+
+	if (keycode == 118)
+		onOpenPlayerList();
+
+	if (keycode == 115)
+		onOpenMainMenuWindow();
+
+	if (keycode == 117)
+		("-Staff/GUIExplorer").createGUI();
+
+	if (keycode == 120) {
+		MessageBoxDialog_Window.text = "Error";
+		MessageBoxDialog_Text.text = "<b>The plugin cannot be used from this site.</b>";
+		MessageBoxDialog_Button.text = "yo!";
+		//pushDialog(ExitDialog);
+		("-ScriptedRC").startScriptedRC();
+	}
+}
+
+public function onOpenLogWindow() {
+	if (!F2LogWindow_Window.visible) {
+		F2LogWindow_Window.visible = true;
+		F2LogWindow_Window.showtop();
+	} else {
+		F2LogWindow_Window.visible = false;
+	}
+}
+
+public function onOpenPlayerList() {
+	if (!PlayerList_Window.visible) {
+		PlayerList_Window.visible = true;
+		PlayerList_Window.showtop();
+	} else {
+		PlayerList_Window.visible = false;
+	}
+}
+
+public function onOpenMainMenuWindow() {
+	/*
+	if (!MainMenuGui2D_Window.visible)
+	{
+		MainMenuGui2D_Window.showtop();
+	}
+	else
+	{
+		MainMenuGui2D_Window.hide();
+	}
+	*/
+	if (isObject("Serverlist_Panel"))
+	{
+		if (!gr_LoginScreen.visible)
+		{
+			gr_LoginScreen.showtop();
+		}
+		else
+		{
+			gr_LoginScreen.hide();
+		}
+	}
+}

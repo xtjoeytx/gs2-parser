@@ -1,0 +1,17 @@
+//#CLIENTSIDE
+function onWeaponFired() {
+  if (player.isBomy()) {
+    return;
+  }
+
+  if (player.ani.starts("torch")) {
+    replaceani("idle", "idle");
+    replaceani("walk", "walk");
+    setani("idle", null);
+  } else {
+    player.attr[2] = "torch.png";
+    replaceani("idle", "torch_idle");
+    replaceani("walk", "torch_walk");
+    setani("torch_idle", null);
+  }
+}

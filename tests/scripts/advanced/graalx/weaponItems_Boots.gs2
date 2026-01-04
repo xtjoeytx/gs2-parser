@@ -1,0 +1,45 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  onTimeout();
+}
+
+function onWeaponFired()
+{
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+  
+  if (temp.muditem.itemtype == "ARCHETYPE_ITEM" && temp.muditem.realname == "Boots" && temp.muditem.quantity >= 1)
+  {
+    if (client.speedbonus <= 0)
+    {
+      player.addMsg("Server", "You put on the boots!", 15);
+      playerfreeze = 0.35;
+    
+      triggerserver("gui", name, "use", client.selectedweapon);
+      onTimeout();
+    }
+    else player.addMsg("Server", "You are already wearing a pair of boots!", 15);
+  }
+}
+
+function onTimeout()
+{
+  if (clientr.speed3)
+  {
+    if (client.speedbonus > 0)
+    {
+      client.speedbonus--;
+    }
+      else
+    {
+      triggerserver("gui", this.name, "remove");
+    }
+  }
+    elseif (client.speedbonus)
+  {
+    client.speedbonus = 0;
+  }
+  
+  setTimer(1);
+}

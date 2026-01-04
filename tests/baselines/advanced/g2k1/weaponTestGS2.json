@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "fc2ae54949fbce9631c90772cb6b82208bd6fea058b430458e36c5332bf217fd",
+  "bytecode_size": 493,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponTestGS2.gs2",
+    "generated_at": "2026-01-04 16:44:39",
+    "compiler_version": "modified_1767562734"
+  }
+}

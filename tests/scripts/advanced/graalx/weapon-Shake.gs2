@@ -1,0 +1,17 @@
+//#CLIENTSIDE
+function onCreated() {
+  //setTimer("0.05");
+}
+function onTimeout() {
+  if (client.gunshake == true) {
+    for (i=0;i<5;i++) {
+      rand1 = random("-.1",".1");
+      rand2 = random("-.1",".1");
+      setfocus(player.x+rand1,player.y+rand2);
+      sleep(0.05);
+    }
+    resetfocus();
+    client.gunshake = false;
+  }
+  setTimer(0.05);
+}

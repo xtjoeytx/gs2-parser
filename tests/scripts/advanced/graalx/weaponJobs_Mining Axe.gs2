@@ -1,0 +1,54 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.minetiles = {1423, 1438, 1439, 1580, 1857, 1858, 1859, 1874, 1875, 1890, 1904, 1905, 1906, 1907, 1920, 1921, 1922, 1923, 1952, 1957, 1969, 1970, 1971, 1972};
+  this.pickaxes = {{"crackedrustyaxe", "rusty", 0.5, 1250}, {14, "metal", 0.45, 2500, 21}, {15, "gold", 0.4, 5000, 22}, {16, "diamond", 0.3, 10000, 23}};
+}
+
+function onWeaponFired() {
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+  if (temp.muditem.quantity >= 1 && temp.muditem.tool == "Mining Axe") {
+    setani("jaxe", "pickaxe" @ this.pickaxes[temp.muditem.ttype][1] @ ".png");
+    playerfreeze = 0.6;
+    sleep(0.55);
+    triggeraction(player.x+1.5+vecx(player.dir)*2.5, player.y+2+vecy(player.dir)*2, "axehit", this.pickaxes[temp.muditem.ttype][2], player.id);
+    if (player.level.starts("g_mines")) {
+      if (tiles[player.x+1.5+vecx(player.dir)*2.5, player.y+1+vecy(player.dir)*2] in this.minetiles) {
+        onActionClientside();
+        if (this.rtime <= 0 && random(0, this.pickaxes[temp.muditem.ttype][2]) < 0.065) {
+          this.rtime = int(random(10, 20));
+          getDirs();
+          placeRock();
+        }
+      }
+    }
+    onTimeout();
+  }
+}
+
+function onTimeout() {
+  if (this.rtime > 0)
+    this.rtime -= 0.05;;
+  setTimer(0.05);
+}
+
+function getDirs() {
+  if (player.dir == 0) 
+    this.newrock = {player.x + 0.75, player.y + 3};
+  elseif (player.dir == 1) 
+    this.newrock = {player.x + 2.5, player.y + 1};
+  elseif (player.dir == 2) 
+    this.newrock = {player.x + 0.65, player.y - 1.5};
+  elseif (player.dir == 3) 
+    this.newrock = {player.x - 1.5, player.y + 1};
+}
+
+function placeRock() {
+  placerock = true;
+  if (placerock == true)
+    triggerserver("gui", "Jobs/Mining Axe", "placerock", this.newrock);
+}
+
+function onActionClientside() {
+  triggerserver("gui", "Jobs/Mining Axe", "damageaxe", this.pickaxes[temp.muditem.ttype]);
+}

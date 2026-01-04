@@ -1,0 +1,23 @@
+// Long string handling
+function testLongStrings() {
+  // Long string literal
+  temp.long_string = "This is a very long string that contains many characters and should test the string handling capabilities of the parser and compiler to ensure that it can handle strings of significant length without any issues or memory problems.";
+
+  // String concatenation
+  temp.concatenated = "Part 1 " @ "Part 2 " @ "Part 3 " @ "Part 4 " @ "Part 5";
+
+  // Repeated concatenation
+  temp.repeated = "";
+  for (temp.i = 0; temp.i < 100; temp.i++) {
+    temp.repeated @= "x";
+  }
+
+  // Special characters
+  temp.special = "String with \"quotes\" and 'apostrophes' and \n newlines \t tabs";
+  temp.unicode = "Unicode: αβγδε ΑΒΓΔΕ 中文 日本語 한국어";
+
+  // Empty and whitespace strings
+  temp.empty = "";
+  temp.spaces = "                    ";
+  temp.mixed_whitespace = " \t\n\r ";
+}

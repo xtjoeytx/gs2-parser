@@ -1,0 +1,186 @@
+//#CLIENTSIDE
+function onActionClientSide()
+{
+  if (params[0] == "init")
+  {
+    this.mode = "vote";
+    createGui();
+    setStuff(params[1],params[2]);
+  }  
+  elseif (params[0] == "poll")
+  {
+    if (vote_window == NULL) createGui();
+    this.mode="poll";
+    showResults(params[1],params[2],params[3]);
+  }  
+}
+
+function onCreated()
+{
+  if (vote_window != NULL) vote_window.destroy();
+  triggerserver("gui", this.name, "init");
+}
+
+function createGui() 
+{
+  if (vote_window != NULL) vote_window.destroy();
+  new GuiWindowCtrl(vote_window)
+  {
+    awake = true;
+    height = 250;
+    profile = GuiBlueWindowProfile;
+    text = "Graal X Voting System - A forced production by Twinny ;)";
+    canclose=canresize=canminimize=canmaximise=canmaximize=false;
+    visible = true;
+    width = 334;
+    x = 444;
+    y = 402;
+
+    new GuiScrollCtrl(vote_questionScroll) 
+    {
+      profile = GuiBlueScrollProfile;
+      x = 10;
+      y = 30;
+      width = 315;
+      height = 60;
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+    
+      new GuiMLTextCtrl(vote_question)
+      {
+        height = 55;
+        profile = GuiBlueMLTextProfile;
+        useownprofile = true;
+        text = "Retreiving Question...";
+        visible = true;
+        width = 314;
+        x = 5;
+        y = 5;
+      }
+    }  
+    new GuiButtonCtrl(vote_button) 
+    {
+      height = 22;
+      profile = GuiBlueButtonProfile;
+      text = "";
+      visible = true;
+      width = 315;
+      x = 10;
+      y = 220;
+    }
+    
+    new GuiScrollCtrl(vote_answersScroll) 
+    {
+      profile = GuiBlueScrollProfile;
+      x = 10;
+      y = 100;
+      width = 315;
+      height = 100;
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+    
+    }
+  }
+  GraalControl.addControl(vote_window);
+}
+
+
+function setStuff(question,answers)
+{
+  this.answers = answers;
+  vote_question.setText(question);
+  
+  with (vote_answersScroll)
+  {
+    for (temp.i=0;temp.i<answers.size();temp.i++)
+    {
+      if (temp.i => 1)
+        this.newy += ("vote_answersb"@temp.i-1).height + 20;
+
+      else
+      {
+        this.newy = 5;               
+      }
+      new GuiRadioCtrl("vote_answersr"@temp.i)
+      {
+        x = 5;
+        profile = GuiBlueRadioProfile;
+      }
+      
+      new GuiMLTextCtrl("vote_answersb"@temp.i)
+      {
+        profile = GuiBlueMLTextProfile;
+        visible = true;
+        wordwrap = true;
+        width = 250;
+        x = 20;
+      }
+      ("vote_answersb"@temp.i).settext(answers[temp.i]);
+      ("vote_answersr"@temp.i).y = this.newy;
+      ("vote_answersb"@temp.i).y = this.newy + 5;
+      vote_button.settext("Vote Now!");
+    }
+  }
+}  
+   
+function vote_button.onAction()
+{
+  if (this.mode == "vote")
+  {
+    for (temp.i=0;temp.i<this.answers.size();temp.i++)
+    {
+      if (("vote_answersr"@temp.i).checked)
+      {
+        triggerserver("gui", this.name, "vote", temp.i);
+        vote_window.destroy();
+        break;
+      }
+    }
+  }
+  else
+    vote_window.destroy();
+}
+
+function showResults(question,answers,results)
+{
+  vote_button.settext("Close Window");
+  vote_question.setText(question);
+  echo(answers);
+  with (vote_answersScroll)
+  {
+    for (temp.i=0;temp.i<answers.size();temp.i++)
+    {
+      if (temp.i => 1)
+        this.newy += ("vote_pollresult"@temp.i-1).height + 20;
+      else
+        this.newy = 5;
+    
+      new GuiMLTextCtrl("vote_pollresult"@temp.i)
+      {
+        profile = GuiBlueMLTextProfile;
+        visible = true;
+        wordwrap = true;
+        width = 250;
+        x = 5;
+      }
+      ("vote_pollresult"@temp.i).settext(answers[temp.i]@
+       " : " @ results[temp.i]);     
+      ("vote_pollresult"@temp.i).y = this.newy;
+    }  
+  }
+}  
+
+function onKeyPressed(keycode, keychar)
+{
+  if (keycode == 309)
+  {
+    if (vote_window != NULL)
+    {
+      vote_window.destroy();
+    }
+      else
+    {
+      onCreated();
+    }
+  }
+}

@@ -1,0 +1,200 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.raildirs = {1,3, 0,2, 2,3, 1,2, 0,3, 1,0};
+  this.acc = 0.25;
+  this.friction = 0.97;
+  this.maxspeed = 2;
+  enabledefmovement();
+  enableweapons();
+  player.chat = float("14.37test63");
+}
+
+function onBomyWeaponFired() {
+  onWeaponFired();
+}
+
+function onWeaponFired() {
+  if (this.on == false) {
+    this.speed = 0;
+    this.waypos = 0;
+    searchforrails();
+    if (this.on==true)
+      this.waypos = 2;
+  }
+}
+
+function searchforrails() {
+  temp.tx = player.x+1.5;
+  temp.ty = player.y+2;
+  this.outdir = -1;
+  this.oldrailx = this.railx;
+  this.oldraily = this.raily;
+
+  temp.pushdir = player.dir;
+  if (!keydown(temp.pushdir)) {
+    if (keydown((temp.pushdir+1)%4))
+      temp.pushdir = (temp.pushdir+1)%4;
+    if (keydown((temp.pushdir-1)%4))
+      temp.pushdir = (temp.pushdir-1)%4;
+  }
+  for (temp.i=0; temp.i<npcs.size(); temp.i++) {
+    temp.nx = npcs[temp.i].x;
+    temp.ny = npcs[temp.i].y;
+    temp.indir = -1;
+    temp.outdir = -1;
+    if (npcs[temp.i].save[9]==1 && temp.tx in |temp.nx-1,temp.nx+4| && temp.ty in |temp.ny,temp.ny+4|) { // nx,nx+4 and ny,ny+4
+      temp.ttype = npcs[temp.i].save[0];
+      temp.d1 = this.raildirs[temp.ttype*2];
+      temp.d2 = this.raildirs[temp.ttype*2+1];
+      temp.oppdir = (player.dir+2)%4;
+      
+      if (temp.d1==temp.oppdir) {
+        temp.indir = temp.d1;
+        temp.outdir = temp.d2;
+      } else if (temp.d2==temp.oppdir) {
+        temp.indir = temp.d2;
+        temp.outdir = temp.d1;
+      }
+    }
+    if (temp.outdir>=0) {
+      if (this.outdir<0 || temp.outdir==temp.pushdir || (this.outdir!=temp.pushdir && temp.outdir==player.dir)) {
+        this.railx = temp.nx;
+        this.raily = temp.ny;
+        this.indir = temp.indir;
+        this.outdir = temp.outdir;
+        if (temp.outdir==temp.pushdir)
+          break;
+      }
+    }
+  }
+  if (this.outdir>=0) {
+    if (this.waypos>0) {
+      temp.wayposset = false;
+      if (this.indir in {0,2}) {
+        player.x = this.railx+0.5;
+        this.waypos -= abs(this.raily-this.oldraily);
+        temp.wayposset = true;
+      }
+      if (this.indir in {1,3}) {
+        player.y = this.raily;
+        this.waypos -= abs(this.railx-this.oldrailx);
+        temp.wayposset = true;
+      }
+      if (temp.wayposset==false) {
+        if (this.waypos>=4)
+          this.waypos -= 4;
+        else
+          this.waypos = 0;
+      }
+    }
+
+    this.on = true;
+    disabledefmovement();
+    if (player.isBomy())
+      disablebomymovement = true;
+    
+    setTimer(0.05);
+  }
+}
+
+function turnoff() {
+  this.on = false;
+  enabledefmovement();
+  if (player.isBomy()) {
+    disablebomymovement = false;
+    setani("bomy_idle", null);
+  } else
+    setani("idle", null);
+  stopsound("train.wav");
+}
+
+function setanimation() {
+  if (player.isBomy()) {
+    if (this.speed==0) {
+      if (player.ani != "bomy_draisine")
+        setani("bomy_draisine", null);
+    }
+    else
+      setani("bomy_draisine2", null);
+  } else {
+    if (this.speed==0) {
+      if (player.ani != "draisine")
+        setani("draisine", null);
+    }
+    else
+      setani("draisine2", null);
+  }
+}
+
+function onTimeout() {
+  if (!this.on) {
+    return;
+  }
+
+  if (keydown(6))
+    turnoff();
+  else {
+    player.freeze(0.1);
+    if (keydown(5)) {
+      if (this.speedkeydown==false) {
+        this.speed += this.acc;
+        if (this.speed>this.maxspeed)
+          this.speed = this.maxspeed;
+        playlooped("train.wav");
+      }
+      this.speedkeydown = true;
+    } else {
+      this.speedkeydown = false;
+    }
+
+    temp.tox = this.railx+0.5+vecx(this.indir)*2;
+    temp.toy = this.raily+vecy(this.indir)*2;
+    temp.isstraight = (this.indir==(this.outdir+2)%4);
+    if (temp.isstraight==true) {
+      temp.tox += this.waypos * vecx(this.outdir);
+      temp.toy += this.waypos * vecy(this.outdir);
+    } else {
+      temp.w = this.waypos/4*3.14/2;
+      temp.dside = 1-cos(temp.w);
+      temp.dforward = sin(temp.w);
+
+      temp.fdir = (this.indir+2)%4;
+      temp.tox += temp.dforward*2*vecx(temp.fdir);
+      temp.toy += temp.dforward*2*vecy(temp.fdir);
+
+      temp.tox += temp.dside*2*vecx(this.outdir);
+      temp.toy += temp.dside*2*vecy(this.outdir);
+    }
+    
+    player.chat = format("str8 %d | To %d, %d | fdir %d | indir %d | wp %f | dside %f dforward %f | waypos %f", temp.isstraight, temp.tox, temp.toy, temp.fdir, this.indir, temp.w, temp.dside, temp.dforward, this.waypos);
+      if (player.x in |temp.tox-4,temp.tox+4| && player.y in |temp.toy-4,temp.toy+4|) {
+        player.x = temp.tox;
+        player.y = temp.toy;
+      } else this.waypos = 0;
+    
+    if (!(player.x+1.5 in |this.railx,this.railx+4| && player.y+2 in |this.raily,this.raily+4|)
+        || (temp.isstraight==true && this.speed>0)) {
+      this.on = false;
+      searchforrails();
+      if (this.on==false)
+        turnoff();
+    } else
+      setTimer(0.05);
+
+    if (this.on==true) {
+      temp.addspeed = this.speed;
+      if (!isonmap) {
+        if (!(player.x+1.5 in |4,60| && player.y+2 in |4,60|) && temp.addspeed>1)
+          temp.addspeed = 1;
+      }
+      this.waypos += temp.addspeed;
+      if (this.waypos>=2) player.dir = this.outdir;
+      this.speed *= this.friction;
+      if (this.speed<0.05)
+        this.speed = 0;
+      if (this.speed==0)
+        stopsound("train.wav");
+      setanimation();
+    }
+  }
+}

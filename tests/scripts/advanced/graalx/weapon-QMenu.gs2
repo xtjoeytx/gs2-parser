@@ -1,0 +1,375 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.row = 0;
+  this.dinc = 0.1;
+  setTimer(0.05);
+}
+
+function onTimeout() {
+  // Detect if Q is being Held Down
+  if (keydown(9) && client.disableq == false && player.ani != "dead") {
+    client.qmenu = true;
+    if (!this.dontcount) {
+      if (!this.dragging)
+        this.amount = 1;
+      onItemCount();
+      this.dontcount = true;
+    }
+    if (clientr.vault)
+      player.dir = 0;
+      
+    // Inventory Main Gui Show
+    showimg(200, "gx_inventory1.png", screenwidth/4, screenheight/4);
+    changeimgvis(200, 4);
+    changeimgcolors(200, 1, 1, 1, 0.4);
+    changeimgmode(200, 1);
+    
+    // Enable Functions for Linking
+    onPlayerEXP();
+    onPlayerInfo();
+    onPlayerView();
+    onPlayerInventory();
+
+  } else {
+    client.qmenu = false;
+    if (this.dontcount)
+      this.dontcount = false;
+    hideimgs("200","1000");
+  }
+
+  // Double Click check
+  if (this.lastclick > 0)
+   this.lastclick -= .05;
+   
+  if (player.ani == "swim" && this.dragging) {
+    this.dragging = false;
+    hideimg(199);
+    hideimgs(1200, 1201);
+  }
+    
+  // Dragging
+  if (this.dragging && leftmousebutton && this.lastmx2 != mousex && this.lastmy2 != mousey)
+    onDragging();
+
+  if (!leftmousebutton && this.dragging) {
+    this.dragging = false;
+    hideimg(199);
+    hideimgs(1200, 1201);
+    
+    if (this.sent == false && client.qmenu)
+    {
+      for (temp.I = 0; temp.I < 24; temp.I++)
+      {
+        if (mousescreenx in |(screenwidth / 4 + 150) + ((temp.I % 6) * 44), (screenwidth / 4 + 150) + ((temp.I % 6) * 44) + 32| && mousescreeny in |(screenheight / 4 + 145) + (int(temp.I / 6) * 44),(screenheight / 4 + 145) + (int(temp.I / 6) * 44) + 32|) {
+          triggerserver("gui", this.name, "switchitems", this.viewitem, this.items[temp.I + (this.row * 6)], this.items[this.items.size() - 1] + 1);
+          this.sent = true;
+    
+          break;
+        }
+      }
+    }
+    
+    if (player.ani == "gx-lay1") {
+      temp.muditem = new TStaticVar();
+      temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ thiso.viewitem));
+      setani("lay", NULL);
+      findWeapon("-Movement").changeAnis3();
+      if (temp.muditem.cantdrop != 1) {
+        triggerserver("gui", name, "drop", thiso.viewitem, int(this.amount));
+      } else {
+        player.chat = "You can not drop this item!";
+      }
+    }
+  }
+
+  // Timeout
+  setTimer(0.05);
+}
+
+function onPlayerEXP() {
+  this.jobs = {"cook", "farm", "fish", "hunt", "mine"};
+  this.lvls = {3, 5};
+  this.plyrlvl = 0;
+  this.physlvl = clientr.health[1];
+  for (v = 0; v < this.jobs.size(); v++)
+    this.plyrlvl += makevar("clientr.job_" @ this.jobs[v])[2];
+  for (v = 0; v < this.lvls.size(); v++)
+    this.physlvl += clientr.level[this.lvls[v]];
+  
+  client.joblvl = int(this.plyrlvl / this.jobs.size());
+  client.physlvl = int(this.physlvl / (this.lvls.size() + 1));
+  client.totallvl = this.plyrlvl + this.physlvl;
+  
+  // First Menu Box
+  showtext(210, screenwidth/4+11, screenheight/4+16, "Arial Bold", "b", "Job Level: " @ client.joblvl);
+  showtext(211, screenwidth/4+11, screenheight/4+28, "Arial Bold", "b", "Physical Lvl: " @ client.physlvl);
+  showtext(212, screenwidth/4+11, screenheight/4+40, "Arial Bold", "b", "Total Level: " @ client.totallvl);
+
+  // Second Menu Box | 118 | 130 | 142
+  showtext(213, screenwidth/4+11, screenheight/4+58, "Arial Bold", "b", "Max Health: " @ clientr.health[1]);
+  showtext(214, screenwidth/4+11, screenheight/4+70, "Arial Bold", "b", "Max Speed: " @ clientr.level[5]);
+  showtext(215, screenwidth/4+11, screenheight/4+82, "Arial Bold", "b", "Max Strength: " @ clientr.level[3]);
+  showtext(216, screenwidth/4+11, screenheight/4+118, "Arial Bold", "b", "Speed: " @ client.speed);
+  showtext(217, screenwidth/4+11, screenheight/4+130, "Arial Bold", "b", "Vault: " @ int(client.vaultweight) @ " / " @ int(clientr.vaultmax) @ " lbs.");
+  showtext(218, screenwidth/4+11, screenheight/4+142, "Arial Bold", "b", "Weight: " @ int(client.weight) @ " / " @ int(clientr.weightmax) @ " lbs.");
+ 
+  // Third Menu Box
+  showtext(219, screenwidth/4+11, screenheight/4+162, "Arial Bold", "b", "Level " @ clientr.job_cook[2] @ " Cooking");
+  showtext(220, screenwidth/4+11, screenheight/4+174, "Arial Bold", "b", clientr.job_cook[0]);
+  showtext(221, screenwidth/4+11, screenheight/4+186, "Arial Bold", "b", "Level " @ clientr.job_farm[2] @ " Farming");
+  showtext(222, screenwidth/4+11, screenheight/4+198, "Arial Bold", "b", clientr.job_farm[0]);
+  showtext(223, screenwidth/4+11, screenheight/4+210, "Arial Bold", "b", "Level " @ clientr.job_fish[2] @ " Fishing");
+  showtext(224, screenwidth/4+11, screenheight/4+222, "Arial Bold", "b", clientr.job_fish[0]);
+  showtext(225, screenwidth/4+11, screenheight/4+234, "Arial Bold", "b", "Level " @ clientr.job_hunt[2] @ " Hunting");
+  showtext(226, screenwidth/4+11, screenheight/4+248, "Arial Bold", "b", clientr.job_hunt[0]);
+  showtext(227, screenwidth/4+11, screenheight/4+260, "Arial Bold", "b", "Level " @ clientr.job_mine[2] @ " Mining");
+  showtext(228, screenwidth/4+11, screenheight/4+272, "Arial Bold", "b", clientr.job_mine[0]);
+  
+  if (client.vaultweight > clientr.vaultmax)
+    changeimgcolors(217, 0.6, 0, 0, 1);
+  else
+    changeimgcolors(217, 0, 0, 0, 1);
+    
+  if (client.weight > clientr.weightmax)
+    changeimgcolors(218, 0.6, 0, 0, 1);
+  else
+    changeimgcolors(218, 0, 0, 0, 1);
+    
+  // For Loop - Change Size / Color / Visual Layer
+  for (i=0;i<19;i++) {
+    changeimgvis(210+i, 5);
+    if (i < 7 || i > 8)
+      changeimgcolors(210+i, 0, 0, 0, 1);
+    changeimgzoom(210+i, .6);
+  }
+}
+function onPlayerInfo() {
+  if (thiso.viewitem != NULL) {
+    temp.muditem = new TStaticVar();
+    temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ thiso.viewitem));
+    showimg(400, temp.muditem.iconimage, screenwidth/4+162, screenheight/4+24);
+    changeimgpart(400, 0, 0, 32, 32);
+    // 198 - 23 | 35 | 47
+    showtext(401, screenwidth/4+162, screenheight/4+58, "Arial Bold", NULL, temp.muditem.displayname);
+    showtext(402, screenwidth/4+162, screenheight/4+70, "Arial Bold", NULL, "Quantity: " @ int(temp.muditem.quantity));
+    showtext(403, screenwidth/4+162, screenheight/4+82, "Arial Bold", NULL, "Weight: " @ temp.muditem.weight @ " / " @ temp.muditem.weight * temp.muditem.quantity);
+    if (makevar("clientr.ammo_" @ temp.itemstring[9]) > 0)
+      this.ammo = makevar("clientr.ammo_" @ temp.itemstring[9]);
+    else
+      this.ammo = 0;
+    if (temp.itemstring[4] == 1) {
+      showtext(404, screenwidth/4+162, screenheight/4+94, "Arial Bold", NULL, "Loaded Ammo: " @ client.ammo @ " / " @ client.ammomax);
+      showtext(405, screenwidth/4+162, screenheight/4+106, "Arial Bold", NULL, "Total Ammo: " @ this.ammo);
+    }
+    elseif (temp.itemstring[4] == 2) {
+      showtext(404, screenwidth/4+162, screenheight/4+94, "Arial Bold", NULL, "Added Ammo: " @ temp.itemstring[10]);
+      showtext(405, screenwidth/4+162, screenheight/4+106, "Arial Bold", NULL, "Total Ammo: " @ this.ammo);
+    } else {
+      hideimgs(404, 405);
+    }
+    
+    for (i=0;i<10;i++) {
+      if (i != 0) {
+        changeimgzoom(400+i, .6);
+        changeimgcolors(400+i, 0, 0, 0, 1);
+      }
+      changeimgvis(400+i, 5);
+    }
+  }
+  else hideimgs(400, 420);
+}
+
+function onPlayerView() {
+  // Show Characters Animations
+  showani(300, screenwidth/4+335, screenheight/4+60, player.dir, player.ani, client.bparams);
+  changeimgvis(300, 5);
+
+  // For Loop - Change Size / Color / Visual Layer
+  //for (i=1;i<7;i++) {
+  //  changeimgvis(300+i, "5");
+  //  changeimgcolors(300+i, "0", "0", "0", "1");
+  //  changeimgzoom(300+i, ".7");
+  //}
+}
+  
+function onPlayerInventory() {
+  if (mousewheeldelta < 0 || keydown(0)) {
+    if (this.row > 0) {
+      this.row --;
+      hideimgs(800, 824);
+      this.updateitem = true;
+    }
+  } else if (mousewheeldelta > 0 || keydown(2)) {
+    if (this.row * 6 + 24 < this.items.size()) {
+      this.row ++;
+      hideimgs(800, 824);
+      this.updateitem = true;
+    }
+  }
+
+  if (client.updatemenu)
+  {
+    client.updatemenu = false;
+    onItemCount();
+  }
+
+  if (this.updateitem == true)
+  {
+    this.updateitem = false;
+    onShowItems();
+  }
+}
+
+// Other Functions
+function onShowItems()
+{
+  if (this.items.size() < 24)
+    max = this.items.size();
+  else
+    max = 24;
+    
+  hideimgs(800, 900);
+  
+  for (i=0; i<max; i++) {
+    this.pos = i + (this.row*6);
+    temp.muditem = new TStaticVar();
+    temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ this.items[i+(this.row * 6)]));
+    temp.mudid = this.items[i+(this.row * 6)];
+    if (temp.muditem.quantity >= 1) {
+      showimg(800+i, temp.muditem.iconimage, (screenwidth/4+150)+((i%6)*44),(screenheight/4+145)+(int(i/6)*44));
+      changeimgvis(800+i, 5);
+      changeimgpart(800+i, 0, 0, 32, 32);
+      //checkMudType(temp.mudid);
+    }
+  }
+}
+
+public function onItemCount() {
+  this.items = 0;
+  client.weight = 0;
+  
+  for (temp.varname: clientr.getdynamicvarnames()) {
+    if (temp.varname.starts("muditem_")) {
+      if (makevar("clientr." @ temp.varname) != NULL) {
+        temp.muditem = new TStaticVar();
+        temp.muditem.loadvarsfromarray(makevar("clientr." @ temp.varname));
+        this.items.add(temp.varname.substring("muditem_".length(), -1));
+        client.weight = client.weight + (temp.muditem.weight * temp.muditem.quantity);
+      }
+    }
+  }
+  
+  this.updateitem = true;
+}
+
+function onDragging() {
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ thiso.viewitem));
+  
+  showimg(1200, temp.muditem.iconimage, mousescreenx - 25, mousescreeny - 15);
+  changeimgvis(1200, 6);
+  
+  if (client.qmenu != true) {
+    playerfreeze = 0.1;
+    if (keydown(0) || keydown(2))
+      this.dspeed += this.dinc;
+    else
+      this.dspeed = 1;
+    if (keydown(0) && temp.muditem.quantity > int(this.amount))
+      this.amount += int(this.dspeed);
+    if (keydown(2) && this.amount > 1)
+      this.amount -= int(this.dspeed);
+    if (this.amount < 1)
+      this.amount = 1;
+    if (this.amount > temp.muditem.quantity)
+      this.amount = temp.muditem.quantity;
+    
+    this.amount = int(this.amount);
+    
+    setani("gx-lay1", NULL);
+    showtext(1201, mousex - 2.2, mousey - 1.6, "Arial Bold", NULL, this.amount);
+    if (mousex in |playerx-7,playerx+7| && mousey in |playery-7,playery+7|){
+      this.dropimg = {player.x+.5+vecx(playerdir)*2, player.y+1.5+vecy(playerdir)*1.75};
+      showimg(199, temp.muditem.iconimage, this.dropimg[0], this.dropimg[1]);
+      changeimgpart(199, 0, 0, 48, 48);
+      changeimgvis(199, 1);
+      
+      this.msx = mousex - player.x - 1.5;
+      this.msy = mousey - player.y - 2;
+      if (clientr.vault == false) {
+        if (abs(this.msx) > abs(this.msy)) {
+          if (this.msx > 0)
+            player.dir = 3;
+          else
+            player.dir = 1;
+       } else {
+          if (this.msy > 0)
+            player.dir = 2;
+          else
+            player.dir = 0;
+        }
+      }
+    } else {
+      setani("idle", NULL);
+      hideimg(199);
+    }
+  } else {
+      setani("idle", NULL);
+      hideimg(199);
+   }
+}
+
+function onMouseDown(type){
+  if (client.qmenu != true)
+    return;
+    
+  if (this.item != -1)
+    this.item = -1;
+    
+  if (this.items.size() < 24)
+    max = this.items.size();
+  else
+    max = 24;
+    
+  for (i=0; i<max; i++) {
+    if (mousescreenx in |(screenwidth/4+150)+((i%6)*44),(screenwidth/4+150)+((i%6)*44)+32| && mousescreeny in |(screenheight/4+145)+(int(i/6)*44),(screenheight/4+145)+(int(i/6)*44)+32|) {
+      temp.muditem = new TStaticVar();
+      temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ this.items[i+(this.row * 6)]));
+      if (temp.muditem.quantity > 0) {
+        if (type == "left") {
+          this.dragging = true;
+          this.lastmx = this.lastmx2;
+          this.lastmy = this.lastmy2;
+          this.lastmx2 = mousex;
+          this.lastmy2 = mousey;
+          this.viewitem = thiso.items[i+(this.row * 6)];
+          this.amount = 1;
+        }
+        if (type == "right") {
+          //checkItem(thiso.items[i+(this.row * 6)], makevar("clientr.muditem_" @ thiso.items[i+(this.row * 6)])[0]);
+        }
+        if (type == "double" && leftmousebutton && mousex == this.lastmx && mousey == this.lastmy) {
+          client.selectedweapon = this.items[i+(this.row * 6)];
+          if (temp.muditem.weapon == "") {
+            temp.muditem.weapon = "Blank";
+          }
+          for (i=0; i < weapons.size(); i++) {
+            if (temp.muditem.weapon == weapons[i].name) {
+              selectedweapon = i;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+function onActionClientSide()
+{
+  if (params[0] == "setoff")
+  {
+    this.sent = false;
+  }
+  
+  onItemCount();
+}

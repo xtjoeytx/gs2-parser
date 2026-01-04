@@ -1,0 +1,159 @@
+//#CLIENTSIDE
+public function OpenRightsWindow(accountname) {
+  this.rights = { "warptoxy", "warptoplayer", "warpplayers", "updatelevel", "disconnectplayers", "viewattributes", "setattributes", "setownattributes", "resetattributes", "adminmessage", "-", "setserverflags", "changerights", "banplayers", "changecomments", "changestaffaccounts", "changeoptions", "changefolderconfig", "changefolderrights", "NPC-Control"};
+  this.rights_desc = { "Warpto x y", "Warpto player", "Warp players", "Update level", "Disconnect players", "View player attributes", "Set player attributes", "Set the own attributes", "Reset attributes", "Admin message", "-", "Set server flags", "Change rights", "Ban players", "Change comments", "Change staff accounts", "Change server options", "Edit folder configuration", "Edit folder rights", "NPC-Control" };
+  this.acc = accountname;
+
+  new GuiTextProfile(RemoteControl_TextProfile) {
+    fontcolor = "255 255 255";
+  }
+
+  RemoteControl_RightsWindow.destroy();
+  new GuiWindowCtrl(RemoteControl_RightsWindow) {
+    profile = "GuiBlueTransWindowProfile";
+    x = 0;
+    y = 0;
+    width = 500;
+    height = 400;
+    text = "Rights";
+    canresize = false;
+    canmaximize = false;
+
+    new GuiTextCtrl(RemoteControl_Rights_Label_AccountName) {
+      profile = "RemoteControl_TextProfile";
+      x = 10;
+      y = 30;
+      height = 20;
+      text = "Account name:";
+    }
+
+    new GuiTextEditCtrl(RemoteControl_Rights_AccountName) {
+      profile = "GuiBlueTextEditProfile";
+      x = RemoteControl_Rights_Label_AccountName.x + RemoteControl_Rights_Label_AccountName.width + 10;
+      y = 30;
+      width = 100;
+      height = 20;
+      text = accountname;
+    }
+
+    new GuiTextCtrl(RemoteControl_Rights_Label_IPRange) {
+      profile = "RemoteControl_TextProfile";
+      x = RemoteControl_Rights_AccountName.x + RemoteControl_Rights_AccountName.width + 50;
+      y = 30;
+      height = 20;
+      text = "IP range(s):";
+    }
+
+    new GuiTextEditCtrl(RemoteControl_Rights_IPRange) {
+      profile = "GuiBlueTextEditProfile";
+      x = RemoteControl_Rights_Label_IPRange.x + RemoteControl_Rights_Label_IPRange.width + 10;
+      y = 30;
+      width = 150;
+      height = 20;
+      text = "";
+    }
+
+    i = 0;
+    for(right: thiso.rights) {
+      if(right != "-") {
+        new GuiCheckBoxCtrl("RemoteControl_Rights_" @ right) {
+          //profile = "RemoteControl_CheckBoxProfile";
+          profile = "GuiBlueCheckBoxProfile";
+          x = 10;
+          y = 30 + 30 + (i*15);
+          text = thiso.rights_desc[i];
+//          text = right;
+        }
+      }
+
+      i++;
+    }
+
+    new GuiScrollCtrl(RemoteControl_Rights_Folders_Scroll) {
+      profile = "GuiBlueScrollProfile";
+      x = 200;
+      y = 60;
+      width = RemoteControl_RightsWindow.width - RemoteControl_Rights_Folders_Scroll.x - 20;
+      height = RemoteControl_RightsWindow.height - RemoteControl_Rights_Folders_Scroll.y - 50;
+      vscrollbar = "dynamic";
+      hscrollbar = "dynamic";
+
+      new GuiMLTextEditCtrl(RemoteControl_Rights_Folders) {
+        profile = "GuiBlueMLTextEditProfile";
+        x = 0;
+        y = 0;
+        width = RemoteControl_Rights_Folders_Scroll.width - 25;
+        height = RemoteControl_Rights_Folders_Scroll.height;
+      }
+    }
+
+    new GuiButtonCtrl(RemoteControl_Rights_Apply) {
+      profile = "GuiBlueButtonProfile";
+      x = RemoteControl_Rights_Folders_Scroll.x;
+      y = RemoteControl_Rights_Folders_Scroll.y + RemoteControl_Rights_Folders_Scroll.height + 10;
+      width = 100;
+      height = 30;
+      text = "Apply";
+
+      thiso.catchevent(name, "onAction", "onApply");
+    }
+
+    new GuiButtonCtrl(RemoteControl_Rights_Cancel) {
+      profile = "GuiBlueButtonProfile";
+      x = RemoteControl_Rights_Apply.x + RemoteControl_Rights_Apply.width + 10;
+      y = RemoteControl_Rights_Apply.y;
+      width = 100;
+      height = 30;
+      text = "Cancel";
+
+      thiso.catchevent(name, "onAction", "onCancel");
+    }
+  }
+
+  requesttext("rights", accountname);
+}
+
+function onCancel() {
+  RemoteControl_RightsWindow.destroy();
+}
+
+function onApply() {
+  temp.addrights = { "iprange=" @ RemoteControl_Rights_IPRange.text @ "\n" };
+
+  for (right: thiso.rights) {
+    if (("RemoteControl_Rights_" @ right).checked) {
+      temp.addrights.add(right @ "=true\n");
+    }
+  }
+
+  folders = RemoteControl_Rights_Folders.getLines();
+  for (folder : folders) {
+    temp.addrights.add(folder);
+  }
+
+  sendtext("rights", this.acc, temp.addrights);
+  RemoteControl_RightsWindow.destroy();
+}
+function onReceiveText(texttype,textoption,textlines) {
+  switch(texttype) {
+    case "rights":
+      for(i=0;i<textlines.size();i++) {
+        if(i == 0) {
+          // IP Range
+          tokens = textlines[i].tokenize("=");
+          RemoteControl_Rights_IPRange.settext(tokens[1]);
+        } else {
+          // Checkbox Rights
+          tokens = textlines[i].tokenize("=");
+
+          if(tokens[1] == "true") {
+            (@"RemoteControl_Rights_" @ tokens[0]).checked = true;
+          } else {
+            // Folder Rights
+            RemoteControl_Rights_Folders.settext(RemoteControl_Rights_Folders.gettext() @ textlines[i] @ "\n");
+          }
+        }
+      }
+      break;
+  }
+}

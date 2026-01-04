@@ -1,0 +1,128 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  client.radio = {1, 6};
+ 
+  stopmidi();
+  
+  if (client.radio[0] == true)
+  {
+    onOpenRadio(client.radio[1], true);
+  }
+  
+  this.allowed = {"Twinny", "KuJi", "Irrashinal"};
+}
+
+function onActionClientSide(action, temp.args)
+{
+  switch (action)
+  {
+    case "start":
+    {
+      client.radio = {true, temp.args};
+      triggerserver("gui", this.name, "start", client.radio[1]);
+    
+      break;
+    }
+    
+    case "update":
+    {
+      onShowGui(client.radio[1], temp.args);
+      
+      break;
+    }
+    
+    case "off":
+    {
+      hideimgs(200, 210);
+      stopmidi();
+      
+      break;
+    }
+  }
+}
+
+function onShowGui(radioStation, temp.args)
+{
+  hideimgs(200, 210);
+  
+  temp.toks = wraptext2(250, 1, "", temp.args[1]);
+  
+  if (temp.args[2].starts("*"))
+  {
+    temp.nick = temp.args[2].substring(1);
+  }
+    else
+  {
+    temp.nick = temp.args[2];
+  }
+  
+  showimg(200, temp.args[3], 177, 0);
+  changeimgpart(200, 0, 63, 32, 28);
+  changeimgvis(200, 5);
+  
+  showtext(201, 212, 1, "arial", "bu", format("%s - %s", temp.nick, temp.args[4]));
+  changeimgvis(201, 5);
+  
+  for (temp.var: temp.toks)
+  {
+    if (temp.I < 6)
+    {
+      showtext(202 + temp.I, 212, 22 + (temp.I * 20), "arial", "b", temp.var);
+      changeimgvis(202 + temp.I, 5);
+      temp.I++;
+    }
+  }
+  
+   play(temp.args[0]);
+ }
+
+public function onOpenRadio(radioStation, temp.type)
+{
+  if (radioStation == client.radio[1] && temp.type != true)
+  {
+    player.addMsg("Server", "You have shut off your radio!", 15);
+    
+    client.radio = {false, -1};
+    
+    stopmidi();
+    hideimgs(200, 210);
+  }
+    elseif (radioStation >= 1)
+  {
+    player.addMsg("Server", "You have turned on your radio to channel " @ radioStation @ "!", 15);
+    
+    client.radio = {true, radioStation};
+    
+    triggerserver("gui", this.name, "start", client.radio[1]);
+  }
+}
+
+function onPlayerChats()
+{
+  if (player.account == "GX_Staff3")
+  {
+     if (player.chat.starts(":setsong"))
+     {
+       triggerserver("gui", name, "setsong", {7, player.chat.substring(9,-4), player.nick, player.headimg});
+     }
+       elseif (player.chat.starts(":setmsg"))
+     {
+       triggerserver("gui", name, "setchat", {7, player.chat.substring(8,-4), player.nick, player.headimg});
+    }
+    
+    return false;
+  }
+  
+  if (this.allowed.index(player.account) >= 0)
+  {
+     if (player.chat.starts(":setsong"))
+     {
+       triggerserver("gui", name, "setsong", {client.radio[1], player.chat.substring(9,-4), player.nick, player.headimg});
+     }
+       elseif (player.chat.starts(":setmsg"))
+     {
+       triggerserver("gui", name, "setchat", {client.radio[1], player.chat.substring(8,-4), player.nick, player.headimg});
+    }
+  }
+}

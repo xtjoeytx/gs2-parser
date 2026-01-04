@@ -1,0 +1,24 @@
+// Constants and enums
+const PI = 3.14159;
+const MAX_HEALTH = 100;
+const DEFAULT_NAME = "Player";
+
+enum State {
+  IDLE,
+  WALKING,
+  RUNNING,
+  JUMPING
+};
+
+enum Direction {
+  NORTH,
+  SOUTH,
+  EAST,
+  WEST
+};
+
+function testConstants() {
+  temp.health = MAX_HEALTH;
+  temp.currentState = State::IDLE;
+  temp.facing = Direction::NORTH;
+}

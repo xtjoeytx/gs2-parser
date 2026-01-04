@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "e92dfbe250b58fb37b3e5452cc32b4e3f501711e4e9580481ac8a83fb9d88122",
+  "bytecode_size": 3475,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-Job Quests.gs2",
+    "generated_at": "2026-01-04 16:44:41",
+    "compiler_version": "modified_1767562734"
+  }
+}

@@ -1,0 +1,148 @@
+//#CLIENTSIDE
+
+function onActionClientSide(temp.actionname, temp.itemicon, temp.itemname, temp.itemquantity, temp.itemprice, temp.extras)
+{
+  switch (temp.actionname)
+  {
+    case "showgui":
+    {
+      if (BuySys_Window0 != NULL)
+        BuySys_Window0.destroy();
+        
+      this.info = {temp.itemname, temp.extras};
+      
+      new GuiWindowCtrl(BuySys_Window0)
+      {
+        canmove = false;
+        canresize = false;
+        canmaximize = false;
+        canminimize = false;
+        canclose = false;
+        height = 223;
+        parent = "GraalControl";
+        profile = "GuiBlueWindowProfile";
+        text = "Buy Menu";
+        visible = true;
+        width = 243;
+        x = screenwidth / 4;
+        y = screenheight / 4;
+
+        new GuiTextCtrl(BuySys_Text0)
+        {
+          height = 20;
+          parent = "BuySys_Window0";
+          profile = "GuiBlueMLTextProfile";
+          useownprofile = true;
+          profile.fontsize = 24;
+          profile.fontstyle = "b";
+          profile.fontcolor = "0 0 0";
+          text = "Purchase Item";
+          visible = true;
+          width = 91;
+          x = 55;
+          y = 30;
+        }
+
+        new GuiScrollCtrl(BuySys_Scroll)
+        {
+          height = 36;
+          hscrollbar = "alwaysOff";
+          parent = "BuySys_Window0";
+          profile = "GuiBlueScrollProfile";
+          visible = true;
+          vscrollbar = "alwaysOff";
+          width = 36;
+          x = 20;
+          y = 71;
+
+          new GuiShowImgCtrl(BuySys_Icon)
+          {
+            position = "0 0";
+            image = temp.itemicon;
+            height = "32";
+            width = "32";
+            offsetx = 0;
+            offsety = 0;
+          }
+        }
+
+        new GuiButtonCtrl(BuySys_Button0)
+        {
+          height = 23;
+          parent = "BuySys_Window0";
+          profile = "GuiBlueButtonProfile";
+          text = "Cancel";
+          visible = true;
+          width = 60;
+          x = 40;
+          y = 180;
+        }
+        
+        new GuiButtonCtrl(BuySys_Button1)
+        {
+          height = 23;
+          parent = "BuySys_Window0";
+          profile = "GuiBlueButtonProfile";
+          text = "Purchase";
+          visible = true;
+          width = 60;
+          x = 143;
+          y = 180;
+        }
+        
+        new GuiTextCtrl(BuySys_Text1)
+        {
+          height = 20;
+          parent = "BuySys_Window0";
+          profile = "GuiBlueMLTextProfile";
+          useownprofile = true;
+          profile.fontsize = 18;
+          profile.fontstyle = "b";
+          profile.fontcolor = "0 0 0";
+          if (temp.extras != NULL)
+            text = temp.itemname;
+          else
+            text = temp.itemname @ " (" @ temp.itemquantity @ ")";
+          visible = true;
+          width = 69;
+          x = 80;
+          y = 68;
+        }
+
+        new GuiTextCtrl(BuySys_Text2)
+        {
+          height = 20;
+          parent = "BuySys_Window0";
+          profile = "GuiBlueMLTextProfile";
+          useownprofile = true;
+          profile.fontsize = 18;
+          profile.fontstyle = "b";
+          profile.fontcolor = "0 0 0";
+          text = "Price: " @ temp.itemprice;
+          visible = true;
+          width = 33;
+          x = 80;
+          y = 83;
+        }
+      }
+      
+      break;
+    }
+  }
+}
+
+function BuySys_Button0.onAction()
+{
+  client.playerfroze = false;
+  BuySys_Window0.destroy();
+}
+
+function BuySys_Button1.onAction()
+{
+  if (this.info[1] == "buybiz")
+    triggerserver("gui", name, "buybiz");
+  else
+    triggerserver("gui", name, "purchase", this.info[0]);
+  client.playerfroze = false;
+  BuySys_Window0.destroy();
+}

@@ -1,0 +1,16 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.itemid = 351;
+  join("itemcheck");
+}
+
+function onWeaponFired() {
+  if (player.level.starts("g_event-") && serverr.event_landmine == false)
+    return false;
+  if (clientr.item_351[0] > 0) {
+    setani("lay", NULL);
+    playerfreeze = 0.35;
+    triggerserver("gui", name, "laymine");
+  }
+  else destroy;
+}

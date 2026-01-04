@@ -1,0 +1,29 @@
+//#CLIENTSIDE
+function onBomyWeaponFired() {
+  this.px = int(player.x + 1);
+  this.py = int(player.y + 1.5);
+
+  this.shovelhole = true;
+  for (temp.i = 0; temp.i < 2; temp.i++) {
+    for (temp.j = 0; temp.j < 2; temp.j++) {
+      temp.b = board[this.px + temp.i + 64 * (this.py + temp.j)];
+      temp.bx = temp.b % 16;
+      temp.by = int(temp.b / 16);
+      if (!(temp.bx == 15 && temp.by in {31, 63, 127}))
+        this.shovelhole = false;
+    }
+  }
+  if (this.shovelhole == true) {
+    player.freeze(0.5);
+    setani("bomy_spin1", null);
+    setTimer(0.3);
+  }
+}
+
+function onTimeout() {
+  board[this.px+64*this.py] = 10+114*16;
+  board[this.px+1+64*this.py] = 11+114*16;
+  board[this.px+64*(this.py+1)] = 10+115*16;
+  board[this.px+1+64*(this.py+1)] = 11+115*16;
+  updateboard(this.px,this.py,2,2);
+}

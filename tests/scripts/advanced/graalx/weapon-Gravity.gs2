@@ -1,0 +1,86 @@
+//#CLIENTSIDE
+//Go to twinnytest_a1.nw
+//Added some stuff to test
+// Gotta disable the movement system =/
+
+function onCreated()
+{
+  this.gup = 0.6;
+  this.guprate = 0.1;
+  this.gdownrate = 0.1;
+  this.fall = 3;
+  this.jumpkey = 38;
+  drawButton();
+  setTimer(0.05);
+}
+
+function onTimeout()
+{
+if (this.gon)
+{
+  if (client.gmov => 0)
+    this.gjump = false;
+  else this.gjump = true;
+  
+  if (this.gjump == false)
+  {
+    if (this.gon % 3 == 1)
+    {
+      if (!onwall(player.x+1,playery+3.5))
+      {
+        if (client.gmov <= this.fall)
+          client.gmov += this.gdownrate;
+        player.y += client.gmov;
+      }
+      else client.gmov = 0;
+    }
+      elseif (this.gon % 3 == 2)
+    {
+      if (client.gmov <= this.fall)
+        client.gmov += this.gdownrate;
+      player.y -= client.gmov;
+    }
+  }
+ 
+   if (this.gjump == true)
+  {
+    if (!onwall(player.x+1,playery-1))
+    {
+        client.gmov += this.guprate;
+      player.y += client.gmov;
+    }
+    else
+      client.gmov = 0;
+  }     
+  
+  
+  if (keydown(0))
+  {
+    if (onwall(player.x+1,playery+3.5)) 
+      client.gmov -= this.gup;
+  }
+  
+}  
+  setTimer(0.05);
+}
+
+/*function drawButton()
+{
+  Gravbut.destroy();
+  
+  new GuiButtonCtrl("Gravbut")
+  {
+    profile = "GuiBlueButtonProfile";
+    position = "1 100";
+    text     = "Toggle Gravity";
+  }
+}*/
+
+function Gravbut.onAction()
+{
+  this.gon = (this.gon += 1) % 3;
+  
+  if (this.gon == 0) player.chat = "Off";
+  elseif (this.gon == 1) player.chat = "Down";
+  elseif (this.gon == 2) player.chat = "Up";
+}    

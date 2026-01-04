@@ -1,0 +1,12 @@
+//#CLIENTSIDE
+/*
+function onPlayerChats()
+{
+  if (player.chat.starts(":"))
+  {
+    temp.toks = player.chat.tokenize();
+    temp.toks.delete(0);
+    
+    triggerserver("weapon", this.name, player.chat.substring(1).tokenize()[0], temp.toks);
+  }
+}

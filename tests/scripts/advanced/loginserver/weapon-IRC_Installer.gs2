@@ -1,0 +1,409 @@
+/*
+  Changelog:
+   - 2021-09-19 [joey] - started translating IRC/Installer
+*/
+
+//#CLIENTSIDE
+//#GS2
+
+function onCreated()
+{
+  this.smartphone = (player.platform in {"iphone","android","bada"});
+  this.showupdaterwhenfinished = false;
+  addGuiControls();
+}
+
+function onServerLogin()
+{
+  if (!servername.starts("login") || this.smartphone)
+  {
+    hideProgressWindow();
+  }
+
+  this.logintime = timevar2;
+  this.lastdownloadtime = 0;
+}
+
+function onPlayerEnters()
+{
+  if (!this.smartphone)
+  {
+    setTimer(0.05);
+  } else {
+    hideProgressWindow();
+  }
+}
+
+function onTimeout()
+{
+  checkDownloadProgress();
+  setTimer(0.05);
+}
+
+function addGuiControls()
+{
+  if (!this.smartphone)
+    addDownloadWindow();
+}
+
+function onDefaultStyleChanges()
+{
+  DownloadProgress_Window.style = $pref::Video::defaultguistyle;
+}
+
+function addDownloadWindow()
+{
+  with (GUIContainer)
+  {
+    new GuiWindowCtrl("DownloadProgress_Window")
+    {
+      profile = "GuiBlueWindowProfile";
+      style = $pref::Video::defaultguistyle;
+      clientrelative = true;
+      clientextent = {400, 170};
+      position = {(screenwidth - width) / 2, (screenheight - height) / 2};
+      horzSizing = "center";
+      vertSizing = "center";
+      canMove = true;
+      canResize = true;
+      canClose = true;
+      text = "Download Progress";
+      visible = false;
+
+      new GuiTextCtrl("DownloadProgress_TopLabel")
+      {
+        profile = "GuiBlueDarkCenteredTextProfile";
+        position = "45 15";
+        extent = "310 18";
+        minextent = extent;
+        horizSizing = "width";
+        text = "Downloading:";
+      }
+
+      new GuiTextCtrl("DownloadProgress_Label1")
+      {
+        profile = "GuiBlueDarkTextProfile";
+        position = "20 45";
+        extent = "70 18";
+        text = "File:";
+      }
+
+      new GuiProgressCtrl("DownloadProgress_Bar1")
+      {
+        profile = "GuiBlueProgressProfile";
+        position = {95, 45};
+        extent = {290, 20};
+        horizSizing = "width";
+        progress = 0;
+
+        new GuiTextCtrl("DownloadProgress_File")
+        {
+          profile = "GuiBlueDarkCenteredTextProfile";
+          position = "0 0";
+          extent = "290 20";
+          minextent = extent;
+          horizSizing = "center";
+          text = "";
+        }
+      }
+
+      new GuiTextCtrl("DownloadProgress_Label2")
+      {
+        profile = "GuiBlueDarkTextProfile";
+        position = "20 75";
+        extent = "70 18";
+        text = "Package:";
+      }
+
+      new GuiProgressCtrl("DownloadProgress_Bar2")
+      {
+        profile = "GuiBlueProgressProfile";
+        position = {95, 75};
+        extent = {290, 20};
+        horizSizing = "width";
+        progress = 0;
+        
+        new GuiTextCtrl("DownloadProgress_Package")
+        {
+          profile = "GuiBlueDarkCenteredTextProfile";
+          position = "0 0";
+          extent = "290 20";
+          minextent = extent;
+          horizSizing = "center";
+          text = "";
+        }
+      }
+      
+      new GuiTextCtrl("DownloadProgress_Label3")
+      {
+        profile = "GuiBlueDarkTextProfile";
+        position = "20 105";
+        extent = "70 18";
+        text = "Total:";
+      }
+      
+      new GuiProgressCtrl("DownloadProgress_Bar3")
+      {
+        profile = "GuiBlueProgressProfile";
+        position = {95, 105};
+        extent = {290, 20};
+        horizSizing = "width";
+        progress = 0;
+        
+        new GuiTextCtrl("DownloadProgress_TotalSize")
+        {
+          profile = "GuiBlueDarkCenteredTextProfile";
+          position = "0 0";
+          extent = "290 20";
+          minextent = extent;
+          horizSizing = "center";
+          text = "";
+        }
+      }
+
+      new GuiButtonCtrl(DownloadProgress_CloseButton)
+      {
+        profile = "GuiBlueButtonProfile";
+        position = "130 140";
+        extent = "140 24";
+        text = "Close";
+      }
+    }
+  }
+  
+    new GuiControlProfile("DownloadProgress_GameFadeProfile")
+    {
+        opaque = true;
+        fillcolor = {0, 0, 0};
+        alpha = 0;
+    }
+
+    new GuiControl("DownloadProgress_GameFade")
+    {
+        profile = DownloadProgress_GameFadeProfile;
+        x = y = 0;
+        width = screenwidth;
+        height = screenheight;
+        horizSizing = "width";
+        vertSizing = "height";
+        visible = false;
+    }
+}
+
+function hideProgressWindow()
+{
+  if (isObject("DownloadProgress_Window"))
+  {
+    if (DownloadProgress_Window.visible)
+    {
+      DownloadProgress_Window.visible = false;
+      GraalControl.makeFirstResponder(true);
+    }
+  }
+}
+
+function DownloadProgress_CloseButton.onAction()
+{
+  if (getPackagesDownloadComplete())
+  {
+    hideProgressWindow();
+  }
+}
+
+function checkDownloadProgress()
+{
+  downloadedsize = getDownloadedUpdatePackageSize();
+  totalsize = getTotalUpdatePackageSize();
+
+  if (totalsize > 0)
+  {
+    if (downloadedsize != totalsize)
+    {
+      showDownloadProgress();
+    }
+    else
+    {
+      checkNewDownloadProgress();
+    }
+
+    if (!DownloadProgress_Window.visible)
+    {
+      if (DownloadProgress_GameFade.visible)
+      {
+        DownloadProgress_GameFade.alpha -= 0.05;
+        if (DownloadProgress_GameFade.alpha <= 0.05)
+        {
+          DownloadProgress_GameFade.visible = false;
+        }
+      }
+    }
+  }
+}
+
+function onPackagesDownloadComplete()
+{
+  showDownloadProgress();
+
+  DownloadProgress_Window.canclose = true;
+  DownloadProgress_CloseButton.show();
+  DownloadProgress_Label3.visible = true;
+  DownloadProgress_Bar3.visible = true;
+
+  this.showdownloadof = "package";
+
+  if (getTotalUpdatePackageSize() <= 0)
+  {
+    DownloadProgress_TopLabel.text = "All files are OK!";
+    if (!this.showupdaterwhenfinished) {
+      hideProgressWindow();
+    }
+
+    this.showupdaterwhenfinished = false;
+  }
+  else
+  {
+    DownloadProgress_TopLabel.text = "Download finished!";
+    DownloadProgress_Bar1.progress = 100;
+    DownloadProgress_Bar2.progress = 100;
+    DownloadProgress_Bar3.progress = 100;
+    if (player.account.starts("pc:") || player.account == "guest") {
+      hideProgressWindow();
+    }
+  }
+}
+
+public function showDownloadProgress()
+{
+  downloadedsize = getDownloadedUpdatePackageSize();
+  totalsize = getTotalUpdatePackageSize();
+  
+  if (!DownloadProgress_Window.visible)
+  {
+    DownloadProgress_Window.showtop();
+  }
+
+  DownloadProgress_Window.canclose = false;
+  DownloadProgress_CloseButton.hide();
+  DownloadProgress_Label3.visible = true;
+  DownloadProgress_Bar3.visible = true;
+  this.showdownloadof = "package";
+  
+  if (totalsize > 0)
+  {
+    DownloadProgress_Bar3.progress = downloadedsize / totalsize;
+    DownloadProgress_TotalSize.text = int((downloadedsize + 1023) / 1024) @ "k of " @ int((totalsize + 1023) / 1024) @ "k";
+  }
+  else
+  {
+    DownloadProgress_Bar3.progress = 0;
+    DownloadProgress_TotalSize.text = "";
+  }
+
+  package = getDownloadingPackage();
+  if (package != null)
+  {
+    if (package.totalsize > 0)
+    {
+      DownloadProgress_TopLabel.text = "Downloading:";
+      DownloadProgress_Package.text = (package.name == "Graal Executable" ? "Graal version " @ package.version : package.name);
+      DownloadProgress_Bar2.progress = package.downloadedsize / package.totalsize;
+      DownloadProgress_File.text = package.lastdownloadfile;
+
+      if (package.filetotalsize > 0)
+      {
+        DownloadProgress_Bar1.progress = package.filedownloadedsize / package.filetotalsize;
+      }
+      else
+      {
+        DownloadProgress_Bar1.progress = 0;
+      }
+    }
+    else
+    {
+      DownloadProgress_TopLabel.text = "Starting download...";
+      DownloadProgress_Package.text = "";
+      DownloadProgress_Bar2.progress = 0;
+      DownloadProgress_File.text = "";
+      DownloadProgress_Bar1.progress = 0;
+    }
+  }
+}
+
+function checkNewDownloadProgress()
+{
+  // loopvar 0: temp.ext
+  // loopvar 1: DownloadProgress_Window
+  
+  if (!isdownloadingfiles() || downloadfile == "")
+  {
+    if (lastdownloadfile == "")
+    {
+      if (DownloadProgress_Window.visible)
+      {
+        if (this.showdownloadof == "gamefiles")
+        {
+          hideProgressWindow();
+          return; 
+        }
+      }
+    }
+  }
+
+  if (this.lastdownloadtime != 0 || timevar2 > this.logintime + 10)
+  {
+    if (!DownloadProgress_Window.visible)
+    {
+      if (downloadsize < 1000000)
+        return 0;
+    }
+  }
+
+  this.lastdownloadtime = timevar2;
+  if (!DownloadProgress_Window.visible)
+  {
+    DownloadProgress_Window.showtop();
+    DownloadProgress_Window.canclose = true;
+    DownloadProgress_CloseButton.show();
+    DownloadProgress_Label3.visible = false;
+    DownloadProgress_Bar3.visible = false;
+
+    if (!servername.starts("login"))
+    {
+      DownloadProgress_GameFade.showtop();
+      DownloadProgress_GameFade.alpha = 0.75;
+      this.showdownloadof = "gamefiles";
+
+      temp.file = (downloadfile != "" ? downloadfile : lastdownloadfile);
+      temp.progress = (downloadfile != "" ? downloadpos / downloadsize : 1);
+
+      temp.lastfile = DownloadProgress_File.text;
+      temp.lastprogress = DownloadProgress_Bar1.progress;
+      DownloadProgress_TopLabel.text = "Downloading:";
+
+      temp.ext = extractfileext(temp.file);
+
+      DownloadProgress_File.text = (temp.ext in {".enc", ".gpake"} ? extractfilebase(temp.file) : temp.file);
+      DownloadProgress_Bar1.progress = temp.progress;
+      DownloadProgress_Package.text = (temp.ext in {".mp3", ".wav"} ? "Sound files" : temp.ext in {".png", ".mng", ".gif", ".jpg", ".jp2", ".bmp"} ? "Graphics" : temp.ext in {".wba"} ? "GUI Graphics" : "Game files");
+
+      DownloadProgress_Bar2.progress = temp.progress;
+      if (DownloadProgress_File.text == temp.lastfile)
+      {
+        if (DownloadProgress_Bar1.progress == temp.lastprogress)
+        {
+          temp.stalledcounter += 0.05;
+
+          if (temp.stalledcounter >= 1)
+          {
+            this.logintime = timevar2 - 10;
+            hideProgressWindow();
+          }
+        }
+      }
+      else
+      {
+        temp.stalledcounter = 0;
+      }
+    }
+  }
+}

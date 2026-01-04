@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "00c8ddc9d34597fa6146d84eef1e23cb632f9f117fbcddbfffbc10f8f6c8ca98",
+  "bytecode_size": 52,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponVulcan.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

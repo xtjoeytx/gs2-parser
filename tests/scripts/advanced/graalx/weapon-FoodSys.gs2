@@ -1,0 +1,56 @@
+//#CLIENTSIDE
+/*function onCreated() {
+  this.hspeed = 20;
+  this.foodspin = 0;
+  this.checktick = 480; // 8 Minutes
+  if (clientr.foodspeed < 10 || clientr.foodspeed > 10) 
+    triggerserver("gui", "-FoodSys", "setspeed", 10);
+  onTimeout();
+}
+
+function onTimeout() {
+  if (client.food > 999)
+    client.food = 999;
+  elseif (client.food < 0)
+    client.food = 0;
+    
+  if (clientr.health[2] > 0 && this.foodtick <= 0) {
+    this.guilds = {clientr.staff, "Working"};
+    
+    if (this.guilds.index(player.guild) <= -1) {
+      this.foodtick = clientr.foodspeed;
+      this.hspeed = 15;
+      client.food--;
+    }
+  }
+  elseif (this.htick <= 0 && clientr.health[0] > 0 && client.food <= 0) {
+    this.hspeed--;
+    if (this.hspeed < 3)
+      this.htick = 20;
+    else
+      this.htick = this.hspeed;
+    this.dmg = int(random(1, 3));
+    this.dmg2 = int(random(0, 2));
+    if (this.dmg2 >= 1)
+      this.damage = this.dmg + 0.5;
+    else
+      this.damage = this.dmg;
+    client.attacker = {"Starvation", "Death"};
+    triggerserver("gui", "-System", "dodmg", this.damage, true);
+  }
+  
+  // Virus
+  if (this.vtick <= 0 && clientr.virusimmune >= 10) {
+    this.vtick = 10;
+    triggerserver("gui", name, "virusimmune", 10);
+  }
+  
+  // Ticks
+  if (this.foodtick >= 0.05)
+    this.foodtick -= 0.05;
+  if (this.htick >= 0.05) 
+    this.htick -= 0.05;
+  if (this.vtick >= 0.05)
+    this.vtick -= 0.05;
+  setTimer(0.05);
+}

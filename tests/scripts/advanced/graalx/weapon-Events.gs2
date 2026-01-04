@@ -1,0 +1,218 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.accounts = {"KuJi", "Sage_Shadowbane"};
+  this.guilds = {"Events Team", "Events Admin", "Staff"};
+  
+  if (Events_Window != NULL) Events_Window.destroy();
+
+  onTimeout();
+}
+
+function onDisplayEvent(eventID, eventName, eventPrize)
+{
+  if (Events_Window.text.substring(11) == eventID) return false;
+ 
+  new GuiWindowCtrl(Events_Window)
+  {
+    height = 150;
+    parent = "GraalControl";
+    profile = "GuiBlueWindowProfile";
+    text = "New Event: " @ eventID;
+    visible = true;
+    width = 160;
+    canmove = false;
+    canresize = false;
+    canmaximize = false;
+    canminimize = false;
+    closequery = true;
+    x = 0;
+    y = 91;
+    tab = 0;
+
+    new GuiTextCtrl(Events_Text)
+    {
+      height = 20;
+      parent = "Event_Window";
+      profile = "";
+      fontsize = 12;
+      resizeheight = false;
+      text = "Event Name:";
+      visible = true;
+      width = 180;
+      x = 16;
+      y = 35;
+    }
+
+    new GuiTextCtrl(Events_Text2)
+    {
+      height = 20;
+      parent = "Event_Window";
+      profile = "";
+      resizeheight = false;
+      text = eventName;
+      visible = true;
+      width = 180;
+      x = 16;
+      y = 45;
+    }
+    
+    new GuiTextCtrl(Events_Text3)
+    {
+      height = 20;
+      parent = "Event_Window";
+      profile = "";
+      fontsize = 12;
+      resizeheight = false;
+      text = "Event Prize:";
+      visible = true;
+      width = 180;
+      x = 16;
+      y = 65;
+    }
+
+    new GuiTextCtrl(Events_Text4)
+    {
+      height = 20;
+      parent = "Event_Window";
+      profile = "";
+      resizeheight = false;
+      text = eventPrize;
+      visible = true;
+      width = 180;
+      x = 16;
+      y = 75;
+    }
+    
+    new GuiButtonCtrl(Event_Button1)
+    {
+      height = 23;
+      parent = "Event_Window";
+      profile = "GuiBlueButtonProfile";
+      text = "Join";
+      visible = true;
+      width = 60;
+      x = 15;
+      y = 115;
+      thiso.catchEvent(name, "onAction", "onActionAccept"); 
+    }
+    
+    new GuiButtonCtrl(Event_Button2)
+    {
+      height = 23;
+      parent = "Editor_Window0";
+      profile = "GuiBlueButtonProfile";
+      text = "Cancel";
+      visible = true;
+      width = 60;
+      x = 85;
+      y = 115;
+      thiso.catchEvent(name, "onAction", "onActionReject"); 
+    }
+  }
+  GraalControl.makeFirstResponder(true);
+}
+
+function onActionAccept(obj)
+{
+  triggerserver("gui", name, "join");
+  
+  Events_Window.destroy();
+}
+
+function onActionReject(obj)
+{
+  Events_Window.destroy();
+}
+
+function Events_Window.onCloseQuery()
+{
+  Events_Window.destroy();
+}
+
+function onActionClientSide(action, args)
+{
+  switch (action)
+  {
+    case "end":
+    {
+      Events_Window.destroy();
+    
+      break;
+    }
+    
+    case "show":
+    {
+      onDisplayEvent(args[0], args[1], args[2]);
+    
+      break;
+    }
+  }
+}
+
+function onPlayerChats()
+{
+  if (player.chat.starts(":setevent"))
+  {
+    tokens = player.chat.tokenize();
+    
+    if (this.guilds.index(player.guild) >= 0 || this.accounts.index(player.account) >= 0)
+    {
+      if (tokens.size() >= 3)
+      {
+        triggerserver("gui", name, "set", {tokens[1], tokens[2]});
+      }
+      else player.addMsg("Server", "Syntax: setevent 'name' 'prize'", 15);
+    }
+  }
+  
+  if (player.chat == ":endevent")
+  {
+    if (this.guilds.index(player.guild) >= 0 || this.accounts.index(player.account) >= 0)
+    {
+      triggerserver("gui", name, "end");
+    }
+  }
+  
+  if (player.chat == ":host")
+  {
+    if (this.guilds.index(player.guild) >= 0 || this.accounts.index(player.account) >= 0)
+    {
+      triggerserver("gui", this.name, "host");
+    }
+  }
+  
+  if (player.chat == ":resend")
+  {
+    if (this.guilds.index(player.guild) >= 0 || this.accounts.index(player.account) >= 0)
+    {
+      triggerserver("gui", name, "resend");
+    }
+  }
+  
+  if (player.chat == "/checkevent")
+  {
+    triggerserver("gui", name, "get");
+  }
+}
+
+function onTimeout()
+{
+  if (this.etick > 0)
+  {
+    this.etick -= 0.05;
+    
+    setTimer(0.05);
+  }
+}
+
+function onKeyPressed(keycode, keychar)
+{
+  if (keychar == "`" && this.etick <= 0)
+  {
+    triggerserver("gui", this.name, "join");
+    this.etick = 5;
+    
+    onTimeout();
+  }
+}

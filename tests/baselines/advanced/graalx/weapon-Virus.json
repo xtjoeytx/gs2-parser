@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "e2c68be419b974684b13a2dcd56ef3d7b19a8f7d9e5d79bed70504ffb7440a71",
+  "bytecode_size": 717,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-Virus.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

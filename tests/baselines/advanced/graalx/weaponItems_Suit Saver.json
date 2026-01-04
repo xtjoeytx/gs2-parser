@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "f96690a69e140107fe1fa0103f7f129c45a627e0e709a4e9fd0c0f9dd480226f",
+  "bytecode_size": 3368,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponItems_Suit Saver.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

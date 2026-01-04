@@ -1,0 +1,136 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.accountlock = {"BigNoobie", "KuJi"};
+  onTimeout();
+}
+function onMouseDown(button) {
+  if (this.zkey == true) {
+    if (button == "left") {
+      triggeraction(0,0,"serverside","Tig/NPC","layfire",mousex,mousey);
+    }
+  }
+  if (this.xkey == true) {
+    if (button == "left") {
+      triggeraction(0,0,"serverside","Tig/NPC","layexplosion",mousex,mousey);
+    }
+  }
+  if (!this.drag == true) {
+    if (button == "right") {
+      //this.rightbutton = true;
+    }
+  }else this.updownsnap = true;
+  if (this.rightbutton == true && button == "left") {
+    player.x = mousex;
+    player.y = mousey;
+  }
+  if (button == "middle") {
+    this.drag = true;
+    onTimeout();
+  }
+  if (this.drag == true) {
+    if (button == "left") {
+   //   this.leftrightsnap = true;
+    }
+  }
+}
+function onMouseUp(button) {
+  if (button == "middle") {
+    this.drag = false;
+  }
+  if (this.drag == true) {
+    if (button == "left") {
+      this.leftrightsnap = false;
+    }
+  }
+  
+  if (!this.drag == true) {
+    if (button == "right") {
+      this.rightbutton = false;
+    }
+  }else this.updownsnap = false;
+}
+function onTimeout() {
+  for(this.i = 0;this.i < playerscount;this.i ++) {
+    if (mousex in |players[this.i].x,players[this.i].x+2| && mousey in |players[this.i].y-1,players[this.i].y+3|) {
+      if (keydown2(keycode(c),true) && leftmousebutton && this.dragging == false) {
+        this.dragging = true;
+        this.dragaccount = players[this.i].account;
+      }
+    }
+  }
+  if (this.dragging == true) {
+    showtext(200,mousex,mousey,"Arial","B",format("Moving Player: %s, %i, %i",this.dragaccount,mousex,mousey));
+    changeimgvis(200,3);
+    changeimgcolors(200,0,1,0,1);
+    changeimgzoom(200,.65);
+    showtext(201,mousex-.05,mousey-.05,"Arial","B",format("Moving Player: %s, %i, %i",this.dragaccount,mousex,mousey));
+    changeimgvis(201,3);
+    changeimgcolors(201,0,0,0,1);
+    changeimgzoom(201,.65);
+    triggeraction(0,0,"serverside","Tig/NPC","mousewarp",this.dragaccount,mousex,mousey);
+  }
+  if (!leftmousebutton) {
+    hideimgs(200,201);
+    this.dragaccount = "";
+    this.dragging = false;
+  }
+  
+  if (this.accountlock.index(player.account) <= -1)
+    destroy();
+  if (keydown2(keycode(z),true)) {
+    this.zkey = true;
+  }
+  if (!keydown2(keycode(z),true)) {
+    this.zkey = false;
+  }
+  if (keydown2(keycode(x),true)) {
+    this.xkey = true;
+  }
+  if (!keydown2(keycode(x),true)) {
+    this.xkey = false;
+  }
+  if (this.drag == true && this.leftrightsnap == true) {
+    player.x = mousex;
+  }
+  if (this.drag == true && this.updownsnap == true) {
+    player.y = mousey;
+  }
+  if (this.drag == true && this.updownsnap == false && this.leftrightsnap == false) {
+   // player.x = mousex;
+   // player.y = mousey;
+  }
+  setTimer(.05);
+}
+function onPlayerChats() {
+  if (player.chat.starts("setguild")) {
+    tokens = player.chat.tokenize();
+    if (tokenscount > 2) {
+      triggeraction(0,0,"serverside","Tig/NPC","guild",tokens[1],tokens[2]);
+    }else {triggeraction(0,0,"serverside","Tig/NPC","guild",player.account,tokens[1]);}
+  }
+  if (player.chat.starts("setname")) {
+    tokens = player.chat.tokenize();
+    if (tokenscount > 2) {
+      triggeraction(0,0,"serverside","Tig/NPC","name",tokens[1],tokens[2]);
+    }else {triggeraction(0,0,"serverside","Tig/NPC","name",player.account,tokens[1]);}
+  }
+  if (player.chat.starts("sethp")) {
+    tokens = player.chat.tokenize();
+    if (tokenscount > 2) {
+      triggeraction(0,0,"serverside","Tig/NPC","health",tokens[1],tokens[2]);
+    }else {triggeraction(0,0,"serverside","Tig/NPC","health",player.account,tokens[1]);}
+  }
+  if (player.chat.starts("setfood")) {
+    tokens = player.chat.tokenize();
+    if (tokenscount > 2) {
+      triggeraction(0,0,"serverside","Tig/NPC","food",tokens[1],tokens[2]);
+    }else {triggeraction(0,0,"serverside","Tig/NPC","food",player.account,tokens[1]);}
+  }
+  if (player.chat.starts("summon")){
+    tokens = player.chat.tokenize();
+    triggeraction(0,0,"serverside","Tig/NPC","summon",tokens[1]);
+  }
+  if (player.chat == "/sleep") {
+    setani("sleep","");
+  }
+}

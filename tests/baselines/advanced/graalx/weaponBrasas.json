@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "a2f1852e51261f34c20a033f1e34f4cdb259442faba7efb485809714fcdb92c0",
+  "bytecode_size": 1463,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponBrasas.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

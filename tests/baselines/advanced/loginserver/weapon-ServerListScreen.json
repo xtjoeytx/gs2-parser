@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "ae8652babe7f72d813615c81cf17d5f4a69eb5c6da7a7c7841c33201565b7ccf",
+  "bytecode_size": 33833,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/loginserver/weapon-ServerListScreen.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

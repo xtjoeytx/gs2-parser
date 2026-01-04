@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "06e5be6a1208dd7ecc102af64b816fbd9dc131785382ea6acd5ef1e80bce94a3",
+  "bytecode_size": 2624,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponToys_gPod.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

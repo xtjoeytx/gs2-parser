@@ -1,0 +1,81 @@
+//#CLIENTSIDE
+function onCreated() {
+}
+
+public function openAttribs(acctname) {
+  this.accountname = acctname;
+
+  new GuiWindowCtrl(AttributesWindow_Main) {
+    profile = "GuiBlueTransWindowProfile";
+    extent = "500 500";
+    text = "Attributes - " @ acctname;
+    visible = true;
+  }
+}
+
+public function openFlags(acctname) {
+  this.flagsaccount = acctname;
+
+  new GuiWindowCtrl(FlagsWindow_Main) {
+    profile = "GuiBlueTransWindowProfile";
+    extent = "250 300";
+    text = "Flags of player: " @ acctname;
+    visible = true;
+
+    new GuiScrollCtrl(FlagsWindow_FlagsScroll) {
+      profile = "GuiBlueScrollProfile";
+      position = "6 24";
+      width = FlagsWindow_Main.width - x - 6;
+      height = FlagsWindow_Main.height - y - 6 - 25;
+      vertSizing = "height";
+      horizSizing = "width";
+
+      new GuiMLTextCtrl(FlagsWindow_Flags) {
+        profile = "GuiBlueMLTextProfile";
+        position = "5 0";
+        width = FlagsWindow_FlagsScroll.width - x - 25;
+        height = FlagsWindow_FlagsScroll.height - y - 25;
+        wordwrap = false;
+      }
+    }
+
+    new GuiButtonCtrl(FlagsWindow_Apply) {
+      profile = "GuiBlueButtonProfile";
+      x = 6;
+      y = FlagsWindow_FlagsScroll.y + FlagsWindow_FlagsScroll.height;
+      width = (FlagsWindow_Main.width - 12) / 2;
+      height = 25;
+      text = "Apply";
+      vertSizing = "top";
+      horizSizing = "width";
+    }
+
+    new GuiButtonCtrl(FlagsWindow_Cancel) {
+      profile = "GuiBlueButtonProfile";
+      x = FlagsWindow_Apply.x + FlagsWindow_Apply.width;
+      y = FlagsWindow_Apply.y;
+      width = (FlagsWindow_Main.width - 12) / 2;
+      height = 25;
+      text = "Cancel";
+      vertSizing = "top";
+      horizSizing = "left";
+    }
+  }
+
+  requesttext("playerflags", acctname);
+}
+
+function FlagsWindow_Apply.onAction() {
+  sendtext("playerflags", this.flagsaccount, FlagsWindow_Flags.text);
+}
+
+function onReceiveText(texttype,textoptions,textlines) {
+  switch(texttype) {
+  case "playerflags":
+    FlagsWindow_Flags.text = "";
+    for(line: textlines) {
+      FlagsWindow_Flags.addtext(line @ "\n", true);
+    }
+    break;
+  }
+}

@@ -1,0 +1,111 @@
+//#CLIENTSIDE
+function onCreated() 
+{  
+  this.currentLine = 0; 
+   
+  new GuiWindowCtrl("Document_Main")  
+  { 
+    canclose = canmove = canminimize = true; 
+    canmaximize = canresize = false; 
+     
+    profile = GuiBlueWindowProfile; 
+    x = 10; 
+    y = 120; 
+    width = 400; 
+    height = 330; 
+    text = "Staff Documents"; 
+ 
+    new GuiScrollCtrl("Document_fileText")  
+    { 
+      profile = GuiBlueScrollProfile; 
+      x = 10; 
+      y = 30; 
+      width = 380; 
+      height = 230; 
+       
+      hScrollBar = "dynamic"; 
+      vScrollBar = "dynamic"; 
+      
+      new GuiTextListCtrl("fileText_Lines")  
+      { 
+        profile = GuiBlueTextListProfile; 
+        x = y = 0; 
+        width = 140; 
+        fitparentwidth = true; 
+      
+        clearrows(); 
+      } 
+    } 
+    new GuiTextEditCtrl("Document_folderFind")  
+    { 
+      profile = GuiBlueTextEditProfile; 
+      x = 10; 
+      y = 270; 
+      width = 320; 
+      height = 20; 
+      text = "levels/*.nw"; 
+    } 
+    new GuiTextEditCtrl("Document_textFind")  
+    { 
+      profile = GuiBlueTextEditProfile; 
+      x = 10; 
+      y = 295; 
+      width = 320; 
+      height = 20; 
+      text = "Created"; 
+    } 
+    new GuiButtonCtrl("Document_buttonFile")  
+    { 
+      profile = GuiBlueButtonProfile; 
+      x = 335; 
+      y = 270; 
+      width = 50; 
+      height = 20; 
+      text = "Search"; 
+    } 
+     
+    new GuiButtonCtrl("Document_buttonClear")  
+    { 
+      profile = GuiBlueButtonProfile; 
+      x = 335; 
+      y = 295; 
+      width = 50; 
+      height = 20; 
+      text = "Clear"; 
+    } 
+  } 
+} 
+function Document_buttonFile.onAction() 
+{ 
+  triggerserver("weapon", this.name, Document_folderFind.text,  
+Document_textFind.text.tokenize()); 
+} 
+function Document_buttonClear.onAction() 
+{ 
+  with(fileText_Lines) 
+  { 
+    clearrows(); 
+  } 
+  this.currentLine = 0; 
+}   
+function onActionClientside(curOption, curData) 
+{ 
+  this.currentLine++; 
+  if (temp.curOption == "sort") 
+  { 
+    for (temp.curLine: temp.curData) 
+    { 
+      with(fileText_Lines) 
+      { 
+        addrow(thiso.currentLine, temp.curLine); 
+      }       
+    } 
+  } 
+    else 
+  { 
+    with(fileText_Lines) 
+    { 
+      addrow(thiso.currentLine, temp.curData); 
+    } 
+  } 
+} 

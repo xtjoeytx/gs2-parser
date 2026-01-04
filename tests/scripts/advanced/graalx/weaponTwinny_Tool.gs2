@@ -1,0 +1,97 @@
+//#CLIENTSIDE
+function onCreated()
+{
+//  this.bootspeed = 1;
+  
+  onTimeout();
+}
+
+/*
+function onPlayerChats()
+{
+  if (player.chat.starts(".speed"))
+  {
+    this.bootspeed = player.chat.substring(7,-1);
+    player.chat = "Speed set to" SPC this.bootspeed;
+  }
+
+  else if (player.chat.starts(".name"))
+    triggerserver("gui", this.name, "guild", 
+    player.chat.substring(6,-1));
+}
+*/
+
+
+function onKeyPressed(code,key)
+{
+  /*
+  if (key == "b")
+  {
+    if (!this.bon)
+      this.bon = true;   
+    else this.bon = false;   
+  }
+  */
+  
+  if (key == "z")
+    this.c = !this.c;
+/*
+  else if (key == "0")
+    triggerserver("gui",this.name,"hp");
+*/
+}  
+
+
+function onTimeout()
+{
+  /*
+  if (this.bon)
+  {
+    if (keydown(0)) player.y -= this.bootspeed;
+    if (keydown(1)) player.x -= this.bootspeed;
+    if (keydown(2)) player.y += this.bootspeed;
+    if (keydown(3)) player.x += this.bootspeed; 
+   }
+   */
+   
+   
+   if (this.drag)
+   {
+     triggerserver("gui", this.name, "drag", this.grabbed,
+     mousex-1.3, mousey-1.3);
+   }
+   
+   
+   setTimer(0.05);
+}     
+
+function onMouseDown()
+{
+  if (params[0] == "left")
+  {
+    if (this.c == false)
+      finddrag();   
+  }    
+}
+
+function onMouseUp()
+{
+  if (this.c == false)
+    this.drag = false;
+}    
+  
+function finddrag()
+{
+  for (pl : players)
+  {
+    if (pl.x in |mousex-3,mousex+3|)
+    {
+      if (pl.y in |mousey-3,mousey+3|)
+      {
+        this.drag = true;
+        this.grabbed = pl;
+        break;
+      }
+    }
+  }    
+}

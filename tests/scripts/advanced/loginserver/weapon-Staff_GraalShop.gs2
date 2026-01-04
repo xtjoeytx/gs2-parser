@@ -1,0 +1,4403 @@
+//#CLIENTSIDE
+//#GS2
+
+function onCreated() {
+  echo("-Staff/GraalShop created");
+  generateIcons();
+  initConfig();
+  //onOpenGUI();
+}
+  
+function ChatBar.onAction() {
+  if (ChatBar.text.trim() == "/graalshop") {
+    onOpenGUI();
+    ChatBar.text = "";
+  }
+}
+
+function onOpenGUI() {
+  createGUI(true);
+}
+
+function initConfig() {
+  // Scale/Zoom Limits
+  this.scale_min  = 0.25;
+  this.scale_max  = 2;
+  // Fast Zooming
+  this.fast_zoom = true;
+  if (this.fast_zoom) {
+    this.fast_scales = {
+      1 / 7,
+      1 / 6,
+      1 / 5,
+      1 / 4, 
+      1 / 3, 
+      1 / 2, 
+      1 / 1, 
+      1 / 0.75,
+      1 / 0.5
+    };
+    this.scale_min = this.fast_scales[0];
+    this.scale_max = this.fast_scales[this.fast_scales.size()-1];
+  }
+}
+
+function generateIcons() {
+  if (!fileexists("soundicon.png")) {
+    temp.soundicon = base64decode("iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAADAFBMVEUAhAApKRhSUjGMhISMjCG9tb3GxgDGxlrW1tbn5ynn5+fv56Xv71r372P/9////97////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////vcAKZAAAAAXRSTlMAQObYZgAAAPRJREFUeNqtk0EWwyAIRCOiaIh6/9sWsHlNNbGbzs7Mj8iI2/ZnOec+C5h9QPDnZ7jzPfgU4MnekLwPNfkHW3wBUq3p1lW/CLBX2+LeZznCAMDVL6UD+wkADD6DDwpYHxcXRbkwt9QBq3HJCwNRPri1GkBimE6JvJfMTX40IAjxDcRaS+TaRApoEiPAJcoJRCQbeAgTUAQwkW7wBtypDhymR+CI+Q2A9jF1ceSYjSDnQLMcLkNz6gRBD2K8La1kBF2CctsAKSFAkHnYbSC+plPXUobw+TaNiLiYByNmYKyCq5lUAnE11ULA+l1ob+uX9ftt3ugFuWkLfVOZi3EAAAAASUVORK5CYII=");
+    temp.soundicon.savestring("soundicon.png", 0);
+  }
+}
+
+function createGUI(debugging) {
+  if (debugging) {
+    if (isObject("GraalShop")) {
+      GraalShop.clearcontrols();
+      GraalShop.destroy();
+    }
+    if (isObject("GraalShop_AddSprite_Window")) GraalShop_AddSprite_Window.destroy();
+    if (isObject("GraalShop_Defaults_Window")) GraalShop_Defaults_Window.destroy();
+    if (isObject("GraalShop_Script_Window")) GraalShop_Script_Window.destroy();
+    if (isObject("GraalShop_FileExplorer_Window")) GraalShop_FileExplorer_Window.destroy();
+  }
+  new GuiWindowCtrl("GraalShop") {
+    profile = GuiBlueWindowProfile;
+    clientwidth = 700 - 8;
+    clientheight = 500;
+    minextent = {clientwidth, clientheight};
+    canmaximize = canminimize = canclose = true;
+    text = "Graal Shop Pro";
+    x = (screenwidth - width) / 2;
+    y = (screenheight - height) / 2;
+    isexternal = false; // External is too buggy.
+    new GuiScrollCtrl("GraalShop_Sprites_Scroll") {
+      profile = GuiBlueScrollProfile;
+      useownprofile = true;
+      profile.border = 1;
+      hscrollbar = "alwaysOff";
+      x = (GraalShop.isexternal ? 0 : 6);
+      y = (GraalShop.isexternal ? 0 : 24) + 24;
+      width = 64 + 20;
+      height = GraalShop.height - 24 - 6 - (60 + 10);
+      vertsizing = "height";
+    }
+    new GuiControl("GraalShop_Frame") {
+      useownprofile = true;
+      profile.opaque = true;
+      profile.fillcolor = GuiBlueScrollProfile.fillcolor;
+      profile.border = 1;
+      x = GraalShop_Sprites_Scroll.x + GraalShop_Sprites_Scroll.width - 1;
+      y = GraalShop_Sprites_Scroll.y;
+      height = GraalShop_Sprites_Scroll.height;
+      width  = 432;
+      vertsizing = "height";
+      horizsizing = "width";
+      thiso.catchevent(this.name, "onMouseWheelUp", "onZoomFrameOut");
+      thiso.catchevent(this.name, "onMouseWheelDown", "onZoomFrameIn");
+      new GuiStretchCtrl("GraalShop_Frame_Zoom") {
+        useownprofile = true;
+        profile.modal = false;
+        clipchildren = false;
+        width = GraalShop_Frame.width - 2;
+        height = GraalShop_Frame.height - 2;
+        clientwidth = width * 1;
+        clientheight = height * 1;
+        new GuiDrawingPanel("GraalShop_Frame_Guideline") {
+          useownprofile = true;
+          profile.modal = false;
+          profile.fontcolor = GuiBlueTextProfile.fontcolor;
+          width = GraalShop_Frame.width;
+          height = GraalShop_Frame.height;
+          vertsizing = "height";
+          horizsizing = "width";
+          x = 1;
+          y = 1;
+          alpha = 1;
+        }
+      }
+    }
+    temp.tl = GraalShop_Frame.x + GraalShop_Frame.width + 4;
+    temp.tt = GraalShop_Frame.y - 2;
+    new GuiTextCtrl("GraalShop_Direction_Label") {
+      profile = GuiBlueTextProfile;
+      horizsizing = "left";
+      x = temp.tl;
+      y = temp.tt;
+      text = "Direction:";
+    }
+    new GuiPopUpMenuCtrl("GraalShop_Direction_Popup") {
+      profile = GuiBluePopUpMenuProfile;
+      scrollprofile = GuiBlueScrollProfile;
+      textprofile = GuiBlueTextListProfile;
+      horizsizing = "left";
+      height = 20;
+      width  = 160;
+      x = GraalShop_Direction_Label.x;
+      y = GraalShop_Direction_Label.y + 20;
+      clearrows();
+      temp.j = 0;
+      for (temp.d: {"up", "left", "down", "right"}) {
+        addrow(temp.j, temp.d);
+        temp.j++;
+      }
+      setselectedrow(2);
+      thiso.catchevent(this.name, "onSelect", "onRedrawGraalShopFrame");
+    }
+    new GuiTextCtrl("GraalShop_SelectedSprite_Label") {
+      profile = GuiBlueTextProfile;
+      horizsizing = "left";
+      x = temp.tl;
+      y = GraalShop_Direction_Popup.y + 20;
+      text = "Selected Sprite:";
+    }
+    new GuiTextEditCtrl("GraalShop_SelectedSprite_Num") {
+      profile = GuiBlueTextEditProfile;
+      width = 28;
+      height = 20;
+      x = GraalShop_SelectedSprite_Label.x;
+      y = GraalShop_SelectedSprite_Label.y + 20;
+      text = "";
+      horizsizing = "left";
+    }
+    new GuiPopUpMenuCtrl("GraalShop_SelectedSprite_Popup") {
+      profile = GuiBluePopUpMenuProfile;
+      scrollprofile = GuiBlueScrollProfile;
+      textprofile = GuiBlueTextListProfile;
+      horizsizing = "left";
+      height = 20;
+      width  = 160 - 30;
+      x = GraalShop_SelectedSprite_Label.x + 30;
+      y = GraalShop_SelectedSprite_Label.y + 20;
+      clearrows();
+      addrow(0, "<none>");
+      setselectedrow(0);
+    }
+    new GuiButtonCtrl("GraalShop_SpriteControls_LayerUp") {
+      profile = GuiBlueButtonProfile;
+      horizsizing = "left";
+      x = temp.tl;
+      y = GraalShop_SelectedSprite_Popup.y + 24;
+      text = "+L";
+      width = 24;
+      height = 24;
+      hint = "Moves sprite up a layer.";
+      thiso.catchevent(this.name, "onAction", "onMoveSprite");
+    }
+    new GuiButtonCtrl("GraalShop_SpriteControls_LayerDown") {
+      profile = GuiBlueButtonProfile;
+      horizsizing = "left";
+      x = temp.tl;
+      y = GraalShop_SpriteControls_LayerUp.y + GraalShop_SpriteControls_LayerUp.height + 2;
+      text = "-L";
+      width = 24;
+      height = 24;
+      hint = "Moves sprite down a layer.";
+      thiso.catchevent(this.name, "onAction", "onMoveSprite");
+    }
+    new GuiButtonCtrl("GraalShop_SpriteControls_Left") {
+      profile = GuiBlueButtonProfile;
+      horizsizing = "left";
+      x = temp.tl + 40;
+      y = GraalShop_SelectedSprite_Popup.y + 24;
+      text = "-X";
+      width = 24;
+      height = 24;
+      hint = "Moves sprite one pixel to the left.";
+      thiso.catchevent(this.name, "onAction", "onMoveSprite");
+    }
+    new GuiButtonCtrl("GraalShop_SpriteControls_Right") {
+      profile = GuiBlueButtonProfile;
+      horizsizing = "left";
+      x = GraalShop_SpriteControls_Left.x + 26;
+      y = GraalShop_SelectedSprite_Popup.y + 24;
+      text = "+X";
+      width = 24;
+      height = 24;
+      hint = "Moves sprite one pixel to the right.";
+      thiso.catchevent(this.name, "onAction", "onMoveSprite");
+    }
+    new GuiButtonCtrl("GraalShop_SpriteControls_Up") {
+      profile = GuiBlueButtonProfile;
+      horizsizing = "left";
+      x = GraalShop_SpriteControls_Right.x + 40;
+      y = GraalShop_SelectedSprite_Popup.y + 24;
+      text = "-Y";
+      width = 24;
+      height = 24;
+      hint = "Moves sprite up one pixel.";
+      thiso.catchevent(this.name, "onAction", "onMoveSprite");
+    }
+    new GuiButtonCtrl("GraalShop_SpriteControls_Down") {
+      profile = GuiBlueButtonProfile;
+      horizsizing = "left";
+      x = GraalShop_SpriteControls_Up.x + 26;
+      y = GraalShop_SelectedSprite_Popup.y + 24;
+      text = "+Y";
+      width = 24;
+      height = 24;
+      hint = "Moves sprite down one pixel";
+      thiso.catchevent(this.name, "onAction", "onMoveSprite");
+    }
+    new GuiTextCtrl("GraalShop_SpriteX_Label") {
+      profile = GuiBlueTextProfile;
+      horizsizing = "left";
+      x = GraalShop_SpriteControls_Left.x;
+      y = GraalShop_SpriteControls_LayerDown.y;
+      text = "X:";
+    }
+    new GuiTextEditCtrl("GraalShop_SpriteX_Edit") {
+      profile = GuiBlueTextEditProfile;
+      horizsizing = "left";
+      x = GraalShop_SpriteX_Label.x + 12;
+      y = GraalShop_SpriteX_Label.y + 1;
+      height = 20;
+      width  = 38;
+      text = "-";
+    }
+    new GuiTextCtrl("GraalShop_SpriteY_Label") {
+      profile = GuiBlueTextProfile;
+      horizsizing = "left";
+      x = GraalShop_SpriteControls_Up.x;
+      y = GraalShop_SpriteControls_LayerDown.y;
+      text = "Y:";
+    }
+    new GuiTextEditCtrl("GraalShop_SpriteY_Edit") {
+      profile = GuiBlueTextEditProfile;
+      horizsizing = "left";
+      x = GraalShop_SpriteY_Label.x + 12;
+      y = GraalShop_SpriteY_Label.y + 1;
+      height = 20;
+      width  = 38;
+      text = "-";
+    }
+    new GuiButtonCtrl("GraalShop_File_New") {
+      profile = GuiBlueButtonProfile;
+      x = GraalShop_Sprites_Scroll.x + 2;
+      y = GraalShop_Sprites_Scroll.y - 22;
+      height = 20;
+      width  = 40;
+      text = "New";
+    }
+    new GuiButtonCtrl("GraalShop_File_Open") {
+      profile = GuiBlueButtonProfile;
+      x = GraalShop_File_New.x + 42;
+      y = GraalShop_File_New.y;
+      height = 20;
+      width  = 40;
+      text = "Open";
+    }
+    new GuiButtonCtrl("GraalShop_File_Save") {
+      profile = GuiBlueButtonProfile;
+      x = GraalShop_File_Open.x + 42;
+      y = GraalShop_File_Open.y;
+      height = 20;
+      width  = 40;
+      text = "Save";
+      active = false;
+    }
+     new GuiButtonCtrl("GraalShop_File_SaveAs") {
+      profile = GuiBlueButtonProfile;
+      x = GraalShop_File_Save.x + 42;
+      y = GraalShop_File_Save.y;
+      height = 20;
+      width  = 52;
+      text = "Save As";
+      active = false;
+    }
+    new GuiButtonCtrl("GraalShop_File_Undo") {
+      profile = GuiBlueButtonProfile;
+      x = GraalShop_File_SaveAs.x + 70;
+      y = GraalShop_File_SaveAs.y;
+      height = 20;
+      width  = 40;
+      text = "Undo";
+      active = false;
+      thiso.catchevent(this.name, "onAction", "onUndoHistory");
+    }
+     new GuiButtonCtrl("GraalShop_File_Redo") {
+      profile = GuiBlueButtonProfile;
+      x = GraalShop_File_Undo.x + 42;
+      y = GraalShop_File_Undo.y;
+      height = 20;
+      width  = 40;
+      text = "Redo";
+      active = false;
+      thiso.catchevent(this.name, "onAction", "onRedoHistory");
+    }
+    new GuiButtonCtrl("GraalShop_File_AddSprite") {
+      profile = GuiBlueButtonProfile;
+      x = GraalShop_File_Redo.x + 60;
+      y = GraalShop_File_Redo.y;
+      height = 20;
+      width  = 52;
+      text = "+Sprite";
+      hint = "Opens up add sprite window.";
+      thiso.catchevent(this.name, "onAction", "onAddSprite");
+    }
+    new GuiButtonCtrl("GraalShop_File_RemoveUnused") {
+      profile = GuiBlueButtonProfile;
+      x = GraalShop_File_AddSprite.x + 54;
+      y = GraalShop_File_AddSprite.y;
+      height = 20;
+      width  = 52;
+      text = "-Unused";
+      hint = "Removes unused sprites to reduce file size.";
+      thiso.catchevent(this.name, "onAction", "onRemovedUnusedSprites");
+    }
+    new GuiButtonCtrl("GraalShop_File_ImportSprites") {
+      profile = GuiBlueButtonProfile;
+      x = GraalShop_File_RemoveUnused.x + 54;
+      y = GraalShop_File_RemoveUnused.y;
+      height = 20;
+      width  = 52;
+      text = "Import";
+      hint = "Imports sprite definitions from another file.";
+    }
+    new GuiButtonCtrl("GraalShop_File_Reverse") {
+      profile = GuiBlueButtonProfile;
+      x = GraalShop_File_ImportSprites.x + 54;
+      y = GraalShop_File_ImportSprites.y;
+      height = 20;
+      width  = 52;
+      text = "Reverse";
+      hint = "Reverses animation.";
+      thiso.catchevent(this.name, "onAction", "onReverseAnimation");
+    }
+    new GuiTextCtrl("GraalShop_ZoomScale_Label") {
+      profile = GuiBlueTextProfile;
+      x = GraalShop_SpriteControls_LayerDown.x;
+      y = GraalShop_SpriteControls_LayerDown.y + 26;
+      text = "Zoom:";
+      horizsizing = "left";
+    }
+    new GuiTextEditCtrl("GraalShop_ZoomScale_Edit") {
+      profile = GuiBlueTextEditProfile;
+      x = GraalShop_ZoomScale_Label.x + 40;
+      y = GraalShop_ZoomScale_Label.y;
+      horizsizing = "left";
+      height = 20;
+      width  = 30;
+      text   = 1;
+    }
+    new GuiTextCtrl("GraalShop_PlaySpeed_Label") {
+      profile = GuiBlueTextProfile;
+      x = GraalShop_ZoomScale_Edit.x + 38;
+      y = GraalShop_ZoomScale_Edit.y;
+      text = "Speed:";
+      horizsizing = "left";
+    }
+    new GuiTextEditCtrl("GraalShop_PlaySpeed_Edit") {
+      profile = GuiBlueTextEditProfile;
+      x = GraalShop_PlaySpeed_Label.x + 40;
+      y = GraalShop_PlaySpeed_Label.y;
+      horizsizing = "left";
+      height = 20;
+      width  = 30;
+      text   = 1;
+    }
+    new GuiButtonCtrl("GraalShop_Controls_Play") {
+      profile = GuiBlueButtonProfile;
+      vertsizing = "top";
+      x = GraalShop_Frame.x;
+      y = GraalShop_Frame.y + GraalShop_Frame.height + 24;
+      width  = 40;
+      height = 20;
+      text = "Play";
+      thiso.catchevent(this.name, "onAction", "onPlayGani");
+    }
+    new GuiButtonCtrl("GraalShop_Controls_Stop") {
+      profile = GuiBlueButtonProfile;
+      vertsizing = "top";
+      x = GraalShop_Controls_Play.x + 42;
+      y = GraalShop_Controls_Play.y;
+      width  = 40;
+      height = 20;
+      text = "Stop";
+      thiso.catchevent(this.name, "onAction", "onStopGani");
+    }
+    new GuiButtonCtrl("GraalShop_FrameControls_Add") {
+      profile = GuiBlueButtonProfile;
+      vertsizing = "top";
+      x = GraalShop_Controls_Stop.x + 50;
+      y = GraalShop_Controls_Stop.y;
+      width  = 50;
+      height = 20;
+      text = "+Frame";
+      hint = "Add frame after current frame.";
+      thiso.catchevent(this.name, "onAction", "onGUIAddFrame");
+    }
+    new GuiButtonCtrl("GraalShop_FrameControls_Delete") {
+      profile = GuiBlueButtonProfile;
+      vertsizing = "top";
+      x = GraalShop_FrameControls_Add.x + 52;
+      y = GraalShop_FrameControls_Add.y;
+      width  = 50;
+      height = 20;
+      text = "-Frame";
+      hint = "Delete current frame.";
+      thiso.catchevent(this.name, "onAction", "onGUIDeleteFrame");
+    }
+    new GuiButtonCtrl("GraalShop_FrameControls_Copy") {
+      profile = GuiBlueButtonProfile;
+      vertsizing = "top";
+      x = GraalShop_FrameControls_Delete.x + 52;
+      y = GraalShop_FrameControls_Delete.y;
+      width  = 40;
+      height = 20;
+      text = "Copy";
+      hint = "Copy current frame.";
+      thiso.catchevent(this.name, "onAction", "onGUICopyFrame");
+    }
+    new GuiButtonCtrl("GraalShop_FrameControls_PasteB") {
+      profile = GuiBlueButtonProfile;
+      vertsizing = "top";
+      x = GraalShop_FrameControls_Copy.x + 42;
+      y = GraalShop_FrameControls_Copy.y;
+      width  = 50;
+      height = 20;
+      text = "<Paste";
+      hint = "Paste before current frame.";
+      active = false;
+      thiso.catchevent(this.name, "onAction", "onGUIPasteBeforeFrame");
+    }
+    new GuiButtonCtrl("GraalShop_FrameControls_PasteA") {
+      profile = GuiBlueButtonProfile;
+      vertsizing = "top";
+      x = GraalShop_FrameControls_PasteB.x + 52;
+      y = GraalShop_FrameControls_PasteB.y;
+      width  = 50;
+      height = 20;
+      text = "Paste>";
+      hint = "Paste after current frame.";
+      active = false;
+      thiso.catchevent(this.name, "onAction", "onGUIPasteAfterFrame");
+    }
+    new GuiButtonCtrl("GraalShop_FrameControls_Sound") {
+      profile = GuiBlueButtonProfile;
+      vertsizing = "top";
+      x = GraalShop_FrameControls_PasteA.x + 52;
+      y = GraalShop_FrameControls_PasteA.y;
+      width  = 50;
+      height = 20;
+      text = "+Sound";
+      hint = "Adds sound to current frame.";
+      active = true;
+      thiso.catchevent(this.name, "onAction", "onGUIAddSound");
+    }
+    new GuiSliderCtrl("GraalShop_FrameControls_Timeline") {
+      profile = GuiBlueSliderProfile;
+      x = GraalShop_Frame.x;
+      y = GraalShop_Frame.y + GraalShop_Frame.height + 2;
+      height = 20;
+      width = GraalShop_Frame.width;
+      horizsizing = "width";
+      vertsizing = "top";
+      ticks = 1;
+      range = {0,5};
+      value = 0;
+    }
+    new GuiTextCtrl("GraalShop_Properties_Wildcard_Label") {
+      profile = GuiBlueTextProfile;
+      x = GraalShop_ZoomScale_Label.x;
+      y = GraalShop_ZoomScale_Label.y + 4 + 22;
+      text = "Length";
+      horizsizing = "left";
+    }
+    new GuiTextEditCtrl("GraalShop_Properties_Wildcard") {
+      profile = GuiBlueTextEditProfile;
+      width  = 94;
+      height = 20;
+      x = GraalShop_ZoomScale_Label.x + 60;
+      y = GraalShop_ZoomScale_Label.y + 4 + 22;
+      text = "";
+      horizsizing = "left";
+      this.sound = false;
+      thiso.catchevent(this.name, "onTextChanged", "onWildcardChanged");
+    }
+    temp.h = 2;
+    for (temp.box: {"Loop", "Continuous", "Single Direction", "Guidelines", "Sounds"}) {
+      new GuiTextCtrl("GraalShop_Properties_" @ temp.box.tokenize()[0] @ "_Label") {
+        profile = GuiBlueTextProfile;
+        x = GraalShop_ZoomScale_Label.x;
+        y = GraalShop_ZoomScale_Label.y + 4 + 22 * temp.h;
+        text = temp.box;
+        horizsizing = "left";
+      }
+      new GuiCheckBoxCtrl("GraalShop_Properties_" @ temp.box.tokenize()[0]) {
+        profile = GuiBlueCheckBoxProfile;
+        x = GraalShop_ZoomScale_Label.x + 140;
+        y = GraalShop_ZoomScale_Label.y + 22 * temp.h;
+        horizsizing = "left";
+        thiso.catchevent(this.name, "onAction", "onProperties" @ temp.box.tokenize()[0]);
+      }
+      temp.h++;
+    }
+    GraalShop_Properties_Guidelines.checked = true;
+    GraalShop_Properties_Sounds.checked = true;
+    new GuiTextCtrl("GraalShop_Properties_SetBackTo_Label") {
+      profile = GuiBlueTextProfile;
+      x = GraalShop_ZoomScale_Label.x;
+      y = GraalShop_ZoomScale_Label.y + 4 + 22 * temp.h;
+      text = "Setbackto";
+      horizsizing = "left";
+    }
+    new GuiTextEditCtrl("GraalShop_Properties_SetBackTo") {
+      profile = GuiBlueTextEditProfile;
+      width  = 94;
+      height = 20;
+      x = GraalShop_ZoomScale_Label.x + 60;
+      y = GraalShop_ZoomScale_Label.y + 4 + 22 * temp.h;
+      text = "";
+      horizsizing = "left";
+      thiso.catchevent(this.name, "onTextChanged", "onUpdateSetbackto");
+    }
+    temp.h++;
+    for (temp.menu: {"Defaults", "Script"/*, "Macro"*/}) {
+      new GuiButtonCtrl("GraalShop_Menu_" @ temp.menu) {
+        profile = GuiBlueButtonProfile;
+        x = GraalShop_ZoomScale_Label.x;
+        y = GraalShop_ZoomScale_Label.y + 4 + 22 * temp.h;
+        height = 20;
+        width = 156;
+        text = temp.menu;
+        horizsizing = "left";
+      }
+      temp.h++;
+    }
+    new GuiTextCtrl("GraalShop_Timeline_Label") {
+      profile = GuiBlueTextProfile;
+      useownprofile = true;
+      profile.fontstyle = "b";
+      profile.align = "center";
+      profile.autosizewidth = false;
+      x = GraalShop_Sprites_Scroll.x + 0;
+      y = GraalShop_Sprites_Scroll.y + GraalShop_Sprites_Scroll.height + 2;
+      text = "Time";
+      width = 80;
+      vertsizing = "top";
+    }
+    new GuiTextCtrl("GraalShop_Timeline") {
+      profile = GuiBlueTextProfile;
+      useownprofile = true;
+      profile.fontstyle = "b";
+      profile.align = "center";
+      profile.autosizewidth = false;
+      x = GraalShop_Timeline_Label.x;
+      y = GraalShop_Timeline_Label.y + 20;
+      text = "0.00s";
+      width = 80;
+      vertsizing = "top";
+    }  
+  }
+  this.currentscale = 1;
+}
+
+function GraalShop_FrameControls_Timeline.onAction(newvalue) {
+  if (this.keytouched) return;
+  GraalShop_FrameControls_Timeline.value = int(newvalue);
+  if (this.last != GraalShop_FrameControls_Timeline.value) {
+    this.last = GraalShop_FrameControls_Timeline.value;
+    updateTimeline();
+    redrawGraalShopFrame();
+  }
+}
+
+function GraalShop_FrameControls_Timeline.onKeyDown(vk) {
+  this.keytouched = true;
+  if (vk == VK_LEFT) {
+    this.last = max(this.last-1, 0);
+  }
+  else if (vk == VK_RIGHT) {
+    this.last = min(this.last+1, GraalShop_FrameControls_Timeline.range[1]);
+  }
+  else return;
+  this.last = int(this.last);
+  GraalShop_FrameControls_Timeline.value = this.last;
+  updateTimeline();
+  redrawGraalShopFrame();
+  this.trigger("UnsetKeyTouched", "");
+}
+
+function onUnsetKeyTouched() {
+  this.keytouched = "";
+}
+
+function GraalShop.onResize() {
+  redrawGraalShopFrame();
+}
+
+function onZoomFrameOut() {
+  if (leftmousebuttonglobal) return;
+  GraalShop_Frame.makefirstresponder(true);
+  if (this.fast_zoom) {
+    for (temp.scale: this.fast_scales) {
+      if (temp.scale > this.currentscale) {
+        this.currentscale = temp.scale;
+        break;
+      }
+    }
+  } else {
+    this.currentscale = min(this.scale_max, this.currentscale + 0.05);
+  }
+  redrawGraalShopFrame();
+}
+
+function onZoomFrameIn() {
+  if (leftmousebuttonglobal) return;
+  GraalShop_Frame.makefirstresponder(true);
+  if (this.fast_zoom) {
+    for (temp.i = this.fast_scales.size()-1; temp.i > -1; temp.i--) {
+      temp.scale = this.fast_scales[temp.i];
+      if (temp.scale < this.currentscale) {
+        this.currentscale = temp.scale;
+        break;
+      }
+    }
+  } else {
+    this.currentscale = max(this.scale_min, this.currentscale - 0.05);
+  }
+  redrawGraalShopFrame();
+}
+
+function GraalShop_ZoomScale_Edit.onTextChanged() {
+  if (GraalShop_ZoomScale_Edit.isfirstresponder()) {
+    this.currentscale = 1 / float(GraalShop_ZoomScale_Edit.text);
+    this.currentscale = max(this.scale_min, min(this.scale_max, this.currentscale));
+    redrawGraalShopFrame();
+  }
+}
+
+function GraalShop_Frame.onRightMouseDown(km, mx, my) {
+  if (!this.framedragging) {
+    this.lastx = mx;
+    this.lasty = my;
+    this.framedragging = true;
+  }
+}
+
+function GraalShop_Frame.onRightMouseUp() {
+  if (this.framedragging) {
+    this.framedragging = false;
+  }
+}
+
+function GraalShop_Frame.onRightMouseDragged(km, mx, my) {
+  if (this.framedragging) {
+    temp.dx = mx - this.lastx;
+    temp.dy = my - this.lasty;
+    this.lastx = mx;
+    this.lasty = my;
+    if (temp.dx != 0 || temp.dy != 0) {
+      this.offset_fx -= temp.dx * this.currentscale;
+      this.offset_fy -= temp.dy * this.currentscale;
+      redrawGraalShopFrame();
+    }
+  }
+}
+
+function onRedrawGraalShopFrame() {
+  redrawGraalShopFrame();
+}
+
+function redrawGraalShopFrame() {
+  updateZoomScale(this.currentscale);
+}
+
+function updateZoomScale(scale) {
+  with (GraalShop_Frame_Zoom) {
+    width = GraalShop_Frame.width - 2;
+    height = GraalShop_Frame.height - 2;
+    clientwidth = (GraalShop_Frame.width - 2) * scale;
+    clientheight = (GraalShop_Frame.height - 2) * scale;
+  }
+  if (!GraalShop_ZoomScale_Edit.isfirstresponder()) {
+    GraalShop_ZoomScale_Edit.text = 1 / this.currentscale;
+  }
+  drawGuideLines();
+  drawSprites();
+}
+
+function drawGuideLines() {
+  with (GraalShop_Frame_Guideline) {
+    temp.sq = 48;
+    temp.cx = int(width / 2 - (temp.sq / 2) - thiso.offset_fx) - 1;
+    temp.cy = int(height / 2 - (temp.sq / 2) - thiso.offset_fy) - 1;
+    temp.lines = {
+      {0, temp.cy, width, temp.cy},
+      {temp.cx, 0, temp.cx, height},
+      {temp.cx + temp.sq, temp.cy, temp.cx + temp.sq, temp.cy + temp.sq},
+      {temp.cx, temp.cy + temp.sq, temp.cx + temp.sq, temp.cy + temp.sq}
+    };
+    clearall();
+    for (temp.line: temp.lines) {
+      drawline(temp.line[0], temp.line[1], temp.line[2], temp.line[3], 1);
+    }
+    alpha = GraalShop_Properties_Guidelines.checked;
+  }
+}
+
+function drawSprites() {
+  temp.sq = 48;
+  temp.cx = int(GraalShop_Frame_Guideline.width / 2 - (temp.sq / 2) - thiso.offset_fx);
+  temp.cy = int(GraalShop_Frame_Guideline.height / 2 - (temp.sq / 2) - thiso.offset_fy);
+  if (this.cuttingsprites) {
+    with (GraalShop_Frame) {
+      if (GraalShop_Frame_SpritePreviewLabel.text != "Sprite Cutter") {
+        new GuiTextCtrl("GraalShop_Frame_SpritePreviewLabel") {
+          x = 8;
+          y = 2;
+          profile = GuiBlueTextProfile;
+          useownprofile = true;
+          profile.fontsize = 24;
+          profile.fontstyle = "b";
+          profile.fontcolor = {255,255,255,255};
+          profile.textshadow = true;
+          text = "Sprite Cutter";
+        }
+      }
+    }
+    temp.sprites = {{"CUT",0,0}};
+  }
+  else if (this.previewsprites) {
+    with (GraalShop_Frame) {
+      if (GraalShop_Frame_SpritePreviewLabel.text != "Sprite Preview") {
+        new GuiTextCtrl("GraalShop_Frame_SpritePreviewLabel") {
+          x = 8;
+          y = 2;
+          profile = GuiBlueTextProfile;
+          useownprofile = true;
+          profile.fontsize = 24;
+          profile.fontstyle = "b";
+          profile.fontcolor = {255,255,255,255};
+          profile.textshadow = true;
+          text = "Sprite Preview";
+        }
+      }
+    }
+    setupBatchSprite(getGUICurrentFrame());
+    temp.sprites = {{this.previewsprite[0],0,0}};
+  } else {
+    if (GraalShop_Frame_SpritePreviewLabel.visible) {
+      GraalShop_Frame_SpritePreviewLabel.destroy();
+    }
+    temp.sprites = getFrameSprites(getGUICurrentFrame(), getGUICurrentDir());
+    temp.sound   = getFrameSound(getGUICurrentFrame());
+    if (temp.sound.size() == 3 && GraalShop_Properties_Sounds.checked) {
+      temp.sprites.add({"SOUND", int(temp.sound[1] * 16), int(temp.sound[2] * 16)});
+      temp.soundframe = getGUICurrentFrame();
+      if (this.lastsoundframe != temp.soundframe) {
+        play(temp.sound[0]);
+        this.lastsoundframe = temp.soundframe;
+      }
+    } else {
+      this.lastsoundframe = -1;
+    }
+  }
+  temp.spritecount = temp.sprites.size();
+  for (temp.i = temp.spritecount; temp.i < this.lastspritecount; temp.i++) {
+    if (isObject("GraalShop_Frame_Sprite_" @ temp.i @ "_Container")) {
+      ("GraalShop_Frame_Sprite_" @ temp.i @ "_Container").destroy();
+    }
+  }
+  temp.spritesmd5 = md5(temp.sprites);
+  temp.recreateobjects = (temp.spritesmd5 != this.lastmd5);
+  this.lastmd5 = temp.spritesmd5;
+  temp.i = 0;
+  for (temp.sprite: temp.sprites) {
+    temp.sdata @= temp.sprite[0] @ " ";
+    temp.drawsprite = false;
+    if (temp.sprite[0] == "SOUND") {
+      temp.img = "soundicon.png";
+      temp.data = {0,0,0,32,32};
+      temp.clr = {1,1,1,1};
+      temp.sty = temp.stx = temp.mod = temp.zom = 1;
+      temp.rot = 0;
+      temp.drawsprite = true;
+    } else {
+      if (this.cuttingsprites) {
+        temp.img  = getDefaultImage(GraalShop_AddSprite_Image.text);
+        temp.data = {0,0,0,getimgwidth(temp.img),getimgheight(temp.img)};
+        temp.clr  = {1,1,1,1};
+        temp.sty  = temp.stx = temp.mod = temp.zom = 1;
+        temp.rot  = 0;
+        temp.drawsprite = true;
+      }
+      else if (this.previewsprites) {
+        temp.data = this.previewsprite;
+        temp.img  = getDefaultImage(temp.data[0]);
+        temp.clr = this.previewsprite_clr;
+        temp.mod = this.previewsprite_mod;
+        temp.rot = this.previewsprite_rot;
+        temp.stx = this.previewsprite_stx;
+        temp.sty = this.previewsprite_sty;
+        temp.zom = this.previewsprite_zom;
+        temp.drawsprite = true;
+      }
+      else {
+        temp.data = getSprite(temp.sprite[0]);
+      }
+    }
+    with (GraalShop_Frame_Zoom) {
+      new GuiControl("GraalShop_Frame_Sprite_" @ temp.i @ "_Container") {
+        x = temp.cx + temp.sprite[1];
+        y = temp.cy + temp.sprite[2];
+        this.spritepos = temp.i;
+        this.spriteid  = temp.sprite[0];
+        useownprofile = true;
+        profile.bordercolor = {255,255,255,0};
+        profile.modal = false;
+        width = temp.data[3];
+        height = temp.data[4];
+        clipchildren = false;
+        temp.container = this;
+        if (temp.drawsprite) {
+          new GuiShowImgCtrl("GraalShop_Frame_Sprite_" @ temp.i) {
+            useownprofile = true;
+            profile.modal = false;
+            x = y = 0;
+            image = temp.img;
+            partx = temp.data[1];
+            party = temp.data[2];
+            width  = partw = temp.data[3];
+            height = parth = temp.data[4];
+            red = temp.clr[0];
+            green = temp.clr[1];
+            blue = temp.clr[2];
+            alpha = temp.clr[3];
+            mode = temp.mod;
+            zoom = temp.zom;
+            rotation = -temp.rot;
+            stretchx = temp.stx;
+            stretchy = temp.sty;
+            bringtofront();
+          }
+        }
+        thiso.catchevent(this.name, "onMouseDragged", "onSpriteDragged");
+        thiso.catchevent(this.name, "onMouseUp", "onSpriteUnselected");
+      }
+    }
+    if (temp.recreateobjects && !temp.drawsprite) {
+      temp.sname = "GraalShop_Frame_Sprite_" @ temp.i;
+      createSpriteObject(temp.container, temp.sname, temp.sprite[0]);
+    }
+    temp.i++;
+  }
+  if (temp.sdata != this.lastsdata) {
+    temp.sel = getGUISelectedSprite();
+    GraalShop_SelectedSprite_Popup.clearrows();
+    temp.j = 0;
+    for (temp.sprite: temp.sprites) {
+      temp.c = temp.sprite[0] == "SOUND" ? ("Sound: " @ temp.sound[0]) : getSpriteComment(temp.sprite[0]);
+      GraalShop_SelectedSprite_Popup.addrow(temp.j, temp.c);
+      temp.j++;
+    }
+    if (temp.sel != -1) {
+      temp.sel = min(temp.sel, temp.sprites.size()-1);
+      setGUISelectedSprite(temp.sel);
+    }
+    this.lastsdata = temp.sdata;
+  }
+  this.lastspritecount = temp.spritecount;
+}
+
+function GraalShop_Frame.onMouseDown(km, mx, my, ss, m) {
+  if (this.previewsprites) return;
+  if (this.cuttingsprites) {
+    temp.sprites = {{"CUT",0,0}};
+  } else {
+    temp.sprites = getFrameSprites(getGUICurrentFrame(), getGUICurrentDir());
+    temp.sound   = getFrameSound(getGUICurrentFrame());
+    if (temp.sound.size() == 3 && GraalShop_Properties_Sounds.checked) {
+      temp.sprites.add({"SOUND", int(temp.sound[1] * 16), int(temp.sound[2] * 16)});
+    }
+  }
+  for (temp.i = temp.sprites.size()-1; temp.i > -1 && !temp.selected; temp.i--) {
+    temp.obj = makevar("GraalShop_Frame_Sprite_" @ temp.i @ "_Container");
+    for (temp.ctrl: temp.obj.controls) {
+      temp.coords = temp.ctrl.globaltolocalcoord({mx, my});
+      if (temp.coords[0] in |temp.ctrl.x,temp.ctrl.x+temp.ctrl.width| && temp.coords[1] in |temp.ctrl.y, temp.ctrl.y+temp.ctrl.height|) {
+        if (!isTransparent(temp.ctrl, temp.coords[0], temp.coords[1]) || temp.obj.spriteid == "SOUND") {
+          onSpriteSelected(temp.obj, km, mx, my, ss, m);
+          temp.selected = true;
+          break;
+        }
+      }
+    }
+  }
+  if (!temp.selected) {
+    GraalShop.makefirstresponder(true);
+    this.selected = "";
+  }
+}
+
+function isTransparent(sprite, sx, sy) {
+  sx = sprite.partx + int(sx);
+  sy = sprite.party + int(sy);
+  temp.si = sprite.image;
+  if (sprite.rotation != 0 || sprite.stretchx != 1 || sprite.stretchy != 1) {
+    temp.p = new GuiDrawingPanel();
+    temp.p.width = sprite.partw;
+    temp.p.height = sprite.parth;
+    temp.p.drawimagerectangle(0,0,temp.si,sprite.partx,sprite.party,sprite.partw,sprite.parth);
+    temp.p.saveimage("temp_sprite.png");
+    temp.p.destroy();
+    temp.si = "temp_sprite.png";
+    temp.cx = sprite.partw / 2;
+    temp.cy = sprite.parth / 2;
+    temp.dx = (sx - temp.cx - sprite.partx) * sprite.stretchx;
+    temp.dy = (sy - temp.cy - sprite.party) * sprite.stretchy;
+    sx = cos(sprite.rotation) * temp.dx - sin(sprite.rotation) * temp.dy + temp.cx;
+    sy = cos(sprite.rotation) * temp.dy + sin(sprite.rotation) * temp.dx + temp.cy;
+  }
+  return isimgpixeltransparent(temp.si, int(sx), int(sy));
+}
+
+function onSpriteSelected(obj, km, mx, my, ss, m, newsprite) {
+  if (this.cuttingsprites) {
+    temp.coords = obj.controls[0].globaltolocalcoord({mx,my});
+    onSpriteUnselected(obj, km, mx, my, ss, m);
+    onSpriteCut(obj.controls[0].image, int(temp.coords[0]), int(temp.coords[1]));
+    return;
+  }
+  if (obj.spriteid == "SOUND") {
+    this.selected = {obj};
+  }
+  else if (km == 4) {
+    if (!(obj in this.selected)) {
+      this.selected.add(obj);
+      this.selected.sortbyvalue("spritepos", "float", false);
+    }
+  } else {
+    if (!(obj in this.selected)) {
+      this.selected = {obj};
+    }
+  }
+  this.cancelevents("TurnOffBorder");
+  for (temp.obj: this.selected) {
+    setGUISelectedSprite(obj.spritepos);
+    obj.profile.border = 1;
+    obj.mouselock(m);
+    obj.sx = obj.x;
+    obj.sy = obj.y;
+    obj.newsprite = newsprite;
+    this.scheduleevent(1, "TurnOffBorder", obj);
+  }
+  this.lastsx = mx;
+  this.lastsy = my;
+  this.sx = obj.x;
+  this.sy = obj.y;
+  this.gx = GraalShop_SpriteX_Edit.text;
+  this.gy = GraalShop_SpriteY_Edit.text;
+  this.dx = this.dy = 0;
+}
+
+function onSpriteDragged(obj, km, mx, my, ss, m) {
+  this.dx += (mx - this.lastsx) * this.currentscale;
+  this.dy += (my - this.lastsy) * this.currentscale;
+  GraalShop_SpriteX_Edit.text = this.gx + int(this.dx);
+  GraalShop_SpriteY_Edit.text = this.gy + int(this.dy);
+  for (temp.obj: this.selected) {
+    obj.x = obj.sx + int(this.dx);
+    obj.y = obj.sy + int(this.dy);
+  }
+  this.lastsx = mx;
+  this.lastsy = my;
+}
+
+function onTurnOffBorder(obj) {
+  obj.profile.border = 0;
+}
+
+function onSpriteUnselected(obj, km, mx, my, ss, m) {
+  for (temp.obj: this.selected) {
+    onTurnOffBorder(obj);
+    obj.mouseunlock(m);
+  }
+  temp.coords = GraalShop_Sprites_Scroll.globaltolocalcoord({mx, my});
+  if (temp.coords[0] in |GraalShop_Sprites_Scroll.x,GraalShop_Sprites_Scroll.x+GraalShop_Sprites_Scroll.width| && temp.coords[1] in |GraalShop_Sprites_Scroll.y,GraalShop_Sprites_Scroll.y+GraalShop_Sprites_Scroll.height|) {
+    for (temp.obj: this.selected) {
+      onDeleteSprite(temp.obj);
+    }
+    this.selected = "";
+    return;
+  }
+  if (obj.spriteid == "SOUND") {
+    temp.sound = temp.oldsound = getFrameSound(getGUICurrentFrame());
+    temp.sound[1] = int(GraalShop_SpriteX_Edit.text) * (1/16);
+    temp.sound[2] = int(GraalShop_SpriteY_Edit.text) * (1/16);
+    setFrameSound(getGUICurrentFrame(), temp.sound);
+    if (@temp.sound != @temp.oldsound) {
+      addHistory({"movesound", getGUICurrentFrame(), temp.oldsound, temp.sound});
+    }
+  } else {
+    temp.dx = int(GraalShop_SpriteX_Edit.text) - this.gx;
+    temp.dy = int(GraalShop_SpriteY_Edit.text) - this.gy;
+    temp.sprites = getFrameSprites(getGUICurrentFrame(), getGUICurrentDir());
+    for (temp.obj: this.selected) {
+      temp.oldsprite = temp.sprites[obj.spritepos];
+      temp.sprites[obj.spritepos][1] += temp.dx;
+      temp.sprites[obj.spritepos][2] += temp.dy;
+      if (temp.dx != 0 || temp.dy != 0) {
+        if (obj.newsprite) {
+          addHistory({"newsprite", getGUICurrentFrame(), getGUICurrentDir(), obj.spritepos, temp.sprites[obj.spritepos]});
+        } else {
+          addHistory({"movesprite", getGUICurrentFrame(), getGUICurrentDir(), obj.spritepos, temp.sprites[obj.spritepos], temp.oldsprite});
+        }
+      }
+    }
+    setFrameSprites(getGUICurrentFrame(), getGUICurrentDir(), temp.sprites);
+  }
+  GraalShop_Frame.makefirstresponder(true);
+}
+
+function GraalShop_Frame.onKeyDown(vk) {
+  if (vk == VK_LEFT) {
+    onMoveSprite(GraalShop_SpriteControls_Left);
+  }
+  else if (vk == VK_RIGHT) {
+    onMoveSprite(GraalShop_SpriteControls_Right);
+  }
+  else if (vk == VK_DOWN) {
+    onMoveSprite(GraalShop_SpriteControls_Down);
+  }
+  else if (vk == VK_UP) {
+    onMoveSprite(GraalShop_SpriteControls_Up);
+  }
+  else if (vk == 294) {
+    onMoveSprite(GraalShop_SpriteControls_LayerUp);
+  }
+  else if (vk == 296) {
+    onMoveSprite(GraalShop_SpriteControls_LayerDown);
+  }
+  else if (vk == VK_DELETE) {
+    if (this.selected.size() > 0) {
+      for (temp.obj: this.selected) {
+        onDeleteSprite(temp.obj);
+      }
+      this.selected = "";
+    }
+  }
+}
+
+function onDeleteSprite(obj) {
+  temp.sprites = getFrameSprites(getGUICurrentFrame(), getGUICurrentDir());
+  temp.spos = obj.spritepos;
+  if (obj.spritepos == temp.sprites.size()) {
+    addHistory({"deletesound", getGUICurrentFrame(), getFrameSound(getGUICurrentFrame())});
+    setFrameSound(getGUICurrentFrame(), "");
+    setGUISelectedSprite(max(temp.spos-1, 0));
+  } else {
+    addHistory({"deletesprite", getGUICurrentFrame(), getGUICurrentDir(), obj.spritepos, temp.sprites[obj.spritepos]});
+    temp.sprites.delete(obj.spritepos);
+    setFrameSprites(getGUICurrentFrame(), getGUICurrentDir(), temp.sprites);
+    setGUISelectedSprite(max(temp.spos, 0));
+  }
+  if (temp.sprites.size() < 1) {
+    GraalShop_SelectedSprite_Popup.text = "<none>";
+  }
+  redrawGraalShopFrame();
+}
+
+function addHistory(event) {
+  this.history.add(event);
+  this.redohistory = {};
+  GraalShop_File_Undo.active = true;
+  GraalShop_File_Redo.active = false;
+}
+
+function resetHistory() {
+  this.history = this.redohistory = {};
+  GraalShop_File_Undo.active = false;
+  GraalShop_File_Redo.active = false;
+}
+
+function onUndoHistory() {
+  temp.count = this.history.size();
+  if (temp.count > 0) {
+    temp.event = this.history[temp.count-1];
+    if (temp.event[0] == "newsprite") {
+      temp.frame     = temp.event[1];
+      temp.fdir      = temp.event[2];
+      temp.spritepos = temp.event[3];
+      temp.sprite    = temp.event[4];
+      temp.sprites = getFrameSprites(temp.frame, temp.fdir);
+      temp.sprites.delete(temp.spritepos);
+      setFrameSprites(temp.frame, temp.fdir, temp.sprites);
+    }
+    else if (temp.event[0] == "deletesprite") {
+      temp.frame     = temp.event[1];
+      temp.fdir      = temp.event[2];
+      temp.spritepos = temp.event[3];
+      temp.sprite    = temp.event[4];
+      temp.sprites = getFrameSprites(temp.frame, temp.fdir);
+      temp.sprites.insert(temp.spritepos, temp.sprite);
+      setFrameSprites(temp.frame, temp.fdir, temp.sprites);
+    }
+    else if (temp.event[0] == "addsound") {
+      temp.frame = temp.event[1];
+      setFrameSound(temp.frame, "");
+    }
+    else if (temp.event[0] == "movesound") {
+      temp.frame = temp.event[1];
+      temp.oldsound = temp.event[2];
+      temp.newsound = temp.event[3];
+      setFrameSound(temp.frame, temp.oldsound);
+    }
+    else if (temp.event[0] == "deletesound") {
+      temp.frame = temp.event[1];
+      temp.sound = temp.event[2];
+      setFrameSound(temp.frame, temp.sound);
+    }
+    else if (temp.event[0] == "movesprite") {
+      temp.frame     = temp.event[1];
+      temp.fdir      = temp.event[2];
+      temp.spritepos = temp.event[3];
+      temp.sprite    = temp.event[4];
+      temp.oldsprite = temp.event[5];
+      temp.sprites = getFrameSprites(temp.frame, temp.fdir);
+      temp.sprites[temp.spritepos] = temp.oldsprite;
+      setFrameSprites(temp.frame, temp.fdir, temp.sprites);
+    }
+    else if (temp.event[0] == "swapsprite") {
+      temp.frame     = temp.event[1];
+      temp.fdir      = temp.event[2];
+      temp.spos      = temp.event[3];
+      temp.smod      = temp.event[4];
+      temp.sprites   = getFrameSprites(temp.frame, temp.fdir);
+      temp.sprite    = temp.sprites[temp.spos-temp.smod];
+      temp.sprites[temp.spos-temp.smod] = temp.sprites[temp.spos];
+      temp.sprites[temp.spos] = temp.sprite;
+      setFrameSprites(temp.frame, temp.fdir, temp.sprites);
+      setGUISelectedSprite(temp.spos);
+    }
+    this.history.delete(temp.count-1);
+    this.redohistory.add(temp.event);
+    redrawGraalShopFrame();
+    updateSpriteXY();
+    GraalShop_File_Undo.active = (temp.count > 1);
+    GraalShop_File_Redo.active = true;
+  }
+}
+
+function onRedoHistory() {
+  temp.count = this.redohistory.size();
+  if (temp.count > 0) {
+    temp.event = this.redohistory[temp.count-1];
+    if (temp.event[0] == "newsprite") {
+      temp.frame     = temp.event[1];
+      temp.fdir      = temp.event[2];
+      temp.spritepos = temp.event[3];
+      temp.sprite    = temp.event[4];
+      temp.sprites = getFrameSprites(temp.frame, temp.fdir);
+      temp.sprites.add(temp.sprite);
+      setFrameSprites(temp.frame, temp.fdir, temp.sprites);
+    }
+    else if (temp.event[0] == "deletesprite") {
+      temp.frame     = temp.event[1];
+      temp.fdir      = temp.event[2];
+      temp.spritepos = temp.event[3];
+      temp.sprite    = temp.event[4];
+      temp.sprites = getFrameSprites(temp.frame, temp.fdir);
+      temp.sprites.delete(temp.spritepos);
+      setFrameSprites(temp.frame, temp.fdir, temp.sprites);
+    }
+    else if (temp.event[0] == "addsound") {
+      temp.frame = temp.event[1];
+      temp.sound = temp.event[2];
+      setFrameSound(temp.frame, temp.sound);
+    }
+    else if (temp.event[0] == "movesound") {
+      temp.frame = temp.event[1];
+      temp.oldsound = temp.event[2];
+      temp.newsound = temp.event[3];
+      setFrameSound(temp.frame, temp.newsound);
+    }
+    else if (temp.event[0] == "deletesound") {
+      temp.frame = temp.event[1];
+      temp.sound = temp.event[2];
+      setFrameSound(temp.frame, "");
+    }
+    else if (temp.event[0] == "movesprite") {
+      temp.frame     = temp.event[1];
+      temp.fdir      = temp.event[2];
+      temp.spritepos = temp.event[3];
+      temp.sprite    = temp.event[4];
+      temp.sprites = getFrameSprites(temp.frame, temp.fdir);
+      temp.sprites[temp.spritepos] = temp.sprite;
+      setFrameSprites(temp.frame, temp.fdir, temp.sprites);
+    }
+    else if (temp.event[0] == "swapsprite") {
+      temp.frame     = temp.event[1];
+      temp.fdir      = temp.event[2];
+      temp.spos      = temp.event[3];
+      temp.smod      = temp.event[4];
+      temp.sprites   = getFrameSprites(temp.frame, temp.fdir);
+      temp.sprite    = temp.sprites[temp.spos-temp.smod];
+      temp.sprites[temp.spos-temp.smod] = temp.sprites[temp.spos];
+      temp.sprites[temp.spos] = temp.sprite;
+      setFrameSprites(temp.frame, temp.fdir, temp.sprites);
+      setGUISelectedSprite(temp.spos-temp.smod);
+    }
+    this.redohistory.delete(temp.count-1);
+    this.history.add(temp.event);
+    redrawGraalShopFrame();
+    updateSpriteXY();
+    GraalShop_File_Redo.active = (temp.count > 1);
+    GraalShop_File_Undo.active = true;
+  }
+}
+
+function GraalShop_SelectedSprite_Num.onTextChanged() {
+  if (GraalShop_SelectedSprite_Num.isfirstresponder()) {
+    if (!(GraalShop_SelectedSprite_Num.text in {"", "-"})) {
+      temp.sid = getGUISelectedSprite();
+      GraalShop_SelectedSprite_Num.text = int(GraalShop_SelectedSprite_Num.text);
+      temp.sprites = getFrameSprites(getGUICurrentFrame(), getGUICurrentDir());
+      temp.sprites[temp.sid][0] = GraalShop_SelectedSprite_Num.text;
+      setFrameSprites(getGUICurrentFrame(), getGUICurrentDir(), temp.sprites);
+      redrawGraalShopFrame();
+    }
+  }
+}
+
+function GraalShop_SelectedSprite_Popup.onSelect(entryid,entrytext,entryindex) {
+  temp.sprites = getFrameSprites(getGUICurrentFrame(), getGUICurrentDir());
+  if (entryindex == temp.sprites.size()) {
+    GraalShop_SelectedSprite_Num.text = "-";
+  } else {
+    GraalShop_SelectedSprite_Num.text = temp.sprites[entryindex][0];
+  }
+  updateSpriteXY();
+}
+
+function GraalShop_SpriteX_Edit.onTextChanged() {
+  if (GraalShop_SpriteX_Edit.isfirstresponder()) {
+    if (!(GraalShop_SpriteX_Edit.text in {"", "-", "S"})) {
+      temp.sid = getGUISelectedSprite();
+      GraalShop_SpriteX_Edit.text = int(GraalShop_SpriteX_Edit.text);
+      temp.sprites = getFrameSprites(getGUICurrentFrame(), getGUICurrentDir());
+      temp.sprites[temp.sid][1] = GraalShop_SpriteX_Edit.text;
+      setFrameSprites(getGUICurrentFrame(), getGUICurrentDir(), temp.sprites);
+      redrawGraalShopFrame();
+    }
+  }
+}
+
+function GraalShop_SpriteY_Edit.onTextChanged() {
+  if (GraalShop_SpriteY_Edit.isfirstresponder()) {
+    if (!(GraalShop_SpriteY_Edit.text in {"", "-"})) {
+      temp.sid = getGUISelectedSprite();
+      GraalShop_SpriteY_Edit.text = int(GraalShop_SpriteY_Edit.text);
+      temp.sprites = getFrameSprites(getGUICurrentFrame(), getGUICurrentDir());
+      temp.sprites[temp.sid][2] = GraalShop_SpriteY_Edit.text;
+      setFrameSprites(getGUICurrentFrame(), getGUICurrentDir(), temp.sprites);
+      redrawGraalShopFrame();
+    }
+  }
+}
+
+function updateSpriteXY() {
+  if (GraalShop_SelectedSprite_Popup.text == "<none>") {
+    GraalShop_SpriteX_Edit.text = -1;
+    GraalShop_SpriteY_Edit.text = -1;
+    updateWildcard();
+  } else {
+    temp.sid = getGUISelectedSprite();
+    temp.sprites = getFrameSprites(getGUICurrentFrame(), getGUICurrentDir());
+    if (temp.sid == temp.sprites.size()) {
+      temp.sound = getFrameSound(getGUICurrentFrame());
+      GraalShop_SpriteX_Edit.text = int(temp.sound[1] * 16);
+      GraalShop_SpriteY_Edit.text = int(temp.sound[2] * 16);
+      updateWildcard(true);
+    } else {
+      temp.sprite  = temp.sprites[temp.sid];
+      GraalShop_SpriteX_Edit.text = temp.sprite[1];
+      GraalShop_SpriteY_Edit.text = temp.sprite[2];
+      updateWildcard();
+    }
+  }
+}
+
+function updateWildcard(sound) {
+  if (GraalShop_Properties_Wildcard.isfirstresponder()) return;
+  if (sound) {
+    GraalShop_Properties_Wildcard_Label.text = "Sound";
+    GraalShop_Properties_Wildcard.text = getFrameSound(getGUICurrentFrame())[0];
+  } else {
+    GraalShop_Properties_Wildcard_Label.text = "Length";
+    GraalShop_Properties_Wildcard.text = (getFrameWait(getGUICurrentFrame()) + 1) * 0.05;
+  }
+  GraalShop_Properties_Wildcard.sound = sound;
+}
+
+function onWildcardChanged() {
+  if (!GraalShop_Properties_Wildcard.isfirstresponder()) return;
+  if (GraalShop_Properties_Wildcard.sound) {
+    temp.newsound = GraalShop_Properties_Wildcard.text.trim();
+    temp.sound = getFrameSound(getGUICurrentFrame());
+    if (temp.sound.size() > 0) {
+      temp.sound[0] = temp.newsound;
+      setFrameSound(getGUICurrentFrame(), temp.sound);
+      this.lastsdata = "";
+      redrawGraalShopFrame();
+    }
+  } else {
+    temp.newwait = int(GraalShop_Properties_Wildcard.text.trim() / 0.05) - 1;
+    setFrameWait(getGUICurrentFrame(), temp.newwait);
+    updateTimeline();
+  }
+}
+
+function getGUICurrentDir() {
+  return GraalShop_Direction_Popup.getselectedrow();
+}
+
+function getGUICurrentFrame() {
+  return int(GraalShop_FrameControls_Timeline.value);
+}
+
+function setGUICurrentFrame(f) {
+  GraalShop_FrameControls_Timeline.value = int(f);
+}
+
+function getGUISelectedSprite() {
+  return GraalShop_SelectedSprite_Popup.getselectedrow();
+}
+
+function setGUISelectedSprite(ind) {
+  GraalShop_SelectedSprite_Popup.setselectedrow(ind);
+  updateSpriteXY();
+}
+
+function GraalShop_File_New.onAction() {
+  fileOpenGani("levels/ganis/idle.gani", true);
+}
+
+function GraalShop_File_Open.onAction() {
+  createFileExplorer("Open");
+}
+
+function GraalShop_File_ImportSprites.onAction() {
+  createFileExplorer("Import");
+}
+
+function GraalShop_File_Save.onAction() {
+  fileSaveGani(false);
+}
+
+function GraalShop_File_SaveAs.onAction() {
+  createFileExplorer("Save");
+}
+
+function fileOpenGani(file, newgani) {
+  temp.filename = newgani ? getNewName() : file;
+  setGUITitle("Graal Shop Pro - " @ temp.filename @ " - Loading...");
+  this.scheduleevent(0.05, "FileOpenGani", file, newgani);
+}
+
+function fileImportSprites(file) {
+  importganisprites(file, false);
+  populateSpriteList(true);
+}
+
+function onFileOpenGani(file, newgani) {
+  loadgani(file);
+  this.currentfile = newgani ? getNewName() : file;
+  setGUITitle("Graal Shop Pro - " @ this.currentfile);
+  resetGUIVariables();
+  populateSpriteList();
+  redrawGraalShopFrame();
+  updateTimeline();
+  updateProperties();
+  updateSpriteXY();
+  updateDefaults();
+  activateGUIs();
+}
+
+function fileSaveGani(filename) {
+  if (filename) {
+    this.currentfile = filename;
+    setGUITitle("Graal Shop Pro - " @ this.currentfile);
+  }
+  savegani(filename);
+}
+
+function getNewName() {
+  temp.i = 1;
+  temp.template = "scriptfiles/new%s.gani";
+  while (fileexists(format(temp.template, temp.i))) {
+    temp.i++;
+  }
+  return format(temp.template, temp.i);
+}
+
+function activateGUIs() {
+  temp.objs = {
+    GraalShop_File_Save,
+    GraalShop_File_SaveAs
+  };
+  for (temp.obj: temp.objs) {
+    temp.obj.active = true;
+  }
+}
+
+function resetGUIVariables() {
+  this.currentscale = 1;
+  resetHistory();
+  this.offset_fx = this.offset_fy = "";
+  this.isplaying = this.frametime = "";
+  this.lastmd5 = "";
+  this.selected = "";
+  this.lastsoundframe = 0;
+  this.previewsprites = false;
+  if (isObject("GraalShop_AddSprite_Window")) GraalShop_AddSprite_Window.destroy();
+  if (isObject("GraalShop_Defaults_Window")) GraalShop_Defaults_Window.destroy();
+  if (isObject("GraalShop_Script_Window")) GraalShop_Script_Window.destroy();
+  GraalShop_ZoomScale_Edit.text = 1;
+  GraalShop_PlaySpeed_Edit.text = 1;
+  GraalShop_FrameControls_Timeline.value = 0;
+  resetSpriteObjectCache();
+}
+
+function setGUITitle(newtitle) {
+  GraalShop.text = newtitle;
+}
+
+function populateSpriteList(preserve) {
+  if (preserve) {
+    temp.spos = GraalShop_Sprites_Scroll.scrollpos;
+  } else {
+    GraalShop_Sprites_Scroll.clearcontrols();
+  }
+  sortSpriteList();
+  for (temp.sprite: this.sprites) {
+    temp.data = getSprite(temp.sprite[0]);
+    temp.img  = getDefaultImage(temp.data[0]);
+    temp.clr  = getColorEffect(temp.sprite[0]);
+    temp.zom  = getZoomEffect(temp.sprite[0]);
+    temp.mod  = getModeEffect(temp.sprite[0]);
+    temp.rot  = getRotateEffect(temp.sprite[0]);
+    temp.stx  = getStretchXEffect(temp.sprite[0]);
+    temp.sty  = getStretchYEffect(temp.sprite[0]);
+    temp.com  = getSpriteComment(temp.sprite[0]);
+    temp.upd  = md5(temp.data SPC temp.img SPC temp.clr SPC temp.zom SPC temp.mod SPC temp.rot SPC temp.stx SPC temp.sty SPC temp.com);
+    with (GraalShop_Sprites_Scroll) {
+      new GuiControl("GraalShop_SpriteObject_" @ temp.sprite[0] @ "_Container") {
+        this.spriteid = temp.sprite[0];
+        x = (64 - min(64, temp.data[3] * temp.zom)) / 2;
+        y = 4 + temp.ty;
+        temp.changed = (this.lastmd5 != temp.upd);
+        this.lastmd5 = temp.upd;
+        useownprofile = true;
+        profile.bordercolor = {255,255,255,0};
+        width = temp.data[3];
+        height = temp.data[4];
+        temp.container = this;
+        thiso.catchevent(this.name, "onMouseDown", "onNewSpriteSelected");
+        thiso.catchevent(this.name, "onRightMouseDown", "onOpenSpriteContext");
+        hint = "Sprite #" @ temp.sprite[0] @ (temp.com ? "\n" : "") @ temp.com;     
+      }
+      temp.ty += temp.data[4] + 6;
+    }
+    if (temp.changed) {
+      createSpriteObject(temp.container, "GraalShop_SpriteObject_" @ temp.sprite, temp.sprite);
+      if (temp.c++ >= 100) {
+        temp.c = 0;
+        waitfor(this, "RandomWait", 0.05);
+      }
+    } else {
+      for (temp.ctrl: temp.container.controls) {
+        temp.data = getSprite(temp.ctrl.spriteid);
+        temp.img  = getDefaultImage(temp.data[0]);
+        temp.clr  = getColorEffect(temp.ctrl.spriteid);
+        temp.zom  = getZoomEffect(temp.ctrl.spriteid);
+        temp.mod  = getModeEffect(temp.ctrl.spriteid);
+        temp.rot  = getRotateEffect(temp.ctrl.spriteid);
+        temp.stx  = getStretchXEffect(temp.ctrl.spriteid);
+        temp.sty  = getStretchYEffect(temp.ctrl.spriteid);
+        with (temp.ctrl) {
+          image = temp.img;
+          partx = temp.data[1];
+          party = temp.data[2];
+          width  = partw = temp.data[3];
+          height = parth = temp.data[4];
+          red = temp.clr[0];
+          green = temp.clr[1];
+          blue = temp.clr[2];
+          alpha = temp.clr[3];
+          mode = temp.mod;
+          zoom = temp.zom;
+          rotation = -temp.rot;
+          stretchx = temp.stx;
+          stretchy = temp.sty;
+        }
+      }
+    }
+  }
+  if (preserve) {
+    GraalShop_Sprites_Scroll.scrollpos = temp.spos;
+  }
+}
+
+function onOpenSpriteContext(obj) {
+  new GuiContextMenuCtrl("GraalShop_SpriteContextMenu") {
+    this.spriteid = obj.spriteid;
+    profile = GuiBluePopUpMenuProfile;
+    textprofile = GuiBlueTextListProfile;
+    clearrows();
+    addrow(0, "Edit");
+    //addrow(0, "Attachments");
+    addrow(0, "-");
+    addrow(0, "Delete");
+    open(mousescreenx, mousescreeny);
+    thiso.catchevent(this.name, "onSelect", "onSelectSpriteContextMenu");
+  }
+} 
+
+function onSelectSpriteContextMenu(obj, a, entrytext, c) {
+  if (entrytext == "Edit") {
+    onAddSprite(obj, obj.spriteid);
+  }
+  else if (entrytext == "Delete") {
+    deleteSprite(obj.spriteid);
+    deleteSpriteFromFrames(obj.spriteid);
+    temp.container = makevar("GraalShop_SpriteObject_" @ obj.spriteid @ "_Container");
+    temp.container.destroy();
+    populateSpriteList(true);
+    redrawGraalShopFrame();
+  }
+}
+
+function onNewSpriteSelected(obj, km, mx, my, ss, m) {
+  temp.sprite = obj.spriteid;
+  temp.data = getSprite(temp.sprite[0]);
+  temp.img  = getDefaultImage(temp.data[0]);
+  temp.clr  = getColorEffect(temp.sprite[0]);
+  temp.zom  = getZoomEffect(temp.sprite[0]);
+  temp.mod  = getModeEffect(temp.sprite[0]);
+  temp.rot  = getRotateEffect(temp.sprite[0]);
+  temp.stx  = getStretchXEffect(temp.sprite[0]);
+  temp.sty  = getStretchYEffect(temp.sprite[0]);
+  temp.ocoords = obj.globaltolocalcoord({mx, my});
+  with (GraalShop) {
+    temp.coords = this.globaltolocalcoord({mx, my});
+    new GuiControl("GraalShop_NewSprite_Container") {
+      this.ox = temp.ocoords[0];
+      this.oy = temp.ocoords[1];
+      x = temp.coords[0] - this.ox;
+      y = temp.coords[1] - this.oy;
+      useownprofile = true;
+      profile.bordercolor = {255,255,255,0};
+      width = temp.data[3];
+      height = temp.data[4];
+      temp.container = temp.obj = this;
+      this.spriteid = temp.sprite[0];
+      thiso.catchevent(this.name, "onMouseDragged", "onNewSpriteDragged");
+      thiso.catchevent(this.name, "onMouseUp", "onNewSpriteUnselected");
+    }
+  }
+  createSpriteObject(temp.container, "GraalShop_NewSprite", temp.sprite);
+  temp.obj.mouselock(m);
+}
+
+function createSpriteObject(container, objname, spriteid) {
+  container.clearcontrols();
+  for (temp.sprite: getSpriteObjectCache(spriteid)) {
+    temp.data = getSprite(temp.sprite[0]);
+    temp.important = temp.sprite[3];
+    temp.img  = getDefaultImage(temp.data[0]);
+    temp.clr  = getColorEffect(temp.sprite[0]);
+    temp.zom  = getZoomEffect(temp.sprite[0]);
+    temp.mod  = getModeEffect(temp.sprite[0]);
+    temp.rot  = getRotateEffect(temp.sprite[0]);
+    temp.stx  = getStretchXEffect(temp.sprite[0]);
+    temp.sty  = getStretchYEffect(temp.sprite[0]);
+    with (container) {
+      new GuiShowImgCtrl(@objname @ (temp.important ? "" : "_" @ temp.i)) {
+        useownprofile = true;
+        profile.modal = false;
+        this.spriteid = temp.sprite[0];
+        x = temp.sprite[1];
+        y = temp.sprite[2];
+        image = temp.img;
+        partx = temp.data[1];
+        party = temp.data[2];
+        width  = partw = temp.data[3];
+        height = parth = temp.data[4];
+        red = temp.clr[0];
+        green = temp.clr[1];
+        blue = temp.clr[2];
+        alpha = temp.clr[3];
+        mode = temp.mod;
+        zoom = temp.zom;
+        rotation = -temp.rot;
+        stretchx = temp.stx;
+        stretchy = temp.sty;
+        bringtofront();
+      }
+    }
+    temp.i++;
+  }
+  this.objectsprites = "";
+}
+
+function determineAllAttachedSprites(two, start, spritestack, sx, sy) {
+  for (temp.attachment: getSpriteAttachments(two, spritestack[0])) {
+    if (temp.attachment[0] in spritestack) continue;
+    temp.newstack = spritestack;
+    temp.newstack.insert(0, temp.attachment[0]);
+    determineAllAttachedSprites(two, true, temp.newstack, temp.attachment[1], temp.attachment[2]);
+  }
+  if (start) {
+    this.objectsprites.add({spritestack[0], sx, sy});
+  }
+}
+
+function resetSpriteObjectCache() {
+  this.spritecache.clearvars();
+}
+
+function clearSpriteObjectCache(spriteid) {
+  this.spritecache.(@spriteid) = "";
+}
+
+function getSpriteObjectCache(spriteid) {
+  if (this.spritecache.(@spriteid).size() > 0) {
+    return this.spritecache.(@spriteid);
+  }
+  this.objectsprites = this.spritecache.(@spriteid) = {};
+  determineAllAttachedSprites(true, false, {spriteid});
+  this.objectsprites.add({spriteid, 0, 0, true});
+  determineAllAttachedSprites(false, false, {spriteid});
+  this.spritecache.(@spriteid) = this.objectsprites;
+  this.objectsprites = "";
+  return this.spritecache.(@spriteid);
+}
+
+function onNewSpriteDragged(obj, km, mx, my, ss, m) {
+  temp.coords = obj.parent.globaltolocalcoord({mx, my});
+  obj.x = temp.coords[0] - obj.ox;
+  obj.y = temp.coords[1] - obj.oy;
+  if (obj.parent != GraalShop_Frame_Zoom) {
+    if (obj.x in |GraalShop_Frame.x,GraalShop_Frame.x+GraalShop_Frame.width| && obj.y in |GraalShop_Frame.y,GraalShop_Frame.y+GraalShop_Frame.height|) {
+      temp.scoords = GraalShop_Frame_Zoom.globaltolocalcoord({mx, my});
+      temp.sq = 48;
+      temp.cx = int(GraalShop_Frame_Guideline.width / 2 - (temp.sq / 2) - thiso.offset_fx);
+      temp.cy = int(GraalShop_Frame_Guideline.height / 2 - (temp.sq / 2) - thiso.offset_fy);
+      temp.sx = temp.scoords[0] - (obj.ox * this.currentscale) - temp.cx;
+      temp.sy = temp.scoords[1] - (obj.oy * this.currentscale) - temp.cy;
+      temp.sprites = getFrameSprites(getGUICurrentFrame(), getGUICurrentDir());
+      temp.spritecount = temp.sprites.size();
+      temp.sprites.add({obj.spriteid, int(temp.sx), int(temp.sy)});
+      setFrameSprites(getGUICurrentFrame(), getGUICurrentDir(), temp.sprites);
+      redrawGraalShopFrame();
+      obj.destroy();
+      obj = makevar("GraalShop_Frame_Sprite_" @ temp.spritecount @ "_Container");
+      onSpriteSelected(obj, 0, mx, my, ss, m, true);
+    }
+  }
+}
+
+function onNewSpriteUnselected(obj) {
+  obj.destroy();
+}
+
+function updateTimeline() {
+  if (this.previewsprites) {
+    temp.max = getPreviewSpriteCount() - 1;
+    GraalShop_Timeline_Label.text = "Sprite";
+    GraalShop_Timeline.text = getPreviewSpriteID(getGUICurrentFrame());
+  } else {
+    temp.max = getFrameCount() - 1;
+    temp.t = getFrameTime(getGUICurrentFrame());
+    GraalShop_Timeline_Label.text = "Time";
+    GraalShop_Timeline.text = formatGraalShopTime(temp.t);
+  }
+  GraalShop_FrameControls_Timeline.range = {0, temp.max};
+  GraalShop_FrameControls_Timeline.value = min(GraalShop_FrameControls_Timeline.value, temp.max);
+  GraalShop_FrameControls_Timeline.ticks = 1;
+  this.selected = "";
+}
+
+function formatGraalShopTime(temp.t) {
+  if (!temp.t) {
+    temp.t = "0.00s";
+  } else {
+    temp.t = temp.t @ (temp.t.substring(temp.t.pos(".")+1).length() == 1 ? "0" : "") @ "s";
+  }
+  return temp.t;
+}
+
+function updateProperties() {
+  GraalShop_Properties_Loop.checked = isLooped();
+  GraalShop_Properties_Continuous.checked = isContinuous();
+  GraalShop_Properties_Single.checked = isSingleDir();
+}
+
+function onPropertiesLoop(obj) {
+  setLooped(obj.checked);
+  updateTimeline();
+  redrawGraalShopFrame();
+}
+
+function onPropertiesContinuous(obj) {
+  setContinuous(obj.checked);
+}
+
+function onPropertiesSingle(obj) {
+  setSingleDir(obj.checked);
+  updateTimeline();
+  redrawGraalShopFrame();
+}
+
+function onPropertiesGuidelines(obj) {
+  redrawGraalShopFrame();
+}
+
+function onPropertiesSounds(obj) {
+  redrawGraalShopFrame();
+}
+
+function onUpdateSetbackto(obj) {
+  if (obj.text.ends(".gani")) {
+    obj.text = obj.text.substring(0, obj.text.length()-5);
+  }
+  setSetBackTo(obj.text);
+}
+
+function onPlayGani(obj) {
+  this.frametime = getFrameTime(getGUICurrentFrame());
+  this.isplaying = true;
+  this.lastsoundframe = -1;
+  temp.t  = float(GraalShop_PlaySpeed_Edit.text);
+  if (temp.t > 0) {
+    if (GraalShop_FrameControls_Timeline.value == GraalShop_FrameControls_Timeline.range[1]) {
+      GraalShop_FrameControls_Timeline.value = 0;
+      this.frametime = 0;
+    }
+  } else {
+    if (GraalShop_FrameControls_Timeline.value == 0) {
+      GraalShop_FrameControls_Timeline.value = GraalShop_FrameControls_Timeline.range[1];
+      this.frametime = getAniLength();
+    }
+  }
+  onTimeout();
+}
+
+function onStopGani(obj) {
+  this.isplaying = false;
+  setTimer(0);
+}
+
+function onTimeout() {
+  if (this.isplaying) {
+    temp.t  = float(GraalShop_PlaySpeed_Edit.text);
+    temp.ta = abs(temp.t);
+    if (temp.ta > 0 && temp.ta < 1) {
+      this.frametime += (this.previewsprites ? 1 : 0.05) * (temp.t < 0 ? -1 : 1);
+      setTimer(0.05 * (1 / temp.ta));
+    } else {
+      this.frametime += (this.previewsprites ? 1 : 0.05) * int(temp.t);
+      setTimer(0.05);
+    }
+    if (this.previewsprites) {
+      temp.maxtime = getPreviewSpriteCount();
+      this.frametime = max(0, min(this.frametime, temp.maxtime));
+      GraalShop_FrameControls_Timeline.value = int(this.frametime-1);
+      updateTimeline();
+    } else {
+      temp.maxtime    = getAniLength();
+      this.frametime  = max(0, min(this.frametime, temp.maxtime));
+      GraalShop_FrameControls_Timeline.value = getFrameAtTime(this.frametime);
+      GraalShop_Timeline.text = formatGraalShopTime(this.frametime);
+    }
+    redrawGraalShopFrame();
+    if (this.frametime <= 0) {
+      if (isLooped() || this.previewsprites) {
+        this.frametime = temp.maxtime;
+      } else {
+        this.isplaying = false;
+        setTimer(0);
+      }
+    }
+    else if (this.frametime >= temp.maxtime) {
+      if (isLooped() || this.previewsprites) {
+        this.frametime = 0;
+      } else {
+        this.isplaying = false;
+        setTimer(0);
+      }
+    }
+  }
+}
+
+function onGUIAddSound() {
+  temp.sound = getFrameSound(getGUICurrentFrame());
+  if (temp.sound.size() != 3) {
+    temp.sound = {"put.wav", 1.5, 1.5};
+    setFrameSound(getGUICurrentFrame(), temp.sound);
+    addHistory({"addsound", getGUICurrentFrame(), temp.sound});
+    redrawGraalShopFrame();
+  } 
+}
+
+function onGUICopyFrame() {
+  copyFrame(getGUICurrentFrame());
+  GraalShop_FrameControls_PasteA.active = true;
+  GraalShop_FrameControls_PasteB.active = true;
+}
+
+function onGUIPasteBeforeFrame() {
+  resetHistory();
+  pasteFrame(getGUICurrentFrame(), false);
+  updateTimeline();
+  redrawGraalShopFrame();
+}
+
+function onGUIPasteAfterFrame() {
+  resetHistory();
+  pasteFrame(getGUICurrentFrame(), true);
+  updateTimeline();
+  redrawGraalShopFrame();
+}
+
+function onGUIAddFrame() {
+  resetHistory();
+  addFrame(getGUICurrentFrame());
+  updateTimeline();
+  redrawGraalShopFrame();
+}
+
+function onGUIDeleteFrame() {
+  if (getFrameCount() > 1) {
+    resetHistory();
+    deleteFrame(getGUICurrentFrame());
+    updateTimeline();
+    redrawGraalShopFrame();
+  }
+}
+
+function onMoveSprite(obj) {
+  if (GraalShop_SelectedSprite_Popup.text == "<none>" || this.previewsprites) {
+    return;
+  }
+  temp.sprites = getFrameSprites(getGUICurrentFrame(), getGUICurrentDir());
+  temp.spritecount = temp.sprites.size();
+  temp.sid = temp.osid = GraalShop_SelectedSprite_Popup.getselectedrow();
+  if (this.selected.size() > 0) {
+    temp.objs = this.selected;
+    if (obj == GraalShop_SpriteControls_LayerUp) {
+      temp.objs.sortbyvalue("spritepos", "float", false);
+    } else {
+      temp.objs.sortbyvalue("spritepos", "float", true);
+    }
+  } else {
+    temp.objs = {"GUI"};
+    temp.sid = GraalShop_SelectedSprite_Popup.getselectedrow();
+  }
+  echo(temp.objs.size());
+  for (temp.sobj: temp.objs) {
+    temp.sid = sobj == "GUI" ? temp.sid : temp.sobj.spritepos;
+    if (temp.sid == temp.sprites.size()) {
+      onMoveSound(obj);
+      return;
+    }
+    temp.oldsprite = temp.sprites[temp.sid];
+    if (obj == GraalShop_SpriteControls_LayerUp) {
+      if (temp.sid < (temp.spritecount-1)) {
+        temp.sprite = temp.sprites[temp.sid+1];
+        temp.sprites[temp.sid+1] = temp.sprites[temp.sid];
+        temp.sprites[temp.sid] = temp.sprite;
+        GraalShop_SelectedSprite_Popup.setselectedrow(temp.sid+1);
+        addHistory({"swapsprite", getGUICurrentFrame(), getGUICurrentDir(), temp.sid, -1});
+        if (temp.sid == temp.osid) {
+          GraalShop_SelectedSprite_Popup.setselectedrow(temp.sid+1);
+        }
+        temp.sobj.spritepos = temp.sid + 1;
+        temp.updateselected = true;
+      } else {
+        break;
+      }
+    }
+    else if (obj == GraalShop_SpriteControls_LayerDown) {
+      if (temp.sid > 0) {
+        temp.sprite = temp.sprites[temp.sid-1];
+        temp.sprites[temp.sid-1] = temp.sprites[temp.sid];
+        temp.sprites[temp.sid] = temp.sprite;
+        addHistory({"swapsprite", getGUICurrentFrame(), getGUICurrentDir(), temp.sid, 1});
+        if (temp.sid == temp.osid) {
+          GraalShop_SelectedSprite_Popup.setselectedrow(temp.sid-1);
+        }
+        temp.sobj.spritepos = temp.sid - 1;
+        temp.updateselected = true;
+      } else {
+        break;
+      }
+    }
+    else if (obj == GraalShop_SpriteControls_Left) {
+      temp.sprites[temp.sid][1]--;
+    }
+    else if (obj == GraalShop_SpriteControls_Right) {
+      temp.sprites[temp.sid][1]++;
+    }
+    else if (obj == GraalShop_SpriteControls_Up) {
+      temp.sprites[temp.sid][2]--;
+    }
+    else if (obj == GraalShop_SpriteControls_Down) {
+      temp.sprites[temp.sid][2]++;
+    }
+    if (obj != GraalShop_SpriteControls_LayerDown && obj != GraalShop_SpriteControls_LayerUp) {
+      addHistory({"movesprite", getGUICurrentFrame(), getGUICurrentDir(), temp.sid, temp.sprites[temp.sid], temp.oldsprite});
+    }
+  }
+  for (temp.sobj: temp.objs) {
+    temp.newselected.add(temp.sobj.spritepos);
+  }
+  setFrameSprites(getGUICurrentFrame(), getGUICurrentDir(), temp.sprites);
+  updateSpriteXY();
+  redrawGraalShopFrame();
+  if (temp.updateselected && this.selected.size() > 0) {
+    this.selected = {};
+    for (temp.sid: temp.newselected) {
+      temp.container = makevar("GraalShop_Frame_Sprite_" @ temp.sid @ "_Container");
+      this.selected.add(temp.container);
+    }
+  }
+}
+
+function onMoveSound(obj) {
+  temp.sound = temp.oldsound = getFrameSound(getGUICurrentFrame());
+  if (obj == GraalShop_SpriteControls_Left) {
+    temp.sound[1] -= 1/16;
+  }
+  else if (obj == GraalShop_SpriteControls_Right) {
+    temp.sound[1] += 1/16;
+  }
+  else if (obj == GraalShop_SpriteControls_Up) {
+    temp.sound[2] -= 1/16;
+  }
+  else if (obj == GraalShop_SpriteControls_Down) {
+    temp.sound[2] += 1/16;
+  }
+  addHistory({"movesound", getGUICurrentFrame(), temp.oldsound, temp.sound});
+  setFrameSound(getGUICurrentFrame(), temp.sound);
+  updateSpriteXY();
+  redrawGraalShopFrame();
+}
+
+function onRemovedUnusedSprites() {
+  removeUnusedSprites();
+  populateSpriteList();
+}
+
+function onReverseAnimation() {
+  reverseFrames();
+  updateSpriteXY();
+  updateTimeline();
+  redrawGraalShopFrame();
+}
+
+function GraalShop_Menu_Defaults.onAction() {
+  temp.defs = getDefinedDefaults();
+  new GuiWindowCtrl("GraalShop_Defaults_Window") {
+    profile = GuiBlueWindowProfile;
+    isexternal = GraalShop.isexternal;
+    clientwidth = 200;
+    clientheight = 300;
+    minextent = {200,300};
+    canresize = canmaximize = false;
+    x = min(screenwidth - clientwidth, GraalShop.x + GraalShop.width);
+    y = GraalShop.y + (GraalShop.height - height) / 2;
+    visible = destroyonhide = true;
+    bringtofront();
+    text = "Defaults";
+    for (temp.def: temp.defs) {
+      new GuiTextCtrl("GraalShop_Defaults_" @ temp.def @ "_Label") {
+        profile = GuiBlueTextProfile;
+        useownprofile = true;
+        profile.fontstyle = "b";
+        x = 8;
+        y = 22 + 20 * temp.i;
+        height = 20;
+        text = temp.def;
+        width += 8;
+      }
+      new GuiTextEditCtrl("GraalShop_Defaults_" @ temp.def) {
+        profile = GuiBlueTextEditProfile;
+        this.def = temp.def;
+        x = 64;
+        y = 24 + 20 * temp.i;
+        height = 20;
+        width  = 130;
+        text = getDefault(temp.def);
+        if (!text) {
+          text = "";
+        }
+        thiso.catchevent(this.name, "onTextChanged", "onDefaultsChanged");
+      }
+      temp.i++;
+    }
+  }
+}
+
+function updateDefaults() {
+  if (GraalShop_Defaults_Window.visible) {
+    temp.defs = getDefinedDefaults();
+    for (temp.def: temp.defs) {
+      temp.dv = getDefault(temp.def);
+      makevar("GraalShop_Defaults_" @ temp.def).text = temp.dv ? temp.dv : "";
+    }
+  }
+}
+
+function onDefaultsChanged(obj) {
+  setDefault(obj.def, obj.text);
+  this.lastmd5 = "";
+  redrawGraalShopFrame();
+  populateSpriteList(true);
+}
+
+function GraalShop_Menu_Script.onAction() {
+  temp.npc_script = getScriptContent();
+  new GuiWindowCtrl("GraalShop_Script_Window") {
+    profile = GuiBlueWindowProfile;
+    clientrelative = true;
+    temp.ww = clientwidth = 500;
+    temp.wh = clientheight = 400;
+    x = (screenwidth - temp.ww) / 2;
+    y = (screenheight - temp.wh) / 2;
+    isexternal = GraalShop.isexternal;
+    text = "Script";
+    destroyonhide = true;
+    
+    new GuiScrollCtrl("GraalShop_Script_ScriptScroll") {
+      profile = GuiBlueScrollProfile;
+      scrollprofile = GuiBlueScrollProfile;
+      useownprofile = true;
+      profile.fillColor = "255 255 255";
+      profile.opaque = true;
+      profile.border = 1;
+      profile.bitmap = "guiblue_scroll_noback.png";
+      horizsizing = "width";
+      vertsizing  = "height";
+      clientwidth  = temp.ww;
+      clientheight = temp.wh - 40;
+      
+      new GuiMLTextEditCtrl("GraalShop_Script_Script") {
+        profile = SyntaxHighlightProfile;
+        useownprofile = true;
+        profile.fillcolorhl = "80 180 255";
+        profile.fontcolorlink = "255 0 255";
+        profile.fontsize = 15;
+        
+        horizsizing = "width";
+        syntaxhighlighting = true;
+        wordwrap = false;
+        clientheight = temp.wh;
+        clientwidth  = temp.ww - 40;
+        width -= 4;
+        
+        if (temp.npc_script.size() > 0) {
+          setlines(temp.npc_script);
+        } else {
+          settext(temp.npc_script);
+        }
+        temp.scriptctrl = this;
+
+        autoindenting = true;
+        tabspaces = 2;
+      }
+    }
+    new GuiButtonCtrl("GraalShop_Script_ScriptClose") {
+      profile = GuiBlueButtonProfile;
+      horizsizing = "left";
+      vertsizing  = "top";
+      clientwidth  = 64;
+      clientheight = 32;
+      x = temp.ww - 68;
+      y = temp.wh - 40 + 4;
+      text = "Close";
+      thiso.catchevent(this.name, "onAction", "onCloseScript");
+    }
+    new GuiButtonCtrl("GraalShop_Script_ScriptApply") {
+      profile = GuiBlueButtonProfile;
+      horizsizing = "left";
+      vertsizing  = "top";
+      clientwidth  = 64;
+      clientheight = 32;
+      x = temp.ww - 68 - 64 - 4;
+      y = temp.wh - 40 + 4;
+      text = "Apply";
+      thiso.catchevent(this.name, "onAction", "onApplyScript");
+    }
+  }  
+}
+
+function onApplyScript() {
+  setScriptContent(GraalShop_Script_Script.getlines());
+}
+
+function onCloseScript() {
+  GraalShop_Script_Window.destroy();
+}
+
+function onAddSprite(obj, spriteid) {
+  this.previewsprites = false;
+  GraalShop_AddSprite_Window.destroy();
+  temp.defs = getDefinedDefaults();
+  if (obj != GraalShop_File_AddSprite) {
+    temp.sid  = spriteid;
+    temp.data = getSprite(spriteid);
+    temp.com  = getSpriteComment(spriteid);
+    temp.clr  = getColorEffect(spriteid);
+    temp.zom  = getZoomEffect(spriteid);
+    temp.mod  = getModeEffect(spriteid);
+    temp.rot  = getRotateEffect(spriteid);
+    temp.stx  = getStretchXEffect(spriteid);
+    temp.sty  = getStretchYEffect(spriteid);
+    temp.txt  = "Update";
+  } else {
+    temp.sid  = this.sprites[this.sprites.size()-1][0] + 1;
+    temp.data = {"SPRITES", 0, 0, 24, 12};
+    temp.clr  = {1,1,1,1};
+    temp.zom  = temp.stx = temp.sty = 1;
+    temp.rot  = temp.mod = 0;
+    temp.com  = "sprite";
+    temp.txt  = "Add";
+  }
+  if (GraalShop_AddSprite_Window.visible) {
+    GraalShop_AddSprite_Window.clearcontrols();
+  }
+  new GuiWindowCtrl("GraalShop_AddSprite_Window") {
+    profile = GuiBlueWindowProfile;
+    clientrelative = true;
+    canmaximize = canresize = false;
+    temp.ww = clientwidth = 226;
+    temp.wh = clientheight = 400 - 10 + 22 + 22;
+    x = max(0, GraalShop.x - temp.ww - 12);
+    y = GraalShop.y + ((GraalShop.height - height) / 2);
+    isexternal = GraalShop.isexternal;
+    text = temp.txt SPC "Sprite";
+    visible = true;
+    new GuiTextCtrl("GraalShop_AddSprite_General_Label") {
+      profile = GuiBlueTextProfile;
+      useownprofile = true;
+      profile.fontstyle = "b";
+      x = 6;
+      y = 2;
+      text = "Sprite";
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_Image_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_General_Label.y + 20;
+      text = "Image";
+    }
+    new GuiPopUpEditCtrl("GraalShop_AddSprite_Image") {
+      profile = GuiBluePopUpMenuProfile;
+      scrollprofile = GuiBlueScrollProfile;
+      textprofile = GuiBlueTextListProfile;
+      x = GraalShop_AddSprite_Image_Label.x + 74;
+      y = GraalShop_AddSprite_Image_Label.y;
+      height = 20;
+      width = 140;
+      clearrows();
+      addrow(0, "SPRITES");
+      for (temp.def: temp.defs) {
+        addrow(0, temp.def);
+      }
+      setselectedrow(0);
+      text = temp.data[0];
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_Description_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Image_Label.y + 20;
+      text = "Description";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_Description") {
+      profile = GuiBlueTextEditProfile;
+      x = GraalShop_AddSprite_Image.x;
+      y = GraalShop_AddSprite_Description_Label.y;
+      height = 20;
+      width = 140;
+      text = temp.com;
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_Index_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Description_Label.y + 20;
+      text = "Index";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_Index") {
+      profile = GuiBlueTextEditProfile;
+      x = GraalShop_AddSprite_Image.x;
+      y = GraalShop_AddSprite_Index_Label.y;
+      height = 20;
+      width = 140;
+      text = temp.sid;
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_X_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Index_Label.y + 20;
+      text = "X";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_X") {
+      profile = GuiBlueTextEditProfile;
+      x = GraalShop_AddSprite_X_Label.x + 14;
+      y = GraalShop_AddSprite_X_Label.y;
+      height = 20;
+      width = 90;
+      text = temp.data[1];
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_Y_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6 + 110;
+      y = GraalShop_AddSprite_X_Label.y;
+      text = "Y";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_Y") {
+      profile = GuiBlueTextEditProfile;
+      x = GraalShop_AddSprite_Y_Label.x + 14;
+      y = GraalShop_AddSprite_Y_Label.y;
+      height = 20;
+      width = 90;
+      text = temp.data[2];
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_W_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_X_Label.y + 20;
+      text = "W";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_W") {
+      profile = GuiBlueTextEditProfile;
+      x = GraalShop_AddSprite_W_Label.x + 14;
+      y = GraalShop_AddSprite_W_Label.y;
+      height = 20;
+      width = 90;
+      text = temp.data[3];
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_H_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6 + 110;
+      y = GraalShop_AddSprite_W_Label.y;
+      text = "H";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_H") {
+      profile = GuiBlueTextEditProfile;
+      x = GraalShop_AddSprite_H_Label.x + 14;
+      y = GraalShop_AddSprite_H_Label.y;
+      height = 20;
+      width = 90;
+      text = temp.data[4];
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_Effects_Label") {
+      profile = GuiBlueTextProfile;
+      useownprofile = true;
+      profile.fontstyle = "b";
+      x = 6;
+      y = GraalShop_AddSprite_W_Label.y + 20;
+      text = "Effects";
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_Color_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Effects_Label.y + 20;
+      text = "Color";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_Color_Red") {
+      profile = GuiBlueTextEditProfile;
+      x = 6 + 70;
+      y = GraalShop_AddSprite_Color_Label.y;
+      height = 20;
+      width = 36;
+      text = temp.clr[0];
+      hint = "Red (0-1)";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_Color_Green") {
+      profile = GuiBlueTextEditProfile;
+      x = 6 + 70 + (GraalShop_AddSprite_Color_Red.width * 1);
+      y = GraalShop_AddSprite_Color_Label.y;
+      height = 20;
+      width = GraalShop_AddSprite_Color_Red.width;
+      text = temp.clr[1];
+      hint = "Green (0-1)";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_Color_Blue") {
+      profile = GuiBlueTextEditProfile;
+      x = 6 + 70 + (GraalShop_AddSprite_Color_Red.width * 2);
+      y = GraalShop_AddSprite_Color_Label.y;
+      height = 20;
+      width = GraalShop_AddSprite_Color_Red.width;
+      text = temp.clr[2];
+      hint = "Blue (0-1)";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_Color_Alpha") {
+      profile = GuiBlueTextEditProfile;
+      x = 6 + 70 + (GraalShop_AddSprite_Color_Red.width * 3);
+      y = GraalShop_AddSprite_Color_Label.y;
+      height = 20;
+      width = GraalShop_AddSprite_Color_Red.width;
+      text = temp.clr[3];
+      hint = "Alpha (0-1)";
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_Zoom_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Color_Label.y + 20;
+      text = "Zoom";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_Zoom") {
+      profile = GuiBlueTextEditProfile;
+      x = 6 + 70;
+      y = GraalShop_AddSprite_Zoom_Label.y;
+      height = 20;
+      width = 144;
+      text = temp.zom;
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_Rotate_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Zoom_Label.y + 20;
+      text = "Rotate";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_Rotate") {
+      profile = GuiBlueTextEditProfile;
+      x = 6 + 70;
+      y = GraalShop_AddSprite_Rotate_Label.y;
+      height = 20;
+      width = 144;
+      text = temp.rot;
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_Mode_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Rotate_Label.y + 20;
+      text = "Mode";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_Mode") {
+      profile = GuiBlueTextEditProfile;
+      x = 6 + 70;
+      y = GraalShop_AddSprite_Mode_Label.y;
+      height = 20;
+      width = 144;
+      text = temp.mod;
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_StretchX_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Mode_Label.y + 20;
+      text = "StretchX";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_StretchX") {
+      profile = GuiBlueTextEditProfile;
+      x = 6 + 70;
+      y = GraalShop_AddSprite_StretchX_Label.y;
+      height = 20;
+      width = 144;
+      text = temp.stx;
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_StretchY_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_StretchX_Label.y + 20;
+      text = "StretchY";
+    }
+    new GuiTextEditCtrl("GraalShop_AddSprite_StretchY") {
+      profile = GuiBlueTextEditProfile;
+      x = 6 + 70;
+      y = GraalShop_AddSprite_StretchY_Label.y;
+      height = 20;
+      width = 144;
+      text = temp.sty;
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_Common_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_StretchY_Label.y + 20;
+      text = "Common";
+    }  
+    new GuiPopUpMenuCtrl("GraalShop_AddSprite_Common") {
+      profile = GuiBluePopUpMenuProfile;
+      scrollprofile = GuiBlueScrollProfile;
+      textprofile = GuiBlueTextListProfile;
+      x = 6 + 70;
+      y = GraalShop_AddSprite_Common_Label.y;
+      height = 20;
+      width = 144;
+      clearrows();
+      text = "Select to apply.";
+      for (temp.eff: getCommonEffects()) {
+        addrow(0, temp.eff);
+      }
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_BatchOps_Label") {
+      profile = GuiBlueTextProfile;
+      useownprofile = true;
+      profile.fontstyle = "b";
+      x = 6;
+      y = GraalShop_AddSprite_Common_Label.y + 20;
+      text = "Batch Operations";
+    }
+    new GuiTextCtrl("GraalShop_AddSprite_Batch_Label") {
+      profile = GuiBlueTextProfile;
+      x = 6;
+      y = GraalShop_AddSprite_BatchOps_Label.y + 20;
+      text = "Method";
+    }
+    new GuiPopUpMenuCtrl("GraalShop_AddSprite_Batch") {
+      profile = GuiBluePopUpMenuProfile;
+      scrollprofile = GuiBlueScrollProfile;
+      textprofile = GuiBlueTextListProfile;
+      x = 6 + 70;
+      y = GraalShop_AddSprite_Batch_Label.y;
+      height = 20;
+      width = 144;
+      clearrows();
+      for (temp.op: getBatchOps()) {
+        addrow(0, temp.op);
+      }
+      setselectedrow(0);
+    }
+    new GuiControl("GraalShop_AddSprite_Batch_Controls") {
+      x = 6;
+      y = GraalShop_AddSprite_Batch_Label.y + 20;
+      clearcontrols();
+      width = 70 + 144;
+      height = 20;
+    }
+    new GuiButtonCtrl("GraalShop_AddSprite_Preview") {
+      profile = GuiBlueButtonProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Batch_Controls.y + 22;
+      width = 70 + 144;
+      height = 20;
+      text = "Stop Preview";
+    }
+    new GuiButtonCtrl("GraalShop_AddSprite_Cutter") {
+      profile = GuiBlueButtonProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Preview.y + 22;
+      width = 70 + 144;
+      height = 20;
+      text = "Sprite Cutter";
+    }
+    new GuiButtonCtrl("GraalShop_AddSprite_Add") {
+      profile = GuiBlueButtonProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Cutter.y + 22;
+      width = 70 + 144;
+      height = 20;
+      text = temp.txt @ " and Continue";
+      thiso.catchevent(this.name, "onAction", "onUpdateSprite");
+    }
+    new GuiButtonCtrl("GraalShop_AddSprite_AddClose") {
+      profile = GuiBlueButtonProfile;
+      x = 6;
+      y = GraalShop_AddSprite_Add.y + 22;
+      width = 70 + 144;
+      height = 20;
+      text = temp.txt @ " and Close";
+      thiso.catchevent(this.name, "onAction", "onUpdateSprite");
+    } 
+  }
+  for (temp.ctrl: GraalShop_AddSprite_Window.controls) {
+    if (temp.ctrl.objecttype().pos("Edit") >= 0) {
+      thiso.catchevent(temp.ctrl.name, "onTextChanged", "onUpdatePreview");
+    }
+  }
+  this.lastframe = getGUICurrentFrame();
+  this.offset_fx = this.offset_fy = 0;
+  this.previewsprites = true;
+  onUpdatePreview();
+}
+
+function GraalShop_AddSprite_Window.onHide() {
+  if (!GraalShop_AddSprite_Window.visible) {
+    this.previewsprites = false;
+    this.cuttingsprites = false;
+    this.offset_fx = this.offset_fy = 0;
+    updateTimeline();
+    setGUICurrentFrame(this.lastframe);
+    onUpdatePreview(true);
+  }
+}
+
+function getBatchOps() {
+  temp.ops = {
+    "Grid",
+    "Rotate",
+    "Alpha"
+  };
+  return temp.ops;
+}
+
+function GraalShop_AddSprite_Batch.onSelect(a, entrytext, c) {
+  GraalShop_AddSprite_Batch_Controls.clearcontrols();
+  if (entrytext == "Grid") {
+    with (GraalShop_AddSprite_Batch_Controls) {
+      new GuiTextCtrl("GraalShop_Batch_GridW_Label") {
+        profile = GuiBlueTextProfile;
+        x = 0;
+        y = 0;
+        text = "W";
+      }
+      new GuiTextEditCtrl("GraalShop_Batch_GridW") {
+        profile = GuiBlueTextEditProfile;
+        x = 16;
+        y = 0;
+        width = 34;
+        height = 20;
+        text = 1;
+        thiso.catchevent(this.name, "onTextChanged", "onUpdatePreview");
+      }
+      new GuiTextCtrl("GraalShop_Batch_GridH_Label") {
+        profile = GuiBlueTextProfile;
+        x = GraalShop_Batch_GridW.x + GraalShop_Batch_GridW.width + 2;
+        y = 0;
+        text = "H";
+      }
+      new GuiTextEditCtrl("GraalShop_Batch_GridH") {
+        profile = GuiBlueTextEditProfile;
+        x = GraalShop_Batch_GridH_Label.x + 12;
+        y = 0;
+        width = 34;
+        height = 20;
+        text = 1;
+        thiso.catchevent(this.name, "onTextChanged", "onUpdatePreview");
+      }
+      new GuiTextCtrl("GraalShop_Batch_GridSW_Label") {
+        profile = GuiBlueTextProfile;
+        x = GraalShop_Batch_GridH.x + GraalShop_Batch_GridH.width + 2;
+        y = 0;
+        text = "SW";
+      }
+      new GuiTextEditCtrl("GraalShop_Batch_GridSW") {
+        profile = GuiBlueTextEditProfile;
+        x = GraalShop_Batch_GridSW_Label.x + 22;
+        y = 0;
+        width = 34;
+        height = 20;
+        text = 0;
+        hint = "Amount of pixels to skip width-wise. Useful for ignoring spritesheet lines.";
+        thiso.catchevent(this.name, "onTextChanged", "onUpdatePreview");
+      }
+      new GuiTextCtrl("GraalShop_Batch_GridSH_Label") {
+        profile = GuiBlueTextProfile;
+        x = GraalShop_Batch_GridSW.x + GraalShop_Batch_GridSW.width + 2;
+        y = 0;
+        text = "SH";
+      }
+      new GuiTextEditCtrl("GraalShop_Batch_GridSH") {
+        profile = GuiBlueTextEditProfile;
+        x = GraalShop_Batch_GridSH_Label.x + 22;
+        y = 0;
+        width = 34;
+        height = 20;
+        text = 0;
+        hint = "Amount of pixels to skip height-wise. Useful for ignoring spritesheet lines.";
+        thiso.catchevent(this.name, "onTextChanged", "onUpdatePreview");
+      }
+    }
+  }
+  else if (entrytext in {"Rotate", "Alpha"}) {
+    temp.ops = {
+      "Rotate", "Alpha"
+    }; 
+    temp.ranges = {
+      {0, pi*2},
+      {1, 0}
+    };
+    temp.range = temp.ranges[temp.ops.index(entrytext)];
+    with (GraalShop_AddSprite_Batch_Controls) {
+      new GuiTextCtrl("GraalShop_Batch_Sprites_Label") {
+        profile = GuiBlueTextProfile;
+        x = 0;
+        y = 0;
+        text = "Sprites";
+      }
+      new GuiTextEditCtrl("GraalShop_Batch_Sprites") {
+        profile = GuiBlueTextEditProfile;
+        x = 42;
+        y = 0;
+        text = 1;
+        height = 20;
+        width = 32;
+        thiso.catchevent(this.name, "onTextChanged", "onUpdatePreview");
+      }
+      new GuiTextCtrl("GraalShop_Batch_Start_Label") {
+        profile = GuiBlueTextProfile;
+        x = GraalShop_Batch_Sprites.x + GraalShop_Batch_Sprites.width + 2;
+        y = 0;
+        text = "Start";
+      }
+      new GuiTextEditCtrl("GraalShop_Batch_Start") {
+        profile = GuiBlueTextEditProfile;
+        x = GraalShop_Batch_Start_Label.x + 32;
+        y = 0;
+        text = temp.range[0];
+        height = 20;
+        width = 36;
+        thiso.catchevent(this.name, "onTextChanged", "onUpdatePreview");
+      }
+      new GuiTextCtrl("GraalShop_Batch_End_Label") {
+        profile = GuiBlueTextProfile;
+        x = GraalShop_Batch_Start.x + GraalShop_Batch_Start.width + 2;
+        y = 0;
+        text = "End";
+      }
+      new GuiTextEditCtrl("GraalShop_Batch_End") {
+        profile = GuiBlueTextEditProfile;
+        x = GraalShop_Batch_End_Label.x + 28;
+        y = 0;
+        text = temp.range[1];
+        height = 20;
+        width = 40;
+        thiso.catchevent(this.name, "onTextChanged", "onUpdatePreview");
+      }
+    }
+  }
+  GraalShop_AddSprite_Batch_Controls.makefirstresponder(true);
+}
+
+function getCommonEffects() {
+  temp.effects = {
+    "Flip Horizontally",
+    "Flip Vertically",
+    "Rotate 45 Degrees",
+    "Rotate 90 Degrees",
+    "Rotate 180 Degrees",
+    "-",
+    "Remove Effects"
+  };
+  return temp.effects;
+}
+
+function GraalShop_AddSprite_Common.onSelect(a, entrytext, c) {
+  if (entrytext == "Flip Horizontally") {
+    GraalShop_AddSprite_StretchX.text *= -1;
+  }
+  else if (entrytext == "Flip Vertically") {
+    GraalShop_AddSprite_StretchY.text *= -1;
+  }
+  else if (entrytext == "Rotate 45 Degrees") {
+    GraalShop_AddSprite_Rotate.text += pi / 4;
+  }
+  else if (entrytext == "Rotate 90 Degrees") {
+    GraalShop_AddSprite_Rotate.text += pi / 2;
+  }
+  else if (entrytext == "Rotate 180 Degrees") {
+    GraalShop_AddSprite_Rotate.text += pi;
+  }
+  else if (entrytext == "Remove Effects") {
+    GraalShop_AddSprite_Rotate.text = 0;
+    GraalShop_AddSprite_Mode.text = 0;
+    GraalShop_AddSprite_StretchX.text = 1;
+    GraalShop_AddSprite_StretchY.text = 1;
+    GraalShop_AddSprite_Zoom.text = 1;
+    GraalShop_AddSprite_Color_Red.text = 1;
+    GraalShop_AddSprite_Color_Green.text = 1;
+    GraalShop_AddSprite_Color_Blue.text = 1;
+    GraalShop_AddSprite_Color_Alpha.text = 1;
+  }
+  GraalShop_AddSprite_Common.setselectedrow(-1);
+  GraalShop_AddSprite_Common.text = "Select to apply.";
+}
+
+function GraalShop_AddSprite_Preview.onAction() {
+  GraalShop_AddSprite_Preview.text = (this.previewsprites ? "Preview" : "Stop Preview");
+  GraalShop_AddSprite_Cutter.text = "Sprite Cutter";
+  this.previewsprites = !this.previewsprites;
+  this.cuttingsprites = false; 
+  onUpdatePreview(true);
+}
+
+function GraalShop_AddSprite_Cutter.onAction() {
+  GraalShop_AddSprite_Cutter.text = (this.cuttingsprites ? "Sprite Cutter" : "Stop Cutting");
+  GraalShop_AddSprite_Preview.text = "Preview";
+  GraalShop_AddSprite_Batch.setselectedrow(0);
+  this.cuttingsprites = !this.cuttingsprites;
+  this.previewsprites = false;
+  onUpdatePreview(true);
+}
+
+function onUpdatePreview(force) {
+  if (this.previewsprites || this.cuttingsprites || force) {
+    this.isplaying = false;
+    updateTimeline();
+    redrawGraalShopFrame();
+  }
+}
+
+function getPreviewEffect(v) {
+  temp.clr = {
+    min(1, max(0, GraalShop_AddSprite_Color_Red.text)),
+    min(1, max(0, GraalShop_AddSprite_Color_Green.text)),
+    min(1, max(0, GraalShop_AddSprite_Color_Blue.text)),
+    min(1, max(0, GraalShop_AddSprite_Color_Alpha.text))
+  };
+  temp.mod = min(3, max(0, GraalShop_AddSprite_Mode.text));
+  temp.rot = float(GraalShop_AddSprite_Rotate.text);
+  temp.stx = float(GraalShop_AddSprite_StretchX.text);
+  temp.sty = float(GraalShop_AddSprite_StretchY.text);
+  temp.zom = float(GraalShop_AddSprite_Zoom.text);
+  return temp.(@v);
+}
+
+function getPreviewSpriteCount() {
+  if (GraalShop_Batch_Sprites.visible) {
+    return int(GraalShop_Batch_Sprites.text);
+  }
+  else if (GraalShop_Batch_GridW.visible) {
+    temp.gw = int(GraalShop_Batch_GridW.text);
+    temp.gh = int(GraalShop_Batch_GridH.text);
+    return (temp.gw * temp.gh);
+  }
+}
+
+function getPreviewSpriteID(f) {
+  return int(GraalShop_AddSprite_Index.text) + f;
+}
+
+function onUpdateSprite(obj) {
+  temp.preserve  = obj.text.pos("Add") == -1;
+  temp.count     = getPreviewSpriteCount();
+  for (temp.i = 0; temp.i < temp.count; temp.i++) {
+    setupBatchSprite(temp.i);
+    temp.sprite_id  = getPreviewSpriteID(temp.i);
+    temp.sprite_img = this.previewsprite[0];
+    temp.sprite_x   = this.previewsprite[1];
+    temp.sprite_y   = this.previewsprite[2];
+    temp.sprite_w   = this.previewsprite[3];
+    temp.sprite_h   = this.previewsprite[4];
+    temp.sprite_com = GraalShop_AddSprite_Description.text @ (temp.count > 1 ? format(" - %s", temp.i) : "");
+    deleteSprite(temp.sprite_id, temp.preserve);
+    addSprite(temp.sprite_id, temp.sprite_img, temp.sprite_x, temp.sprite_y, temp.sprite_w, temp.sprite_h, temp.sprite_com);
+    clearSpriteObjectCache(temp.sprite_id);
+    if (@this.previewsprite_clr != @{1,1,1,1}) {
+      temp.clr = this.previewsprite_clr;
+      addColorEffect(temp.sprite_id, temp.clr[0], temp.clr[1], temp.clr[2], temp.clr[3]); 
+    } else {
+      deleteColorEffect(temp.sprite_id);
+    }
+    if (this.previewsprite_zom != 1) {
+      addZoomEffect(temp.sprite_id, this.previewsprite_zom);
+    } else {
+      deleteZoomEffect(temp.sprite_id);
+    }
+    if (this.previewsprite_stx != 1) {
+      addStretchXEffect(temp.sprite_id, this.previewsprite_stx);
+    } else {
+      deleteStretchXEffect(temp.sprite_id);
+    }
+    if (this.previewsprite_sty != 1) {
+      addStretchYEffect(temp.sprite_id, this.previewsprite_sty);
+    } else {
+      deleteStretchYEffect(temp.sprite_id);
+    }
+    if (this.previewsprite_mod != 0) {
+      addModeEffect(temp.sprite_id, this.previewsprite_mod);
+    } else {
+      deleteModeEffect(temp.sprite_id);
+    }
+    if (this.previewsprite_rot != 0) {
+      addRotateEffect(temp.sprite_id, this.previewsprite_rot);
+    } else {
+      deleteRotateEffect(temp.sprite_id);
+    }
+  }
+  populateSpriteList(true);
+  if (obj.name.ends("Close")) {
+    GraalShop_AddSprite_Window.destroy();
+  } else {
+    GraalShop_AddSprite_Index.text = temp.sprite_id + 1;
+  }
+}
+
+function setupBatchSprite(i) {
+  this.previewsprite_clr = {
+    min(1, max(0, GraalShop_AddSprite_Color_Red.text)),
+    min(1, max(0, GraalShop_AddSprite_Color_Green.text)),
+    min(1, max(0, GraalShop_AddSprite_Color_Blue.text)),
+    min(1, max(0, GraalShop_AddSprite_Color_Alpha.text))
+  };
+  this.previewsprite_mod = min(3, max(0, GraalShop_AddSprite_Mode.text));
+  this.previewsprite_rot = float(GraalShop_AddSprite_Rotate.text);
+  this.previewsprite_stx = float(GraalShop_AddSprite_StretchX.text);
+  this.previewsprite_sty = float(GraalShop_AddSprite_StretchY.text);
+  this.previewsprite_zom = float(GraalShop_AddSprite_Zoom.text);
+  this.previewsprite = {
+    GraalShop_AddSprite_Image.text,
+    max(0, int(GraalShop_AddSprite_X.text)),
+    max(0, int(GraalShop_AddSprite_Y.text)),
+    max(1, int(GraalShop_AddSprite_W.text)),
+    max(1, int(GraalShop_AddSprite_H.text)),
+  };
+  temp.batchmode = GraalShop_AddSprite_Batch.getselectedtext();
+  if (temp.batchmode == "Grid") {
+    temp.gw = int(GraalShop_Batch_GridW.text);
+    temp.gh = int(GraalShop_Batch_GridH.text);
+    temp.gx = temp.gy = 0;
+    for (temp.j = 0; temp.j < i; temp.j++) {
+      temp.gx++;
+      if (temp.gx >= temp.gw) {
+        temp.gx = 0;
+        temp.gy++;
+      }  
+    }
+    this.previewsprite = {
+      GraalShop_AddSprite_Image.text,
+      this.previewsprite[1] + int(GraalShop_AddSprite_W.text) * temp.gx + int(GraalShop_Batch_GridSW.text) * temp.gx,
+      this.previewsprite[2] + int(GraalShop_AddSprite_H.text) * temp.gy + int(GraalShop_Batch_GridSH.text) * temp.gy,
+      this.previewsprite[3],
+      this.previewsprite[4]
+    };
+  }
+  else if (temp.batchmode == "Rotate") {
+    temp.s = float(GraalShop_Batch_Start.text);
+    temp.e = float(GraalShop_Batch_End.text);
+    temp.d = (temp.e - temp.s) * (i / (int(GraalShop_Batch_Sprites.text)));
+    this.previewsprite_rot += temp.d;
+  }
+  else if (temp.batchmode == "Alpha") {
+    temp.s = float(GraalShop_Batch_Start.text);
+    temp.e = float(GraalShop_Batch_End.text);
+    temp.d = (temp.e - temp.s) * (i / (int(GraalShop_Batch_Sprites.text)));
+    this.previewsprite_clr[3] += temp.d;
+  }
+}
+/*
+function onSpriteCut(temp.image, tx, ty) {
+  // Setup Image Array
+  temp.w = getimgwidth(image);
+  temp.h = getimgheight(image);
+  temp.arr = new[temp.w][temp.h];
+  // Ported From: http://will.thimbleby.net/scanline-flood-fill/
+  // Setup Scanline Fill
+  temp.ranges = {{tx, tx, ty, null, true, true}};
+  temp.arr[tx][ty] = 1;
+  temp.txmin = temp.txmax = temp.tymin = temp.tymax = -1;
+  
+  maxlooplimit = 100000;
+  
+  while (temp.ranges.size() > 0) {
+    
+    temp.rd = temp.ranges.size() - 1;
+    temp.r = temp.ranges[temp.rd];
+    temp.ranges.delete(temp.rd);
+    
+    temp.down = temp.r[3] == true;
+    temp.up   = temp.r[3] == false;
+    
+    // Extend Left
+    temp.minx = temp.r[0];
+    ty = temp.r[2];
+    if (temp.r[4]) {
+      while (temp.minx > 0 && temp.arr[temp.minx - 1][ty] != 1 && !isimgpixeltransparent(image, temp.minx - 1, ty)) {
+        temp.minx--;
+        temp.arr[temp.minx][ty] = 1;
+        temp.txmin = temp.txmin == -1 ? temp.minx : min(temp.txmin, temp.minx);
+        temp.tymin = temp.tymin == -1 ? ty : min(temp.tymin, ty);
+      }
+    }
+    // Extend Right
+    temp.maxx = temp.r[1];
+    if (temp.r[5]) {
+      while (temp.maxx < (temp.w - 1) && temp.arr[temp.maxx+1][ty] != 1 && !isimgpixeltransparent(image, temp.maxx+1, ty)) {
+        temp.maxx++;
+        temp.arr[temp.maxx][ty] = 1;
+        temp.txmax = temp.txmax == -1 ? temp.maxx : max(temp.txmax, temp.maxx);
+        temp.tymax = temp.tymax == -1 ? ty : max(temp.tymax, ty);
+      }
+    }
+    // Extend Range
+    temp.r[0]--;
+    temp.r[1]++;
+    // Extend Down
+    if (ty < temp.h) {
+      temp.newy      = ty + 1;
+      temp.isnext    = !temp.up;
+      temp.downwards = true;
+      
+      temp.rminx     = temp.minx;
+      temp.inrange   = false;
+      for (temp.vx = temp.minx; temp.vx <= temp.maxx; temp.vx++) {
+        temp.empty = (temp.isnext || (temp.vx < temp.r[0] || temp.vx > temp.r[1])) && temp.arr[temp.vx][temp.newy] != 1 && !isimgpixeltransparent(image, temp.vx, temp.newy); 
+        if (!temp.inrange && temp.empty) {
+          temp.rminx = temp.vx;
+          temp.inrange = true;
+        }
+        else if (temp.inrange && !temp.empty) {
+          temp.ranges.add({temp.rminx, temp.vx-1, temp.newy, temp.downwards, temp.rminx == temp.minx, false});
+          temp.inrange = false;
+        }
+        if (temp.inrange) {
+          temp.arr[temp.vx][temp.newy] = 1;
+          temp.txmin = temp.txmin == -1 ? temp.vx : min(temp.txmin, temp.vx);
+          temp.tymin = temp.tymin == -1 ? temp.newy : min(temp.tymin, temp.newy);
+          temp.txmax = temp.txmax == -1 ? temp.vx : max(temp.txmax, temp.vx);
+          temp.tymax = temp.tymax == -1 ? temp.newy : max(temp.tymax, temp.newy);
+        }
+        if (!temp.isnext && temp.vx == temp.r[0]) {
+          temp.vx = temp.r[1];
+        }
+      }
+      if (temp.inrange) {
+        temp.ranges.add({temp.rminx, temp.vx-1, temp.newy, temp.downwards, temp.rminx == temp.minx, true});
+      }
+    }
+    // Extend Up
+    if (ty > 0) {
+      temp.rminx     = temp.minx;
+      temp.newy      = ty - 1;
+      temp.inrange   = false;
+      temp.isnext    = !temp.down;
+      temp.downwards = false;
+      for (temp.vx = temp.minx; temp.vx <= temp.maxx; temp.vx++) {
+        temp.empty = (temp.isnext || (temp.vx < temp.r[0] || temp.vx > temp.r[1])) && temp.arr[temp.vx][temp.newy] != 1 && !isimgpixeltransparent(image, temp.vx, temp.newy); 
+        if (!temp.inrange && temp.empty) {
+          temp.rminx = temp.vx;
+          temp.inrange = true;
+        }
+        else if (temp.inrange && !temp.empty) {
+          temp.ranges.add({temp.rminx, temp.vx-1, temp.newy, temp.downwards, temp.rminx == temp.minx, false});
+          temp.inrange = false;
+        }
+        if (temp.inrange) {
+          temp.arr[temp.vx][temp.newy] = 1;
+          temp.txmin = temp.txmin == -1 ? temp.vx : min(temp.txmin, temp.vx);
+          temp.tymin = temp.tymin == -1 ? temp.newy : min(temp.tymin, temp.newy);
+          temp.txmax = temp.txmax == -1 ? temp.vx : max(temp.txmax, temp.vx);
+          temp.tymax = temp.tymax == -1 ? temp.newy : max(temp.tymax, temp.newy);
+        }
+        if (!temp.isnext && temp.vx == temp.r[0]) {
+          temp.vx = temp.r[1];
+        }
+      }
+      if (temp.inrange) {
+        temp.ranges.add({temp.rminx, temp.vx-1, temp.newy, temp.downwards, temp.rminx == temp.minx, true});
+      }
+    }
+  }
+  
+  temp.sw = temp.txmax - temp.txmin + 1;
+  temp.sh = temp.tymax - temp.tymin + 1;
+  
+  GraalShop_AddSprite_X.text = temp.txmin;
+  GraalShop_AddSprite_Y.text = temp.tymin;
+  GraalShop_AddSprite_W.text = temp.sw;
+  GraalShop_AddSprite_H.text = temp.sh;
+
+  this.cuttingsprites = false;
+  this.previewsprites = true;
+  GraalShop_AddSprite_Cutter.text = "Sprite Cutter";
+  GraalShop_AddSprite_Preview.text = "Stop Preview";
+  this.offset_fx = this.offset_fy = 0;
+  redrawGraalShopFrame();
+}*/
+
+/* 
+  File Explorer 
+*/
+
+function createFileExplorer(filemode) {
+  new GuiWindowCtrl("GraalShop_FileExplorer_Window") {
+    profile = GuiBlueWindowProfile;
+    clientrelative = true;
+    clientextent = "320,231";
+    minextent = {320,231};
+
+    canminimize = false;
+    canmove = true;
+    canresize = true;
+    closequery = false;
+    destroyonhide = true;
+    text = "Graal Shop Explorer";
+    x = (screenwidth - width) / 2;
+    y = (screenheight - height) / 2;
+    visible = true;
+    showtop();
+
+    new GuiTextCtrl("GraalShop_FileExplorer_Folder_Label") {
+      profile = GuiBlueTextProfile;
+      height = 20;
+      text = "Folder:";
+      width = 39;
+      x = 6;
+      y = 2;
+    }
+    new GuiScrollCtrl("GraalShop_FileExplorer_Files_Scroll") {
+      profile = GuiBlueScrollProfile;
+      height = 180;
+      hscrollbar = "alwaysOff";
+      vscrollbar = "dynamic";
+      horizsizing = "width";
+      vertsizing = "height";
+      width = 312;
+      x = 4;
+      y = 25;
+
+      new GuiTextListCtrl("GraalShop_FileExplorer_Files") {
+        profile = GuiBlueTextListProfile;
+        height = 34;
+        horizsizing = "width";
+        width = 308;
+        clearrows();
+      }
+    }
+    new GuiPopUpMenuCtrl("GraalShop_FileExplorer_Folder") {
+      profile = GuiBluePopUpMenuProfile;
+      scrollprofile = GuiBlueScrollProfile;
+      textprofile = GuiBlueTextListProfile;
+      height = 20;
+      maxpopupheight = 200;
+      horizsizing = "width";
+      text = "/";
+      width = 265;
+      x = 51;
+      y = 3;
+      clearrows();
+      temp.mapping = {
+        {"scriptfiles", "scriptfiles/"},
+        {"levels/ganis", "levels/ganis/"}
+      };
+      for (temp.folder: temp.mapping) {
+        temp.row = addrow(0, temp.folder[0]);
+        temp.row.fmap = temp.folder[1];
+      }
+      setselectedrow(0);
+    }
+    new GuiTextCtrl("GraalShop_FileExplorer_Filename_Label") {
+      profile = GuiBlueTextProfile;
+      height = 20;
+      text = "Filename:";
+      width = 55;
+      x = 5;
+      y = 206;
+      vertsizing = "top";
+    }
+    new GuiTextEditCtrl("GraalShop_FileExplorer_File") {
+      profile = GuiBlueTextEditProfile;
+      height = 20;
+      width = 190;
+      x = 61;
+      y = 207;
+      vertsizing = "top";
+      horizsizing = "width";
+      thiso.catchevent(this.name, "onAction", "onApplyFileExplorer");
+    }
+    new GuiButtonCtrl("GraalShop_FileExplorer_Apply") {
+      profile = GuiBlueButtonProfile;
+      height = 20;
+      text = filemode;
+      width = 62;
+      x = 254;
+      y = 207;
+      vertsizing = "top";
+      horizsizing = "left";
+      thiso.catchevent(this.name, "onAction", "onApplyFileExplorer");
+    }
+  }
+  this.findword = "";
+}
+
+function GraalShop_FileExplorer_Folder.onSelect(entryid, entrytext, entryindex) {
+  temp.row = GraalShop_FileExplorer_Folder.rows[entryindex];
+  temp.files.loadfolder(temp.row.fmap @ "*.gani", 0);
+  temp.files.sortascending();
+  with (GraalShop_FileExplorer_Files) {
+    clearrows();
+    for (temp.file: temp.files) {
+      addrow(0, temp.file);
+    }
+  }
+}
+
+function GraalShop_FileExplorer_File.onTextChanged() {
+  if (GraalShop_FileExplorer_File.isfirstresponder()) {
+    temp.findword = GraalShop_FileExplorer_File.text.trim();
+    if (temp.findword) {
+      for (temp.i = 0; temp.i < GraalShop_FileExplorer_Files.rows.size(); temp.i++) {
+        temp.row = GraalShop_FileExplorer_Files.rows[temp.i];
+        if (temp.row.text.starts(temp.findword)) {
+          GraalShop_FileExplorer_Files.setselectedrow(temp.i);
+          break;
+        }
+      }
+    }
+  }
+}
+
+function GraalShop_FileExplorer_Files.onSelect(a, entrytext, c) {
+  if (GraalShop_FileExplorer_Files.isfirstresponder()) {
+    GraalShop_FileExplorer_File.text = entrytext;
+  }
+}
+
+function GraalShop_FileExplorer_Files.onDblClick(a, entrytext, c) {
+  GraalShop_FileExplorer_File.text = entrytext;
+  onApplyFileExplorer();
+}
+
+function GraalShop_FileExplorer_Files.onKeyDown(a, k, c) {
+  this.findword @= k;
+  for (temp.i = 0; temp.i < GraalShop_FileExplorer_Files.rows.size(); temp.i++) {
+    temp.row = GraalShop_FileExplorer_Files.rows[temp.i];
+    if (temp.row.text.starts(this.findword)) {
+      GraalShop_FileExplorer_Files.setselectedrow(temp.i);
+      GraalShop_FileExplorer_File.text = temp.row.text;
+      GraalShop_FileExplorer_Files.makefirstresponder(true);
+      break;
+    }
+  }
+  this.scheduleevent(1, "UnsetFindWord", "");
+}
+
+function onUnsetFindWord() {
+  this.findword = "";
+}
+
+function onApplyFileExplorer() {
+  temp.filename = GraalShop_FileExplorer_File.text.trim();
+  if (!temp.filename) return;
+  temp.row  = GraalShop_FileExplorer_Folder.getselectedrow();
+  temp.fmap = GraalShop_FileExplorer_Folder.rows[temp.row].fmap;
+  if (GraalShop_FileExplorer_Apply.text in {"Open", "Import"}) {
+    temp.fmap @= temp.filename;
+    if (fileexists(temp.fmap)) {
+      if (GraalShop_FileExplorer_Apply.text == "Open") {
+        fileOpenGani(temp.fmap);
+      } else {
+        fileImportSprites(temp.fmap);
+      }
+    } else {
+      return;
+    }
+  } 
+  else if (GraalShop_FileExplorer_Apply.text == "Save") {
+    if (!temp.filename.ends(".gani")) {
+      temp.filename @= ".gani";
+    }
+    fileSaveGani(temp.fmap @ temp.filename);
+  }
+  GraalShop_FileExplorer_Window.destroy();
+}
+
+/*
+   GANI File I/O Functions
+*/
+
+public function loadgani(path) {
+  // Load Gani
+  this.filename = path;
+  temp.lines.loadlines(path);
+  // Define/Clear Variables
+  this.sprites = "";            // List of Sprites
+  this.sprite.clearvars();      // Sprite by ID
+  this.loop = false;            // GANI Loops
+  this.continuous = false;      // GANI Continuous
+  this.singledirection = false; // GANI Single Direction
+  this.setbackto = "";          // GANI Setbackto Ani
+  this.backcolor = "";          // GANI Graalshop Background
+  this.script = false;          // GANI has SCRIPT
+  this.scriptcontent = "";      // GANI's SCRIPT Content
+  this.movie = false;           // GANI has MOVIE
+  this.moviecontent = "";       // GANI's MOVIE Content
+  this.gdefault.clearvars();    // GANI's Default Variables
+  this.effects.rotation = {};   // Rotation Effects
+  this.effects.rotation.clearvars();
+  this.effects.zoom     = {};   // Zoom Effects
+  this.effects.zoom.clearvars();
+  this.effects.color    = {};   // Color Effects
+  this.effects.color.clearvars();
+  this.effects.mode     = {};   // Mode Effects
+  this.effects.mode.clearvars();
+  this.effects.stretchx = {};   // Stretch X Effects
+  this.effects.stretchtx.clearvars();
+  this.effects.stretchy = {};   // Stretch Y Effects
+  this.effects.stretchty.clearvars();
+  this.spriteattachments  = {}; // ATTACHSPRITE
+  this.spriteattachments2 = {}; // ATTACHSPRITE2
+  this.spriteattachment.clearvars();
+  this.spriteattachment2.clearvars();
+  this.frames = "";             // Frames
+  this.frame.clearvars();       // Individual Frame Data
+  // Parse GANI File
+  for (temp.line: temp.lines) {
+    // Parse SCRIPT Section
+    if (temp.parsingscript) {
+      if (temp.line.starts("SCRIPTEND")) {
+        temp.parsingscript = false;
+      } else {
+        this.scriptcontent.add(temp.line);
+      }
+    }
+    // Parse Movie Section
+    else if (temp.parsingmovie) {
+      if (temp.line.starts("MOVIEEND")) {
+        temp.parsingscript = false;
+      } else {
+        this.moviecontent.add(temp.line);
+      }
+    }
+    // Parse ANI Section
+    else if (temp.parsingani) {
+      // Check for END of ANI Section
+      if (temp.line.starts("ANIEND")) {
+        temp.parsingani = false;
+      } else {
+        // Trim Line
+        temp.line = temp.line.trim();
+        // Check for Frame Sound
+        if (temp.line.starts("PLAYSOUND")) {
+          // Set Previous Frames Sound Data
+          this.frame.(@currentframe - 1)[0] = temp.line.tokenize().subarray(1);
+          // Disable Skip Counter for this Line
+          temp.noskip = true;
+        }
+        // Check for Frame Wait
+        else if (temp.line.starts("WAIT")) {
+          // Set Previous Frames Wait Data
+          this.frame.(@currentframe - 1)[1] = temp.line.tokenize()[1];
+          // Disable Skip Counter for this Line
+          temp.noskip = true;
+        }
+        // Check if Line needs to be Skipped
+        else if (temp.skip == (4 - this.singledirection * 3)) {
+          // Reset Skip Counter
+          temp.skip = 0;
+          // Disable Skip Counter for this Line
+          temp.noskip = true;
+        } 
+        else {
+          // Process Sprites
+          temp.framesprites = temp.line.tokenize(",");
+          temp.frame = "";
+          for (temp.framesprite: temp.framesprites) {
+            temp.frame.add(temp.framesprite.tokenize());
+          }
+          // Add Frame
+          this.frames.add(temp.frame);
+          // Initialize Frame Data
+          this.frame.(@currentframe) = {"", 0};
+          // Increment Current Frame for Next Frame
+          temp.currentframe++;
+        }
+        // Check if Skipping Line, Increment Counter if not
+        if (!temp.noskip) temp.skip++;
+        else temp.noskip = false;
+      }
+    }
+    // Parse Everything Else 
+    else {
+      // Tokenize
+      temp.line = temp.line.tokenize();
+      // Check Type Column
+      switch (temp.line[0]) {
+        case "SPRITE":
+          // Define Sprite Properties
+          temp.sprite_id  = int(temp.line[1]);
+          temp.sprite_img = temp.line[2];
+          temp.sprite_x   = int(temp.line[3]);
+          temp.sprite_y   = int(temp.line[4]);
+          temp.sprite_w   = int(temp.line[5]);
+          temp.sprite_h   = int(temp.line[6]);
+          temp.sprite_com = "";
+          for (temp.i = 7; temp.i < temp.line.size(); temp.i++) {
+            temp.sprite_com @= temp.line[i] @ " ";
+          }
+          temp.sprite_com = temp.sprite_com.trim();
+          // Add Sprite
+          addSprite(temp.sprite_id, temp.sprite_img, temp.sprite_x, temp.sprite_y, temp.sprite_w, temp.sprite_h, temp.sprite_com);
+          break;
+        case "SCRIPT":
+          // Set Flag to Begin Parsing SCRIPT Section
+          temp.parsingscript = true;
+          this.script = true;
+          break;
+        case "MOVIE":
+          temp.parsingmovie = true;
+          this.movie = true;
+          break;
+        case "ANI":
+          // Set Flag to Begin Parsing ANI Section
+          temp.parsingani = true;
+          temp.currentframe = 0;
+          temp.skip = 0;
+          break;
+        case "COLOREFFECT":
+          // Determine Color Effect Values
+          temp.sprite_id   = int(temp.line[1]);
+          temp.sprite_r    = temp.line[2];
+          temp.sprite_g    = temp.line[3];
+          temp.sprite_b    = temp.line[4];
+          temp.sprite_a    = temp.line[5];
+          // Add Color Effect
+          addColorEffect(temp.sprite_id, temp.sprite_r, temp.sprite_g, temp.sprite_b, temp.sprite_a);
+          break;
+        case "ZOOMEFFECT":
+          // Determine Zoom Effect Values
+          temp.sprite_id   = int(temp.line[1]);
+          temp.sprite_zoom = temp.line[2];
+          // Add Zoom Effect
+          addZoomEffect(temp.sprite_id, temp.sprite_zoom);
+          break;
+        case "ROTATEEFFECT":
+          // Determine Rotate Effect Values
+          temp.sprite_id     = int(temp.line[1]);
+          temp.sprite_rotate = temp.line[2];
+          // Add Rotate Effect
+          addRotateEffect(temp.sprite_id, temp.sprite_rotate);
+          break;
+        case "EFFECTMODE":
+          // Determine Mode Effect Values
+          temp.sprite_id     = int(temp.line[1]);
+          temp.sprite_mode = temp.line[2];
+          // Add Rotate Effect
+          addModeEffect(temp.sprite_id, temp.sprite_mode);
+          break;
+        case "STRETCHXEFFECT":
+        case "STRETCHYEFFECT":
+          // Determine Stretch Effect Values
+          temp.sprite_id      = int(temp.line[1]);
+          temp.sprite_stretch = temp.line[2];
+          // Add Rotate Effect
+          if (temp.line[0].pos("X") > 0) {
+            addStretchXEffect(temp.sprite_id, temp.sprite_stretch);
+          } else {
+            addStretchYEffect(temp.sprite_id, temp.sprite_stretch);
+          }
+          break;
+        case "ATTACHSPRITE":
+        case "ATTACHSPRITE2":
+          // Determine Attachsprite Values
+          temp.sprite_a = int(temp.line[1]);
+          temp.sprite_b = int(temp.line[2]);
+          temp.sprite_x = int(temp.line[3]);
+          temp.sprite_y = int(temp.line[4]);
+          temp.data = {
+            temp.sprite_a, temp.sprite_b, temp.sprite_x, temp.sprite_y
+          };
+          // Check for Attachsprite2
+          if (temp.line[0].ends("2")) {
+            // Add Attachsprite2
+            addSpriteAttachment(true, temp.sprite_a, temp.sprite_b, temp.sprite_x, temp.sprite_y);
+          } else {
+            // Add Attachsprite
+            addSpriteAttachment(false, temp.sprite_a, temp.sprite_b, temp.sprite_x, temp.sprite_y);
+          }
+          break;
+        case "SETBACKTO":
+        case "BACKCOLOR":
+          // Set Respective Variable to Value
+          this.(@temp.line[0].lower()) = temp.line[1];
+          break;
+        case "LOOP":
+        case "CONTINUOUS":
+        case "SINGLEDIRECTION":
+          // Set Respective Flag to True
+          this.(@temp.line[0].lower()) = true;
+          break;
+        default:
+          // Check for DEFAULT line
+          if (temp.line[0].starts("DEFAULT")) {
+            // Determine Type of Default Value
+            temp.defaulttype = temp.line[0].substring(7);
+            // Set Respective Default Variable to Value
+            this.gdefault.(@temp.defaulttype.lower()) = temp.line[1];
+          }
+          break;
+      }
+    }
+  }
+}
+
+public function importganisprites(path, overwrite) {
+  // Load Gani
+  temp.lines.loadlines(path);
+  // Parse GANI File
+  for (temp.line: temp.lines) {
+    // Parse SCRIPT Section
+    if (temp.parsingscript) {
+      if (temp.line.starts("SCRIPTEND")) {
+        temp.parsingscript = false;
+      }
+    }
+    // Parse Movie Section
+    else if (temp.parsingmovie) {
+      if (temp.line.starts("MOVIEEND")) {
+        temp.parsingscript = false;
+      }
+    }
+    // Parse ANI Section
+    else if (temp.parsingani) {
+      // Check for END of ANI Section
+      if (temp.line.starts("ANIEND")) {
+        temp.parsingani = false;
+      }
+    }
+    // Parse Everything Else 
+    else {
+      // Tokenize
+      temp.line = temp.line.tokenize();
+      // Check Type Column
+      switch (temp.line[0]) {
+        case "SPRITE":
+          // Define Sprite Properties
+          temp.sprite_id  = int(temp.line[1]);
+          if (!overwrite && getSprite(temp.sprite_id).size() > 0) {
+            temp.ignoresprites.add(temp.sprite_id);
+            continue;
+          }
+          temp.sprite_img = temp.line[2];
+          temp.sprite_x   = int(temp.line[3]);
+          temp.sprite_y   = int(temp.line[4]);
+          temp.sprite_w   = int(temp.line[5]);
+          temp.sprite_h   = int(temp.line[6]);
+          temp.sprite_com = "";
+          for (temp.i = 7; temp.i < temp.line.size(); temp.i++) {
+            temp.sprite_com @= temp.line[i] @ " ";
+          }
+          temp.sprite_com = temp.sprite_com.trim();
+          // Add Sprite
+          if (overwrite) {
+            deleteSprite(temp.sprite_id);
+          }
+          addSprite(temp.sprite_id, temp.sprite_img, temp.sprite_x, temp.sprite_y, temp.sprite_w, temp.sprite_h, temp.sprite_com);
+          break;
+        case "SCRIPT":
+          // Set Flag to Begin Parsing SCRIPT Section
+          temp.parsingscript = true;
+          this.script = true;
+          break;
+        case "MOVIE":
+          temp.parsingmovie = true;
+          this.movie = true;
+          break;
+        case "ANI":
+          // Set Flag to Begin Parsing ANI Section
+          temp.parsingani = true;
+          temp.currentframe = 0;
+          temp.skip = 0;
+          break;
+        case "COLOREFFECT":
+          // Determine Color Effect Values
+          temp.sprite_id   = int(temp.line[1]);
+          if (temp.sprite_id in temp.ignoresprites) continue;
+          temp.sprite_r    = temp.line[2];
+          temp.sprite_g    = temp.line[3];
+          temp.sprite_b    = temp.line[4];
+          temp.sprite_a    = temp.line[5];
+          // Add Color Effect
+          addColorEffect(temp.sprite_id, temp.sprite_r, temp.sprite_g, temp.sprite_b, temp.sprite_a);
+          break;
+        case "ZOOMEFFECT":
+          // Determine Zoom Effect Values
+          temp.sprite_id   = int(temp.line[1]);
+          if (temp.sprite_id in temp.ignoresprites) continue;
+          temp.sprite_zoom = temp.line[2];
+          // Add Zoom Effect
+          addZoomEffect(temp.sprite_id, temp.sprite_zoom);
+          break;
+        case "ROTATEEFFECT":
+          // Determine Rotate Effect Values
+          temp.sprite_id     = int(temp.line[1]);
+          if (temp.sprite_id in temp.ignoresprites) continue;
+          temp.sprite_rotate = temp.line[2];
+          // Add Rotate Effect
+          addRotateEffect(temp.sprite_id, temp.sprite_rotate);
+          break;
+        case "EFFECTMODE":
+          // Determine Mode Effect Values
+          temp.sprite_id     = int(temp.line[1]);
+          if (temp.sprite_id in temp.ignoresprites) continue;
+          temp.sprite_mode = temp.line[2];
+          // Add Rotate Effect
+          addModeEffect(temp.sprite_id, temp.sprite_mode);
+          break;
+        case "STRETCHXEFFECT":
+        case "STRETCHYEFFECT":
+          // Determine Stretch Effect Values
+          temp.sprite_id      = int(temp.line[1]);
+          if (temp.sprite_id in temp.ignoresprites) continue;
+          temp.sprite_stretch = temp.line[2];
+          // Add Rotate Effect
+          if (temp.line[0].pos("X") > 0) {
+            addStretchXEffect(temp.sprite_id, temp.sprite_stretch);
+          } else {
+            addStretchYEffect(temp.sprite_id, temp.sprite_stretch);
+          }
+          break;
+        case "ATTACHSPRITE":
+        case "ATTACHSPRITE2":
+          // Determine Attachsprite Values
+          temp.sprite_a = int(temp.line[1]);
+          if (temp.sprite_a in temp.ignoresprites) continue;
+          temp.sprite_b = int(temp.line[2]);
+          temp.sprite_x = int(temp.line[3]);
+          temp.sprite_y = int(temp.line[4]);
+          temp.data = {
+            temp.sprite_a, temp.sprite_b, temp.sprite_x, temp.sprite_y
+          };
+          // Check for Attachsprite2
+          if (temp.line[0].ends("2")) {
+            // Add Attachsprite2
+            addSpriteAttachment(true, temp.sprite_a, temp.sprite_b, temp.sprite_x, temp.sprite_y);
+          } else {
+            // Add Attachsprite
+            addSpriteAttachment(false, temp.sprite_a, temp.sprite_b, temp.sprite_x, temp.sprite_y);
+          }
+          break;
+      }
+    }
+  }
+}
+
+public function savegani(newpath) {
+  // Update Filepath if neccesary
+  this.filename = newpath ? newpath : this.filename;
+  // Prepare File
+  temp.lines.add("GANI0FP4");
+  // Sort Sprites
+  sortSpriteList();
+  // Add Sprites
+  for (temp.spriteid: this.sprites) {
+    temp.data = getSprite(temp.spriteid);
+    temp.line = "SPRITE " @ pad(temp.spriteid, 5) @ " ";
+    for (temp.i = 0; temp.i < (temp.data.size() - 1); temp.i++) {
+      temp.line @= pad(temp.data[temp.i], (temp.i == 0 ? 20 : 5)) @ " ";
+    }
+    temp.line @= temp.data[5];
+    temp.line = temp.line.trim();
+    temp.lines.add(temp.line);
+  }
+  // Formatting
+  temp.lines.add("");
+  // Add Attachsprite Data
+  for (temp.two: {true, false}) {
+    for (temp.spriteid: getAllSpriteAttachments(temp.two)) {
+      for (temp.attach: getSpriteAttachments(temp.two, temp.spriteid)) {
+        temp.line = (temp.two ? "ATTACHSPRITE2  " : "ATTACHSPRITE  ");
+        temp.data = {temp.spriteid};
+        temp.data.addarray(temp.attach);
+        for (temp.j = 0; temp.j < temp.data.size(); temp.j++) {
+          temp.line @= pad(temp.data[temp.j], 5) @ " ";
+        }
+        temp.line = temp.line.trim();
+        temp.lines.add(temp.line);
+        temp.hadattachments = true;
+      }
+    }
+  }
+  // Formatting
+  if (temp.hadattachments) {
+    temp.lines.add("");  
+  }
+  // Add Color Effects
+  if (this.effects.color.size() > 0) {
+    for (temp.spriteid: this.effects.color) {
+      temp.line = "COLOREFFECT  ";
+      temp.data = {temp.spriteid};
+      temp.clrs = getColorEffect(temp.spriteid);
+      temp.data.addarray(temp.clrs);
+      for (temp.i = 0; temp.i < temp.data.size(); temp.i++) {
+        temp.line @= pad(temp.data[temp.i], 5) @ " ";
+      }
+      temp.line = temp.line.trim();
+      temp.lines.add(temp.line);
+    }
+    // Formatting
+    temp.lines.add("");
+  }
+  // Add Rotation Effects
+  if (this.effects.rotate.size() > 0) {
+    for (temp.spriteid: this.effects.rotate) {
+      temp.line = "ROTATEEFFECT ";
+      temp.data = {temp.spriteid};
+      temp.data.add(getRotateEffect(temp.spriteid));
+      for (temp.i = 0; temp.i < temp.data.size(); temp.i++) {
+        temp.line @= pad(temp.data[temp.i], 5) @ " ";
+      }
+      temp.line = temp.line.trim();
+      temp.lines.add(temp.line);
+    }
+    // Formatting
+    temp.lines.add("");
+  }
+  // Add Zoom Effects
+  if (this.effects.zoom.size() > 0) {
+    for (temp.spriteid: this.effects.zoom) {
+      temp.line = "ZOOMEFFECT   ";
+      temp.data = {temp.spriteid};
+      temp.data.add(getZoomEffect(temp.spriteid));
+      for (temp.i = 0; temp.i < temp.data.size(); temp.i++) {
+        temp.line @= pad(temp.data[temp.i], 5) @ " ";
+      }
+      temp.line = temp.line.trim();
+      temp.lines.add(temp.line);
+    }
+    // Formatting
+    temp.lines.add("");
+  }
+  // Add Mode Effects
+  if (this.effects.mode.size() > 0) {
+    for (temp.spriteid: this.effects.mode) {
+      temp.line = "EFFECTMODE   ";
+      temp.data = {temp.spriteid};
+      temp.data.add(getModeEffect(temp.spriteid));
+      for (temp.i = 0; temp.i < temp.data.size(); temp.i++) {
+        temp.line @= pad(temp.data[temp.i], 5) @ " ";
+      }
+      temp.line = temp.line.trim();
+      temp.lines.add(temp.line);
+    }
+    // Formatting
+    temp.lines.add("");
+  }
+  // Add Stretch X Effects
+  if (getStretchXEffects().size() > 0) {
+    for (temp.spriteid: getStretchXEffects()) {
+      temp.line = "STRETCHXEFFECT   ";
+      temp.data = {temp.spriteid};
+      temp.data.add(getStretchXEffect(temp.spriteid));
+      for (temp.i = 0; temp.i < temp.data.size(); temp.i++) {
+        temp.line @= pad(temp.data[temp.i], 5) @ " ";
+      }
+      temp.line = temp.line.trim();
+      temp.lines.add(temp.line);
+    }
+    // Formatting
+    temp.lines.add("");
+  }
+  // Add Stretch Y Effects
+  if (getStretchYEffects().size() > 0) {
+    for (temp.spriteid: getStretchYEffects()) {
+      temp.line = "STRETCHYEFFECT   ";
+      temp.data = {temp.spriteid};
+      temp.data.add(getStretchYEffect(temp.spriteid));
+      for (temp.i = 0; temp.i < temp.data.size(); temp.i++) {
+        temp.line @= pad(temp.data[temp.i], 5) @ " ";
+      }
+      temp.line = temp.line.trim();
+      temp.lines.add(temp.line);
+    }
+    // Formatting
+    temp.lines.add("");
+  }
+  // Add GANI Booleans
+  if (isLooped()) temp.lines.add("LOOP");
+  if (isContinuous()) temp.lines.add("CONTINUOUS");
+  if (isSingleDir()) temp.lines.add("SINGLEDIRECTION");
+  // Add SETBACKTO
+  if (getSetBackTo()) temp.lines.add("SETBACKTO " @ getSetBackTo());
+  // Add BACKCOLOR
+  if (this.backcolor) temp.lines.add("BACKCOLOR " @ this.backcolor);
+  // Add DEFAULT
+  for (temp.defvar: this.gdefault.getdynamicvarnames()) {
+    temp.defval = this.gdefault.(@temp.defvar);
+    temp.lines.add("DEFAULT" @ temp.defvar.upper() @ " " @ temp.defval);
+  }
+  // Formatting
+  if (temp.lines[temp.lines.size()-1].trim() != "") temp.lines.add("");
+  // Add ANI Section
+  if (this.frames.size() > 0) {
+    temp.lines.add("ANI");
+    temp.dircount = (4 - this.singledirection * 3);
+    for (temp.i = 0; temp.i < getFramecount(); temp.i++) {
+      for (temp.j = 0; temp.j < temp.dircount; temp.j++) {
+        // Get Frames Sprites
+        temp.sprites = getFramesprites(temp.i, temp.j);
+        temp.line = "";
+        for (temp.sprite: temp.sprites) {
+          temp.line @= (temp.line == "" ? "" : ",") @ pad(temp.sprite[0], 5) SPC pad(temp.sprite[1], 5) SPC pad(temp.sprite[2], 5);
+        }
+        // Trim off Unneccesary Comma
+        if (temp.line.ends(",")) temp.line.substring(0, temp.line.length()-1);
+        // Add Line
+        temp.lines.add(temp.line);
+      }
+      // Check for Sound and Wait Times
+      temp.sound = getFramesound(temp.i);
+      temp.wait  = getFramewait(temp.i);
+      if (temp.sound.size() == 3) temp.lines.add("PLAYSOUND " @ temp.sound[0] SPC temp.sound[1] SPC temp.sound[2]);
+      if (temp.wait > 0) temp.lines.add("WAIT " @ int(temp.wait));
+      // Add Seperator
+      temp.lines.add("");
+    }
+    temp.lines.delete(temp.lines.size()-1);
+    temp.lines.add("ANIEND");
+  }
+  // Formatting
+  if (temp.lines[temp.lines.size()-1].trim() != "") temp.lines.add("");
+  // Add SCRIPT Section
+  if (this.movie) {
+    temp.lines.add("MOVIE");
+    temp.lines.addarray(this.moviecontent);
+    temp.lines.add("MOVIEEND");
+  }
+  // Formatting
+  if (temp.lines[temp.lines.size()-1].trim() != "") temp.lines.add("");
+  // Add SCRIPT Section
+  if (this.script) {
+    temp.lines.add("SCRIPT");
+    temp.lines.addarray(this.scriptcontent);
+    temp.lines.add("SCRIPTEND");
+  }
+  // Save File
+  temp.lines.savelines(this.filename, 0);
+}
+
+// Text Formatting Function
+// Pads spacing in front of text if there's room for it
+function pad(txt, padding) {
+  temp.req = padding - txt.length();
+  if (temp.req > 0) {
+    temp.space = "                                 ".substring(0, temp.req);
+    txt = temp.space @ txt;
+  }
+  return txt;
+}
+
+/*
+   Animation Functionality
+*/
+
+public function getFrameAtTime(ft) {
+  temp.frames = getFrameCount();
+  for (temp.i = 0; temp.i < temp.frames && ft > temp.anilength; temp.i++) {
+    temp.anilength += 0.05 + (getFrameWait(temp.i) * 0.05);
+  }
+  return temp.i - 1;
+}
+
+// Returns Animation's Length in Seconds
+public function getAniLength() {
+  return getFrameTime(getFrameCount());
+}
+
+// Returns GANI Looped Boolean
+public function isLooped() {
+  return this.loop;
+}
+
+// Sets GANI Looped Boolean
+public function setLooped(bool) {
+  this.loop = bool;
+}
+
+// Returns GANI Continuous Boolean
+public function isContinuous() {
+  return this.continuous;
+}
+
+// Sets GANI Continuous Boolean
+public function setContinuous(bool) {
+  this.continuous = bool;
+}
+
+// Returns GANI Single Direction Boolean
+public function isSingleDir() {
+  return this.singledirection;
+}
+
+// Sets GANI Single Direction Boolean
+public function setSingleDir(bool) {
+  this.singledirection = bool;
+}
+
+// Returns GANI SetBackTo
+public function getSetBackTo() {
+  return this.setbackto;
+}
+
+// Sets GANI SetBackTo
+public function setSetBackTo(newbackto) {
+  this.setbackto = newbackto;
+}
+
+/*
+   Gani Frames Functionality
+   
+   Common Parameters:
+    - ind: Frame Number
+    - dir: Frame Direction (Ignored if single direction)
+*/
+
+public function backupFrames() {
+  for (temp.frame: this.frames) {
+    temp.frames.add(temp.frame);
+    temp.frames[temp.i].data = this.frame.(@temp.i);
+  }
+  return temp.frames;
+}
+
+public function restoreFrames(temp.frames) {
+  this.frames = temp.frames;
+  restoreFrameDataFromFrames();
+}
+
+public function deleteFrame(ind) {
+  backupFrameDataToFrames();
+  ind = ind * (isSingleDir() ? 1 : 4);
+  for (temp.i = 0; temp.i < (isSingleDir() ? 1 : 4); temp.i++) { 
+    this.frames.delete(ind);
+  }
+  restoreFrameDataFromFrames();
+}
+
+public function addFrame(ind) {
+  backupFrameDataToFrames();
+  ind   = ind * (isSingleDir() ? 1 : 4);
+  after = isSingleDir() ? 1 : 4;
+  for (temp.i = 0; temp.i < (isSingleDir() ? 1 : 4); temp.i++) { 
+    this.frames.insert(ind+after, {{0, 12, 34}});
+    this.frames[ind+after].data = "";
+  }
+  restoreFrameDataFromFrames();
+}
+
+public function copyFrame(ind) {
+  this.copy.frames = {};
+  this.copy.framesdata = {};
+  for (temp.i = 0; temp.i < (isSingleDir() ? 1 : 4); temp.i++) { 
+    this.copy.frames.add(getFrameSprites(ind, temp.i));
+    this.copy.framesdata.add(getFrameData(ind, temp.i));
+  }
+}
+
+public function pasteFrame(ind, after) {
+  ind   = ind * (isSingleDir() ? 1 : 4);
+  after = after * (isSingleDir() ? 1 : 4);
+  backupFrameDataToFrames();
+  for (temp.i = this.copy.frames.size()-1; temp.i > -1; temp.i--) {
+    this.frames.insert(ind+after, this.copy.frames[temp.i]);
+    this.frames[ind+after].data = this.copy.framesdata[temp.i];
+  }
+  restoreFrameDataFromFrames();
+} 
+
+public function reverseFrames() {
+  temp.skip = (isSingleDir() ? 1 : 4);
+  temp.framedir = (4 - this.singledirection * 3) - 1;
+  for (temp.i = getFrameCount()-1; temp.i > -1; temp.i--) {
+    temp.k = temp.i * temp.skip;
+    temp.data = getFrameData(temp.i, temp.framedir);
+    temp.newdata.add(temp.data);
+    for (temp.j = 0; temp.j < temp.skip; temp.j++) {
+      temp.newframes.add(this.frames[temp.k + temp.j]);
+    }
+  }
+  this.frames = temp.newframes;
+  for (temp.i = 0; temp.i < temp.newdata.size(); temp.i++) {
+    setFrameData(temp.i, temp.framedir, temp.newdata[temp.i]);
+  }
+}
+
+function backupFrameDataToFrames() {
+  for (temp.i = 0; temp.i < this.frames.size(); temp.i++) {
+    this.frames[temp.i].data = this.frame.(@temp.i);
+  }
+}
+
+function restoreFrameDataFromFrames() {
+  for (temp.i = 0; temp.i < this.frames.size(); temp.i++) {
+    this.frame.(@temp.i) = this.frames[temp.i].data;
+    this.frames[temp.i].data = "";
+  }
+}
+
+// Returns Frame's Sprites
+public function getFrameSprites(ind, dir) {
+  return this.frames[calcframe(ind, dir)];
+}
+
+// Sets Frame's Sprites to New Data
+// Format: {{sprite_id, offset_x, offset_y},{sprite_id, offset_x, offset_y},...}
+public function setFrameSprites(ind, dir, newsprites) {
+  this.frames[calcframe(ind, dir)] = newsprites;
+}
+
+// Returns Frame's Data
+// Output: {{SoundFileName, OffsetX, OffsetY}, WaitFrames}
+public function getFrameData(ind, dir) {
+  return this.frame.(@calcframe(ind, dir));  
+}
+
+public function setFrameData(ind, dir, newdata) {
+  this.frame.(@calcframe(ind, dir)) = newdata;
+}
+
+// Returns Time Frame Starts in Seconds
+public function getFrameTime(ind) {
+  for (temp.i = 0; temp.i < ind; temp.i++) {
+    temp.anilength += 0.05 + (getFrameWait(temp.i) * 0.05);
+  }
+  return temp.anilength;
+}
+
+// Returns Frame's Sound
+// Output: {SoundFileName, OffsetX, OffsetY}
+public function getFrameSound(ind) {
+  temp.framedir = (4 - this.singledirection * 3) - 1;
+  temp.data = getFrameData(ind, framedir);
+  return temp.data[0];
+}
+
+// Sets Frame's Sound
+public function setFrameSound(ind, newsound) {
+  temp.framedir = (4 - this.singledirection * 3) - 1;
+  temp.data = getFrameData(ind, temp.framedir);
+  temp.data[0] = newsound;
+  setFrameData(ind, temp.framedir, temp.data);
+}
+
+// Returns Frame Length
+public function getFrameWait(ind) {
+  temp.framedir = (4 - this.singledirection * 3) - 1;
+  temp.data = getFrameData(ind, framedir);
+  return temp.data[1];
+}
+
+// Sets Frame Length
+public function setFrameWait(ind, waitvalue) {
+  temp.framedir = (4 - this.singledirection * 3) - 1;
+  temp.data = getFrameData(ind, framedir);
+  temp.data[1] = waitvalue > 0 ? int(waitvalue) : "";
+  setFrameData(ind, temp.framedir, temp.data);
+}
+
+// Returns Animations Frame Count
+public function getFrameCount() {
+  return this.frames.size() / (4 - this.singledirection * 3);
+}
+
+// Calculates Frame X based on Index and Direction
+// I.e: First Frame, Down Direction would be 2 in a
+//      multi-direction animation.
+function calcframe(ind, d) {
+  if (this.singledirection) {
+    return ind;
+  } else {
+    return (ind * 4) + d;
+  }
+}
+
+/*
+   Gani Sprites Functionality
+*/
+
+// Adds Sprite to Sprite List
+// Returns false if Sprite with that ID exists
+public function addSprite(sprite_id, sprite_img, sprite_x, sprite_y, sprite_w, sprite_h, sprite_com) { 
+  if (!(sprite_id in this.sprites)) {
+     this.sprites.add(sprite_id);
+     this.sprite.(@sprite_id) = {
+       sprite_img,
+       sprite_x,
+       sprite_y,
+       sprite_w,
+       sprite_h,
+       sprite_com 
+    };
+    return true;
+  }
+  else return false;
+}
+
+public function sortSpriteList() {
+  for (temp.i = 0; temp.i < this.sprites.size(); temp.i++) {
+    this.sprites[temp.i].sortvalue = this.sprites[temp.i];
+  }
+  this.sprites.sortbyvalue("sortvalue", "float", true);
+}
+
+public function addSpriteAttachment(two, sprite_id, sprite_attach, sprite_x, sprite_y) {
+  if (two) {
+    this.spriteattachment2.(@sprite_id).add({sprite_attach, sprite_x, sprite_y});
+    if (!(sprite_id in this.spriteattachments2)) {
+      this.spriteattachments2.add(sprite_id);
+    }
+  } else {
+    this.spriteattachment.(@sprite_id).add({sprite_attach, sprite_x, sprite_y});
+    if (!(sprite_id in this.spriteattachments)) {
+      this.spriteattachments.add(sprite_id);
+    }
+  }
+}
+
+public function deleteSpriteAttachments(two, sprite_id) {
+  if (two) {
+    this.spriteattachment2.(@sprite_id) = "";
+  } else {
+    this.spriteattachment.(@sprite_id) = "";
+  }
+}
+
+public function getSpriteAttachments(two, sprite_id) {
+  if (two) {
+    return this.spriteattachment2.(@sprite_id);
+  } else {
+    return this.spriteattachment.(@sprite_id);
+  }
+}
+
+public function getAllSpriteAttachments(two) {
+  if (two) {
+    return this.spriteattachments2;
+  } else {
+    return this.spriteattachments;
+  }
+}
+
+
+// Deletes Sprite from Sprite List
+public function deleteSprite(sprite_id, preserveattachments) { 
+  if (sprite_id in this.sprites) { 
+    this.sprites.remove(sprite_id); 
+    this.sprite.(@sprite_id) = "";
+    deleteColorEffect(sprite_id);
+    deleteZoomEffect(sprite_id);
+    deleteRotateEffect(sprite_id);
+    deleteModeEffect(sprite_id);
+    deleteStretchXEffect(sprite_id);
+    deleteStretchYEffect(sprite_id);
+    if (!preserveattachments) {
+      deleteSpriteAttachments(false, sprite_id);
+      deleteSpriteAttachments(true, sprite_id);
+    }
+    return true; // Deleted Successfully 
+  } else { 
+    // Doesn't exist. 
+    return false; 
+  } 
+}
+
+public function deleteSpriteFromFrames(sprite_id) {
+  for (temp.f = 0; temp.f < this.frames.size(); temp.f++) {
+    for (temp.s = this.frames[temp.f].size()-1; temp.s > -1; temp.s--) {
+      if (this.frames[temp.f][temp.s][0] == sprite_id) {
+        this.frames[temp.f].delete(temp.s);
+        temp.deleted++;
+      }
+    }
+  }
+  return 0 + temp.deleted;
+}
+
+// Removes Unused Sprites from GANI
+public function removeUnusedSprites() { 
+  temp.inuse = {}; 
+  temp.i = 0;
+  // Determine Sprites Inuse 
+  for (temp.f: this.frames) { 
+    for (temp.s: temp.f) { 
+      if (!(temp.s[0] in temp.inuse)) { 
+        temp.inuse.add(temp.s[0]);
+        temp.inuse[temp.i].sortvalue = temp.s[0];
+        temp.i++; 
+      } 
+    } 
+  } 
+  // Delete Unused Sprite Data  
+  for (temp.s: this.sprites) { 
+    if (!(temp.s in temp.inuse)) { 
+      deleteSprite(temp.s); 
+    } 
+  } 
+  // Update Sprite ID List
+  temp.inuse.sortbyvalue("sortvalue", "float", true);
+  this.sprites = temp.inuse;
+} 
+
+// Returns Sprite Data based on SpriteID
+// Output: {image, offsetx, offsety, width, height}
+public function getSprite(spriteid) {
+  return this.sprite.(@spriteid);
+}
+
+// Returns Sprites Image
+public function getSpriteImage(spriteid) {
+  return getSprite(spriteid)[0];
+}
+
+// Sets Sprites Image
+public function setSpriteImage(spriteid, newimg) {
+  this.sprite.(@spriteid)[0] = newimg;
+}
+
+// Returns Sprites X Image Offset
+public function getSpriteX(spriteid) {
+  return getSprite(spriteid)[1];
+}
+
+// Sets Sprites X Image Offset
+public function setSpriteX(spriteid, newval) {
+  this.sprite.(@spriteid)[1] = int(newval);
+}
+
+// Returns Sprites Y Image Offset
+public function getSpriteY(spriteid) {
+  return getSprite(spriteid)[2];
+}
+
+// Sets Sprites Y Image Offset
+public function setSpriteY(spriteid, newval) {
+  this.sprite.(@spriteid)[2] = int(newval);
+}
+
+// Returns Sprites Image Width
+public function getSpriteWidth(spriteid) {
+  return getSprite(spriteid)[3];
+}
+
+// Sets Sprites Image Width
+public function setSpriteWidth(spriteid, newval) {
+  this.sprite.(@spriteid)[3] = int(newval);
+}
+
+// Returns Sprites Image Height
+public function getSpriteHeight(spriteid) {
+  return getSprite(spriteid)[4];
+}
+
+// Sets Sprites Image Height
+public function setSpriteHeight(spriteid, newval) {
+  this.sprite.(@spriteid)[4] = int(newval);
+}
+
+// Returns Sprites Comment / Note
+public function getSpriteComment(spriteid) {
+  return getSprite(spriteid)[5] ? getSprite(spriteid)[5] : "";
+}
+
+// Sets Sprites Comment / Note
+public function setSpriteComment(spriteid, comment) {
+  this.sprite.(@spriteid)[5] = comment;
+}
+
+/*
+   Gani Sprite Effects (Self-explanatory)
+*/
+
+// Returns List of Color Effects
+// Output: {sprite_id, sprite_id2}
+public function getColorEffects() {
+  return this.effects.color;
+}
+
+public function getColorEffect(spriteid) {
+  return this.effects.color.(@spriteid) == "" ? {1, 1, 1, 1} : this.effects.color.(@spriteid);
+}
+
+public function addColorEffect(spriteid, r, g, b, a) {
+  if (@{r,g,b,a} == @{1,1,1,1}) {
+    deleteColorEffect(spriteid);
+    return;
+  }
+  this.effects.color.add(spriteid);
+  this.effects.color.(@spriteid) = {r, g, b, a};
+}
+
+public function deleteColorEffect(spriteid) {
+  temp.deleted = (spriteid in this.effects.color);
+  if (temp.deleted) {
+    this.effects.color.remove(spriteid);
+    this.effects.color.(@spriteid) = "";
+  }
+  return temp.deleted;
+}
+
+// Returns List of Rotation Effects
+// Output: {sprite_id, sprite_id2}
+public function getZoomEffects() {
+  return this.effects.zoom;
+}
+
+public function getZoomEffect(spriteid) {
+  return this.effects.zoom.(@spriteid) ? this.effects.zoom.(@spriteid) : 1;
+}
+
+public function addZoomEffect(spriteid, z) {
+  if (z == 1) {
+    deleteZoomEffect(spriteid);
+    return;
+  }
+  this.effects.zoom.add(spriteid);
+  this.effects.zoom.(@spriteid) = z;
+}
+
+public function deleteZoomEffect(spriteid) {
+  temp.deleted = (spriteid in this.effects.zoom);
+  if (temp.deleted) {
+    this.effects.zoom.remove(spriteid);
+    this.effects.zoom.(@spriteid) = "";
+  }
+  return temp.deleted;
+}
+
+// Returns List of Rotation Effects
+// Output: {sprite_id, sprite_id2}
+public function getRotateEffects() {
+  return this.effects.rotate;
+}
+
+public function getRotateEffect(spriteid) {
+  return this.effects.rotate.(@spriteid) ? this.effects.rotate.(@spriteid) : 0;
+}
+
+public function addRotateEffect(spriteid, r) {
+  if (r == 0) {
+    deleteRotateEffect(spriteid);
+    return;
+  }
+  this.effects.rotate.add(spriteid);
+  this.effects.rotate.(@spriteid) = r;
+}
+
+public function deleteRotateEffect(spriteid) {
+  temp.deleted = (spriteid in this.effects.rotate);
+  if (temp.deleted) {
+    this.effects.rotate.remove(spriteid);
+    this.effects.rotate.(@spriteid) = "";
+  }
+  return temp.deleted;
+}
+
+// Returns List of Mode Effects
+// Output: {sprite_id, sprite_id2}
+public function getModeEffects() {
+  return this.effects.mode;
+}
+
+public function getModeEffect(spriteid) {
+  return this.effects.mode.(@spriteid) ? this.effects.mode.(@spriteid) : 0;
+}
+
+public function addModeEffect(spriteid, m) {
+  if (m == 0) {
+    deleteModeEffect(spriteid);
+    return;
+  }
+  this.effects.mode.add(spriteid);
+  this.effects.mode.(@spriteid) = m;
+}
+
+public function deleteModeEffect(spriteid) {
+  temp.deleted = (spriteid in this.effects.mode);
+  if (temp.deleted) {
+    this.effects.mode.remove(spriteid);
+    this.effects.mode.(@spriteid) = "";
+  }
+  return temp.deleted;
+}
+
+// Returns List of Stretch X Effects
+// Output: {sprite_id, sprite_id2}
+public function getStretchXEffects() {
+  return this.effects.stretchx;
+}
+
+public function getStretchXEffect(spriteid) {
+  return this.effects.stretchtx.(@spriteid) ? this.effects.stretchtx.(@spriteid) : 1;
+}
+
+public function addStretchXEffect(spriteid, s) {
+  if (s == 1) {
+    deleteStretchXEffect(spriteid);
+    return;
+  }
+  this.effects.stretchx.add(spriteid);
+  this.effects.stretchtx.(@spriteid) = s;
+}
+
+public function deleteStretchXEffect(spriteid) {
+  temp.deleted = (spriteid in this.effects.stretchx);
+  if (temp.deleted) {
+    this.effects.stretchx.remove(spriteid);
+    this.effects.stretchtx.(@spriteid) = "";
+  }
+  return temp.deleted;
+}
+
+// Returns List of Stretch Y Effects
+// Output: {sprite_id, sprite_id2}
+public function getStretchYEffects() {
+  return this.effects.stretchy;
+}
+
+public function getStretchYEffect(spriteid) {
+  return this.effects.stretchty.(@spriteid) ? this.effects.stretchty.(@spriteid) : 1;
+}
+
+public function addStretchYEffect(spriteid, s) {
+  if (s == 1) {
+    deleteStretchYEffect(spriteid);
+    return;
+  }
+  this.effects.stretchy.add(spriteid);
+  this.effects.stretchty.(@spriteid) = s;
+}
+
+public function deleteStretchYEffect(spriteid) {
+  temp.deleted = (spriteid in this.effects.stretchy);
+  if (temp.deleted) {
+    this.effects.stretchy.remove(spriteid);
+    this.effects.stretchty.(@spriteid) = "";
+  }
+  return temp.deleted;
+}
+
+// Defaults
+
+public function setDefault(def, newdef) {
+  thiso.gdefault.(@def.lower()) = newdef;
+}
+
+public function getDefault(def) {
+  return thiso.gdefault.(@def.lower());
+}
+
+public function getDefinedDefaults() {
+  return {
+    "HEAD", "BODY", "SHIELD", "SWORD", "HORSE", 
+    "ATTR1", "ATTR2", "ATTR3", 
+    "PARAM1", "PARAM2", "PARAM3",
+  };
+}
+
+public function getDefinedDefaultFallbacks() {
+  return {
+    "head0.png", "body6.png", "shield1.png", "sword1.png", "ride.png",
+    "hat0.png", "", "",
+    "", "", ""
+  };
+}
+
+public function getDefaultImage(img) {
+  temp.defaults = getDefinedDefaults();
+  if (img in temp.defaults || img.starts("ATTR") || img.starts("PARAM")) {
+    temp.def = getDefault(img);
+    if (temp.def) {
+      temp.i = int(temp.def);
+      if (temp.i >= 0 && int(temp.def) == temp.def) {
+        return getSprite(temp.def)[0];
+      }
+      return temp.def;
+    } else {
+      temp.fallbacks = getDefinedDefaultFallbacks();
+      return temp.fallbacks[temp.defaults.index(img)];
+    }
+  }
+  return img;
+}
+
+function getScriptContent() {
+  return this.script ? this.scriptcontent : "";
+}
+
+function setScriptContent(script) {
+  this.scriptcontent = script.trim();
+  this.script = (this.scriptcontent != "");
+}

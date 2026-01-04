@@ -1,0 +1,20 @@
+// Comparison expressions
+function testComparison() {
+  // Equality
+  temp.equal = (5 == 5);
+  temp.not_equal = (5 != 3);
+
+  // Relational
+  temp.less = (3 < 5);
+  temp.less_equal = (5 <= 5);
+  temp.greater = (7 > 3);
+  temp.greater_equal = (5 >= 5);
+
+  // String comparison
+  temp.str_equal = ("hello" == "hello");
+  temp.str_not_equal = ("hello" != "world");
+
+  // Mixed type comparison
+  temp.mixed_equal = (5 == 5.0);
+  temp.mixed_not_equal = (5 != "5");
+}

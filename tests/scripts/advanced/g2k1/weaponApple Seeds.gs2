@@ -1,0 +1,38 @@
+//#CLIENTSIDE
+const APPLESITEM = 1;
+const APPLESEEDITEM = 11;
+
+function onPlayerChats() {
+  if (player.chat == "show seeds") {
+    player.chat = "";
+    say2(format("You have %d seeds", makevar("clientr.itemc" @ APPLESEEDITEM)));
+  } else if (player.chat == "show apples") {
+    player.chat = "";
+    say2(format("You have %d apples", makevar("clientr.itemc" @ APPLESITEM)));
+  }
+}
+
+function onWeaponFired() {
+  onFired();
+}
+
+function onBomyWeaponFired() {
+  onFired();
+}
+
+function onFired() {
+  if (client.destroyappleseeds) {
+    destroy();
+    return;
+  }
+  
+  if (client.race == "bomy") {
+    player.freeze(1.75);
+    setani("bomy_seed1", "");
+  } else {
+    player.freeze(0.5);
+    setani("seed1", "");
+  }
+  
+  triggeraction(player.x + 1.5 + vecx(player.dir) * 2, player.y + 2 + vecy(player.dir) * 2, "seed", player.account);
+}

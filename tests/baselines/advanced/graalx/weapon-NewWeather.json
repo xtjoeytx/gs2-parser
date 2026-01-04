@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "7431d93b48f32e17e48aeef077bb672a9603c7c76643f53490f0f2c23b354bf3",
+  "bytecode_size": 265,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-NewWeather.gs2",
+    "generated_at": "2026-01-04 16:44:41",
+    "compiler_version": "modified_1767562734"
+  }
+}

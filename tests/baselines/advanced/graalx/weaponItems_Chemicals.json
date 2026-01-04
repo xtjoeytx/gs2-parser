@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "69cb7bc8923ff7d37e16f3b8564f5dbe2c2d53a93516cf46286c46cc7eb2267a",
+  "bytecode_size": 225,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponItems_Chemicals.gs2",
+    "generated_at": "2026-01-04 16:44:41",
+    "compiler_version": "modified_1767562734"
+  }
+}

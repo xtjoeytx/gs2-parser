@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "4a019d8968c6b3446c7e57b6113996894c820ebfef1fe18c523d61cea2a8d613",
+  "bytecode_size": 1849,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponFileEditor.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

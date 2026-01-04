@@ -1,0 +1,20 @@
+// Large number handling
+function testLargeNumbers() {
+  // Large integers
+  temp.max_int = 2147483647;
+  temp.large_positive = 999999999;
+  temp.large_negative = -999999999;
+
+  // Large floats
+  temp.large_float = 999999.99999;
+  temp.small_float = 0.00000001;
+
+  // Edge case calculations
+  temp.overflow_test = temp.max_int + 1;
+  temp.underflow_test = temp.small_float / 2;
+
+  // Precision tests
+  temp.precision1 = 0.1 + 0.2;
+  temp.precision2 = 1.0 / 3.0;
+  temp.precision3 = 999999999.0 + 1.0;
+}

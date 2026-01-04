@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "4a7c80817dc0a3734ab7b77fcc5d5ff281262d3b158653ddb2aff822bdb73d2c",
+  "bytecode_size": 3387,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponJobs_Fishing Rod.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

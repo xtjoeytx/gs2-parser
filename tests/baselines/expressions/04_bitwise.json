@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "3a7af8ca0aa715588af6d7b0220677c2f0cb60d227873441f12b5ab7d5fc756b",
+  "bytecode_size": 219,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "expressions/04_bitwise.gs2",
+    "generated_at": "2026-01-04 16:44:39",
+    "compiler_version": "modified_1767562734"
+  }
+}

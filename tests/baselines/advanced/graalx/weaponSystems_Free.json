@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "bc9e8b057366901d61205d7a486e0c712f2ae3e015e0234975716f69a860440f",
+  "bytecode_size": 3835,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponSystems_Free.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

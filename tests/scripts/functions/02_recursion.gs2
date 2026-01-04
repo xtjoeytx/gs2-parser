@@ -1,0 +1,35 @@
+// Recursive functions
+function factorial(n) {
+  if (n <= 1) {
+    return 1;
+  }
+  return n * factorial(n - 1);
+}
+
+function fibonacci(n) {
+  if (n <= 1) {
+    return n;
+  }
+  return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+function countdown(n) {
+  if (n <= 0) {
+    return;
+  }
+  temp.count = n;
+  countdown(n - 1);
+}
+
+function testRecursion() {
+  // Test factorial
+  temp.fact5 = factorial(5);  // Should be 120
+  temp.fact0 = factorial(0);  // Should be 1
+
+  // Test fibonacci
+  temp.fib7 = fibonacci(7);   // Should be 13
+  temp.fib1 = fibonacci(1);   // Should be 1
+
+  // Test countdown
+  countdown(5);
+}

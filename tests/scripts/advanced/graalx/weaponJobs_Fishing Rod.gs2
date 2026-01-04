@@ -1,0 +1,180 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.fishnames = {{"Shrimp", 1, "raw_shrimp", 10, 0.15}, {"Sardine", 5, "raw_sardine", 20, 0.17}, {"Herring", 10, "raw_herring", 30, 0.19}, {"Anchovies", 15, "raw_anchovies", 40, 0.20}, {"Mackerel", 16, "raw_mackerel", 20, 0.22}, {"Trout", 20, "raw_trout", 50, 0.24},
+                    {"Cod", 23, "raw_cod", 45, 0.25}, {"Pike", 25, "raw_pike", 60, 0.27}, {"Salmon", 30, "raw_salmon", 70, 0.28}, {"Tuna", 35, "raw_tuna", 80, 0.29}, {"Lobster", 40, "raw_lobster", 90, 0.31}, {"Bass", 46, "raw_bass", 100, 0.33},
+                    {"Shark", 76, "raw_shark", 110, 0.3073}};
+                               
+  this.dirgo = {0,-1, -1,0, 0,1, 1,0};
+  this.pole = 0;
+}
+
+function onWeaponFired() {
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+  if (temp.muditem.quantity >= 1) {
+    if (this.pole == 0 && temp.muditem.tool == "Fishing Rod" && player.level.starts("gx_city1-") || player.account == "KuJi") {
+      if (player.Mud_FindArchetype("ARCHETYPE_RAWFOOD") < 28)
+      {
+        playerfreeze = 0.15;
+        onThrowHook();
+      }
+      else player.addMsg("Server", "You can not carry anymore fish!", 15);
+    }
+  }
+}
+
+function onTimeout() {
+  if (player.weapon != "Jobs/Fishing Rod" || !player.ani.starts("gx-fishing")) {
+    onRemoveRod();
+  } else {
+    if (this.pole > 0)
+      playerfreeze = 0.1;
+      
+    if (this.pole == 1)
+      onAnimateHook();
+    
+    if (this.pole == 2) {
+      dist = ((player.x + 1.5 - polex) ^ 2 + (player.y + 1.5 - poley) ^ 2) ^ 0.5;
+      catchfish = int(random(1, 100));
+      if (catchfish >= 93) {
+        if (this.fishcheck <= 0)
+          this.pole = 3;
+      }
+      else this.fishcheck = 0.1;
+      
+      if (dist < 3 || !onwater(polex + 0.5, poley + 0.5))
+        onRemoveRod();
+    }
+    
+    if (this.pole == 3) {
+      dist = ((player.x + 1.5 - polex) ^ 2 + (player.y + 1.5 - poley) ^ 2) ^ 0.5;
+      if (dist < 8 && !onwater(polex + 0.5, poley + 0.5)) {
+        onRemoveRod();
+        triggerserver("gui", "Jobs/Fishing Rod", "addfish", this.fishinfo[2], "Raw " @ this.fishinfo[0], this.fishinfo[3]);
+      } else if (dist > 20 || !onwater(polex + 0.5, poley + 0.5)) {
+        onRemoveRod();
+        player.addMsg("Server", "You lost your fish!", 15);
+      } else {
+        this.fishsize = this.fishinfo[4];
+        // this.fishsize = random(0.1, 0.2);
+        pullfac = random(this.fishsize - 0.08, this.fishsize + 0.08);
+        // pullfac= random(0.1, 0.15);
+        if (pullfac < 0.1)
+          pullfac = 0.1;
+        polex += this.dirgo[player.dir * 2] * pullfac;
+        poley += this.dirgo[player.dir * 2 + 1] * pullfac;
+        for (i = 0; i < 4; i++) {
+          if (i != player.dir && keydown(i)) {
+            polex += this.dirgo[i * 2] * 0.05;
+            poley += this.dirgo[i * 2 + 1] * 0.05;
+          }
+        }
+      }
+    }
+    
+    if (this.pole in {2, 3}) {
+      if (keydown(5) || keydown(6)) {
+        if (this.pullingkeydown == false)
+          onPullHook();
+        this.pullingkeydown = true;
+      }
+      else this.pullingkeydown = false;
+    }
+    
+    if (this.time == 10) {
+      if (onwater(polex + 0.5, poley + 0.5)) {
+        this.pole = 2;
+        putleaps(5, polex, poley);
+      } else {
+        this.pole = 0;
+        putleaps(0, polex, poley);
+        hideimg(0);
+        setani("idle", NULL);
+      }
+      this.time = 0;
+    }
+    
+    if (this.pole in {2, 3}) {
+      hideimg(0);
+      showimg(0, "hook_3.png", polex, poley);
+      changeimgvis(0, 1);
+    }
+    
+    if (this.pole == 3) {
+      hideimg(1);
+      showimg(1, "fishnm.png", polex, poley);
+      changeimgvis(1, 1);
+    }
+    
+    if (this.fishcheck > 0)
+      this.fishcheck -= 0.05;
+    setTimer(0.05);
+  }
+}
+
+function onRemoveRod() {
+  playerfreeze = 0.4;
+  player.dir = this.hdir;
+  hideimgs(0, 1);
+  this.pole = 0;
+  this.time = 0;
+  setani("idle", NULL);
+}
+
+function onThrowHook() {
+  showimg(0, "hook_3.png", player.x, poley);
+  changeimgvis(0, 1);
+  this.time = 0;
+  poley = player.y + 1;
+  polex = player.x + 1;
+  this.hdir = player.dir;
+  this.pole = 1;
+  this.pullingkeydown = false;
+  setani("gx-fishingstill", NULL);
+  this.fish = int(random(1, clientr.job_fish[2] + 1));
+
+  for (i = this.fishnames.size() - 1; i >= 0; i--) {
+    if (this.fish >= this.fishnames[i][1]) {
+      this.fishinfo = this.fishnames[i];
+      break;
+    }
+  }
+  
+  setTimer(0.05);
+}
+
+function onAnimateHook() {
+  if (player.dir == 3) {
+    polex++;
+    showimg(0, "hook_3.png", polex, player.y + this.time/10);
+  }
+  elseif (player.dir == 1) {
+    polex--;
+    showimg(0, "hook_3.png", polex, player.y + this.time/10);
+  }
+  elseif (player.dir == 0) {
+    poley--;
+    showimg(0, "hook_3.png", player.x + 1, poley);
+  }
+  elseif (player.dir == 2) {
+    poley++;
+    showimg(0, "hook_3.png", player.x + 1, poley);
+  }
+  
+  this.time++;
+}
+
+function onPullHook() {
+  setani("gx-fishing", NULL);
+  
+  if (playerdir==0)
+    poley += 0.85;
+  elseif (playerdir==1)
+    polex += 0.85;
+  elseif (playerdir == 2)
+    poley -= 0.85;
+  elseif (playerdir==3)
+    polex -= 0.85;
+    
+  setTimer(0.05);
+}

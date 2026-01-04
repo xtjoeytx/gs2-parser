@@ -1,0 +1,21 @@
+// Assignment expressions
+function testAssignment() {
+  // Basic assignment
+  temp.x = 10;
+
+  // Compound assignment
+  temp.x += 5;    // temp.x = temp.x + 5
+  temp.x -= 3;    // temp.x = temp.x - 3
+  temp.x *= 2;    // temp.x = temp.x * 2
+  temp.x /= 4;    // temp.x = temp.x / 4
+  temp.x %= 3;    // temp.x = temp.x % 3
+
+  // String concatenation assignment
+  temp.message = "Hello";
+  temp.message @= " World";  // temp.message = temp.message @ " World"
+
+  // Increment/decrement
+  temp.counter = 5;
+  temp.counter++;
+  temp.counter--;
+}

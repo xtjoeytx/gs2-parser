@@ -1,0 +1,50 @@
+// Switch statements
+function testSwitch() {
+  temp.value = 2;
+
+  // Basic switch
+  switch (temp.value) {
+    case 1:
+      temp.result = "one";
+      break;
+    case 2:
+      temp.result = "two";
+      break;
+    case 3:
+      temp.result = "three";
+      break;
+    default:
+      temp.result = "other";
+  }
+
+  // Switch with fall-through
+  switch (temp.value) {
+    case 1:
+    case 2:
+    case 3:
+      temp.category = "low";
+      break;
+    case 4:
+    case 5:
+      temp.category = "medium";
+      break;
+    default:
+      temp.category = "high";
+  }
+
+  // Switch with string values
+  temp.action = "walk";
+  switch (temp.action) {
+    case "idle":
+      temp.state = 0;
+      break;
+    case "walk":
+      temp.state = 1;
+      break;
+    case "run":
+      temp.state = 2;
+      break;
+    default:
+      temp.state = -1;
+  }
+}

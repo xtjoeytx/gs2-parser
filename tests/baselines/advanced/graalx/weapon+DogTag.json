@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "46541b08b359b460c0ab98c591b02247cacf0ac7a4255cbd8304f4ba41590c6f",
+  "bytecode_size": 1631,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon+DogTag.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

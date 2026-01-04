@@ -1,0 +1,32 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  onTimeout();
+}
+
+function onTimeout()
+{
+  onUpdateParticles();
+
+  setTimer(120);
+}
+
+function onUpdateParticles()
+{
+  
+  
+  return true;
+}
+
+function onActionClientSide(action, args)
+{
+  switch (action)
+  {
+    case "update":
+    {
+      onUpdateParticles();
+      
+      break;
+    }
+  }
+}

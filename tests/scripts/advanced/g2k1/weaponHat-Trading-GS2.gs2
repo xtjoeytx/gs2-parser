@@ -1,0 +1,233 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated()
+{
+  // Configuration
+  this.maxitems = 256;
+  
+  // Hats
+  this.hat_free    = {0, 1, 2, 4, 17, 18, 24, 25, 26, 27, 32, 33, 92, 137};
+  this.hat_dustari = {17, 18, 27};
+  this.hat_pirates = {24, 25, 26, 32};
+  this.hat_police  = {92, 137};
+  
+  // Arrays
+  this.keytime = new[11];
+}
+
+function onBomyWeaponFired() {
+  this.onFired();
+}
+
+function onWeaponFired() {
+  this.onFired();
+}
+
+function onFired()
+{
+  // Already On?
+  if (this.on > 0)
+     return;
+  
+  // Freeze Player
+  freezeplayer(0.05);
+  setani((player.ani == "walk" ? "idle" : player.ani), null);
+  
+  // Grab Items
+  this.GrabItems();
+  
+  // Start
+  this.on = 1;
+  this.onTimeout();
+}
+
+function onTimeout()
+{
+  // Freeze Player
+  freezeplayer(0.05);
+  
+  // Check Keys
+  this.CheckKeys();
+    
+  // Draw Items
+  this.DrawItems();
+  
+  // Reset Timer
+  this.on++;
+  if (this.on > 1)
+    setTimer(0.05);
+  else CloseTrading();
+}
+
+function GrabItems()
+{
+  // Reset
+  this.items.clear();
+  
+  // Loop Possible Items
+  for (temp.I = 0; temp.I < this.maxitems; temp.I++)
+  {
+    temp.q = makevar("clientr.hatc" @ temp.I);
+
+    if (temp.q > 0 || temp.I in this.hat_free)
+      this.items.add({temp.I, temp.q});
+  }
+}
+
+function CheckKeys()
+{
+  // Item-System Enabled?
+  if (this.on < 5)
+    return;
+    
+  // Close Trading
+  if (keydown(6))
+  {
+    CloseTrading();
+    return;
+  }
+  
+  // Drop Hat
+  if (keydown(5))
+  {
+    this.keytime[5]++;
+    if (this.keytime[5] == 1 && !(this.items[this.selecteditem][0] in this.hat_free))
+    {
+      CloseTrading();
+      
+      freezeplayer(0.5);
+      setani((player.isBomy() ? "bomy_lay" : "lay"), null);
+      triggerserver("gui", this.name, "layhat", this.items[this.selecteditem][0]);
+    }
+    else this.keytime[5] = 0;
+  }
+  
+  // Select Hat
+  if (keydown(4))
+  {
+    this.keytime[4]++;
+    if (this.keytime[4] == 1)
+    {
+      CloseTrading();
+      
+      temp.val = player.isHuman();
+      if (player.isHuman())
+      {
+        // Variables
+        temp.hat = "hat" @ this.items[this.selecteditem][0] @ ".png";
+
+        // Set Hat
+        if (player.attr[1] != temp.hat)
+          SetHat(temp.hat);
+        else
+          UnsetHat();
+      }
+    }
+  } else this.keytime[4] = 0;
+  
+  // Move Selection: Left
+  if (keydown(1))
+  {
+    this.keytime[1]++;
+    if (this.keytime[1] == 1 || this.keytime[1] >= 4)
+    {
+      this.selecteditem = (this.selecteditem - 1) % this.items.size();
+      play("nextpage.wav");
+    }
+  } else this.keytime[1] = 0;
+  
+  // Move Selection: Right
+  if (keydown(3))
+  {
+    this.keytime[3]++;
+    if (this.keytime[3] == 1 || this.keytime[3] >= 4)
+    {
+      this.selecteditem = (this.selecteditem + 1) % this.items.size();
+      play("nextpage.wav");
+    }
+  } else this.keytime[3] = 0;
+}
+
+function CloseTrading()
+{
+  // Clear Chat
+  player.chat = "";
+  
+  // Hide Images
+  hideimgs(1, 3);
+  hideimgs(200, 200 + this.items.size());
+  
+  // Disable
+  this.on = false;
+}
+
+function DrawItems()
+{
+  // Item Width
+  this.itemwidth = 4; //(this.items.size() / 4) + 1;
+  
+  // Iterate Items
+  for (temp.I = 0; temp.I < this.items.size(); temp.I++)
+  {
+    // Current Item
+    temp.item = this.items[temp.I];
+    
+    // Current Item-Angle
+    temp.da = ((this.selecteditem - temp.I) / this.items.size() + 0.25) * 2 * 3.14;
+    temp.dx = cos(temp.da) * this.itemwidth;
+    temp.dy = -sin(temp.da) * 4;
+    
+    // Draw Current Item
+    temp.id = (temp.I == this.selecteditem ? 1 : 200 + temp.I);
+    showimg(temp.id, "haticons.png", player.x + 0.5 + temp.dx, player.y + 1 + temp.dy);
+    changeimgpart(temp.id, (temp.item[0] % 4) * 32, int(temp.item[0] / 4) * 32, 32, 32);
+    
+    // Hide Invalid Item
+    if (temp.id != 200 + temp.I)
+      hideimg(200 + temp.I);
+  }
+  
+  // Selected Item Layer
+  changeimgvis(1, 3);
+  
+  // Draw Top-Arrow
+  showimg(2, "haticons.png", player.x + 1, player.y - 4);
+  changeimgpart(2, 128, 0, 16, 16);
+  
+  // Draw Bottom-Arrow
+  showimg(3, "haticons.png", player.x + 1, player.y - 1);
+  changeimgpart(3, 128, 16, 16, 16);
+  changeimgvis(3, 0);
+  
+  // Current Item
+  player.chat = (this.items[this.selecteditem][0] in this.hat_free ? "(free)" : this.items[this.selecteditem][1]);
+}
+
+// Set Hat
+public function SetHat(temp.pHat)
+{
+  // Take Hat Off
+  if (player.attr[1] != "")
+    UnsetHat();
+
+  // Put Hat On
+  player.attr[1] = temp.pHat;
+  freezeplayer(0.7);
+  setani("haton", null);
+}
+
+// Unset Hat
+public function UnsetHat()
+{
+  // Hold animation
+  temp.lastani = player.ani;
+  
+  // Take Hat Off
+  freezeplayer(0.7);
+  setani("hatoff", null);
+  sleep(0.7);
+  player.attr[1] = "";
+  
+  // Reset Animation
+  setani(temp.lastani, null);
+}

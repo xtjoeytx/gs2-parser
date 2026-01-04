@@ -1,0 +1,125 @@
+//#CLIENTSIDE
+destroy();
+
+function onCreated()
+{
+  this.staff = {{"Exit", 0, "block.png",    "Staff Blocks"},
+                {"Staff Block", 3, "gx_staffblock.png",    "Staff Blocks"},
+                {"Staff Axe",   5, "gx_staffaxe-icon.gif", "Staff Axe"}};
+}
+
+function onKeyPressed(keycode, keychar, scancode)
+{
+  if (keychar == "R" && !this.on)
+  {
+    this.on = true;
+    
+    calcRights();
+  }
+    elseif (keychar == "T" && this.on)
+  {
+    this.selection = (this.selection += 1) % this.staffpower.size();
+    
+    updateItem();
+  }
+    elseif (keychar == "W" && this.on)
+  {
+    if (playerfreeze <= 0)
+    {
+      useSecondary();
+    }
+  }
+    elseif (keychar == "E" && this.on)
+  {
+    if (playerfreeze <= 0)
+    {
+      useTool();
+    }
+  }
+}
+
+// Functions
+function calcRights()
+{
+  this.staffpower = "";
+  
+  for (temp.var: this.staff)
+  {
+    if (temp.var[1] in clientr.stafftool)
+    {
+      this.staffpower.add(temp.I);
+    }
+    
+    temp.I++;
+  }
+  
+  this.selection = 0;
+  updateItem();
+}
+
+function updateItem()
+{
+  temp.cur = this.staff[this.staffpower[this.selection]];
+ 
+  showpoly(200, {20, screenheight - 110, 90, screenheight - 110, 90, screenheight - 20, 20, screenheight - 20}); 
+  changeimgcolors(200, 0, 0, 0, 1);
+  changeimgvis(200, 4);
+  
+  showimg(201, temp.cur[2], 38, screenheight - 105);
+  changeimgvis(201, 5);
+  
+  showtext(202, 54, screenheight - 67, "Arial", "bc", temp.cur[0]);
+  changeimgvis(202, 5);
+  changeimgzoom(202, 0.6);
+}
+
+
+function useTool()
+{
+  temp.cur = this.staff[this.staffpower[this.selection]];
+  
+  switch (temp.cur[0])
+  {
+    case "Exit":
+    {
+      this.on = false;
+      hideimgs(200, 210);
+    
+      break;
+    }
+    
+    case "Staff Axe":
+    {
+      setani("gx_tph-staffaxe", NULL);
+      playerfreeze = 0;
+      triggeraction(player.x + 1.5 + vecx(player.dir) * 2, player.y + 1.5 + vecy(player.dir) * 2, "staffaxe", player.account, this.axeselect);
+
+      break;
+    }
+    
+    case "Staff Block":
+    {
+      playerfreeze = 0.35;
+      setani("lay", NULL);
+      triggerserver("gui", this.name, "staffblock");
+      
+      break;
+    }
+  }
+}
+
+function useSecondary()
+{
+  temp.cur = this.staff[this.staffpower[this.selection]];
+  
+  switch (temp.cur[0])
+  {
+    case "Staff Axe":
+    {
+      playerfreeze = 0.35;
+      setani("lay", NULL);
+      
+      break;
+    }
+  }
+}

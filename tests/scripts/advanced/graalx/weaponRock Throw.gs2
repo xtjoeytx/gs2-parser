@@ -1,0 +1,18 @@
+//#CLIENTSIDE
+function onWeaponFired() {
+  client.ammomax = "";
+  if (clientr.item_13[0] > 0)
+    onFiregun();
+  client.ammo = clientr.item_13[0];
+}
+
+function onFiregun() {
+  triggerserver("gui", name);
+  setani("shoot", NULL);
+  playerfreeze = 0.25;
+  if (player.guild != NULL)
+    setshootparams(player.account, 8, player.guild, client.nopk, clientr.allies);
+  else
+    setshootparams(player.account, 8, "(none)", client.nopk, clientr.allies); 
+  shoot(player.x, player.y, 0, getangle(vecx(playerdir),vecy(playerdir)), 1, -1, "gx_rock", NULL);
+}

@@ -1,0 +1,44 @@
+// Conditional statements
+function testConditionals() {
+  temp.x = 10;
+  temp.y = 5;
+
+  // Simple if
+  if (temp.x > temp.y) {
+    temp.result = "x is greater";
+  }
+
+  // If-else
+  if (temp.x < temp.y) {
+    temp.result = "x is less";
+  } else {
+    temp.result = "x is not less";
+  }
+
+  // If-else if-else chain
+  if (temp.x == temp.y) {
+    temp.comparison = "equal";
+  } else if (temp.x > temp.y) {
+    temp.comparison = "greater";
+  } else {
+    temp.comparison = "less";
+  }
+
+  // Nested conditions
+  if (temp.x > 0) {
+    if (temp.y > 0) {
+      temp.quadrant = "first";
+    } else {
+      temp.quadrant = "fourth";
+    }
+  } else {
+    if (temp.y > 0) {
+      temp.quadrant = "second";
+    } else {
+      temp.quadrant = "third";
+    }
+  }
+
+  // Ternary operator (if supported)
+  temp.max = (temp.x > temp.y) ? temp.x : temp.y;
+}

@@ -1,0 +1,50 @@
+//#CLIENTSIDE
+function onWeaponFired()
+{
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+ 
+  if (temp.muditem.quantity >= 1 && temp.muditem.itemtype == "ARCHETYPE_HAT" && this.chghat == false)
+  {
+    this.hat = "hat" @ temp.muditem.hatnum @ ".png";
+    
+    if (client.haton != this.hat)
+    {
+      if (client.haton == "")
+      {
+        onHat();
+      }
+        else
+      {
+        offHat();
+        onHat();
+      }
+    }
+      else
+    {
+      offHat();
+    }
+  }
+}
+
+public function offHat()
+{
+  this.chghat = true;
+  client.haton = "";
+  setani("hatoff", NULL);
+  playerfreeze = 0.65;
+  sleep(0.6);
+  player.attr[1] = "";
+  this.chghat = false;
+}
+
+public function onHat()
+{
+  this.chghat = true;
+  client.haton = this.hat;
+  player.attr[1] = this.hat;
+  setani("haton", NULL);
+  playerfreeze = 0.65;
+  sleep(0.6);
+  this.chghat = false;
+}

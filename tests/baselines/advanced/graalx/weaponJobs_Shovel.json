@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "27c028d8b9d3cb7718db2a19684f6c62c22142ef4a28610ce195e85fce908375",
+  "bytecode_size": 1283,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponJobs_Shovel.gs2",
+    "generated_at": "2026-01-04 16:44:40",
+    "compiler_version": "modified_1767562734"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "fa0720a44ec780141aab4614bd8c11f145559758ce96798e508adbb0edf8fe21",
+  "bytecode_size": 185,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "basic/01_variables.gs2",
+    "generated_at": "2026-01-04 16:44:39",
+    "compiler_version": "modified_1767562734"
+  }
+}
