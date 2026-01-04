@@ -1,4 +1,4 @@
-﻿namespace GS2Compiler
+﻿namespace Preagonal.Scripting.GS2Compiler
 {
 	public struct CompilerResponse
 	{

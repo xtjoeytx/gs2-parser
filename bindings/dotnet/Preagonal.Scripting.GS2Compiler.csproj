@@ -4,17 +4,18 @@
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
-		<Title>GS2Compiler</Title>
+		<Title>Preagonal.Scripting.GS2Compiler</Title>
 		<Authors>Preagonal</Authors>
-		<Copyright>Preagonal 2023-2024</Copyright>
+		<Copyright>Preagonal 2023-2025</Copyright>
 		<PackageProjectUrl>https://github.com/Preagonal/GS2Engine</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/Preagonal/GS2Engine</RepositoryUrl>
 		<AssemblyVersion>1.0.0</AssemblyVersion>
 		<FileVersion>1.0.0</FileVersion>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<TargetFramework>netstandard2.0</TargetFramework>
-		<AssemblyName>GS2Compiler</AssemblyName>
-		<RootNamespace>GS2Compiler</RootNamespace>
+		<AssemblyName>Preagonal.Scripting.GS2Compiler</AssemblyName>
+		<RootNamespace>Preagonal.Scripting.GS2Compiler</RootNamespace>
+		<PackageId>Preagonal.Scripting.GS2Compiler</PackageId>
 	</PropertyGroup>
 
 	<PropertyGroup Condition=" '$(Configuration)' == 'Release' ">

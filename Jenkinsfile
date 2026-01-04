@@ -50,7 +50,10 @@ def buildStep(dockerImage, generator, os, osdir, defines) {
 			properties([pipelineTriggers([githubPush()])]);
 			def commondir = env.WORKSPACE + '/../' + fixed_job_name + '/';
 
-			docker.image("${dockerImage}").inside("") {
+			def dockerImageRef = docker.image("${dockerImage}");
+			dockerImageRef.pull();
+
+			dockerImageRef.inside("") {
 
 				checkout(scm);
 
@@ -92,7 +95,7 @@ def buildStepDocker() {
 	def split_job_name = env.JOB_NAME.split(/\/{1}/);
 	def fixed_job_name = split_job_name[1].replace('%2F',' ');
 
-	def customImage = docker.image("mcr.microsoft.com/dotnet/sdk:8.0");
+	def customImage = docker.image("mcr.microsoft.com/dotnet/sdk:9.0");
 	customImage.pull();
 
 	try {
@@ -132,7 +135,7 @@ def buildStepDocker() {
                 customImage.inside("-u 0") {
                     dir("bindings/dotnet/") {
                         sh("chmod 777 -R .");
-                        sh("dotnet pack GS2Compiler.csproj -c Release ${VER}");
+                        sh("dotnet pack Preagonal.Scripting.GS2Compiler.csproj -c Release ${VER}");
                         sh("chmod 777 -R .");
                     }
                 }
@@ -151,6 +154,7 @@ def buildStepDocker() {
                 stage("Pushing NuGet") {
                     customImage.inside("-u 0") {
                         dir("bindings/dotnet/") {
+							archiveArtifacts(artifacts: 'bin/Release/*.nupkg', allowEmptyArchive: true);
                             withCredentials([string(credentialsId: 'PREAGONAL_GITHUB_TOKEN', variable: 'GITHUB_TOKEN')]) {
                                 sh("dotnet nuget push -s https://nuget.pkg.github.com/Preagonal/index.json -k ${env.GITHUB_TOKEN} bin/Release/*.nupkg;chmod 777 -R .");
                                 discordSend description: "NuGet Successful", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Artifact Successful: ${fixed_job_name} #${env.BUILD_NUMBER}", webhookURL: env.GS2EMU_WEBHOOK;
@@ -195,7 +199,7 @@ killall_jobs();
 	sh('git fetch --tags');
 
 	env.LATEST_TAG = sh(
-		script: 'git tag -l | tail -1',
+		script: 'git tag --sort=creatordate -l | tail -1',
 		returnStdout: true
 	).trim();
 
@@ -256,7 +260,7 @@ killall_jobs();
 
 	project.builds.each { v ->
 		branches["Build ${v.DockerRoot}/${v.DockerImage}:${v.DockerTag}"] = {
-			node {
+			node("amd64") {
 				buildStep(v.DockerImage, v.Generator, v.OS, v.OSDir, v.Defines);
 			}
 		}
@@ -264,7 +268,7 @@ killall_jobs();
 
 	parallel(branches);
 
-	def customImage = docker.image("mcr.microsoft.com/dotnet/sdk:8.0");
+	def customImage = docker.image("mcr.microsoft.com/dotnet/sdk:9.0");
 	customImage.pull();
 
 	project.builds.each { v ->

@@ -86,7 +86,7 @@ void GS2CompilerVisitor::writeLabels()
 
 void GS2CompilerVisitor::Visit(Node *node)
 {
-	std::string errorMsg = fmt::format("unimplemented node type {}", node->NodeType());
+	std::string errorMsg = std::format("unimplemented node type {}", node->NodeType());
 	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, errorMsg });
 
 #ifdef DBGEMITTERS
@@ -470,7 +470,7 @@ void GS2CompilerVisitor::Visit(ExpressionBinaryOpNode *node)
 		}
 	}
 
-	std::string errorMsg = fmt::format("Undefined opcode in BinaryExpression {}: {} {}", node->op, ExpressionOpToString(node->op), node->toString());
+	std::string errorMsg = std::format("Undefined opcode in BinaryExpression {}: {} {}", static_cast<int>(node->op), std::string{ExpressionOpToString(node->op)}, node->toString());
 	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 }
 
@@ -599,7 +599,7 @@ void GS2CompilerVisitor::Visit(ExpressionUnaryOpNode* node)
 		}
 	}
 
-	std::string errorMsg = fmt::format("Undefined opcode in UnaryExpression {}: {}", node->op, ExpressionOpToString(node->op));
+	std::string errorMsg = std::format("Undefined opcode in UnaryExpression {}: {}", static_cast<int>(node->op), ExpressionOpToString(node->op));
 	parserContext.addError({ ErrorLevel::E_ERROR, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 }
 
@@ -1172,7 +1172,7 @@ void GS2CompilerVisitor::Visit(StatementBreakNode* node)
 {
 	if (break_label <= 0)
 	{
-		std::string errorMsg = fmt::format("`break` outside loop detected");
+		std::string errorMsg = std::format("`break` outside loop detected");
 		parserContext.addError({ ErrorLevel::E_WARNING, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 		return;
 	}
@@ -1188,7 +1188,7 @@ void GS2CompilerVisitor::Visit(StatementContinueNode* node)
 {
 	if (continue_label <= 0)
 	{
-		std::string errorMsg = fmt::format("`continue` outside loop detected");
+		std::string errorMsg = std::format("`continue` outside loop detected");
 		parserContext.addError({ ErrorLevel::E_WARNING, GS2CompilerError::ErrorCategory::Compiler, std::move(errorMsg) });
 		return;
 	}

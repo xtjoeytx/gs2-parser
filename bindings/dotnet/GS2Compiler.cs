@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace GS2Compiler
+namespace Preagonal.Scripting.GS2Compiler
 {
 	public static class Interface
 	{
