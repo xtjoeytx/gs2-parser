@@ -6,7 +6,7 @@
   "error_message": "Compilation reported success but no output file found: /Users/joey/projects/gs2/gs2-parser/tests/scripts/error_cases/03_string_escaping.gs2bc",
   "metadata": {
     "script_path": "error_cases/03_string_escaping.gs2",
-    "generated_at": "2026-01-04 16:39:27",
+    "generated_at": "2026-01-04 16:44:39",
     "compiler_version": "modified_1767562734"
   }
 }
