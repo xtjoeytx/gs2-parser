@@ -1,12 +1,12 @@
 {
-  "bytecode_hash": "1bf5304319da8bb38cb54ce1f42913d72f8555e402b9adb3f3901dc61d27c7d8",
-  "bytecode_size": 3417,
-  "compilation_success": true,
+  "bytecode_hash": "",
+  "bytecode_size": 0,
+  "compilation_success": false,
   "expected_failure": false,
-  "error_message": "",
+  "error_message": "Compilation reported success but no output file found: /Users/joey/projects/gs2/gs2-parser/tests/scripts/advanced/graalx/weaponRC_NCControl.gs2bc",
   "metadata": {
     "script_path": "advanced/graalx/weaponRC_NCControl.gs2",
-    "generated_at": "2026-01-03 14:08:07",
-    "compiler_version": "modified_1767460496"
+    "generated_at": "2026-01-04 16:39:28",
+    "compiler_version": "modified_1767562734"
   }
 }

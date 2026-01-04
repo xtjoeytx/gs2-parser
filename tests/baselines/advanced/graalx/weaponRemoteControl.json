@@ -1,12 +1,12 @@
 {
-  "bytecode_hash": "deb51ce94ff917d169ad797aba6fa1aaa3701381c0c731c59faf7ef4b5b019b4",
-  "bytecode_size": 6137,
-  "compilation_success": true,
+  "bytecode_hash": "",
+  "bytecode_size": 0,
+  "compilation_success": false,
   "expected_failure": false,
-  "error_message": "",
+  "error_message": "Compilation reported success but no output file found: /Users/joey/projects/gs2/gs2-parser/tests/scripts/advanced/graalx/weaponRemoteControl.gs2bc",
   "metadata": {
     "script_path": "advanced/graalx/weaponRemoteControl.gs2",
-    "generated_at": "2026-01-03 14:08:07",
-    "compiler_version": "modified_1767460496"
+    "generated_at": "2026-01-04 16:39:29",
+    "compiler_version": "modified_1767562734"
   }
 }
