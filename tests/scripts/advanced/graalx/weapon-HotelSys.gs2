@@ -1,0 +1,187 @@
+//#CLIENTSIDE
+function onCreated() {
+  if (Hotel_Window != NULL) Hotel_Window.destroy();
+  if (Hotel_Window2 != NULL) Hotel_Window2.destroy();
+  if (Hotel_Menu != NULL) Hotel_Menu.destroy();
+  if (player.guild != "Hotel StafF")
+    destroy();
+}
+
+function onActionClientSide() {
+  hotel = new TStaticVar();
+  Hotel_Tree.clearNodes();
+  this.hotelinfo = params[0];
+  hotel.room = "Rooms";
+  hotel.suite = "Suites";
+  hotel.master = "Master Suites";
+
+  for (i = 0;i < this.hotelinfo.size();i++) {
+    if (this.hotelinfo[i][0] == "room")
+      this.htype = "Room ";
+    elseif (this.hotelinfo[i][0] == "suite")
+      this.htype = "Suite ";
+    elseif (this.hotelinfo[i][0] == "master")
+      this.htype = "Master Suite ";
+
+    makevar("hotel." @ this.hotelinfo[i][0] @ "." @ this.hotelinfo[i][1]) = this.htype @ this.hotelinfo[i][1];
+    tokens = this.hotelinfo[i][2].tokenize();
+    for (j = 0;j < tokens.size();j++)
+      makevar("hotel." @ this.hotelinfo[i][0] @ "." @ this.hotelinfo[i][1] @ "." @ tokens[j]) = tokens[j];
+  }
+  Hotel_Tree.addVars(hotel, true);
+  Hotel_Tree.sortmode = "name";
+  Hotel_Tree.sort();
+  hotel.destroy();
+}
+
+function onHotelComp() {
+  Hotel_Window.destroy();
+  Hotel_Window2.destroy();
+  Hotel_Menu.destroy();
+  triggerserver("gui", name, "update");
+
+  new GuiWindowCtrl(Hotel_Window) {
+    profile = "GuiBlueWindowProfile";
+    width = 350;
+    height = 300;
+    x = screenwidth / 2 - width / 2;
+    y = screenheight / 2 - height / 2;
+    text = "Hotel Control";
+    canmaximize = false;
+    canresize = false;
+    canclose = true;
+
+    new GuiScrollCtrl(Hotel_Scroll) {
+      profile = "GuiBlueScrollProfile";
+      position = "6 24";
+      width = Hotel_Window.width - 13;
+      height = Hotel_Window.height - 62;
+      horizSizing = "width";
+      vertSizing = "height";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+
+      new GuiTreeViewCtrl(Hotel_Tree) {
+        profile = "GuiBlueTreeViewProfile";
+        width = Hotel_Scroll.width;
+        height = Hotel_Scroll.height;
+        fitparentwidth = true;
+        thiso.catchevent(name, "onOpenMenu", "onTreeView");
+        expanded = 1;
+      }
+    }
+    new GuiButtonCtrl(Hotel_Button_Add) {
+      profile = "GuiBlueButtonProfile";
+      position = "15 267";
+      extent = "100 20";
+      text = "Add";
+      thiso.catchevent(name, "onAction", "onButtonEnter");
+    }
+    new GuiButtonCtrl(Hotel_Button_Refresh) {
+      profile = "GuiBlueButtonProfile";
+      position = "235 267";
+      extent = "100 20";
+      text = "Refresh";
+      thiso.catchevent(name, "onAction", "onButtonEnter");
+    }
+    new GuiContextMenuCtrl(Hotel_Menu) {
+      profile = "GuiBluePopUpMenuProfile";
+      textprofile = "GuiBlueTextListProfile";
+      width = 20;
+
+      clearRows();
+      addRow(0,"Delete Plyr");
+    }
+  }
+}
+
+function Hotel_Tree.onOpenMenu(node, pathname, dotname) {
+  this.badnode = {"Master Suites", "Rooms", "Suites"};
+  if (node.nodes.size() <= 0) {
+    if (pathname.starts("Rooms")) this.subnode = pathname.substring(6, 6);
+    elseif (pathname.starts("Suites")) this.subnode = pathname.substring(7, 7);
+    elseif (pathname.starts("Master Suites")) this.subnode = pathname.substring(14, 14);
+      
+    if (!contains(this.badnode, node)) {
+      this.selectednode = Hotel_Tree.getSelectednode();
+      Hotel_Menu.open(mousescreenx, mousescreeny);
+    }
+  }
+}
+
+function Hotel_Menu.onSelect(entryid,text) {
+  switch (entryid) {
+    case "0": {
+        this.addrows = {"Room 1", "Room 2", "Room 3", "Room 4", "Room 5", "Room 6", "Suite 1", "Suite 2", "Suite 3", "Suite 4", "Master Suite 1", "Master Suite 2"};
+        this.rtypes = {"room1", "room2", "room3", "room4", "room5", "room6", "suite1", "suite2", "suite3", "suite4", "master1", "master2"};
+        for (i=0;i<this.rtypes.size();i++) {
+          if (this.subnode == this.addrows[i])
+            this.subnode2 = this.rtypes[i];
+        }
+        triggerserver("gui", name, "remove", this.selectednode, this.subnode2);
+        break;
+      }
+  }
+}
+
+function onButtonEnter() {
+  if (params[0] == "Hotel_Button_Add") {
+    Hotel_Window2.destroy();
+    new GuiWindowCtrl(Hotel_Window2) {
+      profile = "GuiBlueWindowProfile";
+      extent = "150 123";
+      x = screenwidth / 2 - width / 2;
+      y = screenheight / 2 - height / 2;
+      text = "Hotel Control";
+      canmaximize = false;
+      canresize = false;
+      canclose = true;
+      bringToFront();
+
+      new GuiTextEditCtrl(Hotel_Text_Account) {
+        profile = "GuiBlueTextEditProfile";
+        position = "15 30";
+        extent = "120 20";
+        tabComplete = false;
+        text = "";
+      }
+
+      new GuiPopUpMenuCtrl(Hotel_Text_Option) {
+        profile = "GuiBluePopUpMenuProfile";
+        extent = "120 20";
+        position = "15 60";
+        visible = true;
+        text = "Room 1";
+        clearrows();
+        this.addrows = {"Room 1", "Room 2", "Room 3", "Room 4", "Room 5", "Room 6", "Suite 1", "Suite 2", "Suite 3", "Suite 4", "Master Suite 1", "Master Suite 2"};
+        for (k = 0;k < this.addrows.size();k++)
+          addrow(k, this.addrows[k]);
+      }
+
+      new GuiButtonCtrl(Hotel_Button_Add2) {
+        profile = "GuiBlueButtonProfile";
+        position = "25 90";
+        extent = "100 20";
+        text = "Add";
+        thiso.catchevent(name, "onAction", "onButtonEnter");
+      }
+    }
+  }
+  
+  if (params[0] == "Hotel_Button_Refresh") 
+    triggerserver("gui", name, "update");
+    
+  if (params[0] == "Hotel_Button_Add2") {
+    this.params = {Hotel_Text_Account.text, Hotel_Text_Option.text, NULL};
+    this.addrows = {"Room 1", "Room 2", "Room 3", "Room 4", "Room 5", "Room 6", "Suite 1", "Suite 2", "Suite 3", "Suite 4", "Master Suite 1", "Master Suite 2"};
+    this.rtypes = {"room1", "room2", "room3", "room4", "room5", "room6", "suite1", "suite2", "suite3", "suite4", "master1", "master2"};
+    if (this.params[0] != "") {
+      Hotel_Window2.destroy();
+      for (l=0;l<this.rtypes.size();l++) {
+        if (this.params[1] == this.addrows[l])
+          this.params[2] = this.rtypes[l];
+      }
+      triggerserver("gui", name, "add", this.params[0], this.params[2]);
+    }
+  }
+}

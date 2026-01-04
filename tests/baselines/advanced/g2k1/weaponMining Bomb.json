@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "9d4a469c00e4e3b8d42a31351039ff68f99572135db1b66ff692364eb2895228",
+  "bytecode_size": 745,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponMining Bomb.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

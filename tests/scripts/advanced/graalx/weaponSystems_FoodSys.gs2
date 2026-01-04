@@ -1,0 +1,50 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  if (clientr.player_hunger == NULL)
+  {
+    setUp();
+  }
+  
+  onTimeout();
+}
+
+function onTimeout()
+{
+  temp.food = player.modifyFood("-1");
+  
+  if (temp.food == false && clientr.health[0] > 0)
+  {
+   // setani("hurt", NULL);
+   // triggerserver("gui", this.name, "hurt");
+    
+    // BAD STUFF HAPPENS I THINK
+  }
+  
+  setTimer(clientr.player_hunger[0]);
+}
+
+function setUp()
+{
+  client.player_food = {999, md5(999)};
+  
+  triggerserver("gui", this.name, "setup");
+}
+
+function onActionClientSide(action, args)
+{
+  switch (action)
+  {
+    case "food":
+    {
+      if (args[0].index("-") <= -1)
+      {
+        args[0] = "+" @ args[0];
+      }
+      
+      player.modifyFood(args[0]);
+      
+      break;
+    }
+  }
+}

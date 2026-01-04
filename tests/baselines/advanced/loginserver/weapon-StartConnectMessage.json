@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "3717903d51a6d1d017c4cf1c83ee946648cde745860fff4818eadef47b22eb35",
+  "bytecode_size": 2348,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/loginserver/weapon-StartConnectMessage.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

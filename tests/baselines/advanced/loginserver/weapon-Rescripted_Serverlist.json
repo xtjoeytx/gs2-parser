@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "59e33cf16ff1ede24f683d7592cdb52a8ae3bb90b44267cc91a589d3d299516f",
+  "bytecode_size": 37076,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/loginserver/weapon-Rescripted_Serverlist.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

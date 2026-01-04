@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "e4c1eda780da202ffb0c16fbaa173875ef230b25f2f616cd626806d92996b875",
+  "bytecode_size": 1592,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/loginserver/weapon-Rescripted_-F2LogWindow.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

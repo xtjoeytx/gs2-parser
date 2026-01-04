@@ -1,0 +1,375 @@
+//#CLIENTSIDE
+function onCreated(){
+  this.scriptfolders = {
+    { "npclist", "weaponlist", "classlist" },
+    { "npcs", "weapons", "scripts" },
+    { "npc", "weapon", "" }
+  };
+  this.buttons = {{"Cancel","Send"},{"Add","Delete","Edit","Close"}};
+  this.button_position = {{{285,318},{335,318}},{{12,318},{62,318},{285,318},{335,318}}};
+  this.types = {
+    {"weaponlist","classlist","datablocks","npclist"},
+    {"weapon","class","datablock","npc"},
+    {"options","serverflags"},
+    {"playerflags","playerweapons"}};
+  this.captions = {
+    {"Gui Scripts","Script Classes","Datablocks","Objects (NPCs)"},
+    {"Gui Script","Script Class","Datablock","Object"},
+    {"Server Options","Server Flags (server. and serverr.)"},
+    {"PlayerVariables","Player GUI scripts"}};
+  this.scripttemplates = {
+    {"Endless Loop",
+"function onCreated() {
+  setTimer(1);
+}
+function onTimeout() {
+  setTimer(1);
+}
+"",
+},
+    {"Collision Code",
+"function onCollision(obj,colvelo,colspeed) {
+}
+"",
+}
+  };
+
+  new GuiScrollProfile(TextEditorScrollProfile) {
+    fillColor = "255 255 255";
+    opaque = true;
+    bitmap = "textEditScroll.png";
+  }
+
+  new GuiMLTextEditProfile(TextEditorProfile) {
+    fontType = "Courier";
+    fontSize = 10;
+    cursorColor = "0 0 0";
+    fillColorHL = "255 255 0";
+    fontColor = "0 0 0";
+    fontColorHL = "192 0 0"; // control words like if, else etc.
+    fontColorSEL = "0 96 0"; // identifiers
+    fontColorLink = "0 0 192"; // strings
+    fontColorLinkHL = "0 0 255"; // numbers
+  }
+}
+
+public function getScriptListType(listtype) {
+  textindex = this.types[0].index(listtype);
+  return this.types[1][textindex];
+}
+
+// Text edit window with buttons
+
+public function openWindow(textlines){
+  windownum = editwindows++;
+  windowname = "TextEditor" @ windownum @ "_";
+//  player.chat = "new window: " @ windowname;
+  new GuiWindowCtrl(windowname @ "Window") {
+    profile = "GuiBlueTransWindowProfile";
+    x = (screenwidth/2)-200 + 35;
+    y = (screenheight/2)-175 + 35;
+    width = 400;
+    height = 350;
+    canMaximize = true;
+    canClose = true;
+    text = "Text Editor";
+    tile = true;
+    destroyOnHide = true;
+
+    for (k=0; k<thiso.buttons[0].size(); k++){
+      new GuiButtonCtrl(windowname @ thiso.buttons[0][k]){
+        profile = "GuiBlueButtonProfile";
+        x = thiso.button_position[0][k][0];
+        y = thiso.button_position[0][k][1];
+        width = 50;
+        height = 25;
+        horizSizing = (x<150? "right" : "left");
+        vertSizing = "top";
+        visible = true;
+        text = thiso.buttons[0][k];
+      }
+    }
+
+    new GuiTextCtrl(windowname @ "Line") {
+      profile = "GuiLightTextProfile";
+      x = 20;
+      y = 318;
+      text = "Line: ";
+      vertSizing = "top";
+    }
+
+    new GuiPopUpMenuCtrl(windowname @ "TemplateBox") {
+      profile = "GuiBluePopUpMenuProfile";
+      horizSizing = "width";
+      vertSizing = "top";
+      x = 100;
+      y = 318;
+      extent = "125 20";
+      visible = false;
+    }
+
+    new GuiScrollCtrl(windowname @ "Scroll") {
+      profile = "TextEditorScrollProfile";
+      horizSizing = "width";
+      vertSizing = "height";
+      x = 5;
+      y = 24;
+      width = 390;
+      height = 290;
+      hScrollBar = "dynamic";
+      vScrollBar = "dynamic";
+      tile = true;
+      willFirstRespond = true;
+
+      new GuiMLTextEditCtrl(windowname @ "Text") {
+        profile = "TextEditorProfile";
+        width = 1024;
+        height = 1024;
+        wordWrap = false;
+        syntaxHighlighting = true;
+      }
+    }
+  }
+  (windowname @ "Text").setLines(textlines);
+  return windowname;
+}
+
+// Text List with buttons
+
+public function openList(textlines){
+  listnum = editlists++;
+  listname = "TextList" @ listnum @ "_";
+//  player.chat = "new list: " @ listname;
+
+  new GuiWindowCtrl(listname @ "Window") {
+    profile = "GuiBlueTransWindowProfile";
+    x = (screenwidth/2)-200;
+    y = (screenheight/2)-175;
+    width = 400;
+    height = 350;
+    canMaximize = true;
+    canClose = true;
+    text = "List";
+    tile = true;
+    destroyOnHide = true;
+
+    for (k=0; k<thiso.buttons[1].size(); k++){
+      new GuiButtonCtrl(listname @ thiso.buttons[1][k]){
+        profile = "GuiBlueButtonProfile";
+        x = thiso.button_position[1][k][0];
+        y = thiso.button_position[1][k][1];
+        width = 50;
+        height = 25;
+        horizSizing = (x<150? "right" : "left");
+        vertSizing = "top";
+        visible = true;
+        text = thiso.buttons[1][k];
+      }
+    }
+    new GuiScrollCtrl(listname @ "Scroll") {
+      profile = "GuiBlueScrollProfile";
+      horizSizing = "width";
+      vertSizing = "height";
+      x = 5;
+      y = 24;
+      width = 390;
+      height = 290;
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      tile = true;
+      willFirstRespond = true;
+
+      new GuiTextListCtrl(listname @ "List") {
+        profile = "GuiBlueTextListProfile";
+        x = 1;
+        y = 1;
+        width = 390;
+        fitParentWidth = true;
+        sortOrder = "ascending";
+        sortMode = "name";
+      }
+    }
+  }
+  return listname;
+}
+
+public function openRCWindow(texttype,textoption,textlines) {
+  windowname = openWindow(textlines);
+
+  textindex = this.types[1].index(texttype);
+  if (textindex>=0)
+    (windowname @ "Window").text = this.captions[1][textindex] @ ": " @ textoption;
+  else {
+    textindex = this.types[2].index(texttype);
+    if (textindex>=0) {
+      (windowname @ "Window").text = this.captions[2][textindex];
+      (windowname @ "Text").syntaxHighlighting = false;
+    } else {
+      textindex = this.types[3].index(texttype);
+      if (textindex>=0) {
+        (windowname @ "Window").text = this.captions[3][textindex] @ ": " @ textoption;
+        (windowname @ "Text").syntaxHighlighting = false;
+      }
+    }
+  }
+
+  editfield = makevar(windowname @ "Text");
+  editfield.lineslabel = makevar(windowname @ "Line");
+  catchevent(editfield,"onCursorLineChanged","onCursorMoved");
+  onCursorMoved(editfield,editfield.getCursorLine());
+
+  button = makevar(windowname @ "Send");
+  button.texttype = texttype;
+  button.textoption = textoption;
+  button.textfield = editfield;
+  catchevent(button,"onAction","onSendButton");
+
+  button = makevar(windowname @ "Cancel");
+  button.window = makevar(windowname @ "Window");
+  catchevent(button,"onAction","onCancelButton");
+
+  if (texttype=="npc") {
+    with (makevar(windowname @ "TemplateBox")) {
+      this.textfield = editfield;
+      visible = true;
+      clearRows();
+      i = 0;
+      for (scripttemplate: thiso.scripttemplates)
+        addRow(i++,scripttemplate[0]);
+      text = "Choose Template";
+      thiso.catchevent(name,"onSelect","onScriptTemplate");
+    }
+  }
+
+  return windowname;
+}
+
+function onCursorMoved(obj,line) {
+  obj.lineslabel.text = "Line: " @ (line+1);
+}
+
+function onSendButton(obj) {
+  if (obj.texttype.length()>0) {
+    sendtext(obj.texttype,obj.textoption,obj.textfield.getLines());
+//    sendtorc("** " @ obj.texttype @ " " @ obj.textoption @ " updated.");
+    RemoteControl_ChatList.addtext("\n" @ obj.texttype @ " " @ obj.textoption @ " " @ "updated.", true);
+    RemoteControl_ChatList.scrolltobottom();
+  }
+}
+
+function onScriptTemplate(obj, selid, seltext) {
+  if (obj.textfield.text!="" && !obj.textfield.text.ends("\\n"))
+    obj.textfield.addText("\n",false);
+  obj.textfield.addText(this.scripttemplates[selid][1], true);
+}
+
+public function openRCList(texttype,textoption,textlines) {
+  listname = openList(textlines);
+
+  textindex = this.types[0].index(texttype);
+  (listname @ "Window").text = this.captions[0][textindex];
+  list = makevar(listname @ "List");
+  for (temp.text: textlines) {
+    list.addRow(temp.index,temp.text);
+    temp.index++;
+  }
+  list.sort();
+//  player.chat = "sorted " @ list @ ", "  @ list.sortMode;
+  list.texttype = texttype;
+  catchevent(list,"onDblClick","onListDblClick");
+
+  button = makevar(listname @ "Close");
+  button.window = makevar(listname @ "Window");
+  catchevent(button,"onAction","onCancelButton");
+
+  button = makevar(listname @ "Edit");
+  button.list = list;
+  button.texttype = texttype;
+  catchevent(button,"onAction","onEditButton");
+
+  button = makevar(listname @ "Add");
+  button.list = list;
+  button.texttype = texttype;
+  catchevent(button,"onAction","onAddButton");
+
+  button = makevar(listname @ "Delete");
+  button.list = list;
+  button.texttype = texttype;
+  catchevent(button,"onAction","onDeleteButton");
+
+  return listname;
+}
+
+
+function onCancelButton(obj) {
+  obj.window.destroy();
+}
+
+function requestListEntryText(reqtype, reqname) {
+  if (reqtype=="datablock")
+    DatablockEditor.openDatablockEditor(makevar(reqname));
+  else
+    requesttext(reqtype,reqname);
+}
+
+function onListDblClick(obj) {
+  requestListEntryText(getScriptListType(obj.texttype), obj.getSelectedText());
+}
+
+function onEditButton(obj) {
+  requestListEntryText(getScriptListType(obj.texttype),obj.list.getSelectedText());
+}
+
+function onAddButton(obj) {
+  texttype = getScriptListType(obj.texttype);
+  if (texttype=="datablock")
+    DatablockEditor.openDatablockCreator(makevar(obj.list.getSelectedText()));
+  else {
+    openTextInput("AddScript","Add " @ texttype,"New script name:","Add");
+    AddScript_Window.texttype = texttype;
+  }
+}
+
+function AddScript_Button.onAction() {
+  addscriptname = AddScript_Field.text;
+  sendtext(AddScript_Window.texttype,addscriptname,"//#CLIENTSIDE");
+  requesttext(AddScript_Window.texttype,addscriptname);
+  AddScript_Window.hide();
+}
+
+function onDeleteButton(obj) {
+}
+
+function onReceiveText(texttype,textoption,textlines) {
+  openRCWindow(texttype,textoption,textlines);
+}
+
+// Single text input field with description
+
+public function openTextInput(inputname,inputtitle,inputlabel,inputbutton) {
+  new GuiWindowCtrl(inputname @ "_Window") {
+    profile = "GuiBlueTransWindowProfile";
+    extent = "240 115";
+    x = (screenwidth - width)/2;
+    y = (screenheight - height)/2;
+    canMaximize = false;
+    text = inputtitle;
+    visible = true;
+
+    new GuiTextCtrl(inputname @ "_Label") {
+      profile = "GuiLightTextProfile";
+      x = 30; y = 30;
+      text = inputlabel;
+    }
+    new GuiTextEditCtrl(inputname @ "_Field") {
+      profile = "GuiBlueTextEditProfile";
+      x = 15; y = 50; width = 210; height = 20;
+    }
+    new GuiButtonCtrl(inputname @ "_Button") {
+      profile = "GuiBlueButtonCtrl";
+      x = 160; y = 75; width = 60; height = 25;
+      text = inputbutton;
+    }
+  }
+  (inputname @ "_Window").bringToFront();
+}

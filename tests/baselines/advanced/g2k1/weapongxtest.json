@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "a7c3122c1f621d58f26e9a439f691f8d6f2bd2551eae6b67468b3d3b6ab9a87f",
+  "bytecode_size": 9478,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weapongxtest.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

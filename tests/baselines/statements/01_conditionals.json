@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "ebf4568d2fdde3488ef0a53af6cfb938982163ed716b29d45af45ec2d8a56002",
+  "bytecode_size": 464,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "statements/01_conditionals.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

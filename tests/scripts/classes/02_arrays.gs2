@@ -1,0 +1,45 @@
+// Array operations
+function testArrays() {
+  // Array initialization
+  temp.numbers = {};
+  temp.strings = {};
+  temp.mixed = {};
+
+  // Array assignment
+  temp.numbers[0] = 10;
+  temp.numbers[1] = 20;
+  temp.numbers[2] = 30;
+
+  temp.strings[0] = "first";
+  temp.strings[1] = "second";
+  temp.strings[2] = "third";
+
+  temp.mixed[0] = 42;
+  temp.mixed[1] = "hello";
+  temp.mixed[2] = true;
+  temp.mixed[3] = 3.14;
+
+  // Array access
+  temp.first_number = temp.numbers[0];
+  temp.second_string = temp.strings[1];
+
+  // Dynamic indexing
+  temp.index = 1;
+  temp.dynamic_value = temp.numbers[temp.index];
+
+  // Nested arrays
+  temp.matrix = {};
+  temp.matrix[0] = {};
+  temp.matrix[1] = {};
+  temp.matrix[0][0] = 1;
+  temp.matrix[0][1] = 2;
+  temp.matrix[1][0] = 3;
+  temp.matrix[1][1] = 4;
+
+  // Array with object elements
+  temp.players = {};
+  temp.players[0] = new TPlayer();
+  temp.players[1] = new TPlayer();
+  temp.players[0].name = "Alice";
+  temp.players[1].name = "Bob";
+}

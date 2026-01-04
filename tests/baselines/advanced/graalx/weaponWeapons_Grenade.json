@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "f1c3a227396334e3c4fd5b92b97f1eaa8a678a85c15525228bf8ff5ba3224426",
+  "bytecode_size": 38,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponWeapons_Grenade.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

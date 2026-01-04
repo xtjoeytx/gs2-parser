@@ -1,0 +1,43 @@
+// Deep nesting test
+function testDeepNesting() {
+  // Deep function calls
+  temp.result = level1(level2(level3(level4(level5(42)))));
+
+  // Deep object property access
+  temp.deep = temp.a.b.c.d.e.f.g.h.i.j.k.l.m.n.o.p.q.r.s.t.u.v.w.x.y.z;
+
+  // Deep array access
+  temp.nested_array = temp.arr[0][1][2][3][4][5][6][7][8][9];
+
+  // Deep conditional nesting
+  if (temp.condition1) {
+    if (temp.condition2) {
+      if (temp.condition3) {
+        if (temp.condition4) {
+          if (temp.condition5) {
+            if (temp.condition6) {
+              temp.deeply_nested = true;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Deep loop nesting
+  for (temp.i = 0; temp.i < 3; temp.i++) {
+    for (temp.j = 0; temp.j < 3; temp.j++) {
+      for (temp.k = 0; temp.k < 3; temp.k++) {
+        for (temp.l = 0; temp.l < 3; temp.l++) {
+          temp.nested_loops_result = temp.i + temp.j + temp.k + temp.l;
+        }
+      }
+    }
+  }
+}
+
+function level1(x) { return level2(x) + 1; }
+function level2(x) { return level3(x) + 1; }
+function level3(x) { return level4(x) + 1; }
+function level4(x) { return level5(x) + 1; }
+function level5(x) { return x + 1; }

@@ -1,0 +1,22 @@
+// Logical expressions
+function testLogical() {
+  // Basic logical operations
+  temp.and_true = (true && true);
+  temp.and_false = (true && false);
+  temp.or_true = (true || false);
+  temp.or_false = (false || false);
+  temp.not_true = (!true);
+  temp.not_false = (!false);
+
+  // Short circuit evaluation
+  temp.short_and = (false && someFunction());
+  temp.short_or = (true || someFunction());
+
+  // Complex expressions
+  temp.complex = (5 > 3) && (10 < 20) || (1 == 1);
+  temp.grouped = !((5 > 3) && (10 < 20));
+}
+
+function someFunction() {
+  return true;
+}

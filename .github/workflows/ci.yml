@@ -1,0 +1,107 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+  pull_request:
+  merge_group:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.os }} - ${{ matrix.build_type }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        build_type: [Release, Debug]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+        fetch-depth: 0
+
+    # Windows: ensure MSVC environment is set up for Ninja + cl.exe
+    - name: Setup MSVC dev cmd
+      if: runner.os == 'Windows'
+      uses: ilammy/msvc-dev-cmd@v1
+
+    # Install dependencies - Linux
+    - name: Install dependencies (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y bison flex python3 python3-pip cmake ninja-build
+
+    # Install dependencies - macOS
+    - name: Install dependencies (macOS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install bison flex python3 cmake ninja
+
+    # Install dependencies - Windows
+    - name: Install dependencies (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install winflexbison3 python cmake ninja
+
+    # Configure CMake
+    - name: Configure CMake
+      run: |
+        cmake -B build -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -G Ninja
+
+    # Build
+    - name: Build
+      run: |
+        cmake --build build --config ${{ matrix.build_type }} --parallel
+
+    # Run tests using CTest
+    - name: Run tests
+      run: |
+        cd build
+        ctest --build-config ${{ matrix.build_type }} --output-on-failure --verbose
+      continue-on-error: true
+      id: tests
+
+    # Upload test reports (skip when running locally with act)
+    - name: Upload test reports
+      if: always() && !env.ACT
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-reports-${{ matrix.os }}-${{ matrix.build_type }}
+        path: build/tests/reports/*.json
+        if-no-files-found: warn
+
+    # Check for regressions
+    - name: Check test results
+      if: steps.tests.outcome == 'failure'
+      run: |
+        echo "::error::Tests failed or regressions detected"
+        exit 1
+
+  # Summary job to check all matrix builds passed
+  test-summary:
+    name: Test Summary
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: always()
+
+    steps:
+    - name: Check build and test results
+      run: |
+        if [[ "${{ needs.build-and-test.result }}" == "success" ]]; then
+          echo "✅ All builds and tests passed!"
+          exit 0
+        else
+          echo "❌ Some builds or tests failed"
+          exit 1
+        fi

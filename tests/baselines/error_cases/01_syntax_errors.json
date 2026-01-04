@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "",
+  "bytecode_size": 0,
+  "compilation_success": false,
+  "expected_failure": true,
+  "error_message": "missing semicolon at line 4:   temp.y = 10;",
+  "metadata": {
+    "script_path": "error_cases/01_syntax_errors.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

@@ -1,0 +1,223 @@
+//#CLIENTSIDE
+function onCreated()
+{
+//  loadNews();
+}
+
+function loadNews()
+{
+  if (InfoWindow != NULL) InfoWindow.destroy();
+  
+  // Button Control Names
+  this.buttons = {"Bar1", "Bar2", "Bar3", "Bar4", "Bar5",
+                  "Bar6", "Bar7", "Bar8", "Bar9", "Bar10"};
+                  
+  // Button Control Positions
+  this.buttonpos = {{44, 7}, {50, 23}, {97, 39}, {97, 55}, {50, 71},
+                    {97, 87}, {97, 103}, {97, 119}, {97, 135}, {97, 151}};
+                    
+  // Progress Control Percents
+  this.buttonpercent = {0.87, 0.65, 0.75, 0.55, 0.95, 0.75, 1, 1, 1, 1};
+  
+   new GuiWindowCtrl("InfoWindow")
+  {
+    profile     = "GuiBlueWindowProfile";
+    position    = screenwidth/4 @ " " @ screenheight/4;
+    extent      = "455 300";
+    canMove     = true;
+    canResize   = false;
+    canMaximize = false;
+    canClose    = true;
+    tile        = true;
+    text        = "Graal X - Information and Stats Menu";
+    
+    new GuiScrollCtrl(NewsTab) {
+      profile = "GuiBlueScrollProfile";
+      position = "11 62";
+      extent = "434 228";
+      horizSizing = "width";
+      vertSizing = "height";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      
+      new GuiMLTextCtrl(NewsTab_Label)
+      {
+        profile  = "GuiBlueTextProfile";
+        position = "5 5";
+        extent   = "434 228";
+        text     = "Welcome to Graal X.\n\nWe are now hosted and have been working on new features since. We plan to get Businesses, Cars, Events, and Gangs done throughout this week. Please wait as we release new things each day!\n\nPlease check the Staff List for things we are hiring for. - Joey";
+      }
+    }
+    
+    new GuiScrollCtrl(ProgressTab) {
+      profile = "GuiBlueScrollProfile";
+      position = "11 62";
+      extent = "434 228";
+      horizSizing = "width";
+      vertSizing = "height";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      
+      new GuiMLTextCtrl(ProgressTab_Label)
+      {
+        profile  = "GuiBlueTextProfile";
+        position = "5 5";
+        extent   = "434 228";
+        text     = "Overall:
+   Levels:
+     Outside Levels:
+     Inside Levels:
+   Scripts:
+     Food System:
+     Gun System:
+     Inventory Sys:
+     Main System:
+     Movement Sys:
+     
+     Last Updated on November 14, 2006
+     ";
+      }
+      i = 0;
+      for (button: thiso.buttons)
+      {
+        new GuiProgressCtrl("ProgressTab_" @ button)
+        {
+        profile = GuiBlueProgressProfile;
+        position = thiso.buttonpos[i][0] @ " " @ thiso.buttonpos[i][1];
+        width = 80;
+        height = 10;
+        progress = thiso.buttonpercent[i];
+      }
+      i++;
+      }
+    }
+    
+    new GuiScrollCtrl(UpdatesTab)
+    {
+      profile = "GuiBlueScrollProfile";
+      position = "11 62";
+      extent = "434 228";
+      horizSizing = "width";
+      vertSizing = "height";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      
+      new GuiMLTextCtrl(UpdatesTab_Label)
+      {
+        profile  = "GuiBlueTextProfile";
+        position = "5 5";
+        extent   = "434 228";
+        text     = "November, 2006
+   - November 14, 2006
+      - Release of the GameEngine as well as two games you can tryout at the store.
+      - Hat System has been completed - Expect some hats to be released =D.
+      - Kitchen has been moved. New Location: 4 Buildings to the left of the hospital.
+      - New Event: Laser Tag
+      - Nerf of the Fishing Job - It is a bit (not by much) slower on fishing now.";
+      }
+    }
+    
+    new GuiScrollCtrl(StaffTab)
+    {
+      profile = "GuiBlueScrollProfile";
+      position = "11 62";
+      extent = "434 228";
+      horizSizing = "width";
+      vertSizing = "height";
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      
+      new GuiMLTextCtrl(StaffTab_Label)
+      {
+        profile  = "GuiBlueTextProfile";
+        position = "5 5";
+        extent   = "434 228";
+        text     = "Manager:
+  - Joey (KuJi)
+Co-Manager:
+  - Drastic Vendetta (Temporary Co-Manager)
+  - Sage
+Head Developer:
+  - Chris
+Developer:
+  - Hiring ( Must be good in at least -two- dev spots - not scripting )
+Weapons Admin:
+  - Lance Leone
+NAT Team:
+  - Twinny
+GFX Admin:
+  - Cythus (temporary)
+GFX:
+  - Ace
+  - Jake
+Gani Team:
+  - Ace
+LAT Admin:
+  - Silent
+LAT:
+  - Corzan
+  - Taylor
+  - Hiring
+Events Admin:
+  - Irrashinal
+  - Sarden
+Player Relations:
+  - Delusion
+  - Kidney Banks
+  - Tommy Cartel
+  - Sarden
+Helpers:
+  - Contiga
+        ";
+      }
+    }
+    
+    new GuiTabCtrl(InfoTabs)
+    {
+      profile   = "GuiBlueTabProfile";
+      position  = "10 28";
+      extent    = "360 30";
+      
+      clearRows();
+      with (addRow(0, "News"))
+      {
+        this.pane = NewsTab;
+      }
+      with (addRow(1, "Progress"))
+      {
+        this.pane = ProgressTab;
+      }
+      with (addRow(2, "Updates"))
+      {
+        this.pane = UpdatesTab;
+      }
+      with (addRow(3, "Staff"))
+      {
+        this.pane = StaffTab;
+      }
+      thiso.catchevent(name, "onSelect", "onTabSelect");
+    }
+  }
+  InfoTabs.setSelectedById(0);
+  GraalControl.addControl("InfoWindow");
+}
+
+function onTabSelect(tabs)
+{
+  for (temp.tab: temp.tabs.rows)
+  {
+    if (temp.tab.pane == null)
+    {
+      continue;
+    }
+    
+    if (temp.tab == temp.tabs.selected)
+    {
+      temp.tab.pane.show();
+    }
+    else
+    {
+      temp.tab.pane.hide();
+    }
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "16d2915084225720ac337e991a898f000eee25e4148c69837bf98556721612ee",
+  "bytecode_size": 99,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/loginserver/weapon-Rescripted_IRC_Login4.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

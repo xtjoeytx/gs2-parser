@@ -1,0 +1,7 @@
+//#CLIENTSIDE
+/*
+function onCreated()
+{
+  triggerserver("gui", this.name, "test");
+}
+*/

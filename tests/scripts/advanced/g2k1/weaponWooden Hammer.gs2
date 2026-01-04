@@ -1,0 +1,6 @@
+//#CLIENTSIDE
+function onWeaponFired() {
+  freezeplayer(0.65);
+  setani("jhammer", "hammerwood.png");
+  triggeraction(player.x+1.5+vecx(player.dir)*2, player.y+2+vecy(player.dir)*2, "hammerhit", "wood");
+}

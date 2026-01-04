@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "",
+  "bytecode_size": 0,
+  "compilation_success": false,
+  "expected_failure": false,
+  "error_message": "malformed input at line 3:     if (temp.test == \"\\\\\") {",
+  "metadata": {
+    "script_path": "edge_cases/04_string_escaping.gs2",
+    "generated_at": "2026-01-03 12:15:31",
+    "compiler_version": "modified_1767460496"
+  }
+}

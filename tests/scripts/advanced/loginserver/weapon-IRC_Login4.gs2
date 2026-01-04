@@ -1,0 +1,10 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated() {
+
+}
+
+function onServerLogin(asd) {
+  echo("HELLO FROM IRC4" @ asd);
+  loadingscreenenabled = false;
+}

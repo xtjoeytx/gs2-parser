@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "7075eab612887cf09e032a05fa1fe1a68717487d7eaeb04868298692345159dc",
+  "bytecode_size": 3052,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponTrading Item.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

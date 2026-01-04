@@ -1,0 +1,101 @@
+//#CLIENTSIDE
+function onWeaponFired()
+{
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+  
+  if (temp.muditem.itemtype == "ARCHETYPE_ITEM" && temp.muditem.realname == "DogTag" && temp.muditem.quantity >= 1)
+  {
+    if (makevar("DogTag_Window" @ this.dtagid++) != NULL)
+    {
+      makevar("DogTag_Window" @ this.dtagid).destroy();
+    }
+  
+    new GuiControl("DogTag_Window-" @ thiso.dtagid)
+    {
+      useownprofile = true;
+      profile.modal = true;
+      canmove = true;
+      
+      extent   = {176, 97};
+      position = {random(150, screenwidth - extent[0] - 150), random(100, screenheight - extent[1] - 100)};
+    
+      new GuiBitmapCtrl("DogTag_BG-" @ thiso.dtagid)
+      {
+        useownprofile = true;
+        profile.modal = false;
+        canmove = true;
+      
+        bitmap = "gx_dogtag-gui.png";
+        extent = {176, 97};
+    
+        new GuiMLTextCtrl("DogTag_Text0-" @ thiso.dtagid)
+        {
+          profile = "GuiBlueMLTextProfile";
+          useownprofile = true;
+          profile.modal = false;
+          canmove = true;
+          
+          position = {20, 5};
+          extent   = {135, 20};
+     
+          text     = "<p align=right><font size=15>" @ temp.muditem.killed @ "</font></p>";
+        }
+        
+        new GuiMLTextCtrl("DogTag_Text1-" @ thiso.dtagid)
+        {
+          profile = "GuiBlueMLTextProfile";
+          useownprofile = true;
+          profile.modal = false;
+          canmove = true;
+          
+          position = {20, 45};
+          extent   = {135, 20};
+     
+          text     = "<p align=right><font size=15>Killed By:</font></p>";
+        }
+        
+        new GuiMLTextCtrl("DogTag_Text2-" @ thiso.dtagid)
+        {
+          profile = "GuiBlueMLTextProfile";
+          useownprofile = true;
+          profile.modal = false;
+          canmove = true;
+          
+          position = {20, 60};
+          extent   = {135, 20};
+     
+          text     = "<p align=right><font size=15>" @ temp.muditem.killer @ "</font></p>";
+        }
+        
+        new GuiMLTextCtrl("DogTag_Text3-" @ thiso.dtagid)
+        {
+          profile = "GuiBlueMLTextProfile";
+          position = {25, 75};
+          extent   = {135, 20};
+     
+          text     = "<font size=15>Close</font>";
+          thiso.catchevent(this.name, "onMouseDown", "onCloseGUI");
+        }
+        
+        new GuiShowImgCtrl("DogTag_Img-" @ thiso.dtagid)
+        {
+          useownprofile = true;
+          profile.modal = false;
+          canmove = true;
+          offsety = -64;
+          
+          extent  = {40, 32};
+          position = {30, 5};
+          image   = temp.muditem.head;
+        }
+      }
+    }
+  }
+}
+
+function onCloseGUI()
+{
+  temp.control = params[0].substring(13);
+  makevar("DogTag_Window-" @ temp.control).destroy();
+}

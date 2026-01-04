@@ -1,0 +1,718 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.gangs = serverr.allgangs;
+  
+  onTimeout();
+}
+
+function openGangSys()
+{
+  triggerserver("gui", this.name, "getgangs");
+}
+
+function openStartMenu(gangList)
+{
+  temp.holder = gangList;
+  
+  if (GangStart_Window != NULL)
+  {
+    GangStart_Window.destroy();
+  }
+  
+  new GuiWindowCtrl(GangStart_Window)
+  {
+    canmaximize = false;
+    canminimize = false;
+    canmove     = true;
+    canresize   = false;
+    height      = 269;
+    parent      = "GraalControl";
+    profile     = "GuiBlueWindowProfile";
+    text        = "Select a Gang:";
+    width       = 290;
+    x           = 257;
+    y           = 249;
+
+    new GuiScrollCtrl(GangStart_Info)
+    {
+      profile     = "GuiBlueScrollProfile";
+      position    = "6 24";
+      extent      = "278 239";
+      horizSizing = "width";
+      vertSizing  = "height";
+      hScrollBar  = "alwaysOff";
+      vScrollBar  = "dynamic";
+      
+      temp.I = 0;
+      temp.slots = int(GangStart_Window.width / 96) - 1;
+      for (temp.gang: temp.holder)
+      {
+        new GuiBitmapButtonCtrl("GangStart_Icon-" @ temp.gang[0])
+        {
+          x            = 70 + (temp.I % temp.slots * 96);
+          y            = 10 + (int(temp.I / temp.slots) * 96);
+          width        = 32;
+          height       = 32;
+          normalbitmap = mouseoverbitmap = pressedbitmap = temp.gang[1];
+          thiso.catchevent(this.name, "onAction", "onOpenGang");
+        }
+        
+        new GuiMLTextCtrl("GangStart_Text-" @ temp.gang[0])
+        {
+          profile     = "GuiBlueTextProfile";
+          x           = 70 + temp.I % temp.slots * 96;
+          y           = 45 + (int(temp.I / temp.slots) * 96);
+          height      = 20;
+          text        = format("<center>%s</center>", temp.gang[0]);
+        } 
+        
+        temp.I++;
+      }
+    }
+  }
+}
+
+function openGangMenu(gangSelect)
+{
+  triggerserver("gui", this.name, "getinfo", gangSelect);
+  
+  if (Gang_Window != NULL)
+  {
+    Gang_Window.destroy();
+  }
+  
+  if (Gang_Menu != NULL)
+  {
+    Gang_Menu.destroy();
+  }
+  
+  new GuiWindowCtrl(Gang_Window)
+  {
+    profile     = "GuiBlueWindowProfile";
+    width       = 350;
+    height      = 300;
+    x           = screenwidth / 2 - width / 2;
+    y           = screenheight / 2 - height / 2;
+    text        = "Gang Control: " @ gangSelect;
+    canmaximize = false;
+    canresize   = false;
+    canclose    = true;
+
+    new GuiScrollCtrl(Gang_Info)
+    {
+      profile     = "GuiBlueScrollProfile";
+      position    = "6 62";
+      extent      = "337 232";
+      horizSizing = "width";
+      vertSizing  = "height";
+      hScrollBar  = "alwaysOff";
+      vScrollBar  = "dynamic";
+      
+      new GuiMLTextCtrl(Gang_Info_Label)
+      {
+        profile  = "GuiBlueTextProfile";
+        position = "5 5";
+        extent   = "434 228";
+        text     = name;
+      }
+    }
+    
+    new GuiScrollCtrl(Gang_Members)
+    {
+      profile     = "GuiBlueScrollProfile";
+      position    = "6 62";
+      extent      = "337 232";
+      horizSizing = "width";
+      vertSizing  = "height";
+      hScrollBar  = "dynamic";
+      vScrollBar  = "dynamic";
+    
+      new GuiTextListCtrl(Gang_Members_List)
+      {
+        profile  = "GuiBlueTextListProfile";
+        position = "0 0";
+        width    = Gang_Window.width - 13;
+        height   = Gang_Window.height - 62;
+        columns  = "0 165";
+      }
+    }
+    
+    new GuiScrollCtrl(Gang_Ranks)
+    {
+      profile     = "GuiBlueScrollProfile";
+      position    = "6 62";
+      extent      = "337 232";
+      horizSizing = "width";
+      vertSizing  = "height";
+      hScrollBar  = "alwaysOff";
+      vScrollBar  = "dynamic";
+      
+      new GuiTreeViewCtrl(Gang_Ranks_Tree)
+      {
+        profile = GuiBlueTreeViewProfile;
+        profile.bitmap = "treeview_serverlisticons.png";
+        
+        x = y = 0;
+        width = 140;
+        fitparentwidth = true;
+     
+        clearnodes();
+      }
+    }
+
+    new GuiScrollCtrl(Gang_Allies)
+    {
+      profile     = "GuiBlueScrollProfile";
+      position    = "6 62";
+      extent      = "337 232";
+      horizSizing = "width";
+      vertSizing  = "height";
+      hScrollBar  = "alwaysOff";
+      vScrollBar  = "dynamic";
+      
+      for (temp.I = 0; temp.I < 5; temp.I++)
+      {
+        new GuiMLTextCtrl("Gang_Allies_Label0" @ temp.I)
+        {
+          profile  = "GuiBlueTextProfile";
+          position = {5, 5 + (temp.I * 20)};
+          extent   = "434 228";
+          text     = name;
+        }
+      }
+    }
+    
+    new GuiTabCtrl(Gang_Tabs)
+    {
+      profile   = "GuiBlueTabProfile";
+      position  = "9 28";
+      extent    = "360 34";
+      
+      clearRows();
+      with (addRow(0, "Info"))
+      {
+        this.pane = Gang_Info;
+      }
+      with (addRow(1, "Members"))
+      {
+        this.pane = Gang_Members;
+      }
+      with (addRow(2, "Ranks"))
+      {
+        this.pane = Gang_Ranks;
+      }
+      with (addRow(3, "Allies"))
+      {
+        this.pane = Gang_Allies;
+      }
+      
+      thiso.catchevent(name, "onSelect", "onTabSelect");
+    }
+
+    new GuiContextMenuCtrl(Gang_Menu)
+    {
+      profile     = "GuiBluePopUpMenuProfile";
+      textprofile = "GuiBlueTextListProfile";
+      width       = 20;
+    }
+  }
+  
+  Gang_Tabs.setSelectedById(0);
+  GraalControl.addControl("Gang_Window");
+}
+
+function onOpenGang(obj)
+{
+  openGangMenu(obj.substring(obj.pos("-") + 1, -4));
+  GangStart_Window.destroy();
+}
+
+function onTabSelect(tabs)
+{
+  for (temp.tab: temp.tabs.rows)
+  {
+    if (temp.tab.pane == null)
+    {
+      continue;
+    }
+    
+    if (temp.tab == temp.tabs.selected)
+    {
+      temp.tab.pane.show();
+    }
+      else
+    {
+      temp.tab.pane.hide();
+    }
+  }
+}
+
+function Gang_Ranks_Tree.onOpenMenu(node, pathname, dotname)
+{
+  temp.info = pathname.tokenize("/");
+  temp.hinfo = temp.info[0];
+  for (temp.I = 1; temp.I < temp.info.size() - 1; temp.I++)
+  {
+    temp.hinfo = temp.hinfo @ "/" @ temp.info[temp.I];
+  }
+  
+  this.rnode = {node, temp.hinfo, pathname};
+  Gang_Menu.clearRows();
+
+  Gang_Menu.addRow(0, this.rnode[0]);
+  Gang_Menu.addRow(-1, "-");
+
+  for (temp.I = 0; temp.I < client.gmembers.size(); temp.I++)
+  {
+    if (client.gmembers[temp.I] == node)
+    {
+      Gang_Menu.addRow(1, "Edit Member");
+      Gang_Menu.addRow(2, "Remove Member");
+      temp.found = true;
+      
+      break;
+    }
+  }
+  
+  if (temp.found == false)
+  {
+    Gang_Menu.addRow(1, "Edit Rank");
+    Gang_Menu.addRow(2, "Remove Rank");
+    Gang_Menu.addRow(-1, "-");
+    Gang_Menu.addRow(3, "Add Member");
+    Gang_Menu.addRow(4, "Add Rank");
+  }
+  
+  this.selectednode = pathname;
+  
+  Gang_Menu.open(mousescreenx, mousescreeny);
+}
+
+function Gang_Menu.onSelect(entryid, text)
+{  
+  switch (text)
+  {
+    case "Add Member":
+    {
+      for (temp.var: client.ginfo)
+      {
+        temp.vinfo  = temp.var.tokenize("=");
+        temp.vinfo2 = temp.vinfo[1].tokenize("|");
+        
+        if (temp.vinfo2[0] == this.rnode[2])
+        {
+          onOpenNewWindow("member", {"", Gang_Window.text.substring(14), temp.vinfo[0], ""});
+        }
+      }
+    
+      break;
+    }
+    
+    case "Add Rank":
+    {
+      for (temp.var: client.ginfo)
+      {
+        temp.vinfo  = temp.var.tokenize("=");
+        temp.vinfo2 = temp.vinfo[1].tokenize("|");
+
+        if (temp.vinfo2[0] == this.rnode[2])
+        {
+          temp.sinfo2 = temp.vinfo[0];
+        }
+      }
+      
+      onOpenNewWindow("rank", {"", "", temp.sinfo2, ""}, true);
+      
+      break;
+    }
+    
+    case "Edit Member":
+    {
+      for (temp.var: client.ginfo)
+      {
+        temp.vinfo  = temp.var.tokenize("=");
+        temp.vinfo2 = temp.vinfo[1].tokenize("|");
+        
+        if (temp.vinfo2[0] == this.rnode[1])
+        {
+          onOpenNewWindow("member", {this.rnode[0], Gang_Window.text.substring(14), temp.vinfo[0], temp.vinfo2[1]});
+        }
+      }
+      
+      break;
+    }
+    
+    case "Edit Rank":
+    {
+      for (temp.var: client.ginfo)
+      {
+        temp.vinfo  = temp.var.tokenize("=");
+        temp.vinfo2 = temp.vinfo[1].tokenize("|");
+
+        if (temp.vinfo2[0] == this.rnode[2])
+        {
+          temp.sinfo = {temp.vinfo[0], temp.vinfo2[1]};
+        }
+        
+        if (temp.vinfo2[0] == this.rnode[1])
+        {
+          temp.sinfo2 = temp.vinfo[0];
+        }
+      }
+      
+      temp.info = this.rnode[2].tokenize("/");
+      
+      if (temp.info.size() == 1) temp.sinfo2 = "";
+      onOpenNewWindow("rank", {temp.sinfo[0], this.rnode[0], temp.sinfo2, temp.sinfo[1]});
+      
+      break;
+    }
+    
+    case "Remove Member":
+    {
+      for (temp.var: client.ginfo)
+      {
+        temp.vinfo  = temp.var.tokenize("=");
+        temp.vinfo2 = temp.vinfo[1].tokenize("|");
+        
+        if (temp.vinfo2[0] == this.rnode[1])
+        {
+          triggerserver("gui", this.name, "memrem", {this.rnode[0], "<p align=right>" @ Gang_Window.text.substring(14), temp.vinfo[0], "<p align=right>" @ temp.vinfo2[1]});
+        }
+      }
+      
+      break;
+    }
+    
+    case "Remove Rank":
+    {
+      for (temp.var: client.ginfo)
+      {
+        temp.vinfo  = temp.var.tokenize("=");
+        temp.vinfo2 = temp.vinfo[1].tokenize("|");
+
+        if (temp.vinfo2[0] == this.rnode[2])
+        {
+          temp.sinfo = {temp.vinfo[0], temp.vinfo2[1]};
+        }
+        
+        if (temp.vinfo2[0] == this.rnode[1])
+        {
+          temp.sinfo2 = temp.vinfo[0];
+        }
+      }
+      
+      temp.info = this.rnode[2].tokenize("/");
+      
+      if (temp.info.size() == 1) temp.sinfo2 = "";
+      
+      triggerserver("gui", this.name, "rankrem", {temp.sinfo[0], this.rnode[0], temp.sinfo2, temp.sinfo[1]}, {Gang_Window.text.substring(14), temp.orank});
+      
+      break;
+    }
+  }
+}
+
+function onActionClientSide(action)
+{
+  switch (action)
+  {
+    case "opensys":
+    {
+      openStartMenu(params[1]);
+    
+      break;
+    }
+    
+    case "setinfo":
+    {
+      // Load Members
+      temp.gangmembers = new TStaticVar(); 
+      temp.gangmembers.loadvarsfromarray(params[2]);
+      
+      // Load Ranks
+      temp.gangranks = new TStaticVar(); 
+      temp.gangranks.loadvarsfromarray(params[3]);
+ 
+      client.ginfo = params[4];
+      
+      // Add Members
+      client.granks = "";
+      client.gmembers = "";
+      
+      // Add Ranks
+      Gang_Ranks_Tree.clearnodes();
+      Gang_Members_List.clearrows();
+      
+      for (temp.member: params[2])
+      {
+        if (temp.member != "joinedclasses=" && temp.member != "scriptlogmissingfunctions=false" && temp.member != "timeout=0")
+        {
+          this.nmember = temp.member.substring(temp.member.pos("=") + 1);
+          temp.toks = this.nmember.tokenize("/");
+          Gang_Members_List.addRow(temp.I, temp.member.substring(8, temp.member.pos("=") - 8) @ "\t" @ temp.toks[temp.toks.size() - 1]);
+
+          with (Gang_Ranks_Tree.addnodebypath(temp.member.substring(temp.member.pos("=") + 1) @ "/" @ temp.member.substring(8, temp.member.pos("=") - 8), "/")) {
+            image = selectedimage = 2;
+          }
+          
+          client.gmembers.add(temp.member.substring(8, temp.member.pos("=") - 8));
+        }
+        
+        temp.I++;
+      }
+      
+      for (temp.rank: params[3])
+      {
+        if (temp.rank != "joinedclasses=" && temp.rank != "scriptlogmissingfunctions=false" && temp.rank != "timeout=0")
+        {
+          temp.find = Gang_Ranks_Tree.getnodebypath(temp.rank.substring(0, temp.rank.pos("=")), "/");
+          if (temp.find == "")
+          {
+            Gang_Ranks_Tree.addnodebypath(temp.rank.substring(0, temp.rank.pos("=")), "/");
+          }
+        }
+      }
+      
+      Gang_Members_List.sort();
+      
+      break;
+    }
+  }
+}
+
+function onOpenNewWindow(temp.winType, temp.winInfo, temp.winTy)
+{
+  this.winNum++;
+  if (makevar("GangWin_Window_" @ thiso.winNum) != NULL) makevar("GangWin_Window_" @ thiso.winNum).destroy();
+ 
+  new GuiWindowCtrl("GangWin_Window_" @ thiso.winNum) {
+    canmaximize = canminimize = canresize = false;
+    
+    profile     = "GuiBlueWindowProfile";
+    position    = {screenwidth / 3, screenheight / 3};
+    extent      = {304, 188};
+    
+    if (temp.winType == "member")
+    {
+      text = "Editing Player: " @ temp.winInfo[0];
+      onShowMember(temp.winInfo);
+    }
+      elseif (temp.winType == "rank")
+    {
+      if (temp.winTy == true)
+        text = "New Rank: " @ temp.winInfo[2];
+      else
+        text = "Editing Rank: " @ temp.winInfo[0];
+        
+      onShowRank(temp.winInfo);
+    }
+  }
+}
+
+function onActionButton(obj)
+{
+  temp.winid = obj.substring(17);
+  
+  if (obj.text == "Close")
+  {
+    makevar("GangWin_Window_" @ temp.winid).destroy();
+  }
+    elseif (obj.text == "Add")
+  {
+    if (makevar("GangWin_Window_" @ temp.winid).text.starts("New Rank:"))
+    {
+      if (makevar("GangWin_TextEdit_" @ temp.winid @ "_0").text != NULL && makevar("GangWin_TextEdit_" @ temp.winid @ "_1").text != NULL && makevar("GangWin_TextEdit_" @ temp.winid @ "_2").text != NULL)
+      {
+        triggerserver("gui", this.name, "rankadd", {makevar("GangWin_TextEdit_" @ temp.winid @ "_0").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_1").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_2").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_3").text}, Gang_Window.text.substring(14));
+      }
+      else player.addMsg("Server", "Fill in the rest of the forms first!", 15);
+    }
+      else
+    {
+      triggerserver("gui", this.name, "memadd", {makevar("GangWin_TextEdit_" @ temp.winid @ "_0").text, makevar("GangWin_Text2_" @ temp.winid @ "_1").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_2").text, makevar("GangWin_Text2_" @ temp.winid @ "_3").text});
+    }
+    
+    makevar("GangWin_Window_" @ temp.winid).destroy();
+  }
+    elseif (obj.text == "Update")
+  {
+    if (makevar("GangWin_Window_" @ temp.winid).text.starts("Editing Rank:"))
+    {
+      temp.orank = makevar("GangWin_Window_" @ temp.winid).text.substring(14);
+      triggerserver("gui", this.name, "rankedit", {makevar("GangWin_TextEdit_" @ temp.winid @ "_0").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_1").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_2").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_3").text}, {Gang_Window.text.substring(14), temp.orank});
+    }
+      else
+    {
+      triggerserver("gui", this.name, "memedit", {makevar("GangWin_TextEdit_" @ temp.winid @ "_0").text, makevar("GangWin_Text2_" @ temp.winid @ "_1").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_2").text, makevar("GangWin_Text2_" @ temp.winid @ "_3").text});
+    }
+    
+    makevar("GangWin_Window_" @ temp.winid).destroy();
+  }
+    elseif (obj.text == "Remove")
+  {
+    if (makevar("GangWin_Window_" @ temp.winid).text.starts("Editing Rank:"))
+    {
+      temp.orank = makevar("GangWin_Window_" @ temp.winid).text.substring(14);
+      triggerserver("gui", this.name, "rankrem", {makevar("GangWin_TextEdit_" @ temp.winid @ "_0").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_1").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_2").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_3").text}, {Gang_Window.text.substring(14), temp.orank});
+    }
+      else
+    {
+      triggerserver("gui", this.name, "memrem", {makevar("GangWin_TextEdit_" @ temp.winid @ "_0").text, makevar("GangWin_Text2_" @ temp.winid @ "_1").text, makevar("GangWin_TextEdit_" @ temp.winid @ "_2").text, makevar("GangWin_Text2_" @ temp.winid @ "_3").text});
+    }
+
+    makevar("GangWin_Window_" @ temp.winid).destroy();
+  }
+}
+
+// Members: account | gang | rank | rights
+// Rank: name | rights | parent name
+
+function onShowMember(temp.winInfo)
+{
+  temp.winNames = {"Account", "Gang", "Rank", "Rights"};
+      
+  for (temp.I = 0; temp.I < 4; temp.I++)
+  {
+    new GuiMLTextCtrl("GangWin_Text1_" @ thiso.winNum @ "_" @ temp.I)
+    {
+      profile  = "GuiBlueTextProfile";
+      position = {10, 36 + (temp.I * 30)};
+      extent   = "100 20";
+      text     = temp.winNames[temp.I] @ ":";
+    }
+        
+    if (temp.I != 0 && temp.I != 2)
+    {
+      new GuiMLTextCtrl("GangWin_Text2_" @ thiso.winNum @ "_" @ temp.I)
+      {
+        profile  = "GuiBlueMLTextProfile";
+        position = {112, 36 + (temp.I * 30)};
+        extent   = "167 20";
+        text     = "<p align=right>" @ temp.winInfo[temp.I];
+      }
+    }
+      else
+    {
+      new GuiTextEditCtrl("GangWin_TextEdit_" @ thiso.winNum @ "_" @ temp.I) {
+        profile  = "GuiBlueTextEditProfile";
+        position = {110, 33 + (temp.I * 30)};
+        extent   = "170 20";
+        text     = temp.winInfo[temp.I];
+        
+        useownprofile = true;
+        profile.align = "right";
+            
+        if (temp.I == 0 && temp.winInfo[0] != NULL) editing = true;
+      }
+    }
+  }
+      
+  new GuiButtonCtrl("GangWin_Button_0_" @ thiso.winNum) {
+    profile  = "GuiBlueButtonProfile";
+    position = {206, 150};
+    extent   = "70 25";
+    text     = "Close";
+        
+    thiso.catchevent(this.name, "onAction", "onActionButton");
+  }
+      
+  new GuiButtonCtrl("GangWin_Button_1_" @ thiso.winNum) {
+    profile  = "GuiBlueButtonProfile";
+    position = {117, 150};
+    extent   = "70 25";
+    if (temp.winInfo[0] != NULL) text = "Update"; else text = "Add";
+        
+    thiso.catchevent(this.name, "onAction", "onActionButton");
+  }
+      
+  if (temp.winInfo[0] != NULL)
+  {
+    new GuiButtonCtrl("GangWin_Button_2_" @ thiso.winNum) {
+      profile  = "GuiBlueButtonProfile";
+      position = {28, 150};
+      extent   = "70 25";
+      text     = "Remove";
+        
+      thiso.catchevent(this.name, "onAction", "onActionButton");
+    }
+  }
+}
+
+function onShowRank(temp.winInfo)
+{
+  temp.winNames = {"Name", "Display Name", "Parent", "Rights"};
+      
+  for (temp.I = 0; temp.I < 4; temp.I++)
+  {
+    new GuiMLTextCtrl("GangWin_Text1_" @ thiso.winNum @ "_" @ temp.I)
+    {
+      profile  = "GuiBlueTextProfile";
+      position = {10, 36 + (temp.I * 30)};
+      extent   = "100 20";
+      text     = temp.winNames[temp.I] @ ":";
+    }
+        
+    new GuiTextEditCtrl("GangWin_TextEdit_" @ thiso.winNum @ "_" @ temp.I) {
+      profile  = "GuiBlueTextEditProfile";
+      position = {110, 33 + (temp.I * 30)};
+      extent   = "170 20";
+      text     = temp.winInfo[temp.I];
+        
+      useownprofile = true;
+      profile.align = "right";
+    }
+  }
+      
+  new GuiButtonCtrl("GangWin_Button_0_" @ thiso.winNum) {
+    profile  = "GuiBlueButtonProfile";
+    position = {206, 150};
+    extent   = "70 25";
+    text     = "Close";
+        
+    thiso.catchevent(this.name, "onAction", "onActionButton");
+  }
+      
+  new GuiButtonCtrl("GangWin_Button_1_" @ thiso.winNum) {
+    profile  = "GuiBlueButtonProfile";
+    position = {117, 150};
+    extent   = "70 25";
+    if (temp.winInfo[0] != NULL) text = "Update"; else text = "Add";
+        
+    thiso.catchevent(this.name, "onAction", "onActionButton");
+  }
+      
+  if (temp.winInfo[0] != NULL)
+  {
+    new GuiButtonCtrl("GangWin_Button_2_" @ thiso.winNum) {
+      profile  = "GuiBlueButtonProfile";
+      position = {28, 150};
+      extent   = "70 25";
+      text     = "Remove";
+        
+      thiso.catchevent(this.name, "onAction", "onActionButton");
+    }
+  }
+}
+
+
+function onKeyPressed(keycode, keychar)
+{
+  if (keycode == 305)
+  {
+    openGangSys();
+  }
+}
+
+function onTimeout()
+{
+  if (client.cufftime > 0)
+  {
+    client.cufftime--;
+    playerfreeze = 1;
+    setani("gx_handcuffed", NULL);
+  }
+  
+  setTimer(1);
+}

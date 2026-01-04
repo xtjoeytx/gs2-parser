@@ -1,0 +1,49 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.laytiles = {
+    0xbe2,0xbe3,
+    0xea,0xe9,
+    0x154,0x153
+  };
+}
+
+function onWeaponFired() {
+  if (this.on) {
+    return;
+  }
+
+  checkoff();
+
+  checkpos();
+  if (this.rightpos==true) {
+    this.on = true;
+    triggeraction(0,0, "serverside", this.name, "tntmine", this.cx, this.cy);
+
+    player.freeze(10.8);
+    player.x = int(player.x+0.5)-0.5;
+    player.y -= 1;
+    player.dir = 2;
+    setani("jlaybomb", null);
+
+    sleep(11);
+    this.on = false;
+    checkoff();
+  }
+}
+
+function checkpos() {
+  this.rightpos = false;
+  if (player.dir!=0 || player.y!=int(player.y)) return;
+  this.cx = int(player.x+0.5) % 64;
+  this.cy = (int(player.y)-2) % 64;
+
+  for (temp.i=0; temp.i<2; temp.i++) for (temp.j=0; temp.j<3; temp.j++)
+    if (board[this.cx+temp.i+(this.cy+temp.j)*64]!=this.laytiles[temp.i+temp.j*2])
+      return;
+  this.rightpos = true;
+}
+
+function checkoff() {
+  if (clientr.minebombs <= 0)
+    destroy();
+}

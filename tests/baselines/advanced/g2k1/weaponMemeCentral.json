@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "067bdfb2f3a9fc756e86aa6e31dfcecfbdc6e533e43b597b91cd7a9d7751edb9",
+  "bytecode_size": 268,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponMemeCentral.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

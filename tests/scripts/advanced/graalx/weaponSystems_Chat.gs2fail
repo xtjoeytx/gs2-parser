@@ -1,0 +1,487 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.guilds      = {clientr.staff, "Working"};
+  
+  this.accounts    = {"KuJi", "Twinny", "Sage_Shadowbane", "contiga"}; // because they are so sexy ;) <-- amen
+
+//  this.sounds   = {{"affirmative", "affirmative.wav"}, {"backup", "backup.wav"}, {"damn", "damnit.wav"}, {"hat", "jeremy.wav"}, {"haha", "haha.wav"}, {"jesus christ", "jesuschrist.wav"}, {"jesus", "sin.wav"}, {"lol", "lol.wav"}, {"omg", "omg.wav"}, {"orly", "orly.wav"}, {"oops", "oops.wav"}, {"negative", "negative.wav"}, {"staff", "staff.wav"}, {"what", "what.wav"}};
+
+  this.staff       = {{"Exit",        "", "block.png",            "Staff Blocks"},
+                      {"Staff Block", "staffblock", "gx_staffblock.png",    "Staff Blocks"},
+                      {"Staff Axe",   "staffaxe",   "gx_staffaxe-icon.gif", "Staff Axe"}};
+ 
+  this.tagctrl     = {"/gang tag", "/staff tag", "/working tag"};
+ 
+  this.unsticklvls = {{"gx_city1in-hospital-room1.nw", 22, 42},   {"gx_city1in-hospital-room1.nw", 45, 42},
+                      {"gx_city1in-hospital-room2.nw", 22, 42},   {"gx_city1in-hospital-room2.nw", 45, 42},
+                      {"gx_city1in-hospital-room3.nw", 22, 42},   {"gx_city1in-hospital-room3.nw", 45, 42},
+                      {"gx_city1in-hospital-room4.nw", 22, 42},   {"gx_city1in-hospital-room4.nw", 45, 42},
+                      {"gx_city1in-hospital-room5.nw", 28, 31},   {"gx_city1in-hospital-room5.nw", 39, 31},
+                      {"gx_city1in-hospital-room6.nw", 28, 31},   {"gx_city1in-hospital-room6.nw", 39, 31},
+                                                    
+                      {"gx_city1in-hospital-icroom1.nw", 28, 31}, {"gx_city1in-hospital-icroom1.nw", 39, 31},
+                      {"gx_city1in-hospital-icroom2.nw", 28, 31}, {"gx_city1in-hospital-icroom2.nw", 39, 31},
+                      {"gx_city1in-hospital-icroom3.nw", 28, 31}, {"gx_city1in-hospital-icroom3.nw", 39, 31},
+                      {"gx_city1in-hospital-icroom4.nw", 22, 42}, {"gx_city1in-hospital-icroom4.nw", 45, 42},
+                      {"gx_city1in-hospital-icroom5.nw", 22, 42}, {"gx_city1in-hospital-icroom5.nw", 45, 42},
+                      {"gx_city1in-hospital-icroom6.nw", 22, 42}, {"gx_city1in-hospital-icroom6.nw", 45, 42}};
+  
+  temp.date = player.getRealTime(timevar);
+  
+  this.curDate = format("%s-%s-%s", temp.date[7], temp.date[0], temp.date[2]);
+
+  addMsg("Server", "Welcome to Graal X", 12);
+  addMsg("Server", "Enjoy your stay!", 15);
+  
+  onTimeout();
+}
+
+function onPlayerEnters()
+{
+  if (player.level.starts("gx_city1-") && player.x > 64 && player.y > 64)
+  {
+    onShowParticle();
+  }
+    else
+  {
+    hideimg(1000);
+  }
+}
+
+function onTimeout()
+{
+  hideimgs(200, 300);
+  
+  if (this.atktick > 0) this.atktick -= 0.05;
+  
+  for (temp.var: client.messages)
+  {
+    addMsg(temp.var[0], temp.var[1], temp.var[2]);
+  } 
+    
+  client.messages = "";
+  
+  for (temp.var: this.msgs)
+  {
+    showtext(200 + temp.I, screenwidth - 5, screenheight - 50 - (temp.I * + 15), "Arial", "br", this.msgs[temp.I][1]);
+    changeimgzoom(200 + temp.I, 0.7);
+    changeimgvis(200 + temp.I, 4);
+    
+    // Colors
+    if (this.msgs[temp.I][0] == "Admin")   changeimgcolors(200 + temp.I, 1, 0, 0, 1);
+    if (this.msgs[temp.I][0] == "Guild")   changeimgcolors(200 + temp.I, 1, 0.6, 0, 1);
+    if (this.msgs[temp.I][0] == "Player")  changeimgcolors(200 + temp.I, 0, 1, 0, 1);
+    if (this.msgs[temp.I][0] == "Server")  changeimgcolors(200 + temp.I, 0, 1, 1, 1);
+    if (this.msgs[temp.I][0] == "Regular") changeimgcolors(200 + temp.I, 1, 1, 1, 1);
+    if (this.msgs[temp.I][0] == "Error")   changeimgcolors(200 + temp.I, 1, 0.5, 0.5, 1);
+     
+    if (this.msgs[temp.I][2] > 0)
+    {
+      this.msgs[temp.I][2] -= 0.05;
+    }
+      else
+    {
+      this.msgs.delete(temp.I);
+    }
+    
+    temp.I++;
+  }
+  
+  if (this.gmsg > 0)     this.gmsg -= 0.05;
+  if (this.mmsg > 0)     this.mmsg -= 0.05;
+  if (this.pmsg > 0)     this.pmsg -= 0.05;
+  if (this.stick > 0)   this.stick -= 0.05;
+  if (playerunstick > 0) playerunstick -= 0.05;
+  
+  if (this.guilds.index(player.guild) >= 0 || this.accounts.index(player.account) >= 0)
+  {
+    if (this.bootspeed > 0 && client.cufftime <= 0 && !clientr.car && !clientr.icar)
+    {
+      if ("boots" in clientr.stafftool || this.accounts.index(player.account) >= 0)
+      {
+        if (keydown(0)) player.y -= this.bootspeed;
+        if (keydown(1)) player.x -= this.bootspeed;
+        if (keydown(2)) player.y += this.bootspeed;
+        if (keydown(3)) player.x += this.bootspeed;
+      }
+    }
+    
+    if (middlemousebutton)
+    {
+      if ("mouse" in clientr.stafftool || this.accounts.index(player.account) >= 0)
+      {
+        player.x = mousex;
+        player.y = mousey;
+      }
+    }
+    
+    if (leftmousebutton && this.staffblock)
+    {
+      if (this.jtick <= 0)
+      {
+        triggerserver("gui", this.name, "staffblock mouse " @ mousex SPC mousey);
+      
+        this.jtick = 0.1;
+      }
+    }
+  }
+  
+  if (this.jtick > 0) this.jtick -= 0.05;
+  
+ // if (clientr.particle) hideimg(1000);
+  
+  setTimer(0.05);
+}
+
+function ChatBar.onAction()
+{
+  if (ChatBar.text.starts("setnick"))
+  {
+    if (player.level.starts("g_event-ctf"))
+    {
+      ChatBar.text = "Error: You can't do that here!";
+    }
+  }
+    elseif (ChatBar.text.starts("/"))
+  {
+    temp.msg = ChatBar.text;
+    ChatBar.text = "";
+    
+    temp.toks = temp.msg.tokenize();
+    
+    if (temp.toks[0] == "/mass")
+    {
+      if (this.mmsg > 0)
+      {
+        player.addMsg("Error", "You have to wait at least " @ int(this.mmsg) @ " before sending another mass message!", 15);
+        return true;
+      }
+        else
+      {
+        this.mmsg = 10;
+        triggerserver("gui", this.name, "mass", temp.msg.substring(6));
+        
+        return true;
+      }
+    }
+      elseif (temp.toks[0] == "/radio")
+    {
+      if (temp.toks[1])
+      {
+        findWeapon("Radio").onOpenRadio(temp.toks[1]);
+      }
+        else
+      {
+        player.addMsg("Server", "Please specify a radio station!", 15);
+      }
+      
+      return true;
+    }
+      elseif (temp.toks[0] == "/torch" && player.guild == "Riot")
+    {
+      if (player.ani.starts("torch_"))
+      {
+        setani("idle", NULL);
+        meleedisabled = false;
+        
+        findWeapon("-Movement").changeAnis3();
+      }
+        else
+      {
+        setani("torch_idle", NULL);
+        meleedisabled = true;
+        
+        findWeapon("-Movement").changeAnis("torch_idle", "torch_walk", "swim", "push", "pull", "grab", "sit", "sleep", "map");
+      }
+      
+      return true;
+    }
+    
+    if (temp.msg == "/gang tag")    { triggerserver("gui", this.name, {"gang tag"});    return true; }
+    if (temp.msg == "/staff tag")   { triggerserver("gui", this.name, {"staff tag"});   return true; }
+    if (temp.msg == "/working tag") { triggerserver("gui", this.name, {"working tag"}); return true; }
+  
+    triggerserver("gui", this.name, temp.msg.substring(1));
+  }
+    elseif (ChatBar.text == "unstick me" || ChatBar.text == "unstuck me")
+  {
+    if (playerunstick <= 0)
+    {
+      playerunstick = 30;
+      
+      temp.bedr = int(random(0, this.unsticklvls.size()));
+      temp.bed = this.unsticklvls[temp.bedr];
+      triggerserver("gui", name, "unstick", temp.bed);
+      
+      ChatBar.text = "";
+    }
+      else
+    {
+      ChatBar.text = "You must wait at least " @ int(playerunstick) @ " seconds!";
+    }
+  }
+  
+  hideimgs(15, 40);
+  
+  if (this.stick > 0) return false;
+  
+  for (temp.var: this.sounds)
+  {
+    if (contains(ChatBar.text, temp.var[0])) 
+    {
+      showani(15 + temp.I, player.x, player.y, 2, "gx_serversound", temp.var[1]);
+    
+      temp.I++;
+      
+      if (player.account != "KuJi") this.stick = 10;
+      
+      break;
+    }
+  }
+}
+
+public function addMsg(MType, MMsg, MTime)
+{
+  this.newmsg = {MType, MMsg, MTime};
+  this.msgs.insert(0, this.newmsg);
+  echo(MMsg);
+  
+  temp.chat.add(MMsg);
+  temp.chat.savelines("f2window_" @ this.curDate @ ".txt", 1);
+  
+  if (MMsg.starts("Particle")) onShowParticle();
+}
+
+function onPlayerLogin(newUser)
+{
+  if (!newUser.isExternal && newUser != NULL)
+  {
+    player.addMsg("Server", format("%s has logged on!", newUser), 15);
+  }
+}
+
+function onPlayerLogout(newUser)
+{
+  if (!newUser.isExternal && newUser != NULL)
+  {
+    player.addMsg("Server", format("%s has logged off!", newUser), 15);
+  }
+}
+
+function onKeyPressed(keycode, keychar)
+{
+  if (keycode == 307)
+  {
+    openurl("http://www.graalx.us/");
+  }
+  
+  if (keycode == 308)
+  {
+    openurl("http://www.graalx.us/gdb/");
+  }
+  
+  if (keycode == 48 && this.accounts.index(player.account) >= 0)
+  {
+    triggerserver("gui", this.name, "heal self");
+  }
+  
+  if (keychar == "+" && player.account == "KuJi") client.speed2++;
+  if (keychar == "-" && client.speed2 > 0 && player.account == "KuJi") client.speed2--;
+
+  if (keychar == "b" && player.guild != "FAQ")
+  {
+    if (this.bootspeed <= 0)
+    {
+      this.bootspeed = 1.4;
+    }
+      else
+    {
+      this.bootspeed = 0;
+    }
+  }
+  
+  if (clientr.stafftool == "" && player.account != "KuJi")
+  {
+    return false;
+  }
+  
+  if (keychar == "S" && this.atktick <= 0)
+  {
+    if (player.ani.starts("torch_"))
+    {
+      this.atktick = 7.5;
+      triggerserver("gui", this.name, "asdfkg", player.x + 1.5 + vecx(player.dir) * 2, player.y + 1.5 + vecy(player.dir) * 2);
+    }
+  }
+  
+  if (keychar == "R" && !this.on)
+  {
+    this.on = true;
+    
+    calcRights();
+  }
+    elseif (keychar == "T" && this.on)
+  {
+    this.selection = (this.selection += 1) % this.staffpower.size();
+    
+    updateItem();
+  }
+    elseif (keychar == "W" && this.on)
+  {
+    if (playerfreeze <= 0)
+    {
+      useSecondary();
+    }
+  }
+    elseif (keychar == "E" && this.on)
+  {
+    if (playerfreeze <= 0)
+    {
+      useTool();
+    }
+  }
+}
+
+// Functions
+function calcRights()
+{ 
+  this.staffpower = "";
+  
+  for (temp.var: this.staff)
+  {
+    if (temp.var[1] in clientr.stafftool || temp.var[1] == "" || this.accounts.index(player.account) >= 0)
+    {
+      this.staffpower.add(temp.I);
+    }
+    
+    temp.I++;
+  }
+  
+  this.selection = 0;
+  updateItem();
+}
+
+function updateItem()
+{
+  temp.cur = this.staff[this.staffpower[this.selection]];
+ 
+  showpoly(2300, {20, screenheight - 110, 90, screenheight - 110, 90, screenheight - 20, 20, screenheight - 20}); 
+  changeimgcolors(2300, 0, 0, 0, 1);
+  changeimgvis(2300, 4);
+  
+  showimg(2301, temp.cur[2], 38, screenheight - 105);
+  changeimgvis(2301, 5);
+  
+  showtext(2302, 54, screenheight - 67, "Arial", "bc", temp.cur[0]);
+  changeimgvis(2302, 5);
+  changeimgzoom(2302, 0.6);
+}
+
+
+function useTool()
+{
+  temp.cur = this.staff[this.staffpower[this.selection]];
+  
+  switch (temp.cur[0])
+  {
+    case "Exit":
+    {
+      this.on = false;
+      hideimgs(2300, 2310);
+    
+      break;
+    }
+    
+    case "Staff Axe":
+    {
+      setani("gx_tph-staffaxe", NULL);
+      playerfreeze = 0;
+      triggeraction(player.x + 1.5 + vecx(player.dir) * 2, player.y + 1.5 + vecy(player.dir) * 2, "staffaxe", player.account, this.axeselect);
+
+      break;
+    }
+    
+    case "Staff Block":
+    {
+      playerfreeze = 0.35;
+      setani("lay", NULL);
+      triggerserver("gui", this.name, "staffblock self");
+      
+      break;
+    }
+  }
+}
+
+function useSecondary()
+{
+  temp.cur = this.staff[this.staffpower[this.selection]];
+  
+  switch (temp.cur[0])
+  {
+    case "Staff Axe":
+    {
+      playerfreeze = 0.35;
+      setani("lay", NULL);
+      
+      break;
+    }
+    
+    case "Staff Block":
+    {
+      this.staffblock = !this.staffblock;
+      
+      if (this.staffblock)
+      {
+        player.addMsg("Server", "Mouse Staff Block: On", 15);
+      }
+        else
+      {
+        player.addMsg("Server", "Mouse Staff Block: Off", 15);
+      }
+      
+      break;
+    }
+  }
+}
+
+function onShowParticle()
+{
+  if (clientr.particle)
+  {
+    hideimg(1000);
+    
+    if (clientr.particle) return false;
+  }
+  
+  with (findimg(1000))
+  {
+    x = screenwidth;
+    y = 50;
+    alpha = 0;
+    layer = 4;
+    this.shootAngle2 = pi * 1.5;
+    this.shootAngle = this.shootAngle2 + this.angle;
+    emitter.autorotation = false;
+    emitter.attachposition = false; // If the image's x and y move, would the entire emitter, every single particle at once, move along with the image? If true, every sprite moves when the image movies. If false, then only the point of origin, where the particles are created, move when the image is moved.
+    emitter.delaymin = 0; // This is the minimum delay between emissions.
+    emitter.delaymax = 0.15; // This is the maximum delay between emissions, both of these are in seconds.
+    emitter.emissionoffset = {0, -40, 0}; // In format of "{float, float, float}", it's the offset from the x, y, and z that an emission will show. It's the delta variables for the location, basically.
+    emitter.firstinfront = 1; // Should the first emitted particle be in front of every other particle?
+    emitter.nrofparticles = 5; // The number of particles to be released at the same exact time when the emitter emits. For example, set this to two, and you'll have two particles released every time instead of the default 1.
+    emitter.maxparticles = 150; // The maximum number of particles that can exist at one time. If this limit is reached, the script will wait until one of the particles runs out before emitting another one.
+    emitter.particle.image = "gx_snowpart4.png"; // The imagename of the emitter
+    emitter.particle.mode = 0; // Either 0, 1, or 2, the same as changeimgmode. 0 = add, 1 = trans, 2 = subtract. Use this for a blacklight effect if you wish.
+    emitter.particle.alpha = 1; // Between 0 and 1, the alpha colour for transparancy
+    emitter.particle.zoom = 0.7; // The zoom effect of the particle
+    emitter.particle.zangle = 0; // Between 0 and pi*2, it's the upward angle of the particles. Remember zangle from the shoot() function? Same basic idea.
+    emitter.particle.angle = this.shootAngle; // Again, between 0 and pi*2, it's the angle that the particle should flow.
+    emitter.particle.speed = 300; // I'm not sure if this is measured in Tiles per second or what, but it's the speed. Higher = faster, obviously
+    emitter.particle.stretchx = 1; // This is how 'stretched' each particle will be, relative to width.
+    emitter.particle.stretchy = 1; // This is how 'stretched' each particle will be, relative to height.
+    emitter.addLocalModifier("once", 0, .1, "angle", "replace", pi * 1.5 - 0.25, pi * 1.5 + 1);
+    emitter.addLocalModifier("once", 0, 0, "x", "replace", 0, screenwidth + 70);
+    emitter.addLocalModifier("once", 0, 0, "zoom", "replace", 0, random(0.4, 1.3));
+    //emitter.addLocalModifier("once", 0, 0, "speed", "replace", 0, int(random(200, 325)));
+  }
+}

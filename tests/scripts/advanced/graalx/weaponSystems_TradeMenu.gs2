@@ -1,0 +1,46 @@
+//#CLIENTSIDE
+function onCreated()
+  destroy();
+  onStartTrade("Joey_Rox");
+
+function onSendTrade(tradePlyr) {
+  triggerserver("gui", name, "sendtrade", tradePlyr);
+}
+
+function onStartTrade(tradePlyr) {
+ // showimg(200, "gx_cythus-trademenu.png", screenwidth / 4, screenheight / 4);
+  changeimgvis(200, 4);
+  onTimeout();
+}
+
+function onTimeout() {
+  showGui();
+  //showtext(210, 393, 468, "Arial", "b", mousescreenx @ " - " @ mousescreeny);
+  changeimgvis(210, 5);
+  changeimgzoom(210, 0.7);
+  setTimer(0.05);
+}
+
+function showGui()
+{
+  new GuiWindowControl("Test_Back") {
+    useownprofile = true;
+    profile = "GuiWindowProfile";
+    profile.bitmap = "gx_cythus-trademenu.png";
+    x = 10;
+    y = 10;
+    width = 423;
+    height = 348;
+  }
+//gx_cythus-trade_accept.png
+//gx_cythus-trade_trade.png
+//gx_cythus-trade_cancel.png
+}
+
+function onActionClientSide(action) {
+  switch (action) {
+    case "starttrade": {
+      break;
+    }
+  }
+}

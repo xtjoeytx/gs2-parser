@@ -1,0 +1,26 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.seeds = {{"Apple Seeds", 50, "apple", 3, 1}, {"Corn Seeds", 51, "corn", 3, 2}, {"Banana Seeds", 52, "banana", 5, 4}, {"Tomato Seeds", 53, "tomato", 3, 4}};
+}
+
+function onWeaponFired() {
+  if (makevar("clientr.item_" @ this.seeds[this.seedselect][1])[0] > 0) {
+    if (clientr.job_farm[2] >= this.seeds[this.seedselect][4]) {
+      playerfreeze = 0.5;
+      setani("seed1", NULL);
+      this.dirpos = {player.x + 1.5 + vecx(player.dir) * 2, player.y + 1.5 + vecy(player.dir) * 2};
+      triggerserver("gui", name, "seed", this.seeds[this.seedselect][2], this.seeds[this.seedselect][0], this.seeds[this.seedselect][1], this.seeds[this.seedselect][3], this.seeds[this.seedselect][4]);
+      //triggeraction(this.dirpos[0], this.dirpos[1], "seed", this.seeds[this.seedselect][2], this.seeds[this.seedselect][0], this.seeds[this.seedselect][1], this.seeds[this.seedselect][3], this.seeds[this.seedselect][4]);
+    }
+    else findWeapon("-Chat").addMsg("Server", "You can not use these seeds yet!", 15);
+  }
+}
+
+public function changeSeed(selectWeapon) {
+  for (i=0; i < this.seeds.size(); i++) {
+    if (this.seeds[i][1] == selectWeapon) {
+      this.seedselect = i;
+      break;
+    }
+  }
+}

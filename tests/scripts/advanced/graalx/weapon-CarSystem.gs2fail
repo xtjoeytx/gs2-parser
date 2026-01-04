@@ -1,0 +1,468 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  // Timeout
+  onTimeout();
+}
+
+function onPlayerEnters()
+{
+  if (player.level.starts("gx_races-"))
+  {
+    this.street = {1158,1159,1028,1029,1030,1031,1044,1045,1046,1047,1060,1061,1062,1063,1076,1077,1078,1079};
+  }
+    else
+  {
+    this.sidewalk = {1028,1044,1060,1076,1092,1108,1124,1140,1029,1045,1061,1077,1093,1109,1125,1141,1030,1046,1062,1078,1094,1110,1126,1142,1031,1047,1063,1079,1095,1111,1127,1143,1032,1048,1064,1080,1096,1112,1128,1144,1033,1049,1065,1081,1097,1113,1129,1145,1034,1050,1066,1082,1098,1114,1130,1146,1035,1051,1067,1083,1099,1115,1131,1147,1036,1052,1068,1084,1100,1116,1132,1148,1037,1053,1069,1085,1101,1117,1133,1149,1038,1054,1070,1086,1102,1118,1134,1150,1039,1055,1071,1087,1103,1119,1135,1151};
+    this.street   = {1214,1540,1556,1572,1588,1604,1620,1584,1600,1616,1632,1585,1601,1617,1633,1586,1602,1618,1634,1587,1603,1619,1635,1649,1650};
+  }
+}
+
+function onTimeout()
+{
+  onPassenger();
+  
+  onTick();
+  onTrunk();
+  
+  hideimgs(700, 800);
+  
+  if (player.level.starts("gx_races-"))
+  {
+    for (temp.var: serverr.racerlist)
+    {
+      showimg(700 + temp.I, temp.var[2], 20, 250 + (temp.I * 40));
+      changeimgvis(700 + temp.I, 5);
+      changeimgpart(700 + temp.I, 0, 64, 32, 32);
+     
+      showtext(750 + temp.I, 20, 275 + (temp.I * 40), "Arial Bold", "b", temp.var[0]);
+      changeimgvis(750 + temp.I, 5);
+      changeimgzoom(750 + temp.I, 0.7);
+      
+      temp.I++;
+    }
+  }
+  
+  if (!clientr.car)
+  {
+    return false;
+  }
+  
+  if (client.spinout == true)
+  {
+    if (this.ctick <= 0)
+    {
+      this.speed = random(1, 3.5);
+    }
+    
+    this.ctick += 0.05;
+    
+    if (this.rspeed <= 0)
+    {
+      this.ctick = 0;
+      
+      client.spinout = false;
+    }
+    
+    this.newpos += 24;
+  }
+  
+  // Angle Change
+  if (keydown(1))
+  {
+    this.newpos += 6;
+    
+    if (this.speed > 1) this.speed -= 0.05;
+  }
+  
+  if (keydown(3))
+  {
+    this.newpos -= 6;
+    
+    if (this.speed > 1) this.speed -= 0.05;
+  }
+  
+  if (this.newpos >= 360) this.newpos = 0;
+  if (this.newpos < 0) this.newpos = 360;
+  
+  // Set Car Attributes
+  if (this.siren && this.stick <= 0)
+  {
+    this.cureffect = 2;
+    this.stick = 2.5;
+  }
+  
+  player.attr[13] = clientr.car[4];
+  player.attr[14] = this.newpos - 90;
+  player.attr[15] = this.cureffect;
+  player.attr[16] = clientr.car[5];
+  this.cureffect = "";
+  
+  // Movement
+  this.carAngle = degtorad(this.newpos);
+  onMovement();
+
+  setani("gx_car", NULL);
+  playerfreeze = 0.05;
+  
+  setTimer(0.05);
+}
+
+function onMovement()
+{
+  if (player.level.starts("gx_races-") || player.level.starts("gx_city1-") || player.level.starts("gx_city2-") || player.level.starts("g_oldcity") || player.level.pos("garage") > 0 || player.level.pos("cardealershipback.nw") > 0)
+  {
+    client.carpos = {player.level, player.x, player.y};
+  }
+    else
+  {
+    if (this.atick <= 0)
+    {
+      this.atick = 0.5;
+      onParkCar("bad");
+    }
+  }
+    
+  if (tiles[player.x, player.y + 1.5] in this.street)
+  {
+    if (clientr.car[5] == 3)
+    {
+      this.tspeedmax = 5.5;
+    }
+      else
+    {
+      this.tspeedmax = clientr.car[2];
+    }
+    
+    if (this.etick > 0) this.etick -= 0.05;
+  }
+    elseif (tiles[player.x, player.y + 1.5] in this.sidewalk)
+  {
+    this.tspeedmax = clientr.car[2] - 0.5;
+    
+    if (this.etick > 0) this.etick -= 0.05;
+  }
+    else
+  {
+    this.tspeedmax = clientr.car[2] - 1;
+    
+    if (this.rspeed >= 2.3 && clientr.car[5] == 3)
+    {
+      this.etick += 0.05;
+    }
+      elseif (this.etick >= 0)
+    {
+      this.etick -= 0.05;
+    }
+    
+    if (this.etick >= 0.75 && this.ftick <= 0)
+    {
+      this.etick = 0;
+      
+      this.ftick = 7;
+      temp.fireDmg = 5 + (this.rspeed * 2.5);
+      client.spinout = true;
+      triggerserver("gui", name, "putfire", player.x, player.y, temp.fireDmg, {8, 14});
+    }
+  }
+  
+  if (keydown(0))
+  {
+    if (!client.playerfroze && !client.spinout)
+    {
+      if (this.speed < this.tspeedmax)
+      {
+        this.speed += 0.05;
+        
+      //  player.chat = this.speed;
+      }
+    }
+  }
+    elseif (keydown(2))
+  {
+    if (this.speed > clientr.car[3] && !client.playerfroze && !client.spinout)
+    {
+      this.speed -= 0.05;
+    }
+  }
+  
+  if (this.speed > 0 && (!keydown(0) || client.playerfroze || client.spinout || this.speed > this.tspeedmax || this.wall == true))
+  {
+    this.speed -= 0.09;
+    
+    if (this.speed < 0) this.speed = 0;
+  }
+    elseif (this.speed < 0 && (!keydown(2) || client.playerfroze || client.spinout || this.wall == true))
+  {
+    this.speed += 0.09;
+    
+    if (this.speed > 0) this.speed = 0;
+  }
+  
+  this.wall = false;
+  
+  if (this.speed > 0)
+  {
+    this.rspeed = this.speed;
+    this.newx = player.x + (cos(this.carAngle) * this.speed);
+    this.newy = player.y - (sin(this.carAngle) * this.speed);
+    
+    onCheckMove(this.newx, this.newy);
+  }
+    elseif (this.speed < 0)
+  {
+    this.rspeed = -this.speed;
+    this.newx = player.x - (cos(this.carAngle) * -this.speed);
+    this.newy = player.y + (sin(this.carAngle) * -this.speed);
+    
+    onCheckMove(this.newx, this.newy);
+  }
+    else
+  {
+    this.rspeed = 0;
+  }
+}
+
+function onPassenger()
+{
+  if (clientr.icar || clientr.car)
+  {
+    if (player.ani == "dead")
+    {
+      if (clientr.icar)
+      {
+        if (this.atick <= 0)
+        {
+          this.atick = 0.5;
+          triggerserver("gui", name, "chat", "leave");
+        }
+      }
+        elseif (clientr.car && !client.spinout)
+      {
+        if (this.atick <= 0)
+        {
+          this.atick = 0.5;
+          onParkCar();
+        }
+      }
+    }
+    
+    if (CarChat_Window0 == NULL)
+    {
+      onShowChat();
+      
+      if (clientr.car)
+      {
+        this.newpos = player.attr[14];
+        CarChat_TextList0.addrow(0, player.account);
+      }
+    }
+  }
+    elseif (CarChat_Window0 != NULL)
+  {
+    CarChat_Window0.destroy();
+  }
+  
+  if (clientr.icar != NULL)
+  { 
+    this.pdir = {{4, 1 + clientr.icar[1]},
+                 {3, 1 + clientr.icar[1]},
+                 {3, -3 + -clientr.icar[1]},
+                 {-3, 1 + clientr.icar[1]}};
+    
+    if (clientr.icar) setani("gx_invisible", NULL); else setani("gx_invisible", NULL);
+    
+    this.find = false;
+    
+    if (this.fid == NULL)
+    {
+      onFindPlayer();
+    }
+    
+    if (players[this.fid].account == clientr.icar[0])
+    {
+      this.find = true;
+      player.x = players[this.fid].x + this.pdir[players[this.fid].dir][0];
+      player.y = players[this.fid].y + this.pdir[players[this.fid].dir][1];
+      client.carhold = players[this.fid].dir;
+    }
+      elseif (onFindPlayer())
+    {
+      this.find = true;
+    }
+    
+    if (this.find == false && this.ttick <= 0)
+    {
+      this.ttick = 0.5;
+      triggerserver("gui", name, "findplyr");
+    }
+    
+    if (keydown(5))
+    {
+      if (this.kclick == false)
+      {
+        this.kclick = true;
+        triggerserver("gui", name, "chat", "leave");
+        client.radio[0] = false;
+        stopmidi();
+        setani("idle", NULL);
+      }
+    }
+    else this.kclick = false;
+  }
+  
+  setTimer(0.05);
+}
+
+function onKeyPressed(keycode, keychar)
+{
+  if (clientr.car)
+  {
+    if (keychar == "A" && this.atick <= 0)
+    {
+      this.atick = 0.5;
+      onParkCar();
+    }
+    
+    if (keychar == "S" && this.btick <= 0)
+    {
+      this.cureffect = 1;
+      this.btick = 0.25;
+      
+      triggerserver("gui", this.name, "horn");
+    }
+    
+    if (keychar == "E" && this.btick <= 0 && clientr.car[5] == 6)
+    {
+      if (this.siren)
+      {
+        this.siren = false;
+      }
+        else
+      {
+        this.siren = true;
+      }
+    }
+    
+    if (keychar == "F")
+    {
+      if (this.dooropen == false)
+      {
+        player.chat = "Opened!";
+        this.dooropen = true;
+      }
+        else
+      {
+        player.chat = "Closed!";
+        this.dooropen = false;
+      }
+    }
+  }
+    elseif (clientr.cartrunk)
+  {
+    if (keychar == "S" && this.btick <= 0)
+    {
+      this.btick = 0.25;
+      triggerserver("gui", this.name, "cartrunk");
+    }
+  }
+}
+
+// Clientside Actions
+function onActionClientSide(action)
+{
+  switch (action)
+  {
+    case "add":
+    {
+      CarChat_MultiLine0.addtext("\n" @ params[1], true);
+      CarChat_MultiLine0.scrolltobottom();
+      
+      break;
+    }
+    
+    case "play":
+    {
+      break;
+    }
+    
+    case "kickout":
+    {
+      this.fid = "";
+      this.rtick = 0.5;
+      triggerserver("gui", name, "chat", "leave");
+      player.addMsg("Server", "You have been kicked out of the car!", 15);
+      client.radio[0] = false;
+      stopmidi();
+      
+      break;
+    }
+    
+    case "update":
+    {
+      CarChat_TextList0.clearrows();
+      for (temp.I = 0; temp.I < params[1].size(); temp.I++)
+      {
+        CarChat_TextList0.addrow(temp.I, params[1][temp.I]);
+      }
+      
+      break;
+    }
+  }
+}
+
+// Player is grabbed
+function onActionGrab(User, Guild)
+{
+  if (clientr.car)
+  {
+    if (this.dooropen == true)
+    {
+      triggerserver("gui", name, "chat", "join", User);
+    }
+  }
+}
+
+function onFindPlayer()
+{
+  for (temp.J = 0; temp.J < allplayers.size(); temp.J++)
+  {
+    if (players[temp.J].account == clientr.icar[0])
+    {
+      this.fid = temp.J;
+      
+      return true;
+    }
+  }
+  
+  return false;
+}
+
+function onDisplayGauge(temp.low, temp.high, temp.value)
+{
+  dist = 32 * 1.2;
+ // player.chat = dist;
+  sx = screenwidth  - 128;
+  sy = screenheight - 64;
+
+  gauge = temp.high - abs(temp.value);
+  if (gauge > temp.high) gauge = temp.high;
+  elseif (gauge < temp.low) gauge = temp.low;
+
+  range = pi * 1.5 - pi * 0.5;
+  angle = pi * 0.5 + gauge * range / (temp.high - temp.low);
+
+  showpoly 400, {
+    sx,                                   sy,
+    sx + sin(angle+pi*0.05) * dist * 0.2, sy + cos(angle+pi*0.05) * dist * 0.2,
+    sx + sin(angle)         * dist * 1.0, sy + cos(angle)         * dist * 1.0,
+    sx + sin(angle-pi*0.05) * dist * 0.2, sy + cos(angle-pi*0.05) * dist * 0.2
+  };
+  
+  changeimgvis 400, 6;
+}
+
+if (player.account == "KuJi")
+{
+  onDisplayGauge(0, this.tspeedmax + 0.2, this.rspeed);
+}

@@ -1,0 +1,39 @@
+// With statements
+function testWith() {
+  // Basic with statement
+  with (temp.player) {
+    x = 10;
+    y = 20;
+    health = 100;
+  }
+
+  // Nested with statements
+  with (temp.game) {
+    with (temp.world) {
+      width = 800;
+      height = 600;
+      with (temp.settings) {
+        fullscreen = true;
+        vsync = false;
+      }
+    }
+  }
+
+  // With statement with expressions
+  with (temp.objects[temp.current_index]) {
+    visible = true;
+    alpha = 1.0;
+    x += velocity.x;
+    y += velocity.y;
+  }
+
+  // With statement modifying properties
+  with (temp.character) {
+    if (health <= 0) {
+      alive = false;
+      respawn_timer = 5.0;
+    }
+    x = clamp(x, 0, world_width);
+    y = clamp(y, 0, world_height);
+  }
+}

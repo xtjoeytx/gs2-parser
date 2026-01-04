@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "e9bfd610bda2d9c17f10cf1a6d11f3c7a6b66c81ff16f9e6bb957892c7d18842",
+  "bytecode_size": 266,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponTorch.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

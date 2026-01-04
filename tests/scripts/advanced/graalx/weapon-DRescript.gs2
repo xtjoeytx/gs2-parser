@@ -1,0 +1,15 @@
+//#CLIENTSIDE
+/*function onCreated() {
+  setTimer(0.05);
+}
+
+function onTimeout() {
+  if (this.speedboost <= 0 && clientr.speedboost >= 0) {
+    triggerserver("gui", name, "speedminus", 10);
+    this.speedboost = 10;
+  }
+  
+  if (this.speedboost >= 0.05)
+    this.speedboost -= 0.05;
+  setTimer(0.05);
+}

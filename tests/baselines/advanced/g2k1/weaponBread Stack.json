@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "f05dc92016d991d1be70626295acd5493b33dbf9d8ae16d362a680e21558fda4",
+  "bytecode_size": 752,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponBread Stack.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

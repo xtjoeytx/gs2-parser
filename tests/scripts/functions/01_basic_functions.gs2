@@ -1,0 +1,55 @@
+// Basic function definitions and calls
+function simpleFunction() {
+  temp.called = true;
+}
+
+function functionWithReturn() {
+  return 42;
+}
+
+function functionWithParameters(param1, param2) {
+  return param1 + param2;
+}
+
+function functionWithMultipleParams(a, b, c, d) {
+  return a * b + c - d;
+}
+
+function testFunctionCalls() {
+  // Simple function call
+  simpleFunction();
+
+  // Function with return value
+  temp.result = functionWithReturn();
+
+  // Function with parameters
+  temp.sum = functionWithParameters(5, 10);
+
+  // Function with multiple parameters
+  temp.complex = functionWithMultipleParams(2, 3, 4, 1);
+
+  // Nested function calls
+  temp.nested = functionWithParameters(
+    functionWithReturn(),
+    functionWithParameters(1, 2)
+  );
+
+  // Function call in expression
+  temp.expression = functionWithReturn() * 2 + 1;
+}
+
+// currently supported  & implemented
+function someFunction();
+
+// currently supported & implemented
+function withNoBrackets()
+  return 1;
+
+// supported & not implemented
+function defaultReturn()
+
+// currently supported  & implemented
+function anotherFunction() {
+  return 2;
+}
+

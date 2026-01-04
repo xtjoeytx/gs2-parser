@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "cc6d4e25bda4b2fa79f59e3bdcfebff64c17553ec6a7f899c366beb6c26397be",
+  "bytecode_size": 836,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-Gravity.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

@@ -1,0 +1,16 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.bgsounds = {"cricket.wav", "ci_wind1.wav", "ci_wind2.wav", "ci-crickets_lite_1.wav", "ci-crickets_medium.wav", "ci-crickets_heavy.wav", "bird1.wav", "bird2.wav", "ci_birdchirp1.wav", "ci_birdchirp2.wav", "ci_birdchirp1-2.wav"};
+  onTimeout();
+}
+
+function onTimeout()
+{
+  if (player.level.starts("gx_city1-"))
+  {
+    this.sound = this.bgsounds[int(random(0, this.bgsounds.size()))];
+    play(this.sound);
+  }
+  
+  setTimer(random(10, 25));
+}

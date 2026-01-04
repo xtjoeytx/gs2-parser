@@ -1,0 +1,41 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.hspeed = 10;
+  destroy;
+  setTimer(0.05);
+}
+  
+function onTimeout() {
+  if (this.spreadtime <= 0) {
+    triggeraction(0, 0, "servervirus", player.account);
+    this.spreadtime = 10;
+  }
+  if (this.virustime <= 0) {
+    triggerserver("gui", name, "virusheal", 20);
+    this.virustime = 20;
+  }
+  if (this.hurttime <= 0 && clientr.health[0] > 0) {
+    this.hspeed--;
+    if (this.hspeed < 3) {
+      this.hurttime = 20;
+      this.hspeed = 6;
+    } else {
+      this.hurttime = this.hspeed;
+    }
+    this.dmg = int(random(1, 3));
+    this.dmg2 = int(random(0, 2));
+    if (this.dmg2 >= 1)
+      this.damage = this.dmg + 0.5;
+    else
+      this.damage = this.dmg;
+    client.attacker = {"Virus", "Sickness"};
+    triggerserver("gui", "-System", "dodmg", this.damage, true);
+  }
+  if (this.spreadtime >= 0.05)
+    this.spreadtime -= 0.05;
+  if (this.hurttime >= 0.05)
+    this.hurttime -= 0.05;
+  if (this.virustime >= 0.05)
+    this.virustime -= 0.05;
+  setTimer(0.05);
+}

@@ -1,0 +1,34 @@
+//#CLIENTSIDE
+function onWeaponFired() {
+  temp.putx = player.x + 1.5;
+  temp.puty = player.y + 2.0;
+  if (player.dir == 0) temp.puty -= 1;
+  if (player.dir == 1) temp.putx -= 1;
+  if (player.dir == 2) temp.puty += 1;
+  if (player.dir == 3) temp.putx += 1;
+  temp.putx = int(temp.putx / 2) * 2;
+  temp.puty = int(temp.puty / 2) * 2;
+
+  temp.boardtx = temp.putx % 64;
+  temp.boardty = temp.puty % 64;
+
+  this.empty = 1;
+  for (temp.i = 0; temp.i < 2; temp.i++) {
+    for (temp.j = 0; temp.j < 2; temp.j++) {
+      temp.b = board[temp.boardtx + temp.i + 64 * (temp.boardty + temp.j)];
+      temp.bx = temp.b % 16;
+      temp.by = int(temp.b / 16);
+      if (!(temp.bx == 15 && (temp.by == 31 || temp.by == 63 || temp.by == 127)))
+        this.empty = 0;
+    }
+  }
+
+  if (this.empty == 1 && !onwall2(temp.putx, temp.puty, 2, 2) && testnpc(temp.putx, temp.puty) == -1) {
+    player.freeze(0.9);
+    setani("shovel", null);
+    triggeraction(0, 0, "serverside", this.name, "puthole", temp.boardtx, temp.boardty);
+  } else {
+    player.freeze(0.45);
+    setani("shovel2", null);
+  }
+}

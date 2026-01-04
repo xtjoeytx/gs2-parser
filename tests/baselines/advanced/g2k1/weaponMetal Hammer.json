@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "6306f6e6c95a8375a1dc0cabe254e873a416332799b58446b3d261dd105fb61c",
+  "bytecode_size": 236,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponMetal Hammer.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

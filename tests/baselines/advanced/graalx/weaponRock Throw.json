@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "de3ba08cb7a5f5d1f6a0d1d7bb751eb3b099f9bf92af3a057df16dec2db01f40",
+  "bytecode_size": 488,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponRock Throw.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

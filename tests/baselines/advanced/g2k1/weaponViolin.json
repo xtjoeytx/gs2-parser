@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "547b3ab010d7a1d921bceb0daab123feaaa15f3b3ec1582aa76dc43ea1e251b9",
+  "bytecode_size": 493,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponViolin.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "86de1e62052297dcf26487dbebf87486017203ec4735ef293eb29acadc5e32bc",
+  "bytecode_size": 63,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponSystems_ArchetypeEditor.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

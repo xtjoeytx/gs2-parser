@@ -1,0 +1,47 @@
+//#CLIENTSIDE
+function onCreated() {
+  allgangs = serverr.allgangs;
+  new GuiWindowCtrl(Gang_Window) {
+    awake = true;
+    height = 244;
+    parent = "GraalControl";
+    profile = "GuiBlueWindowProfile";
+    text = "Gang System - Gang Window";
+    visible = true;
+    width = 320;
+    x = 487;
+    y = 137;
+
+    new GuiScrollCtrl(Gang_Scroll) {
+      awake = true;
+      canmove = true;
+      canresize = true;
+      height = 215;
+      hscrollbar = "dynamic";
+      parent = "Gang_Window";
+      profile = "GuiBlueScrollProfile";
+      visible = true;
+      vscrollbar = "dynamic";
+      width = 309;
+      x = 6;
+      y = 24;
+      new GuiControl(Gang_Buttons) {
+        width = Gang_Window.width;
+        height = Gang_Window.height;
+    
+        for (i=0; i<allgangs.size(); i++) {
+          new GuiButtonCtrl("Gang_Button_" @ i) {
+            profile = "GuiBlueButtonProfile";
+            x = Gang_Window.width/2 - 46 + sin((i/allgangs.size())*6.2831+3.1415)*125;
+            y = Gang_Window.height/2 + cos((i/allgangs.size())*6.2831+3.1415)*110;
+            width = 92;
+            height = 18;
+            text = allgangs[i];
+            thiso.catchevent(name, "onAction", "test");
+          }
+        }
+      }
+    }
+  }
+  triggerserver("gui", name, "getinfo", "Takzhe");
+}

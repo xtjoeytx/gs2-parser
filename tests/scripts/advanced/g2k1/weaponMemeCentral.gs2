@@ -1,0 +1,27 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated() {
+  echo("gs2 builtin");
+
+  temp.da = 1.046;
+  temp.dx = cos(temp.da);
+  temp.dy = sin(temp.da) * -1;
+  echo("hi");
+  sleep(0.5);
+  echo("bye");
+
+  echo("Test: " @ temp.da @ " = " @ temp.dx @ "," @ temp.dy);
+  //waitfor("GUIControl", "onFocus", 3);
+  //player.chat = char("c");
+
+  // temp.l = 7.3;
+  // temp.h = random(1, 15);
+  // player.chat = min(temp.l, temp.h) @ "e";
+onTimeout();
+}
+
+
+function onTimeout() {
+  //player.chat = "T: " @ player.x @ "," @ player.y;
+  //setTimer(1);
+}

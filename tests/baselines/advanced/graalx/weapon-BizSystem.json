@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "803dbf4c200cb5929bffa705ead8dbc1e17cf388fd6ecba5882fee599b43fd11",
+  "bytecode_size": 3830,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-BizSystem.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

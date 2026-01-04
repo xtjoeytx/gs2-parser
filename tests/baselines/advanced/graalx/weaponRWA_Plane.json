@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "4b914c98608fc81d441296c990547772213e97e54e4649fd508298a1780e0b3d",
+  "bytecode_size": 3424,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponRWA_Plane.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

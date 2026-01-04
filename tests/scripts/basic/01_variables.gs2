@@ -1,0 +1,15 @@
+// Basic variable declarations and assignments
+function testVariables() {
+  // Basic assignment
+  temp.x = 5;
+  temp.y = 10.5;
+  temp.name = "hello";
+  temp.flag = true;
+  temp.empty = null;
+
+  // Variable access
+  temp.result = temp.x;
+
+  // Chain assignment
+  temp.a = temp.b = temp.c = 42;
+}

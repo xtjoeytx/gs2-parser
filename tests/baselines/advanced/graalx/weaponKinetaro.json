@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "09c6504a00a6fbe986ced91b99524e61cb61b812bae2c15825b10b2fc9434e86",
+  "bytecode_size": 1813,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponKinetaro.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

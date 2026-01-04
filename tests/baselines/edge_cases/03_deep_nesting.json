@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "cc5ae2e28c2bd1782d7ba273566765efcd4235487355a2a3253747089fde8b14",
+  "bytecode_size": 922,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "edge_cases/03_deep_nesting.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

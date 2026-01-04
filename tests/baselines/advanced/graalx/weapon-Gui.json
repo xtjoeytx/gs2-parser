@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "33317988a60cf449d7ba3a8571832b406c6ef0088b74dfa342d5628d244c6b8b",
+  "bytecode_size": 3206,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-Gui.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

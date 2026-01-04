@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "06d7afd7ab8ab39a78875622e0f06fe3f8ec0b5400f7b842a5f9f7efc2518f27",
+  "bytecode_size": 425,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "statements/03_switch.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

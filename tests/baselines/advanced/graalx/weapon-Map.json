@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "e23669280087da794c667a8d821ff79dc2b309674b905b8529b149676c81ecd4",
+  "bytecode_size": 4537,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-Map.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

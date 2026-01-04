@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "1bf5304319da8bb38cb54ce1f42913d72f8555e402b9adb3f3901dc61d27c7d8",
+  "bytecode_size": 3417,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponRC_NCControl.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "a88ef159988b502e59d561fe10e1f538c09290fb5d197b232f0a792b84f7c969",
+  "bytecode_size": 367,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "edge_cases/01_large_numbers.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

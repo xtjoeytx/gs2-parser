@@ -1,0 +1,249 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.commands = {"Chat", "Profile", "Trade"};
+}
+
+function onMouseDown(temp.mtype)
+{
+  switch (temp.mtype)
+  {
+    case "right":
+    {
+      this.pid = onFindPlayers();
+      
+      if (this.pid >= 0)
+      {
+        if (this.pid == 0)
+        {
+          player.showProfile();
+        }
+          else
+        {
+          onShowMenu();
+        }
+      }
+      
+      break;
+    }
+  }
+}
+
+function onFindPlayers()
+{
+  // Method 2
+  for (temp.I = 0; temp.I < players.size(); temp.I++)
+  {
+    if (mousex in |players[temp.I].x, players[temp.I].x + 3| && mousey in |players[temp.I].y, players[temp.I].y + 3|)
+    {
+      return temp.I;
+    }
+  }
+  
+  return -1;
+}
+
+function onShowChat(temp.CUser)
+{
+  if (temp.CUser == NULL || temp.CUser == player.account)
+  {
+    return false;
+  }
+  // <img src="http://www.snponline.com/PHOTOS_OF_WEEK/POW7-2/images/TOP%20FOURTH%20GRIMACE%207-2%204c.jpg>
+
+  new GuiWindowCtrl("PChat_Window" @ temp.CUser)
+  {
+    closequery = true;
+    height     = 250;
+    parent     = "GraalControl";
+    profile    = "GuiBlueWindowProfile";
+    text       = format("%s : %s - Instant Message", temp.CUser, player.account);
+    visible    = true;
+    width      = 300;
+    x          = screenwidth - this.width;
+    y          = 0;
+    
+    thiso.catchevent(this.name, "onCloseQuery", "onCloseQuery");
+
+    new GuiMenuCtrl("PChat_Menu" @ temp.CUser)
+    {
+      profile = GuiBlueTextEditProfile;
+      x = 6;
+      y = 24;
+      width = 288;
+      height = 20;
+      clearmenus();
+      
+      with (addmenu("File"))
+      {
+        profile = GuiBluePopUpMenuProfile;
+        textprofile = GuiBlueTextListProfile;
+        addrow(0, "Open");
+        addrow(-1, "-");
+        addrow(1, "Close");
+      }
+    
+      with (addmenu("Edit"))
+      {
+        profile = GuiBluePopUpMenuProfile;
+        textprofile = GuiBlueTextListProfile;
+        addrow(0, "Find");
+      }
+      
+      thiso.catchevent(this.name, "onSelect", "onMenuSelect");
+    }
+
+    new GuiScrollCtrl("PChat_Scroll" @ temp.CUser)
+    {
+      height      = 172;
+      horizSizing = "width";
+      hscrollbar  = "dynamic";
+      minextent   = "221, 142";
+      profile     = "GuiBlueScrollProfile";
+      vertSizing  = "height";
+      visible     = true;
+      vscrollbar  = "dynamic";
+      width       = 287;
+      x           = 6;
+      y           = 44;
+      
+      new GuiMLTextCtrl("PChat_MultiLine" @ temp.CUser)
+      {
+        horizSizing = "width";
+        profile     = "GuiBlueMLTextProfile";
+        text        = "GX-Instant Message System";
+        vertSizing  = "height";
+        width       = 210;
+        wordwrap    = true;
+        x           = 3;
+        y           = 3;
+      }
+    }
+    
+    new GuiTextEditCtrl("PChat_TextEdit" @ temp.CUser)
+    {
+      height      = 28;
+      horizSizing = "width";
+      profile     = "GuiBlueTextEditProfile";
+      vertSizing  = "top";
+      visible     = true;
+      width       = 288;
+      x           = 6;
+      y           = 216;
+      
+      thiso.catchevent(this.name, "onAction", "onTextEdit");
+    }
+  }
+  
+  GraalControl.makefirstresponder(true);
+}
+
+function onShowMenu()
+{ 
+  new GuiContextMenuCtrl(Profile_Menu)
+  {
+    profile     = "GuiBluePopUpMenuProfile";
+    textprofile = "GuiBlueTextListProfile";
+    text        = players[thiso.pid].account;
+    width       = 20;
+    
+    clearrows();
+    
+    addRow(0, players[thiso.pid].account);
+    addrow(-1, "-");
+    for (temp.I = 0; temp.I < thiso.commands.size(); temp.I++)
+    {
+      addRow(temp.I + 1, thiso.commands[temp.I]);
+    }
+    
+    if (player.guild == clientr.staff || player.account == "KuJi" && "heal" in clientr.stafftool)
+    {
+      addrow(-1, "-");
+      addrow(temp.I + 1, "Heal");
+    }
+    
+    open(mousescreenx, mousescreeny);
+  }
+}
+
+function onTextEdit(obj, chat)
+{
+  if (chat != NULL)
+  {
+    makevar("PChat_MultiLine" @ obj.substring(14, -4)).addtext("\n<font color=\"red\"><b>" @ player.account @ ": </b></font>" @ chat, true);
+    makevar("PChat_MultiLine" @ obj.substring(14, -4)).scrolltobottom();
+
+    triggerserver("gui", this.name, "sendmsg", obj.substring(14, -4), chat);
+  
+    obj.text = "";
+  }
+}
+
+function onCloseQuery(obj)
+{
+  obj.destroy();
+}
+
+function Profile_Menu.onSelect(entryid, text)
+{
+  switch (text)
+  {
+    case "Chat":
+    {
+      //if (makevar("PChat_Window" @ players[this.pid].account) == NULL)
+      //{
+      //  onShowChat(players[this.pid].account);
+      //}
+      
+      player.chat = "Disabled until Baszle grows up and stops abusing a bug I can't fix.. sorry.";
+      
+      break;
+    }
+    
+    case "Heal":
+    {
+      triggerserver("gui", this.name, "heal", players[this.pid].account);
+    
+      break;
+    }
+    
+    case "Profile":
+    {
+      players[this.pid].showProfile();
+      
+      break;
+    }
+  }
+  
+  Profile_Menu.destroy();
+}
+
+function onMenuSelect(menuname, entryid, entrytext, entryindex)
+{
+  switch (entryindex)
+  {
+    case "Close":
+    {
+      onCloseQuery(makevar("PChat_Window" @ menuname.substring(10, -4)));
+    }
+  }
+}
+
+function onActionClientSide(action)
+{
+  switch (action)
+  {
+    case "getmsg":
+    {
+      if (makevar("PChat_Window" @ params[1]) == NULL)
+      {
+        onShowChat(params[1]);
+      }
+      
+      makevar("PChat_MultiLine" @ params[1]).addtext("\n<font color=\"blue\"><b>" @ params[1] @ ": </b></font>" @ params[2], true);
+      makevar("PChat_MultiLine" @ params[1]).scrolltobottom();
+      
+      break;
+    }
+  }
+}

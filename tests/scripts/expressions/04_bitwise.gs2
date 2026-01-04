@@ -1,0 +1,17 @@
+// Bitwise expressions
+function testBitwise() {
+  // Basic bitwise operations
+  temp.and = 5 & 3;        // 0101 & 0011 = 0001
+  temp.or = 5 | 3;         // 0101 | 0011 = 0111
+
+  // Bit shifting
+  temp.left_shift = 5 << 2;   // 0101 << 2 = 10100
+  temp.right_shift = 20 >> 2; // 10100 >> 2 = 0101
+
+  // Complex expressions
+  temp.complex = (5 & 3) | (2 << 1);
+  temp.masked = temp.complex & 255;
+
+  // Power operation (^ is power, not XOR in GS2)
+  temp.power = 2 ^ 3;      // 2 to the power of 3
+}

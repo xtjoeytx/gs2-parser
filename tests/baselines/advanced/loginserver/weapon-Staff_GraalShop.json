@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "c56481affdb5f03cc43f584c2f0ad2888df4fe1847bcdbdf265fa9d1f6c920bd",
+  "bytecode_size": 69892,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/loginserver/weapon-Staff_GraalShop.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "d119c26d48fce1b57ff3a3e5cdb15d10ec440d11ed0de3da6b42b08b431b403d",
+  "bytecode_size": 1921,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-BuySys.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

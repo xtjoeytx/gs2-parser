@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "b4ea67018b81bc61b21388d5209ed14575e79f34004082d694106d8312901c22",
+  "bytecode_size": 3031,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-GraalDB.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

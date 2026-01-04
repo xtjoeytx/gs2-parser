@@ -1,0 +1,160 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.accts = {"KuJi"};
+  map = new TStaticVar();
+  map.offset_x = map.offset_y = 0;
+  map.movespeed = 10;
+  map.status = 0;
+  this.questmap = {{"Billy", 409.5, 106}, {"Jimmy", 390, 53}, {"James", 543.5, 223}, {"Arnok", 427.5, 274}};
+ 
+  onTimeout();
+}
+
+function onKeyPressed( num, key, scan) {
+  if ( key = "m") {
+    if ( player.level.starts( "gx_city1-")) {
+      triggerserver("gui", name, "getinfo");
+      loadPos();
+      map.status = 1 - map.status;
+      if ( map.status = 0) client.playerfroze = 0;
+    }
+    setTimer( 0.05);
+  }
+}
+
+function onTimeout() {
+  if ( map.status == 1) {
+    if ( player.level.starts( "gx_city1-")) drawMap();
+    else hideMap();
+  }
+  else hideMap();
+}
+
+function hideMap() {
+  hideImgs( 200, map.images_index);
+  map.status = 0;
+}
+
+function drawMap() {
+  client.playerfroze = 1;
+  hideImgs( 200, map.images_index); 
+  map.images_index = 200;
+  map.r_width = map.r_height = int( 64 * 25); 
+  map.background_poly = { 0, 0, screenwidth, 0, screenwidth, screenheight, 0, screenheight};
+  map.co_ordinates = { map.offset_x, map.offset_y, screenwidth - 32, screenheight - 32};
+  map.i_width = imgwidth( gx_newmap.png); 
+  map.i_height = imgheight( gx_newmap.png);
+  map.offset_y = max( 0, map.offset_y); 
+  map.offset_y = min( map.i_height - screenheight + 32, map.offset_y);
+  map.offset_x = min( map.i_width - screenwidth + 32, map.offset_x); 
+  map.offset_x = max( 0, map.offset_x);
+  drawImg( "gx_newmap.png", 16, 16, 17, 1, 0.8, 1, map.co_ordinates);
+  drawPoly( map.background_poly, 16, 0.7, 1, { 0, 0, 0});
+  map.objects.clear(); 
+  for ( g: this.custom) {
+    map.objects.add( { g[0], g[1], g[2], g[3], { g[4], g[5], g[6], g[7]}});
+  }
+  if (clientr.questjob) {
+    for (i=0; i < this.questmap.size(); i++) {
+      if (clientr.questjob[1] == this.questmap[i][0] || clientr.questjob[5] == this.questmap[i][0]) {
+        map.objects.add( { "*" @ this.questmap[i][0], this.questmap[i][1], this.questmap[i][2], "gx_x-icon.png", { 0, 0, 31, 32}});
+      }
+    }
+  }
+  
+  map.objects.add( { "*" @ player.account, int( player.x), int( player.y), player.head, { 0, player.dir * 32, 32, 32}});
+  for ( pl: allplayers) {
+    if ( pl.level.starts( "gx_city1-"))
+      map.objects.add( { "*" @ pl.account, int( pl.x), int( pl.y), pl.head, { 0, pl.dir * 32, 32, 32}});
+  }
+  for ( o: map.objects) {
+    obj_new_x = ( o[ 1] * ( map.i_width / map.r_width)) - map.offset_x;
+    obj_new_y = ( o[ 2] * ( map.i_height / map.r_height)) - map.offset_y;
+    map.objects_2.add( obj_new_x @ " - " @ obj_new_y);
+    if ( obj_new_x in | 16, screenwidth - 16| && obj_new_y in | 16, screenheight - 16|) {
+      drawImg( o[ 3], obj_new_x, obj_new_y, 19, 0.8, 1, 1, o[ 4]);
+      if ( mousescreenx in | obj_new_x + 8, obj_new_x + 24| && mousescreeny in | obj_new_y + 8, obj_new_y + 24|) {
+        drawText( o[ 0], obj_new_x + 26, obj_new_y + 4, "Arial", 0.8, "bi", { 1, 1, 1}, 19);
+        obj_polygon_1 = { obj_new_x + 26, obj_new_y + 4, obj_new_x + 30 + getTextWidth( 0.8, "Arial", "bi", o[ 0]), obj_new_y + 4, obj_new_x + 30 + getTextWidth( 0.8, "Arial", "bi", o[ 0]), obj_new_y + 24, obj_new_x + 26, obj_new_y + 24};
+        obj_polygon_2 = { obj_new_x + 2, obj_new_y + 2, obj_new_x + 30, obj_new_y + 2, obj_new_x + 30, obj_new_y + 28, obj_new_x + 2, obj_new_y + 28};
+        drawPoly( obj_polygon_1, 18, 0.7, 1, { 1, 0.5, 0}); drawPoly( obj_polygon_2, 18, 0.6, 1, { 1, 0.8, 0});
+      }
+    }
+  }
+  if ( keydown( 0) || mousescreeny in | 0, 16|) map.offset_y = max( 0, map.offset_y - map.movespeed);
+  if ( keydown( 1) || mousescreenx in | 0, 16|) map.offset_x = max( 0, map.offset_x - map.movespeed);
+  if ( keydown( 2) || mousescreeny in | screenheight - 16, screenheight|) map.offset_y = min( map.i_height - screenheight + 32, map.offset_y + map.movespeed);
+  if ( keydown( 3) || mousescreenx in | screenwidth - 16, screenwidth|) map.offset_x = min( map.i_width - screenwidth + 32, map.offset_x + map.movespeed);
+  setTimer( 0.05);
+}
+
+function loadPos() {
+  map.offset_x = ( player.x * ( map.i_width / map.r_width)) - ( screenwidth / 2) + 16;
+  map.offset_y = ( player.y * ( map.i_height / map.r_height)) - ( screenheight / 2) + 32;
+}
+
+function drawPoly( ip, il, ia, im, ic) {
+  map.images_index ++;
+  with ( findImg( map.images_index)) {
+    polygon = ip; layer = il; alpha = ia; mode = im;
+    red = ic[ 0]; green = ic[ 1]; blue = ic[ 2];
+  }
+}
+
+function drawImg( im, ix, iy, il, iz, ia, imode, ipart) {
+  map.images_index ++;
+  with ( findImg( map.images_index)) {
+    image = im; x = ix; y = iy; layer = il;
+    zoom = iz; alpha = ia; mode = imode;
+  } changeImgPart( map.images_index, ipart[ 0], ipart[ 1], ipart[ 2], ipart[ 3]);
+}
+
+function drawText( tm, tx, ty, tf, tz, ts, tc, tl) {
+  if ( tc = 0) tc = { 1, 1, 1};
+  map.images_index ++;
+  with ( findImg( map.images_index)) {
+    x = tx; y = ty; font = tf; zoom = tz; text = tm; style = ts;
+    red = tc[ 0]; blue = tc[ 2]; green = tc[ 1]; layer = tl + 1;
+  }
+  map.images_index ++;
+  with ( findImg( map.images_index)) {
+    x = tx + 1; y = ty + ( 2 - ( 1 / 16)); font = tf; zoom = tz;
+    text = tm; style = ts; red = blue = green = 0; layer = tl;
+  }
+}
+
+function onMouseDown( button) {
+  switch ( button) {
+    case "left":
+      if ( map.status = 0) return false;
+      
+      if ( keydown2( 162, true)) {
+        map.warp_x = ( ( mousescreenx + map.offset_x) - 16) * ( map.r_width / map.i_width);
+        map.warp_y = ( ( mousescreeny + map.offset_y) - 16) * ( map.r_height / map.i_height);
+        player.chat = "warpto " @ int( map.warp_x) @ " " @ int( map.warp_y) @ " gx_city1.gmap";
+        client.playerfroze = 0; map.status = 0;
+      }
+      
+      break;
+  }
+}
+
+function onActionClientSide() {
+  this.custom = "";
+  for (i=0; i<params[0]; i++) {
+    this.custom.add(params[1][i]);
+  }
+}
+
+function ChatBar.onAction() {
+  if (ChatBar.text.starts("/mapadd")) {
+    tokens = ChatBar.text.tokenize();
+    if (tokens.size() == 7) {
+      triggerserver("gui", name, "add", tokens[1], tokens[2], tokens[3], tokens[4], tokens[5], tokens[6]);
+    }
+    else findWeapon("-Chat").addMsg("Server", "Syntax: /mapadd 'name' 'image' 'imgx' 'imgy' 'width' 'height'", 15);
+  }
+  if (ChatBar.text.starts("/mapremove")) {
+    triggerserver("gui", name, "remove", ChatBar.text.substring(11, -4));
+  }
+}

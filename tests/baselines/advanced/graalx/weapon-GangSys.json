@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "6badd0599d2857fdbb9797f74ac4d7d4b263513901efccf5d653d3c2adc3f3f5",
+  "bytecode_size": 9797,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-GangSys.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

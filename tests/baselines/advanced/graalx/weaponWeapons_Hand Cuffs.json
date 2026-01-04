@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "4f2354e593c0da50f000f05bfb102ec333192d3f44835b1cbc1b6164d2490486",
+  "bytecode_size": 944,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponWeapons_Hand Cuffs.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

@@ -1,0 +1,8 @@
+//#CLIENTSIDE
+function onWeaponFired() {
+  if (clientr.item_112[0] > 0) {
+    playerfreeze = 0.45;
+    setani("gx_medkit", "gx_viruscure.png");
+    triggerserver("gui", name, "usepoison");
+  }
+}

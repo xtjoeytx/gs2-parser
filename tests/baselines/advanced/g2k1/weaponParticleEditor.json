@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "ec11f02a545beb3a53e69c9265e1939a31b75d24aa9b9490a8c2f61a28af7f3f",
+  "bytecode_size": 32127,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponParticleEditor.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

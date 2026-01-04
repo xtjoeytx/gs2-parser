@@ -1,0 +1,81 @@
+//#CLIENTSIDE
+/*
+function onWeaponFired()
+{
+  if (player.level.starts("g_event-") && serverr.event_grenade == false)
+    return false;
+    
+  if (this.nadeout == false)
+  {
+    temp.muditem = new TStaticVar();
+    temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+    if (this.ttick <= 0)
+    {
+      if (temp.muditem.quantity >= 1 && temp.muditem.weapon == name)
+      {
+        this.nadeout = true;
+        this.mthrow = 0.65;
+        onTimeout();
+      }
+    }
+    else findWeapon("-Chat").addMsg("Server", "You can only throw one grenade every 2 seconds!", 15);
+  }
+}
+
+function onTimeout()
+{
+  if (keydown(4))
+  {
+    if (this.nadeout == true && this.mtick <= 0)
+    {
+      setani("grab", NULL);
+      playerfreeze = 0.05;
+      if (this.mthrow < 2.2)
+      {
+        this.mtick = 0.05;
+        this.mthrow += 0.05;
+      }
+    }
+  }
+  elseif (this.nadeout == true)
+    onThrowNade();
+    
+  if (this.ttick > 0) this.ttick -= 0.05;
+  if (this.mtick > 0) this.mtick -= 0.05;
+  setTimer(0.05);
+}
+
+function onKeyPressed(keycode, keychar)
+{
+  if (keychar == "F" && this.nadeout == true)
+  {
+    this.mthrow = 0;
+    onThrowNade();
+  }
+}
+
+function onThrowNade()
+{
+  this.bounce = 0;
+  
+  if (this.ttick <= 0)
+  {
+    playerfreeze = 0.45;
+    this.ttick = 1;
+    triggerserver("gui", name, "usenade", client.selectedweapon);
+    this.angle = getangle(vecx(player.dir), vecy(player.dir)), 1.57 / 2;
+    if (player.guild != NULL)
+    {
+      setshootparams(player.account, 15, player.guild, client.nopk, false, "grenade", this.angle, this.mthrow);
+    } else {
+      setshootparams(player.account, 15, "(none)", client.nopk, false, "grenade", this.angle, this.mthrow); 
+    }
+    shoot(player.x, player.y, player.z, this.angle, 1.57 / 2, this.mthrow, "gx_grenadetest", NULL);
+  }
+  else findWeapon("-Chat").addMsg("Server", "You can only throw one grenade every 2 seconds!", 15);
+  
+  this.nadeout = false;
+  this.mthrow = 0;
+  
+  setTimer(0.05);
+}

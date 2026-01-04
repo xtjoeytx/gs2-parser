@@ -1,0 +1,122 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.buttons = {{"Save", 10, "Save File"}, {"Reload", 150, "Reload File"}, {"Close", 290, "Close File"}};
+}
+
+function ChatBar.onAction()
+{
+  if (ChatBar.text.starts("!openfile"))
+  {
+    triggerserver("gui", this.name, "openfile", {ChatBar.text.substring(10)});
+  }
+}
+
+function onActionClientSide(action, args)
+{
+  switch (action)
+  {
+    case "openfile":
+    {
+      onTextWindow(args[0], args[1]);
+    
+      break;
+    }
+    
+    case "updatelevel":
+    {
+      sendtorc(format("/updatelevel %s", args[0]));
+      player.addMsg("Server", "Saved and Updated successfully!", 15);
+     
+      break;
+    }
+  }
+}
+
+function onActionButton(obj)
+{
+  temp.objid = obj.substring(19);
+  this.sendu = temp.objid;
+  
+  if (obj.starts("TextEdit_")) {
+    temp.type = temp.obj.substring(9);
+    temp.type = temp.type.substring(0, temp.type.length() - 1);
+    temp.uid  = temp.obj.substring(temp.obj.length() - 1);
+    
+    switch (temp.type) {
+      case "Save": {
+        triggerserver("gui", this.name, "savefile", {makevar("TextEdit_Window" @ temp.uid).text.substring(13), makevar("TextEdit_MultiLineEdit" @ temp.uid).getLines()});
+       
+        break;
+      }
+    
+      case "Reload": {
+        makevar("TextEdit_MultiLineEdit" @ temp.uid).setLines(makevar("this.tefile_" @ temp.uid));
+      
+        break;
+      }
+      
+      case "Close": {
+        makevar("TextEdit_Window" @ temp.uid).destroy();
+        
+        break;
+      }
+    }
+  }
+}
+
+function onTextWindow(newFile, newText) {
+  this.teid++;
+  
+  makevar("this.tefile_" @ this.teid) = newText;
+  
+  if (makevar("TextEdit_Window" @ this.teid) != NULL) makevar("TextEdit_Window" @ this.teid).destroy();
+  
+  new GuiWindowCtrl("TextEdit_Window" @ thiso.teid) {
+    profile  = "GuiBlueWindowProfile";
+    
+    extent   = {400, 390};
+    position = {screenwidth / 3, screenheight / 3};
+    
+    text = "Text Editor: " @ newFile;
+
+    new GuiScrollCtrl("TextEdit_Scroll" @ thiso.teid) {
+      profile     = "GuiBlueScrollProfile";
+    
+      extent      = {388, 320};
+      position    = {6, 24};
+      
+      horizSizing = "width";
+      vertsizing  = "height";
+      
+      hscrollbar  = "dynamic";
+      vscrollbar  = "dynamic";
+
+      new GuiMLTextEditCtrl("TextEdit_MultiLineEdit" @ thiso.teid) {
+        profile     = "GuiBlueMLTextProfile";
+        
+        horizSizing = "width";
+        vertsizing  = "height";
+        
+        wordwrap    = false;
+        
+        setlines(newText);
+      }
+    }
+    
+    for (temp.var: thiso.buttons) {
+      new GuiButtonCtrl("TextEdit_" @ temp.var[0] @ thiso.teid) {
+        profile     = "GuiBlueButtonProfile";
+      
+        extent      = {100, 30};
+        position    = {temp.var[1], 349};
+      
+        vertsizing  = "top";
+      
+        text        = temp.var[2];
+        
+        thiso.catchevent(this.name, "onAction", "onActionButton");
+      }
+    }
+  }
+}

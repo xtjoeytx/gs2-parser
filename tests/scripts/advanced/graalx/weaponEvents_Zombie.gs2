@@ -1,0 +1,88 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  onTimeout();
+}
+
+function onTimeout()
+{
+  if (player.level.starts("g"))
+  {
+    if (this.displaytick > 0)
+    {
+      player.attr[4] = "gx_stats.gani";
+      
+      player.attr[6] = format("HP: %s/%s", clientr.zombie_hp[0], clientr.zombie_hp[1]);
+    }
+      else
+    {
+      player.attr[4] = "";
+      player.attr[6] = "";
+    }
+    
+    if (this.attacktime > 0) this.attacktime -= 0.05;
+    
+    setTimer(0.05);
+  }
+    else
+  {
+    //destroy();
+  }
+}
+
+public function onMeleeFired()
+{
+    if (playerfreeze <= 0 && !client.playerfroze && !clientr.playerfroze && clientr.zombie)
+  {
+    temp.attack = random(1, 10);
+      
+    if (temp.attack >= 0)
+    {
+      playerfreeze = 0.12;
+      temp.power   = 4;
+      temp.areaxy  = {player.x + 1.5 + vecx(player.dir) * 1.65,
+                      player.y + 2.0 + vecy(player.dir) * 1.65};
+                             
+      setani("punch", NULL);
+    }
+      else
+    {
+      playerfreeze = 0.12;
+      temp.power   = 5;
+      temp.areaxy  = {player.x + 1.5 + vecx(player.dir) * 1.9,
+                      player.y + 2.0 + vecy(player.dir) * 1.9};
+
+      setani("punch", NULL);
+    }
+    
+    player.chat = "RUN";
+    
+    triggeraction(0, 0, "serverzombie", player.account, player.guild);
+  } 
+}
+
+function ChatBar.onAction()
+{
+  if (ChatBar.text == ":zombiestats")
+  {
+  }
+    elseif (ChatBar.text.starts("sethead") || ChatBar.text.starts("setbody") || ChatBar.text.starts("setnick"))
+  {
+    ChatBar.text = "Invalid Command!";
+  }
+    elseif (clientr.zombie)
+  {
+  }
+}
+
+function onActionClientSide(action)
+{
+  switch (action)
+  {
+    case "blah":  
+    {
+    
+      break;
+    }
+  }
+}

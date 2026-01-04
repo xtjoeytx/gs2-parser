@@ -1,0 +1,55 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated() {
+  initVariables();
+}
+
+function onServerLogin() {
+  initVariables();
+}
+
+function initVariables() {
+	Gs2Utils = this;
+	this.debug = false;
+	echo("-- GS2 Shared Function Pack created --");
+	echo("-- Available functions:");
+	echo("-- * 'Gs2Utils.replaceAll(haystack, needle, replaceVal);'");
+	echo("-- * 'Gs2Utils.indexOf(haystack, needle);'");
+	echo("-- * 'Gs2Utils.destroyObject(objectName);'");
+}
+
+
+public function replaceAll(temp.text, temp.match, temp.replace) {
+  temp.prev = 0;
+  temp.output = "";
+  while (temp.found != -1) {
+    temp.found = indexOf(temp.text, temp.match, temp.prev);
+    if (temp.found == -1) {
+      temp.output @= temp.text.substring(int(temp.prev), -1);
+      return temp.output;
+    } else {
+      temp.output @= temp.text.substring(int(temp.prev), temp.found - temp.prev) @ temp.replace;
+      temp.prev = temp.found + temp.match.length();
+    }
+  } ;
+  return temp.output;
+}
+
+public function indexOf(temp.text, temp.match, temp.offset) {
+	for (temp.i = temp.offset; temp.i < temp.text.length(); temp.i++) {
+		if (temp.text.substring(int(temp.i), temp.match.length()) == temp.match) {
+			return temp.i;
+		}
+	}
+	return -1;
+}
+
+public function destroyObject(temp.obj)
+{
+  if (isObject(temp.obj))
+  {
+	if (this.debug)
+		echo("Destroying object:" SPC temp.obj)
+    (@temp.obj).destroy();
+  }
+}

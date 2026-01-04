@@ -1,0 +1,213 @@
+//#CLIENTSIDE
+function onCreated() {
+  clearitemdb();
+  triggeraction(0, 0, "serverside", this.name, "getitems");
+}
+
+function clearitemdb() {
+  this.itemids = {};
+  this.itemnames = {};
+  this.itemicons = {};
+}
+
+function updateitemdb() {
+  this.maxitems = 0;
+  for (temp.i = 0; temp.i < this.itemids.size(); temp.i++) {
+    temp.itemid = this.itemids[temp.i];
+    if (this.maxitems < temp.itemid) {
+      this.maxitems = temp.itemid;
+    }
+  }
+
+  this.maxitems += 1;
+  setarray(this.itemqty, this.maxitems);
+}
+
+function onActionClientSide(action) {
+  switch (action) {
+    case "itemdb_clear": {
+      clearitemdb();
+      break;
+    }
+
+    case "itemdb_add": {
+      this.itemids = {};
+      for (temp.i=1; temp.i < params.size(); temp.i+=3) {
+        this.itemids.add(params[temp.i]);
+        this.itemnames.add(params[temp.i + 1]);
+        this.itemicons.add(params[temp.i + 2]);
+      }
+      updateitemdb();
+      break;
+    }
+
+    case "inv_update": {
+      for (temp.i=1; temp.i < params.size(); temp.i+=2) {
+        temp.itemid = params[temp.i];
+        this.itemqty[temp.itemid] = params[temp.i + 1];
+      }
+      break;
+    }
+  }
+}
+
+function onBomyWeaponFired() {
+  onWeaponFired();
+}
+
+function onWeaponFired() {
+  setarray(this.keytime, 11);
+  for (temp.i = 0; temp.i < this.keytime.size(); temp.i++) {
+    this.keytime[temp.i] = (temp.i == 4 ? 1 : 0);
+  }
+
+  setarray(this.itemindex, this.maxitems);
+  setarray(this.itemnum, this.maxitems);
+  
+  this.itemcount = 0;
+  for (temp.i=0; temp.i < this.itemids.size(); temp.i++) {
+    temp.itemid = this.itemids[temp.i];
+    temp.itemc = this.itemqty[temp.itemid];
+    if (temp.itemc > 0) {
+      this.itemindex[this.itemcount] = temp.i;
+      this.itemnum[this.itemcount] = temp.itemc;
+      this.itemcount++;
+    }
+  }
+  
+  this.selectedqty = 0;
+  if (this.selecteditem<0) this.selecteditem = 0;
+  if (this.selecteditem>=this.itemcount) this.selecteditem = this.itemcount-1;
+
+  if (this.itemcount > 0) {
+    this.on = true;
+    onTimeout();
+  }
+  else
+    player.chat = "-no items-";
+}
+
+function onTimeout() {
+  if (keydown(6)) {
+    this.on = false;
+    removeicons();
+  } else {
+    player.freeze(0.05);
+    
+    if (keydown(0)) {
+      this.keytime[0]++;
+      if (this.keytime[0]==1 || this.keytime[0]>=4) {
+        if (this.selectedqty < this.itemnum[this.selecteditem]) {
+          this.selectedqty += 1;
+          play("nextpage.wav");
+        }
+      }
+    } else
+      this.keytime[0] = 0;
+      
+    if (keydown(2)) {
+      this.keytime[2]++;
+      if (this.keytime[2]==1 || this.keytime[2]>=4) {
+        if (this.selectedqty > 0) {
+          this.selectedqty -= 1;
+          play("nextpage.wav");
+        }
+      }
+    } else
+      this.keytime[2] = 0;
+      
+    if (keydown(1)) {
+      this.keytime[1]++;
+      if (this.keytime[1]==1 || this.keytime[1]>=4) {
+        this.selecteditem = (this.selecteditem-1)%this.itemcount;
+        this.selectedqty = 0;
+        play("nextpage.wav");
+      }
+    } else
+      this.keytime[1] = 0;
+
+    if (keydown(3)) {
+      this.keytime[3]++;
+      if (this.keytime[3]==1 || this.keytime[3]>=4) {
+        this.selecteditem = (this.selecteditem+1)%this.itemcount;
+        this.selectedqty = 0;
+        play("nextpage.wav");
+      }
+    } else
+      this.keytime[3] = 0;
+
+    if (keydown(5) && this.selectedqty > 0) {
+      this.keytime[5]++;
+      if (this.keytime[5]==1) {
+        this.on = false;
+        removeicons();
+
+        player.freeze(0.5);
+        if (player.isBomy())
+          setani("bomy_lay", null);
+        else
+          setani("lay", null);
+
+        this.uniqueitemid = this.itemids[this.itemindex[this.selecteditem]]; //strtofloat(#I(this.itemids, this.itemindex[this.selecteditem]));
+        triggeraction(0, 0, "serverside", this.name, "layitem", this.uniqueitemid, this.selectedqty);
+      }
+    } else
+      this.keytime[5] = 0;
+  }
+  if (this.on==true) {
+    addicons();
+    setTimer(0.05);
+  }
+}
+
+function addicons() {
+  temp.maxshow = 12;
+  temp.xwidth = 4;
+  if (this.itemcount>temp.maxshow) {
+    temp.maxshow = this.itemcount;
+    temp.xwidth = temp.maxshow/4+1;
+  }
+  for (temp.i=0; temp.i<this.itemcount; temp.i++) {
+    temp.radangle = ((this.selecteditem-i)/temp.maxshow+0.25)*2*3.14;
+    temp.dx = cos(temp.radangle)*temp.xwidth;
+    temp.dy = -sin(temp.radangle)*4;
+
+    temp.index = (temp.i==this.selecteditem? 1 : 200+temp.i);
+    temp.item = this.itemindex[temp.i];
+    //showimg index,selecticons.png,playerx+0.5+dx,playery+1+dy;
+    //changeimgpart index,(item%4)*32,int(item/4)*32,32,32;
+    showimg(temp.index, this.itemicons[temp.item], player.x+0.5+temp.dx, player.y+1+temp.dy);
+    
+    if (temp.index!=200+temp.i)
+      hideimg(200+i);
+  }
+
+  changeimgvis(1,3);
+  showimg(2, "selecticons.png", player.x+1, player.y-4);
+  changeimgpart(2,128,0,16,16);
+  showimg(3, "selecticons.png", player.x+1, player.y-1);
+  changeimgpart(3,128,16,16,16);
+  changeimgvis(3,0);
+
+  if (this.selectedqty == 0) {
+    num = this.itemnum[this.selecteditem];
+    if (num>1) {
+      if (player.chat != num)
+        player.chat = num;
+    } else if (player.chat.length() >0)
+      player.chat = "";
+  } else {
+    if (player.chat != this.selectedqty)
+      player.chat = this.selectedqty;
+    // if (!strequals(#c,#v(this.selectedqty)))
+    // setplayerprop #c,#v(this.selectedqty);
+  }
+}
+
+function removeicons() {
+  for (temp.i=0; temp.i<this.itemcount; temp.i++)
+    hideimg(200 + temp.i);
+  for (temp.i=1; temp.i<=3; temp.i++)
+    hideimg(temp.i);
+  player.chat = "";
+}

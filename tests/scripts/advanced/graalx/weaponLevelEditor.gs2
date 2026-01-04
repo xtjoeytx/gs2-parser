@@ -1,0 +1,522 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  addGuiControls();
+  
+  this.buttons = {{"Save", 10, "Save File"}, {"Reload", 150, "Reload File"}, {"Close", 290, "Close File"}};
+  
+  requesttext("clientrc", 1);
+}
+
+function onKeyPressed(keycode, keychar)
+{
+  if (keycode == 0x73)
+  {
+    LevelEditor_Menu.visible = !LevelEditor_Menu.visible;
+  }
+}
+
+function ChatBar.onAction()
+{
+  if (ChatBar.text.starts(":openfile"))
+  {
+    triggerserver("gui", this.name, "openfile", ChatBar.text.substring(10));
+  }
+}
+
+function onActionClientside(action)
+{
+  switch (action)
+  {
+    case "openfile":
+    {
+      onTextWindow(params[1], params[2]);
+    
+      break;
+    }
+    
+    case "update":
+    {
+      sendtorc(format("/updatelevel %s", params[1]));
+      
+      onOpenLinks(player.level, params[2]);
+      
+      break;
+    }
+    
+    case "updatelevel":
+    {
+      sendtorc(format("/updatelevel %s", params[1]));
+      player.addMsg("Server", "Saved and Updated successfully!", 15);
+     
+      break;
+    }
+    
+    case "sendlinks":
+    {
+      this.linkss = false;
+      
+      onOpenLinks(player.level, params[1]);
+      
+      break;
+    }
+  }
+}
+
+function addGuiControls()
+{
+  new GuiWindowCtrl("LevelEditor_Menu")
+  {
+    profile = "GuiBlueWindowProfile";
+    x = 0;
+    y = 0;
+    width = screenwidth;
+    height = 55;
+    text = "Level Editor - File Menu";
+    visible = false;
+    
+    new GuiMenuCtrl("LevelEditor_Menus")
+    {
+      profile = "GuiBlueMenuBarProfile";
+      x = 10;
+      y = 27;
+      width = 300;
+      height = 20;
+      horizSizing = "width";
+      
+      with (addmenu("Edit Level"))
+      {
+        clearrows();
+        
+        addRow(0,"Links");
+        addRow(1,"Signs");
+        addRow(2,"Update Level");
+      }
+    }
+  }
+}
+
+function LevelEditor_Menus.onSelect(menuname,selid,seltext,selindex)
+{  
+  if (menuname = "Edit Level")
+  {
+    if (seltext == "Links" && !this.linkss)
+    {
+      this.linkss = true;
+      triggerserver("gui", this.name, "getlinks", player.level);
+    }
+    
+    if (seltext == "Signs")
+    {
+      triggerserver("gui", this.name, "getsigns", player.level);
+    }
+    
+    if (seltext == "Update Level")
+    {
+      new GuiWindowCtrl("LevelEditor_UpdateLevel")
+      {
+        profile = "GuiBlueWindowProfile";
+        width = 250;
+        height = 100;
+        x = (screenwidth - width) / 2;
+        y = (screenheight - height) / 2;
+        text = "Update a Level";
+        visible = true;
+        canResize = canMaximize = false;
+        
+        new GuiTextCtrl("UpdateLevel_LevelName")
+        {
+          profile = "GuiBlueTextProfile";
+          x = 24;
+          y = 30;
+          width = 100;
+          height = 25;
+          text = "Level Name:";
+        }
+        
+        new GuiTextEditCtrl("UpdateLevel_NameEdit")
+        {
+          profile = "GuiBlueTextEditProfile";
+          x = 85;
+          y = 28;
+          width = 125;
+          height = 20;
+        }
+        
+        new GuiButtonCtrl("UpdateLevel_ButtonUpdate")
+        {
+          profile = "GuiBlueButtonProfile";
+          width = 50;
+          height = 30;
+          x = (LevelEditor_UpdateLevel.width - width) / 3;
+          y = 55;
+          text = "Update";
+        }
+        
+        new GuiButtonCtrl("UpdateLevel_ButtonCancel")
+        {
+          profile = "GuiBlueButtonProfile";
+          width = 50;
+          height = 30;
+          x = (LevelEditor_UpdateLevel.width - width) / 1.5;
+          y = 55;
+          text = "Cancel";
+        }
+      }
+    }
+  }
+}
+
+function Newlvl_Create.onAction()
+{
+  if (Newlvl_NameEdit.gettext().length() > 0)
+  {
+    triggerserver("gui", this.name, "newlevel", Newlvl_NameEdit.gettext());
+    
+    LevelEditor_Newlvl.destroy();
+  }
+}
+
+function Newlvl_Cancel.onAction()
+{
+  LevelEditor_Newlvl.destroy();
+}
+
+function OpenLevel_ButtonOpen.onAction()
+{
+  if (OpenLevel_NameEdit.gettext().length() > 0)
+  {
+    triggerserver("gui", this.name, "openlevel", OpenLevel_NameEdit.gettext());
+    
+    LevelEditor_OpenLevel.destroy();
+  }
+}
+
+function OpenLevel_ButtonCancel.onAction()
+{
+  LevelEditor_OpenLevel.destroy();
+}
+
+function UpdateLevel_ButtonUpdate.onAction()
+{
+  if (UpdateLevel_NameEdit.gettext().length() > 0)
+  {
+    sendtorc(format("/updatelevel %s", UpdateLevel_NameEdit.gettext()));
+    
+    LevelEditor_UpdateLevel.destroy();
+  }
+}
+function UpdateLevel_ButtonCancel.onAction()
+{
+  LevelEditor_UpdateLevel.destroy();
+}
+
+function onOpenLinks(levelName, levelLinks)
+{
+  if (makevar("LevelEditor_Links_Window") != NULL) makevar("LevelEditor_Links_Window").destroy();
+  
+  new GuiWindowCtrl("LevelEditor_Links_Window")
+  {
+    profile = "GuiBlueWindowProfile";
+    
+    extent = {390, 300};
+    position = {300, 200};
+    
+    text = "Link Manager: " @ levelName;
+
+    new GuiScrollCtrl("LevelEditor_Links_Scroll")
+    {
+      profile = "GuiBlueScrollProfile";
+      
+      extent = {378, 270};
+      position = {6, 24};
+      hscrollbar = "dynamic";
+      vscrollbar = "dynamic";
+
+      new GuiTextListCtrl("LevelEditor_Links_List")
+      {
+        profile = "GuiBlueTextListProfile";
+        
+        x = y = 0;
+        columns  = "0 160 185 210 235 260 310";
+        clearrows();
+        
+        addrow(0, "Level Name \tX\tY \tW \tH \tNew X \tNew Y");
+        
+        temp.toks = levelLinks.tokenize();
+        for (temp.var: temp.toks)
+        {
+          temp.I++;
+          
+          temp.toks2 = temp.var.tokenize(" ");
+          temp.link = "";
+          for (temp.var2: temp.toks2)
+          {
+            if (temp.link)
+              temp.link = temp.link @ "\t " @ temp.var2;
+            else
+              temp.link = temp.var2;
+          }
+          
+          addrow(temp.I, temp.link);
+        }
+        
+        thiso.catchevent(this.name, "onDblClick", "onActionList");
+      }
+    }
+  }
+}
+
+function onActionList(entryid, entryindex, entrytext)
+{  
+  if (entryindex > 0)
+  {
+    temp.toks = entrytext.tokenize(" ");
+    
+    for (temp.var: temp.toks)
+    {
+      temp.info.add(temp.var);
+    }
+
+    openEditLink(makevar("LevelEditor_Links_Window" @ entryid.substring(23)).text.substring(14), temp.info, entryindex - 1);
+  }
+}
+
+// openEditLink
+
+function openEditLink(levelName, linkInfo, linkID)
+{
+  this.lid++;
+  
+  if (makevar("LinkWindow_Window_" @ thiso.lid) != NULL) makevar("LinkWindow_Window_" @ thiso.lid).destroy();
+  
+  new GuiWindowCtrl("LinkWindow_Window_" @ thiso.lid)
+  {
+    canminimize = canmaximize = canresize = false;
+    height = 301;
+    profile = "GuiBlueWindowProfile";
+    text = "Edit Link: " @ levelName @ " | " @ linkID;
+    width = 328;
+    x = 398;
+    y = 304;
+
+    new GuiMLTextCtrl("LinkWindow_TextLabel_" @ thiso.lid)
+    {
+      profile = "GuiBlueTextProfile";
+      
+      position = {15, 25};
+      width = 300;
+      
+      text = "Specify the warp field and the file/URL where the player should be transported to. Also type in the new player position ( you can use math operations and variables like playerx/y).";
+      wordwrap = true;
+    }
+    
+    temp.txt = {"X", "Y", "W", "H"};
+    for (temp.I = 0; temp.I < 4; temp.I++)
+    {
+      new GuiTextCtrl("LinkWindow_Text" @ temp.I @ "_" @ thiso.lid)
+      {
+        profile = "GuiBlueTextProfile";
+      
+        if (temp.I == 3)
+          position = {28 + (temp.I * 70), 100};
+        else
+          position = {27 + (temp.I * 69), 100};
+          
+        width = 25;
+        
+        text = " " @ temp.txt[temp.I];
+      }
+    
+      new GuiTextEditCtrl("LinkWindow_TextEdit" @ temp.I @ "_" @ thiso.lid)
+      {
+        profile = "GuiBlueTextEditProfile";
+        
+        extent = {45, 20};
+        position = {40 + (temp.I * 70), 100};
+        
+        text = linkInfo[temp.I + 1];
+      }
+    }
+    
+    new GuiTextCtrl("LinkWindow_Text4_" @ thiso.lid)
+    {
+      profile = "GuiBlueTextProfile";
+    
+      position = {15, 140};
+          
+      width = 50;
+        
+      text = "Link to level:";
+    }
+    
+    new GuiTextEditCtrl("LinkWindow_TextEdit4_" @ thiso.lid)
+    {
+      profile = "GuiBlueTextEditProfile";
+        
+      extent = {215, 20};
+      position = {80, 140};
+      
+      text = linkInfo[0];
+    }
+    
+    temp.txt = {"New X", "New Y"};
+    
+    for (temp.I = 5; temp.I < 7; temp.I++)
+    {
+      new GuiTextCtrl("LinkWindow_Text" @ temp.I @ "_" @ thiso.lid)
+      {
+        profile = "GuiBlueTextProfile";
+      
+        position = {15, 180 + ((temp.I - 5) * 40)};
+          
+        width = 25;
+        
+        text = temp.txt[temp.I - 5] @ ":";
+      }
+    
+      new GuiTextEditCtrl("LinkWindow_TextEdit" @ temp.I @ "_" @ thiso.lid)
+      {
+        profile = "GuiBlueTextEditProfile";
+        
+        extent = {235, 20};
+        position = {60, 180 + ((temp.I - 5) * 40)};
+        
+        text = linkInfo[temp.I];
+      }
+      
+      new GuiButtonCtrl("LinkWindow_Button0_" @ thiso.lid) {
+        profile = "GuiBlueButtonProfile";
+        
+        extent = {70, 30};
+        position = {130, 255};
+        
+        text = "OK";
+        thiso.catchevent(this.name, "onAction", "onActionButton");
+      }
+      
+      new GuiButtonCtrl("LinkWindow_Button1_" @ thiso.lid) {
+        profile = "GuiBlueButtonProfile";
+        
+        extent = {70, 30};
+        position = {225, 255};
+        
+        text = "Cancel";
+        thiso.catchevent(this.name, "onAction", "onActionButton");
+      }
+    }
+  }
+}
+
+function onActionButton(obj)
+{
+  temp.obj   = obj;
+  temp.objid = obj.substring(19);
+  this.sendu = temp.objid;
+    
+  if (temp.obj.starts("LinkWindow"))
+  {
+    for (temp.I = 0; temp.I < 7; temp.I++)
+    {
+      temp.linfo.add(makevar("LinkWindow_TextEdit" @ temp.I @ "_" @ temp.objid).text);
+    }
+    
+    temp.tok = makevar("LinkWindow_Window_" @ temp.objid).text.substring(11).tokenize("|");
+
+    triggerserver("gui", this.name, "setlink", {temp.tok[0], temp.tok[1]}, temp.linfo);
+    
+    makevar("LinkWindow_Window_" @ temp.objid).destroy();
+  }
+    elseif (temp.obj.starts("TextEdit_"))
+  {
+    temp.type = temp.obj.substring(9);
+    temp.type = temp.type.substring(0, temp.type.length() - 1);
+    temp.uid  = temp.obj.substring(temp.obj.length() - 1);
+    
+    switch (temp.type)
+    {
+      case "Save":
+      {
+        triggerserver("gui", this.name, "savefile", makevar("TextEdit_Window" @ temp.uid).text.substring(13), makevar("TextEdit_MultiLineEdit" @ temp.uid).getLines());
+       
+        break;
+      }
+    
+      case "Reload":
+      {
+        makevar("TextEdit_MultiLineEdit" @ temp.uid).setLines(makevar("this.tefile_" @ temp.uid));
+      
+        break;
+      }
+      
+      case "Close":
+      {
+        makevar("TextEdit_Window" @ temp.uid).destroy();
+        
+        break;
+      }
+    }
+  }
+}
+
+function onTextWindow(newFile, newText)
+{
+  this.teid++;
+  
+  makevar("this.tefile_" @ this.teid) = newText;
+  
+  if (makevar("TextEdit_Window" @ this.teid) != NULL) makevar("TextEdit_Window" @ this.teid).destroy();
+  
+  new GuiWindowCtrl("TextEdit_Window" @ thiso.teid)
+  {
+    profile = "GuiBlueWindowProfile";
+    
+    extent = {400, 390};
+    position = {screenwidth / 3, screenheight / 3};
+    
+    text = "Text Editor: " @ newFile;
+
+    new GuiScrollCtrl("TextEdit_Scroll" @ thiso.teid)
+    {
+      profile = "GuiBlueScrollProfile";
+    
+      extent = {388, 320};
+      position = {6, 24};
+      
+      horizSizing = "width";
+      vertsizing  = "height";
+      
+      hscrollbar  = "dynamic";
+      vscrollbar  = "dynamic";
+
+      new GuiMLTextEditCtrl("TextEdit_MultiLineEdit" @ thiso.teid)
+      {
+        profile = "GuiBlueMLTextProfile";
+        
+        horizSizing = "width";
+        vertsizing  = "height";
+        
+        wordwrap = false;
+        
+        setlines(newText);
+      }
+    }
+    
+    for (temp.var: thiso.buttons)
+    {
+      new GuiButtonCtrl("TextEdit_" @ temp.var[0] @ thiso.teid)
+      {
+        profile     = "GuiBlueButtonProfile";
+      
+        extent      = {100, 30};
+        position    = {temp.var[1], 349};
+      
+        vertsizing  = "top";
+      
+        text        = temp.var[2];
+        
+        thiso.catchevent(this.name, "onAction", "onActionButton");
+      }
+    }
+  }
+}

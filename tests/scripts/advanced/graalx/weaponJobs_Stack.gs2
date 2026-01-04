@@ -1,0 +1,42 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.plevels = {"g_bakery.nw", "g_insides-pizzashop2.nw", "g_kuji-testlvl.nw", "gx_city1in-bakery.nw"};
+  findWeapon("-Movement").changeAnis("stack_idle", "stack_walk", "swim", "push", "pull", "grab", "sit", "sleep", "map");
+  setani("stack_idle", NULL);
+  this.items = {{25, "Bread", 1}, {27, "Apple_Pie", 1}};
+
+  onTimeout();
+}
+  
+function onWeaponFired()
+{
+  triggeraction(player.x+1.5+vecx(player.dir)*2.5, player.y+2+vecy(player.dir)*2, "laybake", player.account, player.id);
+}
+
+function onTimeout() {
+  if (player.weapon != name || !player.ani.starts("stack") || player.level != "gx_city1in-bakery.nw")
+  {
+    findWeapon("-Movement").changeAnis3();
+    
+    destroy();
+  }
+  
+  setTimer(0.05);
+}
+
+function onKeyPressed(keychar, keyval)
+{
+  if (keyval == "A" && player.attr[2] != "")
+  {
+    for (temp.var: this.items)
+    {
+      if (temp.var[0] == player.attr[2])
+      {
+        triggerserver("gui", name, "additem", temp.var[1], temp.var[2]);
+        
+        break;
+      }
+    }
+  }
+}

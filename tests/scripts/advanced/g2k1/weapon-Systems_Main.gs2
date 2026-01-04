@@ -1,0 +1,18 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated()
+{
+  player.join("gs2client-object-player");
+  echo("Joined classes!");
+  
+  /*
+  player.chat = checksum("abcde");
+
+  temp.ob.loadstring("buddyaccounts.txt");
+  player.chat = player.chat SPC checksum(temp.ob);
+  
+  for (temp.a : temp.ob) {
+    echo("T: " @ temp.a);
+  }
+  */
+}

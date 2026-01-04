@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "1f963996615230f4d56af0b2dae1cac4e7401a117da00e81cd22731b62b9323a",
+  "bytecode_size": 372,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "expressions/03_logical.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

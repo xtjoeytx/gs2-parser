@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "d18241ba9d508117f84548a1a9a68404c7d2032f2b8485788bbca3ad962aaaf7",
+  "bytecode_size": 429,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/loginserver/weapon-Adventure.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "81b5e2414c76f05be3174ab7826b4bf1590cbb56c8513e44ff9da702d9c112cf",
+  "bytecode_size": 3916,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon+Guns_M4.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

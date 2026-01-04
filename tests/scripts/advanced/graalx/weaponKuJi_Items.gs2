@@ -1,0 +1,154 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  if (player.account != "KuJi")
+  {
+    destroy();
+  }
+}
+
+function onActionClientSide(action, args)
+{
+  switch (action)
+  {
+    case "send":
+    {
+      this.items = args;
+      
+      return false;
+    }
+  }
+}
+
+function onKeyPressed(keychar, keyval)
+{
+  if (keychar == 117)
+  {
+    if (this.on == false)
+    {
+      this.on = true;
+      
+      this.selitem = 0;
+      this.selamt = 1;
+      
+      calcItems();
+      onTimeout();
+    }
+      else
+    {
+      this.on = false;
+      player.chat = "";
+      setTimer(0);
+    }
+  }
+  
+  if (keyval == "X" && this.on == true)
+  {
+    if (this.hidden == true)
+    {
+      this.hidden = false;
+      player.chat = "Hidden: False";
+    }
+      else
+    {
+      this.hidden = true;
+      player.chat = "Hidden: True";
+    }
+  }
+  
+  if (keyval == "Z" && this.on == true)
+  {
+    if (this.wait <= 0)
+    {
+      triggerserver("gui", this.name, "dropcar", {player.chat});
+      
+      this.wait = 0.15;
+    }
+  }
+  
+  if (keyval == "C" && this.on == true)
+  {
+    if (this.present == true)
+    {
+      this.present = false;
+      player.chat = "Present: False";
+    }
+      else
+    {
+      this.present = true;
+      player.chat = "Present: True";
+    }
+  }
+}
+
+function onTimeout()
+{
+  if (this.on == true)
+  {
+    playerfreeze = 0.15;
+    
+    if (keydown(0))
+    {
+      if (this.selitem <= this.items.size() - 1 && this.ttick <= 0)
+      {
+        this.selitem++;
+        this.selamt = 1;
+        //player.chat = "Item: " @ this.items[this.selitem][1];
+        echo("Item: " @ this.items[this.selitem][1]);
+        this.ttick = 0.1;
+      }
+    }
+    
+    if (keydown(2))
+    {
+      if (this.selitem > 0 && this.ttick <= 0)
+      {
+        this.selitem--;
+        this.selamt = 1;
+        //player.chat = "Item: " @ this.items[this.selitem][1];
+        echo("Item: " @ this.items[this.selitem][1]);
+        this.ttick = 0.1;
+      }
+    }
+    
+    if (keydown(1) && this.selitem >= 0 && this.ttick <= 0)
+    {
+      if (this.selamt > 1)
+      {
+        this.selamt--;
+        //player.chat = "Amount: " @ this.selamt;
+        echo("Amount: " @ this.selamt);
+        this.ttick = 0.1;
+      }
+    }
+    
+    if (keydown(3) && this.selitem >= 0 && this.ttick <= 0)
+    {
+      this.selamt++;
+      //player.chat = "Amount: " @ this.selamt;
+      echo("Amount: " @ this.selamt);
+      this.ttick = 0.1;
+    }
+    
+    if (this.ttick > 0) this.ttick = 0;
+    if (this.wait  > 0) this.wait -= 0.05;
+    
+    setTimer(0.05);
+  }
+}
+
+function calcItems()
+{
+  this.items = "";
+  
+  triggerserver("gui", this.name, "getarchs");
+}
+
+function onMousedown(mtype)
+{
+  if (mtype == "right" && this.on == true)
+  {
+    //player.chat = this.items[this.selitem][1];
+    triggerserver("gui", name, "layitem", {this.items[this.selitem][0], this.selamt, this.hidden, mousex, mousey, this.present});
+  }
+}

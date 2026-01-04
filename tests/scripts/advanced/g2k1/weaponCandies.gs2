@@ -1,0 +1,33 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.lastcandyplaced = 0;
+}
+
+function onBomyWeaponFired() {
+  onFired();
+}
+
+function onWeaponFired() {
+  onFired();
+}
+
+function onFired() {
+  player.freeze(0.5);
+
+  if (player.isBomy()) {
+    setani("bomy_lay", null);
+  } else {
+    setani("lay", null);
+  }
+
+  if (timevar > this.lastcandyplaced) {
+    temp.aimx = player.x + 0.5 + vecx(player.dir) * 2;
+    temp.aimy = player.y + 1.0 + vecy(player.dir) * 2;
+
+    if (!onwall2(temp.aimx, temp.aimy, 2, 2)) {
+      this.lastcandyplaced = timevar;
+      triggeraction(0, 0, "serverside", this.name, "laycandy");
+    }
+  }
+  else player.chat = " You must wait a few seconds before placing another candy!";
+}

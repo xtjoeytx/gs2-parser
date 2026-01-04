@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "",
+  "bytecode_size": 0,
+  "compilation_success": false,
+  "expected_failure": false,
+  "error_message": "Compilation reported success but no output file found: /Users/joey/projects/gs2/gs2-parser/tests/scripts/advanced/loginserver/weapon-Serverlist_v4.gs2bc",
+  "metadata": {
+    "script_path": "advanced/loginserver/weapon-Serverlist_v4.gs2",
+    "generated_at": "2025-09-21 12:42:58",
+    "compiler_version": "Argc: 2\nArgs: --version\nCompiling file --version\nCompiled in 0.000010 seconds\n -> [ERROR] File does not exist\nTotal length of bytecode w/ headers:     0"
+  }
+}

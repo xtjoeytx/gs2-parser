@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "af2555108181559709c407fd5cf9aec69455eae225fc3669dcb09fe842ff38b5",
+  "bytecode_size": 3071,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponDraisine.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

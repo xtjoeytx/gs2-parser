@@ -1,0 +1,21 @@
+//#CLIENTSIDE
+function onWeaponFired() {
+  if (player.level.starts("g_event-") && serverr.event_healing == false)
+    return false;
+    
+  this.healitems = {{109, 25}, {110, 50}};
+  if (clientr.health[0] < 50) {
+    if (makevar("clientr.item_" @ client.selectedweapon)[0] > 0 && !player.level.starts("g_event")) {
+      for (i=0;i<this.healitems.size();i++) {
+        if (this.healitems[i][0] == client.selectedweapon) {
+          playerfreeze = 0.45;
+          triggerserver("gui", name, this.healitems[i][0], this.healitems[i][1]);
+        }
+      }
+    }
+  }
+  else findWeapon("-Chat").addMsg("Server", "You already have full hp!", 15);
+}
+
+public function ImgChg(wepName)
+  setimg(makevar("clientr.item_" @ wepName)[3]);

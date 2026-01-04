@@ -1,0 +1,19 @@
+//#CLIENTSIDE
+function onCreated() {
+  this.valid_levels = {
+    "worldx-13_applebakery.nw",
+    "worldx-14_bakery.nw"
+  };
+}
+
+function onPlayerEnters() {
+  if (!contains(this.valid_levels, player.level)) {
+    destroy();
+  }
+}
+
+function onWeaponFired() {
+  player.freeze(0.6);
+  setani("makebred", "");
+  triggeraction(player.x + 1, player.y + 4, "doughroller", player.account);
+}

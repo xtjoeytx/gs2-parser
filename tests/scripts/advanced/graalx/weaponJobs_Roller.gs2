@@ -1,0 +1,28 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  this.plevels = {"g_bakery.nw", "g_insides-pizzashop2.nw", "g_kuji-testlvl.nw", "gx_city1in-bakery.nw"};
+
+  onTimeout();
+}
+  
+function onWeaponFired()
+{
+  playerfreeze = 0.4;
+  player.dir = 2;
+  setani("makebred", NULL);
+  
+  triggeraction(player.x+1.5+vecx(player.dir)*2.5, player.y+2+vecy(player.dir)*2, "rolldough", player.account, player.id);
+}
+
+function onTimeout()
+{
+  if (player.weapon != name || player.level != "gx_city1in-bakery.nw")
+  {
+    findWeapon("-Movement").changeAnis3();
+    
+    destroy();
+  }
+  
+  setTimer(0.05);
+}

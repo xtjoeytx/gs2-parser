@@ -1,0 +1,32 @@
+//#CLIENTSIDE
+function onCreated() {
+  turnon();
+}
+
+function turnon() {
+  replaceani("idle", "basket_idle");
+  replaceani("walk", "basket_walk");
+  setani("basket_idle", null);
+  setTimer(0.05);
+}
+
+function turnoff() {
+  replaceani("idle", "idle");
+  replaceani("walk", "walk");
+
+  showimg(1, "basket2.png",
+    player.x+0.5-vecx(player.dir),
+    player.y+2-vecy(player.dir)
+  );
+  changeimgvis(1, 0);
+  sleep(1);
+  hideimg(1);
+  destroy();
+}
+
+function onTimeout() {
+  if (!contains(player.ani, "basket"))
+    turnoff();
+  else
+    setTimer(0.05);
+}

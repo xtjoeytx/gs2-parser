@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "97f660161062b9d791e0493f55fc4ffd1f530ba2e8a78f432104dd5bca0feeb7",
+  "bytecode_size": 3665,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weapon-News.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "b2af5059d34a2c59497a156b4a6961cd55ff9d557903ff35127f53c2c3fe6dfd",
+  "bytecode_size": 1431,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponRC_AttributesWindow.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

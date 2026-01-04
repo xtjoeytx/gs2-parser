@@ -1,0 +1,24 @@
+//#CLIENTSIDE
+
+function ChatBar.onAction()
+{
+  if (ChatBar.text.starts(":backup") && player.account == "KuJi")
+  {
+    temp.toks = ChatBar.text.substring(7).tokenize("|");
+    
+    triggerserver("gui", this.name, temp.toks);
+    
+    echo("Backing up Folders: " @ temp.toks);
+    
+    ChatBar.text = "";
+  }
+}
+
+function onActionClientSide()
+{
+  temp.lines = new TStaticVar();
+  temp.lines = params[0];
+  
+  temp.lines.savelines(params[1][0] @ "/" @ params[1][1], false);
+  sendrpgmessage("Backed up to: " @ params[1][0] @ "/" @ params[1][1]);
+}

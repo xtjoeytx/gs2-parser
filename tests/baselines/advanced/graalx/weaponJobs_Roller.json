@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "a9ee93325464d513c3491190f7034db1e3ecf9dad48d79b16ee108c5a861f7ef",
+  "bytecode_size": 547,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponJobs_Roller.gs2",
+    "generated_at": "2026-01-03 14:08:07",
+    "compiler_version": "modified_1767460496"
+  }
+}

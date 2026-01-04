@@ -1,0 +1,249 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  if (SuitSaver_Window0 != NULL)
+  {
+    SuitSaver_Window0.destroy();
+  }
+  this.suittype = {"Body", "Head", "Shield", "Skin", "Coat", "Sleeves", "Shoes", "Belt"};
+}
+
+function onWeaponFired()
+{
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ client.selectedweapon));
+  
+  if (temp.muditem.quantity >= 1 && temp.muditem.weapon == name)
+  {
+    this.items = 0;
+    temp.clientvarnames = clientr.getdynamicvarnames();
+    for (temp.varname: temp.clientvarnames)
+    {
+      if (temp.varname.starts("muditem_"))
+      {
+        if (makevar("clientr." @ temp.varname) != NULL)
+        {
+          temp.muditem = new TStaticVar();
+          temp.muditem.loadvarsfromarray(makevar("clientr." @ temp.varname));
+          if (temp.muditem.itemtype == "ARCHETYPE_OUTFIT")
+          {
+            this.items.add(temp.varname.substring("muditem_".length(), -1));
+          }
+        }
+      }
+    }
+    if (this.items.size() >= 1)
+    {
+      charselect = 0;
+      onUpdateChar();
+    }
+    else player.addMsg("Server", "You need a blank outfit first!", 15);
+  }
+}
+
+function onButtonEnter(obj)
+{
+  if (obj == "SuitSaver_Button0")
+  {
+    triggerserver("gui", name, "save", SuitSaver_TextEdit0.text, this.items[charselect]);
+  }
+  elseif (obj == "SuitSaver_Button1")
+  {
+    triggerserver("gui", name, "delete", this.items[charselect]);
+  }
+  elseif (obj == "SuitSaver_Button2")
+  {
+    temp.muditem = new TStaticVar();
+    temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ this.items[charselect]));
+    player.bodyimg = temp.muditem.suit[1];
+    player.headimg = temp.muditem.suit[2];
+    player.shieldimg = temp.muditem.suit[3];
+    for (temp.i = 0; temp.i < 4; temp.i++)
+    {
+      player.colors[temp.i] = temp.muditem.suit[4 + temp.i];
+    }
+  }
+  elseif (obj == "SuitSaver_Button3")
+  {
+    if (charselect > 0)
+    {
+      charselect--;
+      onUpdateChar();
+    }
+  }
+  elseif (obj == "SuitSaver_Button4")
+  {
+    if (charselect < this.items.size() - 1)
+    {
+      charselect++;
+      onUpdateChar();
+    }
+  }
+}
+
+function onUpdateChar()
+{
+  temp.muditem = new TStaticVar();
+  temp.muditem.loadvarsfromarray(makevar("clientr.muditem_" @ this.items[charselect]));
+  
+  if (SuitSaver_Window0 != NULL) SuitSaver_Window0.destroy();
+  
+  new GuiWindowCtrl(SuitSaver_Window0)
+  {
+    canmaximize = false;
+    canminimize = false;
+    canmove = false;
+    canresize = false;
+    height = 200;
+    parent = "GraalControl";
+    profile = "GuiBlueWindowProfile";
+    text = "Suit Saver - Version 1.0";
+    visible = true;
+    width = 190;
+    x = screenwidth / 4;
+    y = screenheight / 4;
+
+    new GuiButtonCtrl(SuitSaver_Button0)
+    {
+      height = 23;
+      parent = "SuitSaver_Window0";
+      profile = "GuiBlueButtonProfile";
+      text = "Save";
+      visible = true;
+      width = 60;
+      x = 5;
+      y = 24;
+      thiso.catchevent(name, "onAction", "onButtonEnter");
+    }
+
+    new GuiButtonCtrl(SuitSaver_Button1)
+    {
+      height = 23;
+      parent = "SuitSaver_Window0";
+      profile = "GuiBlueButtonProfile";
+      text = "Delete";
+      visible = true;
+      width = 60;
+      x = 65;
+      y = 24;
+      thiso.catchevent(name, "onAction", "onButtonEnter");
+    }
+
+    new GuiButtonCtrl(SuitSaver_Button2)
+    {
+      height = 23;
+      parent = "SuitSaver_Window0";
+      profile = "GuiBlueButtonProfile";
+      text = "Wear";
+      visible = true;
+      width = 60;
+      x = 125;
+      y = 24;
+      thiso.catchevent(name, "onAction", "onButtonEnter");
+    }
+
+    new GuiScrollCtrl(SuitSaver_Scroll)
+    {
+      awake = true;
+      height = 147;
+      hscrollbar = "alwaysOff";
+      parent = "SuitSaver_Window0";
+      profile = "GuiBlueScrollProfile";
+      visible = true;
+      vscrollbar = "alwaysOff";
+      width = 178;
+      x = 6;
+      y = 47;
+
+      new GuiTextCtrl(SuitSaver_Text0)
+      {
+        height = 20;
+        minextent = "8,20";
+        parent = "SuitSaver_Window0";
+        profile = "GuiBlueTextProfile";
+        text = "Suit Name:";
+        visible = true;
+        width = 51;
+        x = 6;
+        y = 5;
+      }
+
+      new GuiTextEditCtrl(SuitSaver_TextEdit0)
+      {
+        awake = true;
+        height = 20;
+        minextent = "8,20";
+        parent = "SuitSaver_Window0";
+        profile = "GuiBlueTextEditProfile";
+        text = temp.muditem.suit[0];
+        visible = true;
+        width = 110;
+        x = 60;
+        y = 6;
+      }
+
+      new GuiButtonCtrl(SuitSaver_Button3)
+      {
+        height = 15;
+        parent = "SuitSaver_Window0";
+        profile = "GuiBlueButtonProfile";
+        text = "<-";
+        visible = true;
+        width = 20;
+        x = 9;
+        y = 105;
+        thiso.catchevent(name, "onAction", "onButtonEnter");
+      }
+
+      new GuiButtonCtrl(SuitSaver_Button4)
+      {
+        height = 15;
+        parent = "SuitSaver_Window0";
+        profile = "GuiBlueButtonProfile";
+        text = "->";
+        visible = true;
+        width = 20;
+        x = 30;
+        y = 105;
+        thiso.catchevent(name, "onAction", "onButtonEnter");
+      }
+      
+      new GuiShowImgCtrl(SuitSaver_Actor0)
+      {
+        ani = "idle";
+        actor.bodyimg = temp.muditem.suit[1];
+        actor.headimg = temp.muditem.suit[2];
+        actor.shield = temp.muditem.suit[3];
+        for (temp.i = 0; temp.i < 4; temp.i++)
+        {
+          actor.colors[temp.i] = temp.muditem.suit[4 + temp.i];
+        }
+        x = -2;
+        y = 35;
+        offsetx = 7;
+        offsety = 15;
+      }
+
+      for (temp.i=0; temp.i < thiso.suittype.size(); temp.i++)
+      {
+        new GuiTextCtrl("SuitSaver_Type" @ temp.i)
+        {
+          height = 20;
+          minextent = "8,20";
+          parent = "SuitSaver_Window0";
+          profile = "GuiBlueTextProfile";
+          text = thiso.suittype[temp.i] @ ": " @ temp.muditem.suit[temp.i + 1];
+          visible = true;
+          width = 51;
+          x = 60;
+          y = 25 + (13 * i);
+        }
+      }
+    }
+  }
+}
+
+function onActionClientSide()
+{
+  onUpdateChar();
+}

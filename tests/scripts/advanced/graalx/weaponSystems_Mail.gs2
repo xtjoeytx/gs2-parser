@@ -1,0 +1,447 @@
+//#CLIENTSIDE
+function onCreated()
+{
+  // Object -> this.mail
+  this.mail         = new TStaticVar();
+  
+  // [ Icons ] \\
+  this.mail.read    = "block.png"; // Read Icon
+  this.mail.unread  = "block.png"; // Unread Icon
+  
+  new GuiControlProfile(GuiGrayWindowProfile)
+  {
+    bitmap = "guigray_window.png"; 
+  }
+  
+  new GuiControlProfile(GuiGrayScrollProfile)
+  {
+    bitmap = "guigray_scroll.png"; 
+  }
+  
+  Mail_Window0.destroy();
+  Mail_Letter.destroy();
+  
+  if (!clientr.init_mailbox)
+  {
+    triggerserver("gui", this.name, "init");
+  }
+}
+
+public function openMailBox()
+{
+  this.selected = -1;
+  
+  triggerserver("gui", this.name, "check");
+}
+
+function onActionClientSide(action, args)
+{
+  switch (action)
+  {
+    case "check":
+    {
+      if (Mail_Window0.visible == false) showMail();
+      
+      onUpdateMail(args[0], this.selected);
+      
+      break;
+    }
+    
+    case "init":
+    {
+      openMailBox();
+    
+      break;
+    }
+  }
+}
+
+function onUpdateMail(newMail)
+{
+  this.newMail = newMail;
+  
+  if (Mail_Frames0 != NULL) Mail_Frames0.destroy();
+  
+  if (newMail.size() < 5) temp.mail = 5; else temp.mail = newMail.size();
+  
+  with (Mail_Scroll0)
+  {
+    new GuiFrameSetCtrl(Mail_Frames0)
+    {
+      extent = {180, 80 * temp.mail};
+      position = {-1, -1};
+   
+      rowcount = temp.mail;
+      columncount = 1;
+  
+      Mail_Letter.destroy();
+    
+      setRowOffset(1, 80);
+      
+      canresize  = false;
+      
+      bordercolor = {128, 128, 255, 128};
+      
+      for (temp.I = 0; temp.I < temp.mail; temp.I++)
+      {
+        new GuiScrollCtrl("Mail_Frames0-" @ temp.I)
+        {
+          profile = GuiBlueScrollProfile;
+          hScrollBar = "alwaysOff";
+          vScrollBar = "alwaysOff";
+          
+          if (newMail[temp.I] != NULL)
+          {
+            thiso.catchevent(name, "onMouseDown", "onSelectMail");
+          
+            temp.curMail = newMail[temp.I];
+            
+            new GuiShowImgCtrl("Mail_Frames0-img-" @ temp.I)
+            {
+              position = {7, 10};
+              extent   = {32, 32};
+              
+              if (temp.curMail[0] == "Unread")
+              {
+                image  = thiso.mail.unread;
+              }
+                else
+              {
+                image  = thiso.mail.read;
+              }
+            }
+            
+            new GuiMLTextCtrl("Mail_Frames0-text-" @ temp.I)
+            {
+              profile  = GuiBlueMLTextProfile;
+              extent   = {130, 100};
+              position = {45, 7};
+              
+              text = "From: " @ temp.curMail[2] @ "\nSubject: " @ temp.curMail[4];
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  if (this.selected >= 0)
+  {
+    onSelectMail("Mail_Frames0-" @ this.selected);
+  }
+}
+
+function onSelectMail(gui)
+{
+  this.selected = gui.substring(13);
+  
+  temp.getMail = this.newMail[this.selected];
+  
+  with (Mail_Window0)
+  {
+    if (temp.getMail != NULL)
+    {
+      Mail_Text.text = format("From: %s\nTo: %s\n\nSubject: %s\n\n%s", temp.getMail[2], temp.getMail[3], temp.getMail[4], temp.getMail[5]);
+      
+      Mail_Compose.visible    = false;
+      Mail_Reply.visible      = true;
+    }
+      else
+    {
+      Mail_Text.text = "";
+      
+      Mail_Compose.visible    = true;
+      Mail_Reply.visible      = false;
+    }
+    
+    if (temp.getMail[6] != NULL)
+    {
+      Mail_Attachment.visible = true;
+      Mail_CheckMail.visible  = false;
+    }
+      else
+    {
+      Mail_Attachment.visible = false;
+      Mail_CheckMail.visible  = true;
+    }
+  }
+}
+
+// Open up the GUI Screen
+function showMail()
+{
+  temp.rows = 8;
+  
+  new GuiWindowCtrl(Mail_Window0)
+  {
+    profile  = "GuiBlueWindowProfile";
+    text     = "Mail Window";
+    
+    extent   = {600, 435};
+    position = {(screenwidth - extent[0]) / 2, (screenheight - extent[1]) / 2};
+  
+    canmaximize = canminimize = canresize = false;
+    closequery  = true;
+    
+    new GuiScrollCtrl(Mail_Scroll0) 
+    {
+      profile    = "GuiBlueScrollProfile";
+      
+      hScrollBar = "alwaysOff";
+      vScrollBar = "alwaysOn";
+      
+      extent     = {200, 404};
+      position   = {6, 24};
+    }
+    
+    new GuiScrollCtrl(Mail_Scroll1) 
+    {
+      profile    = "GuiBlueScrollProfile";
+      
+      hScrollBar = "alwaysOff";
+      vScrollBar = "dynamic";
+      
+      extent     = {389, 404};
+      position   = {205, 24};
+      
+      new GuiScrollCtrl(Mail_Scroll2) 
+      {
+        profile    = "GuiBlueScrollProfile";
+      
+        hScrollBar = "alwaysOff";
+        vScrollBar = "dynamic";
+      
+        extent     = {389, 365};
+        position   = {0, 0};
+        
+        new GuiMLTextCtrl(Mail_Text)
+        {
+          profile  = GuiBlueMLTextProfile;
+          extent   = {375, 100};
+          position = {5, 5};
+          
+          text = "";
+        }
+      }
+    }
+    
+    new GuiButtonCtrl("Mail_Delete")
+    {
+      profile  = GuiBlueButtonProfile;
+      position = {210, Mail_Window0.height - 41};
+      extent   = {100, 30};
+      text = "Delete";
+    }
+    
+    new GuiButtonCtrl("Mail_Compose")
+    {
+      profile  = GuiBlueButtonProfile;
+      position = {350, Mail_Window0.height - 41};
+      extent   = {100, 30};
+      text = "Compose";
+    }
+    
+    new GuiButtonCtrl("Mail_Reply")
+    {
+      profile  = GuiBlueButtonProfile;
+      position = {350, Mail_Window0.height - 41};
+      extent   = {100, 30};
+      text = "Reply";
+    }
+    
+    new GuiButtonCtrl("Mail_Attachment")
+    {
+      profile  = GuiBlueButtonProfile;
+      position = {490, Mail_Window0.height - 41};
+      extent   = {100, 30};
+      text = "Take Attachment";
+    }
+    
+    new GuiButtonCtrl("Mail_CheckMail")
+    {
+      profile  = GuiBlueButtonProfile;
+      position = {490, Mail_Window0.height - 41};
+      extent   = {100, 30};
+      text = "Check Mail";
+    }
+    
+    Mail_Attachment.visible = false;
+    Mail_CheckMail.visible  = true;
+    
+    Mail_Compose.visible    = true;
+    Mail_Reply.visible      = false;
+  }
+}
+
+function Mail_Attachment.onAction()
+{
+  if (this.selected >= 0)
+  {
+    triggerserver("gui", this.name, "attachment", {this.newMail[this.selected][7]});
+  }
+}
+
+function Mail_Reply.onAction()
+{
+  if (this.selected >= 0)
+  {
+    temp.getMail = this.newMail[this.selected];
+    
+    Mail_SendLetter();
+    
+    Mail_LetterTextEdit0.text = temp.getMail[2];
+    Mail_LetterTextEdit1.text = "Re: " @ temp.getMail[4];
+  }
+}
+
+function Mail_Text.onMouseDown()
+{
+  if (Mail_Text.text != NULL)
+  {
+    Mail_Compose.visible = !Mail_Compose.visible;
+    Mail_Reply.visible   = !Mail_Reply.visible;
+  }
+}
+
+function Mail_CheckMail.onAction()
+{
+  triggerserver("gui", this.name, "check");
+}
+
+function Mail_Delete.onAction()
+{
+  if (this.selected >= 0)
+  {
+    triggerserver("gui", this.name, "delete", {this.newMail[this.selected][7]});
+  }
+}
+
+function Mail_Compose.onAction()
+{
+  Mail_SendLetter();
+}
+
+function Mail_SendLetter()
+{
+  if (Mail_Letter.visible == false)
+  {
+    new GuiWindowCtrl(Mail_Letter)
+    {
+      profile  = "GuiBlueWindowProfile";
+      text     = "Mail Window";
+    
+      extent   = {350, 400};
+      position = {(screenwidth - extent[0]) / 2, (screenheight - extent[1]) / 2};
+    
+      canmaximize = canminimize = canresize = false;
+  
+      new GuiScrollCtrl(Mail_LetterScroll0) 
+      {
+        profile    = "GuiBlueScrollProfile";
+      
+        hScrollBar = "alwaysOff";
+        vScrollBar = "alwaysOff";
+      
+        extent     = {338, 370};
+        position   = {6, 24};
+        
+        new GuiMLTextCtrl(Mail_LetterText0)
+        {
+          extent   = {235, 25};
+          position = {8, 12};
+          
+          text     = "<font size=20><b>To:</b></font>";
+        }
+        
+        new GuiTextEditCtrl(Mail_LetterTextEdit0)
+        {
+          profile  = "GuiBlueTextEditProfile";
+          
+          extent   = {235, 25};
+          position = {85, 8};
+        }
+        
+        new GuiMLTextCtrl(Mail_LetterText1)
+        {
+          extent   = {235, 25};
+          position = {8, 43};
+          
+          text     = "<font size=20><b>Subject:</b></font>";
+        }
+        
+        new GuiTextEditCtrl(Mail_LetterTextEdit1)
+        {
+          profile  = "GuiBlueTextEditProfile";
+          
+          extent   = {235, 25};
+          position = {85, 43};
+        }
+        
+        new GuiScrollCtrl(Mail_LetterScroll1) 
+        {
+          profile    = "GuiBlueScrollProfile";
+      
+          hScrollBar = "alwaysOff";
+          vScrollBar = "alwaysOn";
+        
+          extent     = {337, 250};
+          position   = {-1, 80};
+          
+          new GuiMLTextEditCtrl(Mail_LetterTextEdit2)
+          {
+            width    = 313;
+            position = {3, 2};
+          }
+        }
+        
+        new GuiButtonCtrl(Mail_LetterButton0)
+        {
+          profile  = "GuiBlueButtonProfile";
+          
+          position = {115, Mail_Letter.height - 66};
+          extent   = {100, 30};
+          
+          text = "Close";
+        }
+        
+        new GuiButtonCtrl(Mail_LetterButton1)
+        {
+          profile  = "GuiBlueButtonProfile";
+          
+          position = {231, Mail_Letter.height - 66};
+          extent   = {100, 30};
+          
+          text = "Send";
+        }
+      }
+    }
+  }
+}
+
+function Mail_Window0.onCloseQuery()
+{
+  Mail_Window0.destroy();
+  Mail_Letter.destroy();
+}
+
+function Mail_LetterButton0.onAction()
+{
+  Mail_Letter.destroy();
+}
+
+function Mail_LetterButton1.onAction()
+{
+  if (Mail_LetterTextEdit0.text != NULL && Mail_LetterTextEdit1.text != NULL && Mail_LetterTextEdit2.text != NULL && Mail_LetterTextEdit0.text != player.account)
+  {
+    triggerserver("gui", this.name, "send", {Mail_LetterTextEdit0.text, Mail_LetterTextEdit1.text, Mail_LetterTextEdit2.text});
+    
+    Mail_Letter.destroy();
+  }
+}
+
+// Below -> Debugging / Testing Purposes Only
+function ChatBar.onAction()
+{
+  if (ChatBar.text == ":checkmail") openMailBox();
+}
+// Above -> Debugging / Testing Purposes Only

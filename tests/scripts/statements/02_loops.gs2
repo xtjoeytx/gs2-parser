@@ -1,0 +1,25 @@
+// Loop statements
+function testLoops() {
+  // For loop
+  for (temp.i = 0; temp.i < 10; temp.i++) {
+    temp.sum += temp.i;
+  }
+
+  // For loop with different increment
+  for (temp.j = 10; temp.j > 0; temp.j--) {
+    temp.product *= temp.j;
+  }
+
+  // For-in loop with array (based on example syntax)
+  temp.arr = {"abc", "def", "gh"};
+  for (temp.item : temp.arr) {
+    temp.current = temp.item;
+  }
+
+  // Nested loops
+  for (temp.row = 0; temp.row < 3; temp.row++) {
+    for (temp.col = 0; temp.col < 3; temp.col++) {
+      temp.grid[temp.row][temp.col] = temp.row * 3 + temp.col;
+    }
+  }
+}

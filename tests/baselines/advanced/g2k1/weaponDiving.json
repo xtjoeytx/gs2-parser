@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "48ab4e24aac411667012e04e25f5513134331294b3bf7dba3a36dab9067785df",
+  "bytecode_size": 241,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "advanced/g2k1/weaponDiving.gs2",
+    "generated_at": "2026-01-03 14:08:06",
+    "compiler_version": "modified_1767460496"
+  }
+}

@@ -1,0 +1,2791 @@
+//#CLIENTSIDE
+//#GS2
+function onCreated()
+{
+	if (isgraalplugin)
+	{
+		triggeraction(0, 0, "serverplugin", serverstartconnect, serverstartparams);
+	}
+
+	if (findweapon("-Rescripted/IRC/Login3") != null || isgraalplugin)
+	{
+		if (!(isgraalplugin && graalplugincookie == ""))
+		{
+			initServerlist();
+		}
+	}
+
+	echo("-ServerListScreen created");
+
+	onServerLogin();
+
+	if (player.communityname == "pc:339") // Cadavre Daoloth testing
+	{
+		//initServerlist();
+	}
+}
+
+function geticon(image) {
+	temp.url = "http://localhost/" @ image;
+	//temp.req = requesturlasgamefile(temp.url, "levels/images/login/" @ image, 0, true);
+	//this.catchevent(temp.req, "onReceiveData", "onFileTransferred");
+}
+
+function onFileTransferred(obj) {
+	echo(extractfilename(obj.file) SPC "received. (" @ obj.fulldata.length() @ " bytes)");
+} 
+
+function onKeyPressed(keycode, keystring, scancode) {
+	if (keycode == 119 || keycode == 112) {
+		sendServerListRequest();
+		if (!isLoginServer()) {
+			if (!gr_ServerListScreen.visible) {
+				gr_ServerListScreen.visible = true;
+			} else {
+				gr_ServerListScreen.visible = false;
+			}
+		}
+	}
+}
+
+public function initServerlist()
+{
+	setTrainerCheck();
+	
+	this.serverlistcats = {"Classics", "Graal 3D", "Wow", "Playerworlds", "Hidden"};
+
+	this.zone_games = {
+		{0, "Planet1", "zone_login_planet1.png", 75, 125},
+		{1, "Planet2", "zone_login_planet2.png", 450, 100},
+		{2, "Planet3", "zone_login_planet3.png", 185, 40},
+		{3, "Planet4", "zone_login_planet4.png", 310, 170},
+		{4, "Planet5", "zone_login_planet5.png", 170, 260}
+	};
+	this.zone_games_size = {496, 314};
+	this.baseeventsinfo = "<h1><center>OpenGraal</center></h1><center>All your base are belong to us!</center><br>";
+	this.eventsinfo = this.baseeventsinfo;
+
+	if (isObject("MainMenuGui2D"))
+	{
+		//MainMenuGui2D.visible = false;
+	}
+
+	addGuiControls();
+	temp.donormallogin = true;
+	this.testcounter++;
+
+	Serverlist_TaskButton_Main.visible = (serverstartconnect == "" || serverstartconnect == "playerworlds");
+	updateTaskButtonPositions();
+
+	if (serverstartconnect == "skills")
+	{
+		serverstartconnect = "login3";
+	}
+
+	if (serverstartconnect == "playerworlds")
+	{
+		this.onlyshowplayerworlds = true;
+		serverstartconnect = "";
+	}
+
+	if (serverstartconnect == "zone")
+	{
+		serverstartconnect = "playerworld2";
+	}
+
+	if (serverstartconnect == "kingdoms")
+	{
+		serverstartconnect = "graal2002";
+	}
+
+	if (serverstartconnect != "")
+	{
+		this.serverforparams = serverstartconnect;
+		if (serverstartconnect != servername)
+		{
+			temp.donormallogin = false;
+			gr_ServerListScreen.visible = false;
+			serverwarp(serverstartconnect);
+		}
+
+		serverstartconnect = "";
+	}
+	
+	if (temp.donormallogin)
+	{
+		sendServerListRequest();
+		sendEventsInfoRequest();
+		Serverlist_ServerDirectConnect.makeFirstResponder(true);
+	}
+
+	checkServerStartParams();
+}
+
+function setTrainerCheck()
+{
+	
+}
+
+function isLoginServer()
+{
+	return ((servername.starts("login") || servername == "Games" || servername == "Skills Debug") && lowercase(servername).pos("iphone") < 0);
+}
+
+function canProtectComputer()
+{
+	return (isLoginServer() && !player.account.starts("pc:") && player.account != "guest");
+}
+
+// alias to onServerListerConnect?
+function universe.onServerListerConnect()
+{
+	return onServerListerConnect();
+}
+
+function onServerListerConnect()
+{
+	if (!isLoginServer())
+	{
+		if (isObject("gr_ServerListScreen"))
+		{
+			gr_ServerListScreen.hide();
+		}
+
+		if (isObject("LoginGames_MainPanel"))
+		{
+			LoginGames_MainPanel.hide();
+		}
+
+		if (isObject("LoginGames_MainPanel_Border"))
+		{
+			LoginGames_MainPanel_Border.hide();
+		}
+		
+		if (isObject("Serverlist_ConnectMessage"))
+		{
+			Serverlist_ConnectMessage.visible = false;
+		}
+	}
+
+	checkServerStartParams();
+	if (gr_ServerListScreen.visible)
+	{
+		sendServerListRequest();
+	}
+
+	requesttext("lister", "subscriptions");
+
+	if (canProtectComputer())
+	{
+		requesttext("lister", "getlockcomputer");
+	}
+}
+
+function onConnectingToServer(newservername)
+{
+	if (newservername.starts("3 "))
+	{
+		//switchToOpenGL();
+	}
+	else if (!lowercase(newservername).starts("login"))
+	{
+		//switchToDirectX();
+	}
+}
+
+function checkServerStartParams()
+{
+	if (serverstartparams == "")
+	{
+		return 0;
+	}
+
+	this.switchtogame = "";
+	if (servername == "Games")
+	{
+		this.switchtogame = serverstartparams;
+	}
+	else if (!servername.starts("login"))
+	{
+		triggeraction(0, 0, "serverstartparams", serverstartparams);
+		serverstartparams = "";
+	}
+}
+
+public function replaceAll(temp.text, temp.match, temp.replace) {
+  temp.prev = 0;
+  temp.output = "";
+  while (temp.found != -1) {
+    temp.found = indexOf(temp.text, temp.match, temp.prev);
+    if (temp.found == -1) {
+      temp.output @= temp.text.substring(int(temp.prev), -1);
+      return temp.output;
+    } else {
+      temp.output @= temp.text.substring(int(temp.prev), temp.found - temp.prev) @ temp.replace;
+      temp.prev = temp.found + temp.match.length();
+    }
+  } ;
+  return temp.output;
+}
+
+public function indexOf(temp.text, temp.match, temp.offset) {
+  for (temp.i = temp.offset; temp.i < temp.text.length(); temp.i ++) {
+    if (temp.text.substring(int(temp.i), temp.match.length()) == temp.match) {
+      return temp.i;
+    }
+  }
+  return -1;
+}
+
+function onServerLogin()
+{
+	this.serverguistyle = "";
+	this.serverguioverwrite = false;
+	setGUIStyle($pref::Video::defaultguistyle);
+
+	if (indexOf(this.selectedserver[1], servername) >= 0)
+	{
+		this.currentservericonname = replaceAll(this.selectedserver[0], " ", "_");
+		this.currentservericonname = replaceAll(this.currentservericonname, ":", "");
+		this.currentservericon = "login_icon_" @ this.currentservericonname @ ".png";
+		this.currentservericon = lowercase(this.currentservericon);
+		getimgwidth(this.currentservericon);
+		getimgwidth(this.currentservericon);
+		getimgwidth(this.currentservericon);
+		getimgwidth(this.currentservericon);
+
+		if (getimgwidth(this.currentservericon) <= 0)
+		{
+			this.currentservericon = "graalicon_big.png";
+		}
+	}
+	else
+	{
+		this.currentservericon = "graalicon_big.png";
+	}
+
+	with (Serverlist_TaskButton_Server)
+	{
+		if (!isLoginServer())
+		{
+			text = servername;
+			icon.clearall();
+			icon.drawimagestretched(0, 0, 24, 24, thiso.currentservericon, 0, 0, 32, 32);
+			visible = true;
+		}
+		else visible = false;
+	}
+
+	updateTaskButtonPositions();
+
+	with (Serverlist_MainPanel_Back)
+	{
+		visible = (isLoginServer() && style.pos("toon") >= 0);
+	}
+
+	initGraalControlSize();
+}
+
+function getActiveGraalControl()
+{
+	return (isgraal3d ? GraalControl3D : GraalControl);
+}
+
+function initGraalControlSize()
+{
+	with (getActiveGraalControl())
+	{
+		vertSizing = "height";
+		y = (thiso.showtrialbar ? 40 : 0);
+		height = parent.clientheight - y - (Serverlist_TaskBar.visible ? Serverlist_TaskBar.height : 0);
+
+		new GuiTextEditCtrl("ChatBar")
+		{
+			profile = GuiTextEditProfile;
+			x = 12;
+			width = getActiveGraalControl().clientwidth - x - 12;
+			height = 24;
+			y = getActiveGraalControl().clientheight - height - 8;
+			
+			horizSizing = "width";
+			vertSizing = "top";
+			minExtent = "8 24";
+			maxLength = 255;
+			historySize = 100;
+			password = false;
+			tabComplete = false;
+		}
+
+		new GuiButtonCtrl("ChatBar_ToggleTaskBarButton")
+		{
+			profile = "IRC_ButtonProfile";
+			style = $pref::Video::defaultguistyle;
+			width = 16;
+			height = 28;
+			x = getActiveGraalControl().clientwidth - width - 5;
+			y = getActiveGraalControl().clientheight - 32;
+			horizSizing = "left";
+			vertSizing = "top";
+			text = "<";
+			this.special = true;
+			visible = (!Serverlist_TaskBar.visible && player.platform != "linuxstream");
+		}
+	}
+
+	updateChatBarSize();
+}
+
+public function updateTaskButtonPositions()
+{
+	temp.curx = 130;
+
+	for (temp.button : Serverlist_TaskBar.controls)
+	{
+		if (temp.button.objecttype() != "GuiButtonCtrl" || !temp.button.visible || temp.button.special)
+		{
+		continue;
+		}
+
+		temp.button.x = temp.curx;
+		temp.curx += temp.button.width + 10;
+	}
+}
+
+function onOpenServerList()
+{
+	if (!isObject("gr_ServerListScreen"))
+	{
+		return;
+	}
+
+	if (gr_ServerListScreen.visible)
+	{
+		if (isLoginServer())
+		{
+			sendServerListRequest();
+		}
+		else
+		{
+			gr_ServerListScreen.hide();
+		}
+	}
+	else
+	{
+		cursorOn();
+		if (isObject("MainMenuGui2D"))
+		{
+			MainMenuGui2D.visible = false;
+		}
+
+		gr_ServerListScreen.showtop();
+		sendServerListRequest();
+	}
+}
+
+function onOpenHelpWindow()
+{
+	if (findweapon("-ShopGlobal") == null || !"-ShopGlobal".hasPanel("Help"))
+	{
+		onOpenServerList();
+	}
+}
+
+function onPlayerEnters()
+{
+	onTimeout();
+}
+
+function onTimeout()
+{
+	if (player.platform == "iphone")
+	{
+		updateTaskbarTime();
+		updateTrialBarTimer(true);
+		updateServerMapIcons();
+		checkChatBar();
+		setTimer(0.001);
+	}
+	else
+	{
+		this.ticks++;
+		if (this.ticks % 20 == 0)
+		{
+			updateTaskbarTime();
+			updateTrialBarTimer(true);
+		}
+
+		updateServerMapIcons();
+		checkChatBar();
+		setTimer(0.001);
+	}
+
+	with(gr_ServerListScreen)
+
+	{
+		clientwidth = screenwidth;
+		clientheight = screenheight;
+		minextent = { clientwidth, clientheight };
+	}
+
+	// Original image size
+	temp.original_width = 1456; // 1500; // 2048;
+	temp.original_height = 816; // 681; // 1365;
+
+	// Scale to cover the screen
+	temp.scale_x = screenwidth / temp.original_width;
+	temp.scale_y = screenheight / temp.original_height;
+	temp.scale_factor = max(temp.scale_x, temp.scale_y); // Use the larger scale to fill
+
+	temp.new_width = temp.original_width * temp.scale_factor;
+	temp.new_height = temp.original_height * temp.scale_factor;
+
+	with(gr_ServerListScreen_background)
+	{
+		extent = { temp.new_width, temp.new_height };
+		x = (screenwidth - temp.new_width) / 2;
+		y = (screenheight - temp.new_height) / 2;
+	}
+
+	with(gr_ServerListScreen_accountInfo)
+	{
+		extent = { 200 * temp.scale_factor, 200 * temp.scale_factor };
+		x = screenwidth - (200 * temp.scale_factor) - (10 * temp.scale_factor);
+		y = 5 * temp.scale_factor;
+	}
+
+	temp.text1_width = gettextwidth(1 * temp.scale_factor, "friz", "b", gr_ServerListScreen_accountInfo_text1.text);
+	temp.text2_width = gettextwidth(1 * temp.scale_factor, "friz", "", gr_ServerListScreen_accountInfo_text2.text);
+	temp.text3_width = gettextwidth(1 * temp.scale_factor, "friz", "b", gr_ServerListScreen_accountInfo_text3.text);
+	temp.text4_width = gettextwidth(1 * temp.scale_factor, "friz", "", gr_ServerListScreen_accountInfo_text4.text);
+
+	temp.text_left_offset = max(temp.text2_width, temp.text4_width);
+
+	with(gr_ServerListScreen_accountInfo_text1)
+	{
+		extent = { temp.text1_width, gettextheight(1 * temp.scale_factor, "friz", "b") };
+		x = gr_ServerListScreen_accountInfo.width - temp.text_left_offset - temp.text1_width - (5 * temp.scale_factor);
+		y = 0;
+		cliptobounds = false;
+		red=1;
+		green=1;
+		blue=1;
+	}
+
+	with(gr_ServerListScreen_accountInfo_text2)
+	{
+		extent = { temp.text2_width, gettextheight(1 * temp.scale_factor, "friz", "") };
+		x = gr_ServerListScreen_accountInfo.width - temp.text_left_offset;
+		y = 0;
+		cliptobounds = false;
+	}
+
+	with(gr_ServerListScreen_accountInfo_text3)
+	{
+		extent = { temp.text3_width, gettextheight(1 * temp.scale_factor, "friz", "b") };
+		x = gr_ServerListScreen_accountInfo.width - temp.text3_width - temp.text_left_offset - (5 * temp.scale_factor);
+		y = gettextheight(1 * temp.scale_factor, "friz", "b") + (5 * temp.scale_factor);
+		cliptobounds = false;
+	}
+
+	with(gr_ServerListScreen_accountInfo_text4)
+	{
+		extent = { temp.text4_width, gettextheight(1 * temp.scale_factor, "friz", "") };
+		x = gr_ServerListScreen_accountInfo.width - temp.text_left_offset ;
+		y = gettextheight(1 * temp.scale_factor, "friz", "") + (5 * temp.scale_factor);
+		cliptobounds = false;
+	}
+
+
+	showLoginInfo((1 * temp.scale_factor));
+}
+
+function updateTaskbarTime()
+{
+	this.tick++;
+	temp.time = (timevar * 5 + 64800 + 1980 + 34) % 86400;
+
+	temp.hours = int(temp.time / 3600);
+	temp.mins = int(temp.time / 60) % 60;
+
+	Serverlist_TaskBar_Label.text = int(temp.hours / 10) @ (temp.hours % 10) @ (this.tick % 2 == 1 ? ":" : " ") @ int(temp.mins / 10) @ (temp.mins % 10);
+}
+
+function updateTrialBarStatus() 
+{
+	if (this.hassubscription || isLoginServer() || player.platform in {"linuxstream", "iphone"})
+	{
+		this.showtrialbar = false;
+		Serverlist_TrialBar.visible = false;
+
+		with (getActiveGraalControl())
+		{
+			y = 0;
+			height = parent.clientheight - y - (Serverlist_TaskBar.visible ? Serverlist_TaskBar.height : 0);
+			width = parent.clientwidth;
+			horizSizing = "relative";
+			vertSizing = "height";
+		}
+	}
+	else
+	{
+		addTrialBarControls();
+	}
+}
+
+function updateTrialBarTimer(checkaddtime) 
+{
+	if (!this.showtrialbar)
+	{
+		return;
+	}
+
+	temp.iszone = servername.starts("Zone");
+
+	if (temp.iszone)
+	{
+		Serverlist_TrialBar_Text.text = "<font size=5><b>Welcome to Zone! <a href=subscribe>Buy Zone Gold</a> to get more weapons and more<b></font>";
+	}
+	else if (isgraalplugin || isgraal3d)
+	{
+		Serverlist_TrialBar_Text.text = "<font size=5><b>You are in Trial mode: <a href=subscribe>Upgrade Now</a><b></font>";
+	}
+	else
+	{
+		Serverlist_TrialBar_Text.text = "<font size=5><b>Trial mode - Limited choice of look: <a href=subscribe>Upgrade Now</a><b></font>";
+	}
+
+	if (checkaddtime)
+	{
+		if (this.lastmonthlytimecheck != 0)
+		{
+			this.monthlytime += (timevar2 - this.lastmonthlytimecheck);
+		}
+	}
+
+	temp.timeleft = 18000 - int(this.monthlytime);
+
+	if (temp.iszone)
+	{
+		temp.timestr = "";
+	}
+	else
+	{
+		if (temp.timeleft > 0)
+		{
+			temp.timestr = _("Time Left: ") @ " ";
+			temp.hours = int(temp.timeleft / 3600);
+
+			if (temp.hours > 1)
+			{
+				temp.timestr @= temp.hours @ " hours";
+			}
+			else if (temp.hours == 1)
+			{
+				temp.timestr @= "1 hour";
+			}
+			else
+			{
+				temp.minutes = int(temp.timeleft / 60);
+				if (temp.minutes == 1)
+				{
+					temp.timestr @= "1 minute";
+				}
+				else
+				{
+					temp.timestr @= temp.minutes @ " minutes";
+				}
+			}
+		}
+		else
+		{
+			temp.timestr = _("Free time is over");
+			Serverlist_TrialBar_Text2.text = "<p align=right><font size=5><b>" @ temp.timestr @ "</b></font></p>";
+			this.lastmonthlytimecheck = timevar2;
+		}
+	}
+}
+
+function onPlayerChats() 
+{
+	if (player.chat == "test observer mode")
+	{
+		player.chat = "";
+		if (!player.isobserver)
+		{
+			requesttext("setghostmode", 2);
+		}
+	}
+}
+
+function hideTablePanels() 
+{
+	for (temp.i = 0; temp.i < 4; ++temp.i)
+	{
+		if (isObject("Serverlist_TablesPanel" @ temp.i))
+		{
+			("Serverlist_TablesPanel" @ temp.i).hide();
+		}
+	}
+}
+
+function showServerListEntry(entry) 
+{
+	if (this.selectedserver == entry)
+	{
+		return;
+	}
+
+	temp.newservername = entry[1];
+	this.selectedserver = entry;
+
+	hideTablePanels();
+
+	with (Serverlist_TablesTab)
+	{
+		clearRows();
+
+		addRow(0, _("Map"));
+		setSelectedById(0);
+	}
+
+	Serverlist_TablesWindow.text = _("Map");
+
+	for (temp.i = 0; temp.i < 3; ++temp.i)
+	{
+		("Serverlist_DescriptionPanel" @ temp.i).visible = false;
+	}
+
+	with (Serverlist_DescriptionTab)
+	{
+		clearRows();
+		addRow(1, _("Description"));
+		setSelectedById(1);
+	}
+
+	Serverlist_DescriptionWindow.text = _("Description");
+
+	displayServerMap();
+	Serverlist_ServerDirectConnect.text = "";
+	Serverlist_TablesTab.setSelectedById(0);
+
+	"-Serverlist_Chat".requestServerInfo(entry[0]);
+}
+
+function showLoginInfo(temp.fontsize) 
+{
+	checkUpdateLoginInfo(temp.fontsize);
+}
+
+function checkUpdateLoginInfo(temp.fontsize) 
+{
+	if (this.selectedserver != "")
+	{
+		return 0;
+	}
+
+	temp.newtext1 = "Account:";
+	temp.newtext2 = (player.account.starts("pc:") ? "Guest" : player.account) @ "";
+	temp.newtext3 = "Id:";
+	temp.newtext4 = (player.communityname != "" ? player.communityname : "<a href=http://www.graalonline.com/community/login?p=profile>Choose one</a>");
+
+	gr_ServerListScreen_accountInfo_text1.font = "friz";
+	gr_ServerListScreen_accountInfo_text1.style = "b";
+	gr_ServerListScreen_accountInfo_text1.zoom = temp.fontsize;
+	gr_ServerListScreen_accountInfo_text1.text = temp.newtext1;
+	gr_ServerListScreen_accountInfo_text2.font = "friz";
+	gr_ServerListScreen_accountInfo_text2.zoom = temp.fontsize;
+	gr_ServerListScreen_accountInfo_text2.text = temp.newtext2;
+	gr_ServerListScreen_accountInfo_text3.font = "friz";
+	gr_ServerListScreen_accountInfo_text3.style = "b";
+	gr_ServerListScreen_accountInfo_text3.zoom = temp.fontsize;
+	gr_ServerListScreen_accountInfo_text3.text = temp.newtext3;
+	gr_ServerListScreen_accountInfo_text4.font = "friz";
+	gr_ServerListScreen_accountInfo_text4.zoom = temp.fontsize;
+	gr_ServerListScreen_accountInfo_text4.text = temp.newtext4;
+
+	if (this.eventsinfo != "")
+	{
+		Serverlist_EventNews.urlbase = this.eventsinfourlbase;
+		Serverlist_EventNews.text = this.eventsinfo;
+	}
+}
+
+function displayServerMap() 
+{
+	with (Serverlist_TablesPanel0)
+	{
+		this.clearControls();
+		if (thiso.selectedserver[0] != "")
+		{
+			this.currentservermapname = replaceAll(thiso.selectedserver[0], " ", "_");
+			this.currentservermapname = replaceAll(this.currentservermapname, ":", "");
+			new GuiBitmapCtrl("Serverlist_Map")
+			{
+				horizSizing = "center";
+				vertSizing = "center";
+				bitmap = "login_servermap_" @ this.currentservermapname @ ".png";
+				width = getimgwidth(bitmap);
+				height = getimgheight(bitmap);
+				x = (Serverlist_TablesPanel0.width - width) / 2;
+				y = (Serverlist_TablesPanel0.height - height) / 2;
+
+				if (thiso.selectedserver[0] == "Login")
+				{
+					for (game : thiso.zone_games)
+					{
+						new GuiShowImgCtrl("Serverlist_Map_Light" @ game[0])
+						{
+							image = "light4.png";
+							width = 200;
+							height = 200;
+							red = 0.5;
+							green = 0.8;
+							blue = 1;
+							alpha = 0.99;
+							mode = 0;
+							zoom = 1.5;
+						}
+					}
+
+					for (game : thiso.zone_games)
+					{
+						new GuiShowImgCtrl("Serverlist_Map_Game" @ game[0])
+						{
+							image = game[2];
+						}
+					}
+				}
+			}
+		}
+
+		new GuiButtonCtrl("Serverlist_ConnectButton")
+		{
+			profile = IRC_ButtonProfile;
+			width = 150;
+			height = 32;
+			horizSizing = "center";
+			vertSizing = "top";
+			x = (Serverlist_TablesPanel0.width - width) / 2;
+			y = Serverlist_TablesPanel0.height - 40;
+			text = _("Connect");
+		}
+	}
+
+	updateServerMapIcons();
+}
+
+public function updateServerMapIcons() 
+{
+	if (!isObject("Serverlist_Map") || !Serverlist_Map.isActuallyVisible())
+	{
+		return;
+	}
+
+	with (Serverlist_Map)
+	{
+		temp.bitmapwidth = getimgwidth(bitmap);
+		temp.bitmapheight = getimgheight(bitmap);
+
+		if (temp.bitmapwidth > 0 && temp.bitmapheight > 0)
+		{
+			width = temp.bitmapwidth;
+			height = temp.bitmapheight;
+			x = (parent.clientwidth - width) / 2;
+			y = (parent.clientheight - height) / 2;
+		}
+	}
+
+	if (this.selectedserver[0] == "login")
+	{
+		for (game : this.zone_games)
+		{
+			temp.x = ((game[3] * Serverlist_Map.width) / thiso.zone_games_size[0]) - 25;
+			temp.y = ((game[4] * Serverlist_Map.height) / thiso.zone_games_size[1]) - 25;
+
+			with ("Serverlist_Map_Game" @ game[0])
+			{
+				x = temp.x;
+				y = temp.y;
+			}
+			
+			with ("Serverlist_Map_Light" @ game[0])
+			{
+				x = temp.x - 35;
+				y = temp.y - 32;
+				zoom = random(1.6, 1.5);
+			}
+		}
+	}
+}
+
+function onActionClientSide(dataname) 
+{
+	switch (dataname)
+	{
+		case "update":
+		{
+			this.version_html1 = params[2];
+			this.version_html2 = params[3];
+			checkUpdateLoginInfo();
+			break;
+		}
+	}
+}
+
+function isDownloadFinished() 
+{
+	return (getPackagesDownloaded() && getPackagesDownloadComplete());
+}
+
+function checkServerConnect(node) 
+{
+	// loop0: node
+
+	if (node == null || node.level <= 1)// || !isDownloadFinished())
+	{
+		return;
+	}
+
+	if (node.isgame || node.id < 0)
+	{
+		return;
+	}
+
+	entry = this.serverlistentries[node.id];
+	serverwarp(entry[0]);
+}
+
+function sendEventsInfoRequest() 
+{
+	if (player.platform in {"iphone", "win"})
+	{
+		return;
+	}
+
+	this.eventinforequest = requestURL("https://graalserver.com:443/", 1);
+	catchevent(this.eventinforequest, "onReceiveData", "onReceiveEventsInfo");
+}
+
+function onReceiveEventsInfo(obj) 
+{
+	echo("onReceiveEventsInfo" SPC obj.data);
+	this.eventsinfo = this.baseeventsinfo @ obj.fulldata;
+	this.eventsinfourlbase = "http://www.graalserver.com/";
+	Serverlist_EventNews.urlbase = this.eventsinfourlbase;
+	Serverlist_EventNews.text = this.eventsinfo;
+}
+
+function sendServerListRequest() 
+{
+	requesttext("lister", "simplelist");
+	requesttext("lister", "serverinfo", {"GraalEngine", "serverinfo","serverinfo","login"});
+	requesttext("lister", "upgradeinfo");
+}
+
+function onReceiveText(texttype, textoption, textlines) 
+{
+	/*
+	echo("received onReceiveText");
+	echo("---------");
+	echo(texttype SPC textoption);
+	echo(textlines);
+	echo("---------");
+	*/
+	
+	
+	switch (texttype)
+	{
+		case "lister":
+			handleServerListerData(textoption, textlines);
+		break;
+
+		default:
+		break;
+	}
+}
+
+public function publicSendText(sendtype, sendoption, sendlines) 
+{
+	sendText(sendtype, sendoption, sendlines);
+}
+
+/*
+	ServerLevel.Graal3D => "3 ",
+	ServerLevel.Gold    => "P ",
+	ServerLevel.Classic => "",
+	ServerLevel.Hosted  => "H ",
+	ServerLevel.Hidden  => "U ",
+*/
+
+/*
+	Hidden  = 0,
+	Hosted  = 1,
+	Classic = 2,
+	Gold    = 3,
+	Graal3D = 4,
+*/
+
+
+function getServerCategoryLegacy(pservername) 
+{
+	if (pservername.starts("P "))
+	{
+		return 3;
+	}
+
+	if (pservername.starts("3 "))
+	{
+		return 4;
+	}
+
+	if (pservername.starts("U "))
+	{
+		return 0;
+	}
+	
+	if (pservername.starts("H "))
+	{
+		return 1;
+	}
+	
+	return 2;
+}
+
+function getServerCategory(pservername) 
+{
+	if (pservername.starts("P "))
+	{
+		return 0;
+	}
+
+	if (pservername.starts("3 "))
+	{
+		return 0;
+	}
+
+	if (pservername.starts("U "))
+	{
+		return 4;
+	}
+	
+	if (pservername.starts("H "))
+	{
+		return 3;
+	}
+	
+	return 3;
+}
+
+public function handleServerListerData(textoption, textlines) 
+{
+	//echo(textlines);
+	switch (textoption)
+	{
+		case "simpleserverlist":
+		{
+			this.classicserverlist = {};
+			Serverlist_ServerList.clearNodes();
+			this.serverlistentries = textlines;
+
+			if (player.account in {"joey", "cadavre", "nalin"})
+			{
+				this.serverlistentries.add({"login", "P Login", ""});
+				this.serverlistentries.add({"login 2", "P Login 2", ""});
+				this.serverlistentries.add({"login dev", "P Login DEV", ""});
+			}
+
+			this.classicserverlist.add("");
+			this.classicserverlist.add("");
+			this.classicserverlist.add("");
+			this.classicserverlist.add("");
+			this.classicserverlist.add("");
+
+			for (i = 0; i < this.serverlistentries.size(); ++i)
+			{
+				entry = this.serverlistentries[i];
+				entryname = entry[1];
+				cat = getServerCategory(entryname);
+
+				this.classicserverlist[getServerCategoryLegacy(entryname)].add(entry);
+
+				if (cat < 0)
+				{
+				}
+				else
+				{
+					if (this.onlyshowplayerworlds)
+					{
+						if (!(cat in {3, 4, 2}))
+						{
+							continue;
+						}
+					}
+
+					if (cat != 2)
+					{
+						entryname = entryname.substring(2, -1);
+					}
+
+					if (entryname == "Games")
+					{
+						entryname = "Skill Games";
+					}
+
+					entrystr = this.serverlistcats[cat] @ "/" @ entryname TAB entry[2];
+					tmp.node = Serverlist_ServerList.addNodeByPath(entrystr, "/");
+					temp.servericonname = replaceAll(entry[0], " ", "_");
+					temp.servericonname = replaceAll(temp.servericonname, ":", "");
+					temp.servericonname = lowercase(temp.servericonname);
+					temp.img = (cat == 2 ? "graalicon_big.png" : "login_icon_" @ temp.servericonname @ ".png");
+					
+					
+					if (temp.servericonname == "Login" || temp.servericonname == "Login_DEV" || temp.servericonname == "Login_Mobile") {
+						temp.img = "block.png";
+					}
+
+					temp.img = lowercase(temp.img);
+
+					if (getimgwidth(temp.img) <= 0)
+					{
+						temp.img = "graalicon_big.png";
+					}
+					
+					tmp.node.icon.drawimage(0, 0, temp.img);
+					tmp.node.id = i;
+					tmp.node.sortgroup = cat;
+					tmp.node.sortvalue = entry[2];
+				}
+			}
+
+			for (cat = 0; cat < this.serverlistcats.size(); ++cat)
+			{
+				node = Serverlist_ServerList.getNode(this.serverlistcats[cat]);
+				if (node != null)
+				{
+					node.id = -1;
+					node.sortgroup = cat;
+					node.profile = IRC_TreeViewProfile2;
+					node.icon.drawImage(0, 0, "treeview_folderopen_big.png");
+				}
+			}
+			
+			Serverlist_ServerList.sort();
+			if (Serverlist_ServerList.nodes.size() > 0)
+			{
+				Serverlist_ServerList.nodes[0].select();
+			}
+			
+			break;
+		}
+
+		case "upgradeinfo":
+		{
+			this.upgradeinfo = textlines[0];
+			checkUpdateLoginInfo();
+			break;
+		}
+
+		case "playtimes":
+		{
+			this.monthlytime = textlines[0];
+			updateTrialBarTimer(false);
+			break;
+		}
+
+		case "subscriptions":
+		{
+			setSubscriptions(textlines);
+			break;
+		}
+
+		case "lockcomputer":
+		{
+			this.lockcomputer = textlines[0];
+			Serverlist_Account_ProtectButton.visible = !this.lockcomputer;
+			checkUpdateLoginInfo();
+			break;
+		}
+	}
+
+	
+}
+
+function setSubscriptions(data) 
+{
+	this.hassubscription = data.size() > 0;
+	this.subscriptions = {};
+
+	for (temp.subscription : data)
+	{
+		temp.str = temp.subscription[1];
+		temp.days = int(temp.subscription[2] / 86400);
+
+		if (temp.days > 0 && temp.days < 3650)
+		{
+		temp.str @= format(temp.subscription[1] == "Gold Subscription" ? " (next billing in %d days)" : " (%d days left)", temp.days);
+		}
+
+		this.subscriptions.add(temp.str);
+	}
+
+	updateTrialBarStatus();
+	checkUpdateLoginInfo();
+}
+
+function addGuiControls() 
+{
+	addProfiles();
+	addControls();
+	addServerListControls();
+	addDescriptionControls();
+	addGameTableControls();
+	addStartMenu();
+	initGraalControlSize();
+	Adventure_setGraalControlRecreate(false);
+}
+
+public function addProfiles() 
+{
+	new GuiBlueTransWindowProfile("IRC_WindowProfile")
+	{
+		bitmap = "guiblue2_window_noback.png";
+		overridestylefont = true;
+		fonttype = "Verdana";
+		fontstyle = "b";
+		fontsize = 24;
+		align = "right";
+		textoffset = {0, -4};
+		textshadow = false;
+		shadowcolor = {0, 0, 0};
+		shadowoffset = {1, 1};
+	}
+
+	new IRC_WindowProfile("IRC_WindowLeftProfile")
+	{
+		align = "left";
+	}
+
+	new IRC_WindowLeftProfile("IRC_WindowLessTransProfile")
+	{
+		fillColor = {96, 144, 208, 240};
+	}
+
+	new IRC_WindowLeftProfile("IRC_WindowFloatingProfile")
+	{
+		
+	}
+
+	new IRC_WindowProfile("IRC_WindowRedProfile")
+	{
+		fillColor = {224, 0, 0, 192};
+	}
+
+	new GuiBlueButtonProfile("IRC_ButtonProfile")
+	{
+		bitmap = "guiblue2_button.png";
+		fonttype = "Verdana";
+		fontstyle = "b";
+		fontsize = 16;
+		textshadow = true;
+		shadowcolor = {0, 0, 0};
+	}
+
+	new IRC_ButtonProfile("IRC_LeftButtonProfile")
+	{
+		align = "left";
+	}
+
+	new GuiDefaultProfile("IRC_TaskBarProfile")
+	{
+		bitmap = "guiblue2_button.png";
+		border = 5;
+	}
+
+	new GuiBlueTransScrollProfile("IRC_ScrollProfile")
+	{
+		border = 0;
+		bitmap = "guiblue2_scroll.png";
+	}
+
+	new GuiBlueTransScrollProfile("IRC_BorderScrollProfile")
+	{
+		bitmap = "guiblue2_scroll.png";
+	}
+
+	new GuiTextListProfile("IRC_TextListProfile")
+	{
+		fonttype = "Verdana";
+		fontstyle = "b";
+		fontsize = 16;
+		textshadow = true;
+		shadowcolor = {0, 0, 0};
+	}
+
+	new IRC_TextListProfile("IRC_StartMenuProfile")
+	{
+		textshadow = false;
+		fillcolorhl = {255, 255, 255, 128};
+		fillcolorna = {255, 255, 255, 64};
+	}
+
+	new IRC_TextListProfile("IRC_TextListProfile2")
+	{
+		opaque = true;
+		fillColor = {255, 0, 0, 128};
+	}
+
+	new IRC_TextListProfile("IRC_TextListSmallProfile")
+	{
+		fontstyle = "b";
+		fontsize = 16;
+		textshadow = false;
+	}
+
+	new GuiTextProfile("IRC_TextProfile")
+	{
+		fonttype = "Verdana";
+		fontstyle = "b";
+		fontsize = 20;
+		textshadow = true;
+		shadowcolor = {0, 0, 0};
+		fontColorLink = {255, 224, 192};
+		fontColorLinkHL = {255, 255, 255};
+	}
+
+	new GuiBlueTextProfile("IRC_BlueTextProfile")
+	{
+		fonttype = "Verdana";
+		fontstyle = "b";
+		fontsize = 20;
+		textshadow = true;
+		shadowcolor = {0, 0, 0};
+		fontColorLink = {224, 224, 255};
+		fontColorLinkHL = {255, 255, 255};
+	}
+
+	new IRC_TextProfile("IRC_TextRightProfile")
+	{
+		autoSizeWidth = false;
+		align = "right";
+	}
+
+	new IRC_TextProfile("IRC_TextCenterProfile")
+	{
+		align = "center";
+	}
+
+	new IRC_TextRightProfile("IRC_TimeProfile")
+	{
+		fonttype = "Courier";
+		fontstyle = "b";
+	}
+	
+	new IRC_TextProfile("IRC_TextSmallProfile")
+	{
+		fontsize = 14;
+		textshadow = false;
+	}
+
+	new IRC_TextCenterProfile("IRC_TextCenterVerySmallProfile")
+	{
+		fontsize = 11;
+		textshadow = false;
+	}
+
+	new GuiTabProfile("IRC_TabProfile")
+	{
+		bitmap = "guiblue2_tab.png";
+		fonttype = "Verdana";
+		fontstyle = "b";
+		fontsize = 16;
+		align = "center";
+		textshadow = true;
+		shadowcolor = {0, 0, 0};
+	}
+
+	new GuiTreeViewProfile("IRC_TreeViewProfile")
+	{
+		fonttype = "Verdana";
+		fontstyle = "";
+		fontsize = 16;
+		textshadow = false;
+		shadowcolor = {0, 0, 0};
+	}
+
+	new IRC_TreeViewProfile("IRC_TreeViewProfile2")
+	{
+		opaque = true;
+		fillColor = {255, 0, 0, 128};
+	}
+
+	new GuiBlueTreeViewProfile("IRC_BlueTreeViewProfile")
+	{
+		fonttype = "Verdana";
+		fontstyle = "b";
+		fontsize = 16;
+		textshadow = true;
+		shadowcolor = {0, 0, 0};
+	}
+
+	new IRC_TreeViewProfile("IRC_TreeViewProfile3")
+	{
+		opaque = true;
+		fillColor = {128, 0, 0, 128};
+	}
+
+	new GuiPopUpMenuProfile("IRC_MenuProfile")
+	{
+		fillColor = {0, 0, 224, 255};
+		bitmap = "guiblue2_scroll.png";
+		transparency = 1;
+	}
+
+	new GuiBlueTextEditSliderProfile("IRC_TextEditSliderProfile")
+	{
+		fonttype = "Verdana";
+		fontstyle = "b";
+		fontsize = 16;
+		textshadow = true;
+		shadowcolor = {0, 0, 0};
+	}
+
+	new GuiTextEditProfile("IRC_TextEditProfile")
+	{
+		bitmap = "guiblue_textedit.png";
+		fillColor = {41, 82, 156};
+		fillColorHL = {96, 144, 208};
+	}
+
+	new GuiTextEditProfile("IRC_TextEditRedProfile")
+	{
+		fonttype = "Verdana";
+		fontstyle = "b";
+		fontsize = 16;
+	}
+
+	new GuiMiddleBlueMLTextProfile("IRC_ChatTextProfile")
+	{
+		fontColorLink = {224, 224, 255};
+		fontColorLinkHL = {255, 255, 255};
+	}
+	
+	new GuiBlueMLTextProfile("IRC_ChatTextSmallProfile")
+	{
+		fontColorLink = {224, 224, 255};
+		fontColorLinkHL = {255, 255, 255};
+	}
+
+	new IRC_TextProfile("IRC_TableTextProfile")
+	{
+		fontsize = 16;
+	}
+
+	new GuiDefaultProfile("IRC_FilledControlProfile")
+	{
+		
+	}
+
+	new IRC_ScrollProfile("IRC_FilledScrollProfile")
+	{
+		
+	}
+
+	new IRC_BorderScrollProfile("IRC_FilledBorderScrollProfile")
+	{
+		
+	}
+
+	with (IRC_WindowProfile)
+	{
+		bitmap = "guiblue_window_noback.png";
+	}
+
+	with (IRC_WindowLessTransProfile)
+	{
+		bitmap = "guiblue_window_noback.png";
+	}
+
+	with (IRC_WindowRedProfile)
+	{
+		bitmap = "guiblue_window.png";
+		transparency = 0.75;
+	}
+
+	with (IRC_WindowLeftProfile)
+	{
+		bitmap = "guiblue_window_noback.png";
+	}
+
+	with (IRC_ButtonProfile)
+	{
+		bitmap = "guiblue_button.png";
+	}
+
+	with (IRC_LeftButtonProfile)
+	{
+		bitmap = "guiblue_button.png";
+	}
+
+	with (IRC_TaskBarProfile)
+	{
+		bitmap = "guiblue_button.png";
+	}
+
+	with (IRC_TabProfile)
+	{
+		bitmap = "guiblue_tab.png";
+		fontColor = {192, 224, 255};
+		fontsize = 14;
+	}
+
+	with (IRC_ScrollProfile)
+	{
+		bitmap = "guiblue_scroll.png";
+	}
+
+	with (IRC_FilledScrollProfile)
+	{
+		bitmap = "guiblue_scroll.png";
+	}
+	
+	with (IRC_BorderScrollProfile)
+	{
+		bitmap = "guiblue_scroll.png";
+	}
+	
+	with (IRC_FilledBorderScrollProfile)
+	{
+		bitmap = "guiblue_scroll.png";
+	}
+	
+	with (IRC_MenuProfile)
+	{
+		bitmap = "guiblue_scroll.png";
+	}
+	
+	with (IRC_TextProfile)
+	{
+		fontColor = {192, 224, 255};
+		fontColorLink = {224, 224, 255};
+		fontColorLinkHL = {255, 255, 255};
+	}
+
+	with (IRC_TextSmallProfile)
+	{
+		fontColor = {192, 224, 255};
+	}
+
+	with (IRC_TimeProfile)
+	{
+		fontColor = {192, 224, 255};
+	}
+	
+	with (IRC_TextCenterVerySmallProfile)
+	{
+		fontColor = {192, 224, 255};
+	}
+	
+	with (IRC_TextRightProfile)
+	{
+		fontColor = {192, 224, 255};
+	}
+	
+	with (IRC_TextListProfile)
+	{
+		fontColor = {192, 224, 255};
+		fillColorHL = {96, 144, 208};
+		fillColorNA = {41, 82, 156};
+	}
+
+	with (IRC_TreeViewProfile)
+	{
+		fontColor = {192, 224, 255};
+		fillColor = {255, 255, 255, 144};
+		fillColorHL = {255, 255, 255, 144};
+		fillColorNA = {255, 255, 255, 64};
+	}
+
+	with (IRC_TreeViewProfile2)
+	{
+		fontColor = {192, 224, 255};
+		fillColor = {255, 255, 255, 64};
+		fillColorHL = {255, 255, 255, 64};
+		fillColorNA = {255, 255, 255, 64};
+	}
+
+	with (IRC_TextEditProfile)
+	{
+		fillColor = {41, 82, 156};
+		fillColorHL = {96, 144, 208};
+		fontColor = {192, 224, 255};
+		fontColorNA = {192, 224, 255};
+	}
+
+	with (IRC_TextEditRedProfile)
+	{
+		bitmap = "guiblue_textedit.png";
+		fillColor = {41, 82, 156};
+		fillColorHL = {96, 144, 208};
+		fontColor = {192, 224, 255};
+		fontColorNA = {192, 224, 255};
+	}
+}
+
+function addControls() 
+{
+	Gs2Utils.destroyObject("gr_ServerListScreenProfile");
+    new GuiControlProfile("gr_ServerListScreenProfile")
+    {
+        fillColor = { 0, 0, 0 };
+        fontColor = { 255, 255, 255 };
+
+        opaque = true;
+        transparency = 0.5;
+    }
+
+    Gs2Utils.destroyObject("gr_ServerListScreen_backgroundProfile");
+    new GuiControlProfile("gr_ServerListScreen_backgroundProfile")
+    {
+        fillColor = { 0, 0, 0 };
+        fontColor = { 255, 255, 255 };
+
+        opaque = false;
+        transparency = 0.3;
+    }
+	Gs2Utils.destroyObject("gr_ServerListScreen");
+	new GuiControl("gr_ServerListScreen")
+	{
+		profile = gr_ServerListScreenProfile;
+		useownprofile = true;
+		clientwidth = screenwidth;
+		clientheight = screenheight;
+		minextent = { clientwidth, clientheight };
+		x = 0;
+		isexternal = false;
+		visible = true; // External is too buggy.  
+		maximized = true;
+		canmaximize = canminimize = canclose = false;
+		modal = true;
+		profile.border = 0;
+
+		Gs2Utils.destroyObject("gr_ServerListScreen_background");
+		new GuiBitmapCtrl("gr_ServerListScreen_background")
+		{
+			profile = "gr_ServerListScreen_backgroundProfile";
+			bitmap = "bg_11.png"; //"graalreborn_background.jpg";
+			extent = { screenwidth, screenheight };
+			x = (screenwidth - width) / 2;
+		}
+
+
+		Gs2Utils.destroyObject("gr_ServerListScreen_logo");
+		new GuiBitmapCtrl("gr_ServerListScreen_logo")
+		{
+			bitmap = "graalreborn_logo.png";
+			extent = { 1100 / 1.5, 271 / 1.5 };
+			x = (screenwidth - width) / 2;
+			visible = false;
+		}
+	};
+
+	with (gr_ServerListScreen)
+	{
+		new GuiControl("gr_ServerListScreen_Serverlist")
+		{
+		  profile = IRC_WindowRedProfile;
+		  clientrelative = true;
+		  x = y = 0;
+		  extent = {280, Serverlist_MainPanel.clientheight};
+		  horizSizing = "right";
+		  vertSizing = "height";
+		  canMove = true;
+		  canMinimize = false;
+		  canMaximize = false;
+		  canResize = true;
+		  canClose = false;
+		  tile = false;
+		  
+		  text = "Servers";
+
+		  new GuiControl("Serverlist_Window_Panel")
+		  {
+			profile = "GuiDefaultProfile";
+			x = 0;
+			y = 0;
+			width = Serverlist_Window.clientwidth;
+			height = Serverlist_Window.clientheight;
+			horizSizing = "width";
+			vertSizing = "height";
+		  }
+		}
+
+		Gs2Utils.destroyObject("gr_ServerListScreen_accountInfo");
+
+		new GuiControl("gr_ServerListScreen_accountInfo")
+		{
+			profile = IRC_WindowProfile;
+			useownprofile = true;
+			profile.fillColor = { 0, 0, 0, 0 };
+			profile.fontColor = { 255, 255, 255, 255 };
+			profile.border = 0;
+			clientrelative = true;
+			x = screenwidth - 280;
+			y = 10;
+			width = 280;
+			height = 200;
+			horizSizing = "width";
+			vertSizing = "bottom";
+			canMove = false;
+			canMinimize = false;
+			canMaximize = false;
+			canResize = true;
+			canClose = false;
+			tile = false;
+
+			new GuiShowImgCtrl("gr_ServerListScreen_accountInfo_text1")
+			{
+				profile = IRC_ChatTextSmallProfile;
+				useownprofile = true;
+				profile.fontColor = { 255, 255, 255, 255 };
+				textshadow = true;
+				shadowcolor = { 255, 255, 255, 255 };
+				shadowoffset = { 1, 1 };
+				x = y = 0;
+
+				width = gr_ServerListScreen_accountInfo.clientwidth;
+				height = gr_ServerListScreen_accountInfo.clientheight;
+				horizSizing = "width";
+			}
+			
+			new GuiShowImgCtrl("gr_ServerListScreen_accountInfo_text2")
+			{
+				profile = IRC_ChatTextSmallProfile;
+				useownprofile = true;
+				profile.fontColor = { 255, 255, 255, 255 };
+				textshadow = true;
+				shadowcolor = { 0, 0, 0, 155 };
+				shadowoffset = { 1, 1 };
+				x = y = 0;
+				width = gr_ServerListScreen_accountInfo.clientwidth;
+				height = gr_ServerListScreen_accountInfo.clientheight;
+				horizSizing = "width";
+			}
+
+			new GuiShowImgCtrl("gr_ServerListScreen_accountInfo_text3")
+			{
+				profile = IRC_ChatTextSmallProfile;
+				useownprofile = true;
+				profile.fontColor = { 255, 255, 255, 255 };
+				textshadow = true;
+				shadowcolor = { 255, 255, 255, 255 };
+				shadowoffset = { 1, 1 };
+				x = y = 0;
+				width = gr_ServerListScreen_accountInfo.clientwidth;
+				height = gr_ServerListScreen_accountInfo.clientheight;
+				horizSizing = "width";
+			}
+			
+			new GuiShowImgCtrl("gr_ServerListScreen_accountInfo_text4")
+			{
+				profile = IRC_ChatTextSmallProfile;
+				useownprofile = true;
+				profile.fontColor = { 255, 255, 255, 255 };
+				textshadow = true;
+				shadowcolor = { 0, 0, 0, 155 };
+				shadowoffset = { 1, 1 };
+				x = y = 0;
+				width = gr_ServerListScreen_accountInfo.clientwidth;
+				height = gr_ServerListScreen_accountInfo.clientheight;
+				horizSizing = "width";
+			}
+		}
+
+		Gs2Utils.destroyObject("Serverlist_TablesWindow");
+		/*
+		new GuiWindowCtrl("Serverlist_TablesWindow")
+		{
+			profile = IRC_WindowProfile;
+			clientrelative = true;
+			x = 280;
+			y = 200;
+			width = Serverlist_MainPanel.clientwidth - x;
+			height = Serverlist_MainPanel.clientheight - 200 - 200;
+			horizSizing = "width";
+			vertSizing = "height";
+			canMove = false;
+			canMinimize = false;
+			canMaximize = false;
+			canResize = true;
+			canClose = false;
+			tile = false;
+			text = "";
+			text = _("Events");
+
+			new GuiControl("Serverlist_TablesPanel")
+			{
+				profile = "GuiDefaultProfile";
+				x = 0;
+				y = -22;
+				width = Serverlist_TablesWindow.clientwidth;
+				height = Serverlist_TablesWindow.clientheight - y;
+				horizSizing = "width";
+				vertSizing = "height";
+			}
+		}
+		*/
+	}
+}
+
+function onDefaultStyleChanges() 
+{
+  setGUIStyle(getGUIStyle());
+}
+
+public function setServerGUIStyle(newstyle, overwrite) 
+{
+  this.serverguistyle = newstyle;
+  this.serverguioverwrite = overwrite;
+  setGUIStyle(getGUIStyle());
+
+  if (isObject("-Playerlist"))
+  {
+	"-Playerlist".setGUIStyle(getGUIStyle());
+  }
+
+  if (isObject("-ScriptedRC"))
+  {
+	"-ScriptedRC".setGUIStyle(getGUIStyle());
+  }
+  
+  if (isObject("-ShopGlobal"))
+  {
+	"-ShopGlobal".setGUIStyle(getGUIStyle());
+  }
+}
+
+public function getGUIStyle() 
+{
+  if (this.serverguioverwrite)
+  {
+	return this.serverguistyle;
+  }
+
+  if ($pref::Video::defaultguistyle != "")
+  {
+	return $pref::Video::defaultguistyle;
+  }
+  
+  return this.serverguistyle;
+}
+
+public function setGUIStyle(newstyle) 
+{
+  if (isObject("Serverlist_TaskBar"))
+  {
+	Serverlist_TaskBar.style = newstyle;
+  }
+
+  if (isObject("Serverlist_Taskbar_Menu"))
+  {
+	Serverlist_Taskbar_Menu.style = newstyle;
+  }
+  
+  if (isObject("Serverlist_TaskButton_Toggle"))
+  {
+	Serverlist_TaskButton_Toggle.style = newstyle;
+  }
+  
+  if (isObject("ChatBar_ToggleTaskBarButton"))
+  {
+	ChatBar_ToggleTaskBarButton.style = newstyle;
+  }
+  
+  if (isObject("Serverlist_ProtectQuery_Window"))
+  {
+	Serverlist_ProtectQuery_Window.style = newstyle;
+  }
+}
+
+function addGameTableControls() 
+{
+  with (Serverlist_TablesPanel)
+  {
+	new GuiTabCtrl("Serverlist_TablesTab")
+	{
+	  profile = "IRC_TabProfile";
+	  x = 0;
+	  y = 0;
+	  width = Serverlist_TablesPanel.width;
+	  height = 22;
+	  horizSizing = "width";
+	  tabwidth = 100;
+	  leveling = 3;
+	}
+
+	for (i = 0; i < 4; ++i)
+	{
+	  new GuiControl("Serverlist_TablesPanel" @ i)
+	  {
+		profile = "GuiDefaultProfile";
+		x = 0;
+		y = 24;
+		width = Serverlist_TablesPanel.width;
+		height = Serverlist_TablesPanel.height - y;
+		horizSizing = "width";
+		vertSizing = "height";
+		visible = false;
+	  }
+	}
+  }
+}
+
+function Serverlist_TrialBar_Text.onMouseDown() 
+{
+  openShopURL();
+}
+
+function Serverlist_TrialBar_Text2.onMouseDown() 
+{
+  openShopURL();
+}
+
+function addTrialBarControls() 
+{
+  this.showtrialbar = true;
+
+  new GuiControlProfile("Serverlist_TrialBarProfile")
+  {
+	bitmap = "guiblue_button.png";
+	border = 5;
+	modal = false;
+	focusOnShow = false;
+  }
+
+  with (getActiveGraalControl())
+  {
+	vertSizing = "height";
+	y = 40;
+	height = parent.clientheight - y - (Serverlist_TaskBar.visible ? Serverlist_TaskBar.height : 0);
+  }
+
+  with (GUIContainer)
+  {
+	new GuiControl("Serverlist_TrialBar")
+	{
+	  profile = Serverlist_TrialBarProfile;
+	  x = y = 0;
+	  width = GUIContainer.clientwidth;
+	  height = 40;
+	  horizSizing = "width";
+	  visible = true;
+
+	  new GuiMLTextCtrl("Serverlist_TrialBar_Text")
+	  {
+		profile = GuiBlueMLTextProfile;
+		x = 20;
+		y = 10;
+		width = Serverlist_TrialBar.clientwidth - x - 10;
+		horizSizing = "width";
+		text = "";
+	  }
+
+	  new GuiMLTextCtrl("Serverlist_TrialBar_Text2")
+	  {
+		profile = GuiBlueMLTextProfile;
+		x = 20;
+		y = 10;
+		width = Serverlist_TrialBar.clientwidth - x - 10;
+		horizSizing = "width";
+		text = "";
+	  }
+	}
+  }
+
+  updateTrialBarTimer(false);
+  requesttext("lister", "playtimes");
+}
+
+function addStartMenu()
+{
+  with (GUIContainer)
+  {
+	new GuiTaskbar("Serverlist_TaskBar")
+	{
+	  profile = IRC_TaskBarProfile;
+	  width = GUIContainer.clientwidth;
+	  height = 30;
+	  x = 0;
+	  y = GUIContainer.clientheight - height;
+	  visible = (player.platform != "linuxstream");
+	  horizSizing = "width";
+	  vertSizing = "top";
+	  style = $pref::Video::defaultguistyle;
+
+	  new GuiTextCtrl("Serverlist_TaskBar_Label2")
+	  {
+		profile = "IRC_TextCenterVerySmallProfile";
+		x = Serverlist_TaskBar.width - 85;
+		y = -2;
+		height = 20;
+		text = _("servertime");
+		horizSizing = "left";
+		vertSizing = "top";
+	  }
+
+	  new GuiTextCtrl("Serverlist_TaskBar_Label")
+	  {
+		profile = "IRC_TimeProfile";
+		width = 90;
+		height = 20;
+		x = Serverlist_TaskBar.clientwidth - width - 25;
+		y = 6;
+		text = "";
+		horizSizing = "left";
+		vertSizing = "top";
+		hint = "Servertime (24-hour time)";
+	  }
+
+	  new GuiButtonCtrl("Serverlist_TaskButton_Start")
+	  {
+		profile = "IRC_ButtonProfile";
+		stylesection = "Taskbar.StartButton";
+		x = 0;
+		y = 0;
+		width = 90;
+		height = 30;
+		this.special = true;
+	  }
+
+	  
+	  /*
+	  new GuiButtonCtrl("Serverlist_TaskButton_Shop")
+	  {
+		profile = "IRC_ButtonProfile";
+		stylesection = "Taskbar.ButtonHorz";
+		x = 130;
+		y = 0;
+		width = 80;
+		height = 30;
+		text = _("Shop");
+	  }
+	  */
+	  new GuiButtonCtrl("Serverlist_TaskButton_Main")
+	  {
+		profile = "IRC_LeftButtonProfile";
+		stylesection = "Taskbar.ButtonHorz";
+		x = 130;
+		y = 0;
+		width = 110;
+		height = 30;
+		text = _("Servers");
+
+		setIconSize(24, 24);
+		icon.clearall();
+		icon.drawimagestretched(0, 0, 24, 24, "graalicon_big.png", 0, 0, 32, 32);
+	  }
+	  
+	  new GuiButtonCtrl("Serverlist_TaskButton_Server")
+	  {
+		profile = "IRC_LeftButtonProfile";
+		stylesection = "Taskbar.ButtonHorz";
+		x = 190;
+		y = 0;
+		width = 150;
+		height = 30;
+		text = "";
+		setIconSize(24, 24);
+		visible = false;
+	  }
+	  
+	  new GuiButtonCtrl("Serverlist_TaskButton_Toggle")
+	  {
+		profile = "IRC_ButtonProfile";
+		style = $pref::Video::defaultguistyle;
+		width = 16;
+		height = 30;
+		x = Serverlist_TaskBar.clientwidth - width;
+		y = 0;
+		horizSizing = "left";
+		vertSizing = "top";
+		text = ">";
+		this.special = true;
+	  }
+	}
+
+	new GuiStartMenuCtrl("Serverlist_Taskbar_Menu")
+	{
+	  profile = IRC_MenuProfile;
+	  textprofile = IRC_StartMenuProfile;
+	  text = "Graal";
+	  style = $pref::Video::defaultguistyle;
+	  setIconSize(16, 16);
+
+	  clearRows();
+	  addRow(15, _("Switch account"));
+	  addRow(-1, "-");
+	  addRow(14, _("Log window"));
+	  addRow(13, _("Playerlist"));
+	  //addRow(12, _("Remote Control"));
+	  addRow(11, _("Global Chat"));
+
+	  /*
+	  if (graalversion >= 5.2)
+	  {
+		if (player.account in {"cadavre", "joey"})
+		{
+		  addRow(8, _("Create Live-Book"));
+		}
+	  }
+	  */
+
+	  addRow(-1, "-");
+	  addRow(7, _("Options"));
+	  //addRow(6, _("Support"));
+	  addRow(5, _("Graal Wiki "));
+	  addRow(4, _("Forums"));
+	  //addRow(-1, "-");
+	  //addRow(3, _("Upgrade"));
+	  //addRow(9, _("Invite a Friend"));
+	  //addRow(10, _("Send Gift Wish"));
+	  addRow(-1, "-");
+	  addRow(2, _("Install Packages"));
+	}
+  }
+}
+
+function addServerListControls() 
+{
+  with (Serverlist_Window_Panel)
+  {
+	new GuiControl("Serverlist_ServerPanel0")
+	{
+	  x = y = 0;
+	  extent = Serverlist_Window_Panel.clientextent;
+	  horizSizing = "width";
+	  vertSizing = "height";
+	  visible = true;
+	}
+  }
+  
+  serverlistpanel = Serverlist_ServerPanel0;
+
+  with (serverlistpanel)
+  {
+	new GuiScrollCtrl("Serverlist_ServerList_Scroll")
+	{
+	  profile = "IRC_ScrollProfile";
+	  horizSizing = "width";
+	  vertSizing = "height";
+	  x = y = 0;
+	  width = serverlistpanel.clientwidth;
+	  height = serverlistpanel.clientheight - 25;
+	  hScrollBar = "alwaysOff";
+	  vScrollBar = "dynamic";
+
+	  new GuiTreeViewCtrl("Serverlist_ServerList")
+	  {
+		profile = "IRC_TreeViewProfile";
+		boxWidth = 12;
+		statuswidth = 20;
+		horizSizing = "width";
+		x = y = 0;
+		width = serverlistpanel.width - 20;
+		fitParentWidth = true;
+		columns = {0, 230};
+		setIconSize(32, 32);
+		clipColumnText = true;
+		wrapColumnText = true;
+		sortmode = "value";
+		sortorder = "descending";
+		groupsortorder = "ascending";
+		firstLineVisible = false;
+	  }
+	}
+
+	new GuiTextCtrl("Serverlist_ServerDirectLabel")
+	{
+	  profile = "IRC_TextSmallProfile";
+	  x = 0;
+	  y = serverlistpanel.clientheight - 24;
+	  width = 105;
+	  height = 22;
+	  horizSizing = "right";
+	  vertSizing = "top";
+	  text = _("Servername") @ ":";
+	}
+
+	new GuiTextEditCtrl("Serverlist_ServerDirectConnect")
+	{
+	  profile = "IRC_TextEditRedProfile";
+	  horizSizing = "width";
+	  vertSizing = "top";
+	  x = 110;
+	  y = serverlistpanel.clientheight - 24;
+	  width = serverlistpanel.clientwidth - x;
+	  height = 24;
+	  minExtent = "8 22";
+	  hint = _("Type the name of server to connect");
+	}
+  }
+}
+
+function addDescriptionControls() 
+{
+  with (Serverlist_DescriptionPanel)
+  {
+	new GuiTabCtrl("Serverlist_DescriptionTab")
+	{
+	  profile = "IRC_TabProfile";
+	  x = 0;
+	  y = 0;
+	  width = Serverlist_DescriptionPanel.width;
+	  height = 22;
+	  horizSizing = "width";
+	  tabwidth = 120;
+	  leveling = 3;
+	  visible = false;
+	}
+
+	for (i = 0; i < 3; ++i)
+	{
+	  new GuiControl("Serverlist_DescriptionPanel" @ i)
+	  {
+		x = 0;
+		y = 22;
+		width = Serverlist_DescriptionPanel.width;
+		height = Serverlist_DescriptionPanel.height - y;
+		horizSizing = "width";
+		vertSizing = "height";
+		visible = false;
+	  }
+	}
+  }
+
+  for (i = 0; i < 3; ++i)
+  {
+	with ("Serverlist_DescriptionPanel" @ i)
+	{
+	  new GuiScrollCtrl("Serverlist_DescriptionScroll" @ i)
+	  {
+		profile = "IRC_ScrollProfile";
+		x = y = 0;
+		width = ("Serverlist_DescriptionPanel" @ i).width;
+		height = ("Serverlist_DescriptionPanel" @ i).height;
+		hScrollBar = "alwaysOff";
+		vScrollBar = "dynamic";
+		horizSizing = "width";
+		vertSizing = "height";
+		childmargin = {10, 10};
+
+		new GuiMLTextCtrl("Serverlist_Description" @ i)
+		{
+		  profile = IRC_ChatTextSmallProfile;
+		  x = y = 0;
+		  width = ("Serverlist_DescriptionScroll" @ i).width - 45;
+		  height = 14;
+		  horizSizing = "width";
+		}
+	  }
+	}
+  }
+
+  with (Serverlist_DescriptionPanel0)
+  {
+	/*
+	new GuiButtonCtrl("Serverlist_Account_UpgradeButton")
+	{
+	  profile = "IRC_ButtonProfile";
+	  width = 72;
+	  height = 24;
+	  x = Serverlist_DescriptionPanel0.clientwidth - width - 20;
+	  y = 5;
+	  horizSizing = "left";
+	  text = _("Upgrade");
+	}
+
+	new GuiButtonCtrl("Serverlist_Account_ProtectButton")
+	{
+	  profile = "IRC_ButtonProfile";
+	  width = 72;
+	  height = 24;
+	  x = Serverlist_DescriptionPanel0.clientwidth - width - 20;
+	  y = 50;
+	  horizSizing = "left";
+	  text = _("Protect");
+	  visible = (!thiso.lockcomputer && canProtectComputer());
+	}
+	*/
+  }
+
+  Serverlist_DescriptionTab.setSelectedRow(0);
+  addProtectQueryWindow();
+}
+
+function addProtectQueryWindow() 
+{
+  with (GUIContainer)
+  {
+	new GuiWindowCtrl("Serverlist_ProtectQuery_Window")
+	{
+	  profile = GuiBlueWindowProfile;
+	  useownprofile = true;
+	  profile.transparency = 1;
+	  style = $pref::Video::defaultguistyle;
+	  clientrelative = true;
+	  clientextent = {360, 200};
+	  horizSizing = "center";
+	  vertSizing = "center";
+	  canMove = true;
+	  canResize = false;
+	  canClose = true;
+	  text = _("Protect Account");
+	  visible = false;
+
+	  new GuiScrollCtrl("Serverlist_ProtectQuery_Scroll")
+	  {
+		profile = GuiBlueScrollProfile;
+		horizSizing = "width";
+		vertSizing = "height";
+		x = 0;
+		y = 0;
+		width = Serverlist_ProtectQuery_Window.clientwidth;
+		height = Serverlist_ProtectQuery_Window.clientheight - y;
+		hScrollBar = "alwaysOff";
+		vScrollBar = "dynamic";
+		childmargin = {5, 5};
+
+		new GuiMLTextCtrl("Serverlist_ProtectQuery")
+		{
+		  profile = GuiBlueMLTextProfile;
+		  x = y = 0;
+		  width = Serverlist_ProtectQuery_Window.clientwidth - 25 - 10;
+		  height = 14;
+		  horizSizing = "width";
+		  text = "<ignorelinebreaks>You can protect your Graal account so that it can only
+be used by this computer. If someone else is connecting to your account then
+you will receive an e-mail for approving the new computer.<br>
+<b><i>Make sure that your e-mail address is working correctly! <a href=emailcheck>Click here to send a test-email</a></i></b><br>
+This action cannot be undone.";
+		}
+	  }
+
+	  new GuiButtonCtrl("Serverlist_ProtectQuery_ProtectButton")
+	  {
+		profile = GuiBlueButtonProfile;
+		width = 100;
+		height = 24;
+		x = (Serverlist_ProtectQuery_Window.clientwidth - width) / 2 - 55;
+		y = Serverlist_ProtectQuery_Window.clientheight - 40;
+		vertsizing = "top";
+		text = _("Protect");
+	  }
+	  
+	  new GuiButtonCtrl("Serverlist_ProtectQuery_CancelButton")
+	  {
+		profile = GuiBlueButtonProfile;
+		width = 100;
+		height = 24;
+		x = (Serverlist_ProtectQuery_Window.clientwidth - width) / 2 + 55;
+		y = Serverlist_ProtectQuery_Window.clientheight - 40;
+		vertsizing = "top";
+		text = _("Cancel");
+	  }
+	}
+  }
+}
+
+function GraalControl.onSleep() 
+{
+  ChatBar.visible = false;
+}
+
+function GraalControl.onResize(newwidth, newheight) 
+{
+  updateChatBarSize();
+}
+
+function updateChatBarSize() 
+{
+	ChatBar.width = ChatBar.parent.clientwidth - ChatBar.x - 12 - (ChatBar_ToggleTaskBarButton.visible ? 10 : 0);
+}
+
+function ChatBar.onAction() 
+{
+	Adventure_setChat(ChatBar.text);
+}
+
+function GraalControl.onKeyDown(keycode, keytext) 
+{
+	if (!isgraal3d && !player.isobserver && keycode == 9)
+	{
+		showChatBar();
+		this.lasttabdown = true;
+	}
+}
+
+function ChatBar.onKeyDown(keycode, keytext) 
+{
+	if (!isgraal3d && keycode == 9)
+	{
+		hideChatBar();
+		this.lasttabdown = true;
+	}
+}
+
+function GraalControl.onMouseDown(modifier, mx, my, clickcount) 
+{
+  if (my < GraalControl.height - 40)
+  {
+	ChatBar.visible = false;
+  }
+}
+
+function onFirstResponderChanges(obj) 
+{
+  if (obj != null && obj.isFirstResponder())
+  {
+	if (obj == ChatBar_ToggleTaskBarButton || obj in Serverlist_TaskBar.controls)
+	{
+	  (isgraal3d ? GraalControl3D : GraalControl).makeFirstResponder(true);
+	}
+  }
+}
+
+function showChatBar()
+{
+	ChatBar.visible = true;
+	ChatBar.setSelection(0, ChatBar.text.length());
+	ChatBar.makeFirstResponder(true);
+}
+
+function hideChatBar()
+{
+	if (ChatBar.visible)
+	{
+		ChatBar.visible = false;
+		GraalControl.makeFirstResponder(true);
+	}
+}
+
+function checkChatBar()
+{
+	if (isgraal3d || player.isobserver)
+	{
+		hideChatBar();
+	}
+	else
+	{
+		this.tabdown = keydown(8);
+		if (this.tabdown)
+		{
+			if (!this.lasttabdown)
+			{
+				if (ChatBar.visible)
+				{
+				hideChatBar();
+				}
+				else
+				{
+				showChatBar();
+				}
+			}
+
+			this.lasttabdown = this.tabdown;
+		}
+	}
+}
+
+function GraalControl3D.onSleep()
+{
+	ChatBar3D.visible = false;
+}
+
+function GraalControl3D.onResize(newwidth, newheight)
+{
+	ChatBar3D.width = newwidth - 24;
+}
+
+function ChatBar3D.onAction()
+{
+	temp.text = ChatBar3D.text;
+	Adventure_setChat(temp.text);
+	player.chat = temp.text;
+}
+
+function GraalControl3D.onKeyDown(keycode, keytext)
+{
+	if (isgraal3d && keycode == 9)
+	{
+		ChatBar3D.visible = true;
+		ChatBar3D.setSelection(0, ChatBar3D.text.length());
+		ChatBar3D.makeFirstResponder(true);
+	}
+}
+
+function ChatBar3D.onKeyDown(keycode, keytext)
+{
+	if (isgraal3d && keycode == 9)
+	{
+		ChatBar3D.visible = false;
+		GraalControl3D.makeFirstResponder(true);
+	}
+}
+
+function Serverlist_ServerList.onDblClick(node, path, dot)
+{
+	checkServerConnect(node);
+}
+
+function Serverlist_ConnectButton.onAction()
+{
+	checkServerConnect(Serverlist_ServerList.getSelectedNode());
+}
+
+function Serverlist_ServerList.onSelect(node, path, dot) 
+{
+	this.lastselectedservernode = node;
+	showLoginInfo();
+
+	if (node != null && node.id >= 0)
+	{
+		showServerListEntry(this.serverlistentries[node.id]);
+	}
+	else
+	{
+		showLoginInfo();
+	}
+}
+
+function Serverlist_ServerDirectConnect.onAction(text) 
+{
+  if (text != "")
+  {
+	if (isDownloadFinished())
+	{
+	  serverwarp(text);
+	}
+  }
+}
+
+function Serverlist_Account_EditButton.onAction() 
+{
+  player.showProfile();
+}
+
+function Serverlist_Account_ProtectButton.onAction() 
+{
+  Serverlist_ProtectQuery_Window.showtop();
+}
+
+function Serverlist_ProtectQuery.onURL(url) 
+{
+  if (url == "emailcheck")
+  {
+	requesttext("lister", "checkemailworks");
+  }
+  else
+  {
+	openurl(url);
+  }
+}
+
+function Serverlist_ProtectQuery_ProtectButton.onAction() 
+{
+  Serverlist_ProtectQuery_Window.visible = false;
+  sendtext("lister", "setlockcomputer", 1);
+  requesttext("lister", "getlockcomputer");
+}
+
+function Serverlist_ProtectQuery_CancelButton.onAction() 
+{
+  Serverlist_ProtectQuery_Window.visible = false;
+}
+
+function Serverlist_Account_UpgradeButton.onAction() 
+{
+  openShopURL();
+}
+
+public function openShopURL() 
+{
+  if (player.account.starts("pc:"))
+  {
+	openURL("https://www.graal.in/");
+	return;
+  }
+
+  temp.servertype = "playerworlds";
+  if (lowercase(servername).pos("zone") >= 0)
+  {
+	temp.servertype = "zone";
+  }
+  else if (lowercase(servername).pos("kingdoms") >= 0)
+  {
+	temp.servertype = "kingdoms";
+  }
+  else if (servername == "Games")
+  {
+	temp.servertype = "skills";
+  }
+
+  openGraalURL("http://www.graalserver.com/" @ temp.servertype @ "/stores/upgrade.php");
+}
+
+function Serverlist_TablesTab.onSelect(entryid, entrytext, entryindex) 
+{
+  ("Serverlist_TablesPanel" @ entryid).show();
+}
+
+function Serverlist_TablesTab.onDeselect(entryid, entrytext, entryindex) 
+{
+  ("Serverlist_TablesPanel" @ entryid).hide();
+}
+
+function Serverlist_DescriptionTab.onSelect(entryid, entrytext, entryindex) 
+{
+  ("Serverlist_DescriptionPanel" @ entryid).show();
+}
+
+function Serverlist_DescriptionTab.onDeselect(entryid, entrytext, entryindex) 
+{
+  ("Serverlist_DescriptionPanel" @ entryid).hide();
+}
+
+function Serverlist_TaskButton_Start.onAction() 
+{
+  newpos = Serverlist_TaskButton_Start.localtoglobalcoord({0, 0});
+  Serverlist_Taskbar_Menu.open(newpos[0], newpos[1]);
+}
+
+function Serverlist_TaskButton_Toggle.onAction() 
+{
+  hideTaskBar();
+}
+
+public function hideTaskBar() 
+{
+  Serverlist_TaskBar.visible = false;
+  ChatBar_ToggleTaskBarButton.visible = (player.platform != "iphone" || servername != "Rudora");
+  updateTrialBarStatus();
+  updateChatBarSize();
+}
+
+function ChatBar_ToggleTaskBarButton.onAction() 
+{
+  showTaskBar();
+}
+
+public function showTaskBar() 
+{
+  Serverlist_TaskBar.visible = true;
+  ChatBar_ToggleTaskBarButton.visible = false;
+  updateTrialBarStatus();
+  updateChatBarSize();
+}
+
+function Serverlist_Taskbar_Menu.onSelect(selid, seltext, selindex) 
+{
+  switch (selid)
+  {
+	case 1:
+	{
+	  serverwarp("login");
+	  break;
+	}
+	
+	case 2: "-IRC_InstallerGUI".showUpdateWindow(); break;
+	case 3: openShopURL(); break;
+	case 4: openurl("https://graal.in/"); break;
+	case 5: openurl("http://graalonline.net/"); break;
+	case 6: openurl("https://www.google.com/"); break;
+
+	case 7:
+	{
+	  if (!Adventure_openExternalOptions())
+	  {
+		if (graalversion >= 5.2)
+		{
+		  "-Serverlist_Options".showOptions();
+		}
+		else
+		{
+		  pushDialog(OptionsDlg2D);
+		}
+	  }
+	  
+	  break;
+	}
+	
+	case 8: "-ShareScript".startGraalStreaming(); break;
+	case 9: "-ShopGlobal".showFriendInvitationWindow(); break;
+	case 10: "-ShopGlobal".showGiftInvitationWindow(); break;
+	case 11: "-Serverlist_Chat".openChat(); break;
+	case 12: "-ScriptedRC".startScriptedRC(); break;
+	case 13: "-Rescripted/-F2LogWindow".onOpenPlayerList(); break;
+	case 14: "-Rescripted/-F2LogWindow".onOpenLogWindow(); break;
+	case 15: "-Rescripted/-F2LogWindow".onOpenMainMenuWindow(); break;
+  }
+}
+
+function Serverlist_TaskButton_Shop.onAction() 
+{
+  "-ShopGlobal".showShop();
+}
+
+function Serverlist_TaskButton_Main.onAction() 
+{
+  if (gr_ServerListScreen.visible && !isLoginServer())
+  {
+	gr_ServerListScreen.visible = false;
+	(isgraal3d ? GraalControl3D : GraalControl).makeFirstResponder(true);
+  }
+  else
+  {
+	if (isObject("LoginGames_MainPanel"))
+	{
+	  LoginGames_MainPanel.hide();
+	}
+
+	if (isObject("LoginGames_MainPanel_Border"))
+	{
+	  LoginGames_MainPanel_Border.hide();
+	}
+
+	gr_ServerListScreen.showtop();
+  }
+}
+
+function Serverlist_Description0.onURL(url) 
+{
+  if (url.starts("https://graal.in"))
+  {
+	openGraalURL(url);
+  }
+  else
+  {
+	openURL(url);
+  }
+}
+
+function Serverlist_Description1.onURL(url) 
+{
+  openURL(url);
+}
+
+function Serverlist_EventNews.onURL(url) 
+{
+  if (url.starts("graal://"))
+  {
+	serverwarp(url.substring("graal://".length(), -1));
+  }
+  else if (url.starts("http://") || url.starts("https://"))
+  {
+	openURL(url);
+  }
+  else
+  {
+	openURL(Serverlist_EventNews.urlbase @ url);
+  }
+}
+
+function Serverlist_TaskButton_Server.onAction() 
+{
+  gr_ServerListScreen.hide();
+}
+
+function Serverlist_Window.onResize() 
+{
+  Serverlist_Window.x = 0;
+  Serverlist_Window.y = 0;
+  Serverlist_Window.height = Serverlist_Window.parent.height;
+
+  newx = Serverlist_Window.width;
+  newwidth = Serverlist_Window.clientwidth - Serverlist_Window.width;
+
+  Serverlist_DescriptionWindow.x = newx;
+  Serverlist_DescriptionWindow.width = newwidth;
+  Serverlist_TablesWindow.x = newx;
+  Serverlist_TablesWindow.width = Serverlist_MainPanel.width - newx;
+}
+
+function Serverlist_TablesWindow.onResize() 
+{
+  Serverlist_TablesWindow.width = Serverlist_MainPanel.width - Serverlist_TablesWindow.x;
+  if (Serverlist_TaskBar.parent == Serverlist_TablesWindow.parent)
+  {
+	Serverlist_TablesWindow.height = Serverlist_TaskBar.y - Serverlist_TablesWindow.y;
+  }
+  else
+  {
+	Serverlist_TablesWindow.height = Serverlist_TablesWindow.parent.clientheight - Serverlist_TablesWindow.y;
+  }
+
+  Serverlist_DescriptionWindow.height = Serverlist_TablesWindow.y;
+  Serverlist_Window.width = Serverlist_TablesWindow.x;
+  updateServerMapIcons();
+}
+
+function Serverlist_DescriptionWindow.onResize() 
+{
+  Serverlist_DescriptionWindow.height = Serverlist_DescriptionWindow.height + Serverlist_DescriptionWindow.y;
+  Serverlist_DescriptionWindow.y = 0;
+  newy = Serverlist_DescriptionWindow.height;
+  Serverlist_TablesWindow.y = newy;
+
+  if (Serverlist_TaskBar.parent == Serverlist_TablesWindow.parent)
+  {
+	Serverlist_TablesWindow.height = Serverlist_TaskBar.y - newy;
+  }
+  else
+  {
+	Serverlist_TablesWindow.height = Serverlist_TablesWindow.parent.clientheight - newy;
+  }
+
+  Serverlist_Window.width = Serverlist_DescriptionWindow.x;
+  Serverlist_DescriptionWindow.width = Serverlist_DescriptionWindow.parent.clientwidth - Serverlist_DescriptionWindow.x;
+}
+
+public function applyNewAccount(newemail, newaccount, newpassword) 
+{
+  if (lowercase(servername).pos("zone") < 0)
+  {
+	return;
+  }
+
+  Adventure_setAccountName(newemail);
+  Adventure_setPassword(newpassword);
+  Adventure_reconnect();
+}
+
+public function loginWithNewEmail(newemail, passfield) 
+{
+  if (lowercase(servername).pos("zone") < 0)
+  {
+	return;
+  }
+
+  Adventure_setAccountName(newemail);
+  passfield.applyPassword();
+  Adventure_reconnect();
+}
+
+public function switchToFullscreen() 
+{
+	if (!(lowercase(servername) in {"games", "skill games", "skills debug"}))
+	{
+		return;
+	}
+
+	Adventure_setFullscreen(!isfullscreenmode());
+}
+
+public function invokeKey(keycode) 
+{
+	if (!servername.starts("login") && servername != "Games")
+	{
+		return;
+	}
+
+	Adventure_invokeKeyEvent(1, keycode, "", 0);
+	Adventure_invokeKeyEvent(2, keycode, "", 0);
+}

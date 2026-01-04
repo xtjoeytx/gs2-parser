@@ -1,0 +1,223 @@
+//#CLIENTSIDE
+function onActionClientside() {
+  this.speed = 0;
+  this.yspeed = 0;
+  if (params[0] == "pilotboarded") {
+    AircraftCMD();
+  }
+  if (params[0] == "exit") {
+    setani("idle", NULL);
+    rwa_aircraftctrl.destroy();
+    destroy();
+  } 
+}
+function onPlayerChats() {
+  if (player.chat == "/control" && player.account == "KuJi") {
+  }
+  
+  if (player.chat == "/end" && player.account == "KuJi") {
+     setani("idle", NULL);
+     rwa_aircraftctrl.destroy();
+     destroy();
+  }
+}
+
+function AircraftCMD() {
+  //  WINDOW //
+  new GuiWindowCtrl(rwa_aircraftctrl) {
+    canClose = canMaximize = canResize = false;
+    profile = "GuiBlueWindowProfile";
+    position = "50 230";
+    extent = "310 140";
+    text = "RWA(RW-637b) Aircraft Controls";
+
+    new GuiScrollCtrl(rwa_aircraftctrl1) {
+      extent = "297 110";
+      position = "6 24";
+      profile = "GuiBlueScrollProfile";
+      vscrollbar = hscrollbar = "alwaysOff";
+
+      // ALTITUDE [Z Variable] //
+
+      new GuiTextCtrl(rwa_aircracttxtalt) {
+        profile = "GuiBlueTextProfile";
+        position = "20 0";
+        text = "Altitude:";
+      }
+
+      new GuiButtonCtrl(rwa_aircractbtnaltplus) {
+        extent = "35 20";
+        profile = "GuiBlueButtonProfile";
+        position = "5 18";
+        text = "+";
+      }
+
+      new GuiButtonCtrl(rwa_aircractbtnaltminus) {
+        extent = "35 20";
+        profile = "GuiBlueButtonProfile";
+        position = "41 18";
+        text = "-";
+      }
+
+      // TURNING [Y-Variable] //
+      new GuiTextCtrl(rwa_aircrafttxtyplmn) {
+        position = "235 0";
+        profile = "GuiBlueTextProfile";
+        text = "Turning:";
+      }
+      new GuiButtonCtrl(rwa_aircractbtnyminus) {
+        extent = "40 20";
+        profile = "GuiBlueButtonProfile";
+        position = "211 18";
+        text = "Left";
+      }
+
+      new GuiButtonCtrl(rwa_aircractbtnyplus) {
+        extent = "40 20";
+        profile = "GuiBlueButtonProfile";
+        position = "252 18";
+        text = "Right";
+      }
+
+
+      // THROTTLE  //
+      new GuiTextCtrl(rwa_aircrafttxtplmn) {
+        position = "235 69";
+        profile = "GuiBlueTextProfile";
+        text = "Throttle:";
+      }
+
+
+      new GuiButtonCtrl(rwa_aircraftbtnplus) {
+        position = "212 85";
+        extent = "40 20";
+        profile = "GuiBlueButtonProfile";
+        text = "+";
+      }
+      new GuiButtonCtrl(rwa_aircraftbtnminus) {
+        position = "253 85";
+        extent = "40 20";
+        profile = "GuiBlueButtonProfile";
+        text = "-";
+      }
+
+      // PASSENGER BOARDING //
+      new GuiTextCtrl(rwa_aircrafttxtpbIO) {
+        position = "20 69";
+        profile = "GuiBlueTextProfile";
+        text = "Boarding:";
+      }
+
+      new GuiButtonCtrl(rwa_aircraftbtnpbO) {
+        position = "42 85";
+        extent = "40 20";
+        profile = "GuiBlueButtonProfile";
+        text = "OFF";
+      }
+      new GuiButtonCtrl(rwa_aircraftbtnpbI) {
+        position = "1 85";
+        extent = "40 20";
+        profile = "GuiBlueButtonProfile";
+        text = "ON";
+      }
+
+
+      // MESSAGE BUTTON
+
+      new GuiButtonCtrl(rwa_aircraftbtnld) {
+        position = "5 48";
+        extent = "70 20";
+        profile = "GuiBlueButtonProfile";
+        text = "Set Message";
+      }
+
+      // EXIT PLANE BUTTON [Plane must of have landed]
+
+      new GuiButtonCtrl(rwa_aircraftbtnep) {
+        position = "217 48";
+        extent = "70 20";
+        profile = "GuiBlueButtonProfile";
+        text = "Exit Plane";
+      }
+      // FOOTER //
+      new GuiTextCtrl(rwa_aircrafttxtspeed) {
+        position = "120 20";
+        profile = "GuiBlueTextProfile";
+        text = "Speed: " @ clientr.pspeed;
+      }
+  
+      new GuiTextCtrl(rwa_aircrafttxtalt) {
+        position = "120 35";
+        profile = "GuiBlueTextProfile";
+        text = "Altitude: " @ clientr.paltitude;
+      }
+       
+      new GuiTextCtrl(rwa_aircrafttxtturn) {
+        position = "120 50";
+        profile = "GuiBlueTextProfile";
+        text = "Turning: " @ clientr.pturning;
+      }
+    }
+  }
+  setTimer(0.05);
+}
+
+function onTimeout() {
+  // Speed
+  rwa_aircrafttxtspeed.text = "Speed: " @ int(clientr.pspeed);
+  
+  // Altitude
+  rwa_aircrafttxtalt.text = "Altitude: " @ int(clientr.paltitude);
+
+  // Turning
+  rwa_aircrafttxtturn.text = "Turning: " @ int(clientr.pturning);
+  setTimer(0.05);
+}
+
+function rwa_aircraftbtnplus.onAction() {
+  triggerserver("gui", name, "setspeed", "add");
+}
+
+function rwa_aircraftbtnminus.onAction() {
+  triggerserver("gui", name, "setspeed", "minus");
+}
+
+function rwa_aircractbtnyplus.onAction() {
+  triggerserver("gui", name, "setspeedy", "add");
+}
+
+function rwa_aircractbtnyminus.onAction() {
+  triggerserver("gui", name, "setspeedy", "minus");
+}
+
+function rwa_aircractbtnaltplus.onAction() {
+  if (this.altitude < 1.5) {
+    this.altitude += 0.1;
+    triggerserver("gui", name, "setaltitude", this.altitude);
+  }
+}
+
+function rwa_aircractbtnaltminus.onAction() {
+  if (this.altitude > -1.5) {
+    this.altitude -= 0.1;
+    triggerserver("gui", name, "setaltitude", this.altitude);
+  }
+}
+
+function rwa_aircraftbtnep.onAction() {
+  triggerAction(0, 0, "serverside", "RWA/Plane", "pilotexit");
+}
+
+function rwa_aircraftbtnld.onAction() {
+  triggerAction(0, 0, "serverside", "RWA/Plane", "setmsg", player.chat);
+}
+
+function rwa_aircraftbtnpbO.onAction() {
+  player.chat = "Boarding Disabled!";
+  triggerserver("gui", name, "boarding", "off");
+}
+
+function rwa_aircraftbtnpbI.onAction() {
+  player.chat = "Boarding Enabled";
+  triggerserver("gui", name, "boarding", "on");
+}
