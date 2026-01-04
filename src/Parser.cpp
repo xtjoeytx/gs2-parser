@@ -33,6 +33,34 @@ void ReplaceStringInPlace(std::string& subject, const std::string& search, const
 	}
 }
 
+std::string unquoteString(std::string_view str)
+{
+	std::string result;
+	result.reserve(str.length());
+
+	for (size_t i = 0; i < str.length(); i++)
+	{
+		if (str[i] == '\\' && i + 1 < str.length())
+		{
+			switch (str[i + 1])
+			{
+				case '\\': result += '\\'; i++; break;
+				case '"':  result += '"';  i++; break;
+				case '\'': result += '\''; i++; break;
+				case 'n':  result += '\n'; i++; break;
+				case 'r':  result += '\r'; i++; break;
+				case 't':  result += '\t'; i++; break;
+				default:   result += str[i]; break;  // Unknown escape, keep backslash
+			}
+		}
+		else
+		{
+			result += str[i];
+		}
+	}
+	return result;
+}
+
 ParserContext::ParserContext(GS2ErrorService& service)
 		: lineNumber(0), columnNumber(0), buffer(nullptr), failed(false), inputStringPtr(nullptr),
 		  lambdaFunctionCount(0), programNode(nullptr), errorService(service)
@@ -87,21 +115,15 @@ void ParserContext::reset()
 
 std::string* ParserContext::saveString(const char* str, int length, bool unquote)
 {
-	auto tmpStr = std::string(str, length);
-	if (unquote)
-	{
-		ReplaceStringInPlace(tmpStr, "\\\"", "\"");
-		ReplaceStringInPlace(tmpStr, "\\n", "\n");
-	}
+	auto tmpStr = unquote ? unquoteString(std::string_view(str, length)) : std::string(str, length);
 
 	auto it = stringTable.find(tmpStr);
 	if (it != stringTable.end())
 		return it->second.get();
 
 	auto ptr = std::make_shared<std::string>(std::move(tmpStr));
-	auto ret = stringTable.insert({ *ptr, ptr });
-	return ptr.get(); // warning: C26816, but seems ok to me
-	//return ret.first->second.get();
+	stringTable.insert({ *ptr, ptr });
+	return ptr.get();
 }
 
 std::string * ParserContext::generateLambdaFuncName()
