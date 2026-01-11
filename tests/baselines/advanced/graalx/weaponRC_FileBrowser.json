@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "",
+  "bytecode_size": 0,
+  "compilation_success": false,
+  "expected_failure": false,
+  "error_message": "Compilation reported success but no output file found: /Users/joey/projects/gs2/gs2-parser/tests/scripts/advanced/graalx/weaponRC_FileBrowser.gs2bc",
+  "metadata": {
+    "script_path": "advanced/graalx/weaponRC_FileBrowser.gs2",
+    "generated_at": "2026-01-04 18:35:15",
+    "compiler_version": "modified_1767569624"
+  }
+}

@@ -19,11 +19,12 @@
 
 %}
 
-DIGIT		[0-9]
-ALPHA		[a-zA-Z_$]
-ALPHANUM	[a-zA-Z_0-9]
-string_const (\"(\\.|[^"])*\")
-HEXNUM		[a-fA-F0-9]
+DIGIT		 [0-9]
+ALPHA		 [a-zA-Z_$]
+ALPHANUM	 [a-zA-Z_0-9]
+char_const   '(\\.|[^'])'
+string_const \"(\\.|[^"])*\"
+HEXNUM		 [a-fA-F0-9]
 %x C_COMMENT
 
 %%
@@ -132,7 +133,7 @@ HEXNUM		[a-fA-F0-9]
 {ALPHA}{ALPHANUM}*	{yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
 {ALPHA}{ALPHANUM}*(::{ALPHA}{ALPHANUM}*)+ {yylval->sval = yyextra->saveString(yytext, yyleng); return T_IDENTIFIER;}
 {string_const}		{yylval->sval = yyextra->saveString(yytext+1, yyleng - 2, true); return T_STRCONSTANT;}
-'.|\.'              {yylval->sval = yyextra->saveString(yytext+1, yyleng - 2, true); return T_STRCONSTANT;}
+{char_const}        {yylval->sval = yyextra->saveString(yytext+1, yyleng - 2, true); return T_STRCONSTANT;}
 
 %%
 
