@@ -142,7 +142,6 @@ if(WIN32 OR APPLE)
 		set_target_properties(gs2compiler PROPERTIES PREFIX "")
 	endif()
 endif()
-option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 target_include_directories(gs2compiler
 		PUBLIC
@@ -175,7 +174,6 @@ if(GS2PARSER_BUILD_GS2TEST)
 	endif()
 	target_link_libraries(gs2test PRIVATE gs2compiler)
 endif()
-target_link_libraries(gs2test PRIVATE gs2compiler)
 
 # Test suite integration
 # Only configure tests if this is the main project (not a subproject)
