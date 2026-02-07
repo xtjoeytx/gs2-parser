@@ -6,7 +6,7 @@
 #include <iostream>
 #include <vector>
 #include <span>
-#include "GS2Context.h"
+#include "compiler/GS2Context.h"
 
 struct Response
 {

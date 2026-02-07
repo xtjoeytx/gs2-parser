@@ -4,8 +4,8 @@
 
 #include "ast/ast.h"
 #include "visitors/FunctionInspectVisitor.h"
-#include "visitors/GS2CompilerVisitor.h"
-#include "Parser.h"
+#include "compiler/GS2CompilerVisitor.h"
+#include "parser/Parser.h"
 
 opcode::Opcode getExpressionOpCode(ExpressionOp op)
 {

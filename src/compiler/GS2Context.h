@@ -5,6 +5,7 @@
 
 #include <set>
 #include <vector>
+#include "gs2compiler_export.h"
 #include "encoding/buffer.h"
 #include "exceptions/GS2CompilerError.h"
 #include "GS2BuiltInFunctions.h"
@@ -18,7 +19,7 @@ struct CompilerResponse
 	std::set<std::string> joinedClasses;
 };
 
-class GS2Context
+class GS2COMPILER_EXPORT GS2Context
 {
 	public:
 		GS2Context();

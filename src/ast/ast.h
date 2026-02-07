@@ -9,7 +9,7 @@
 #include <vector>
 
 #include "ast/expressiontypes.h"
-#include "ast/astvisitor.h"
+#include "ast/NodeVisitor.h"
 
 #define _NodeName(name) \
 	inline static const char * NodeName = name; \

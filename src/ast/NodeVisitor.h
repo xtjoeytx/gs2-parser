@@ -6,7 +6,9 @@
 class NodeVisitor
 {
     public:
-        virtual void Visit(class Node *node) = 0;
+		virtual ~NodeVisitor() = default;
+
+		virtual void Visit(class Node *node) = 0;
         virtual void Visit(class StatementNode *node) = 0;
         virtual void Visit(class StatementBlock *node) = 0;
         virtual void Visit(class StatementIfNode *node) = 0;
