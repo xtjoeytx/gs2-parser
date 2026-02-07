@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.28)
 project(gs2parser VERSION 1.0)
 include(GenerateExportHeader)
+set(CMAKE_CXX_SCAN_FOR_MODULES OFF)
 
 if(PROJECT_IS_TOP_LEVEL)
 	set(CMAKE_DEBUG_POSTFIX _d)
@@ -135,7 +136,6 @@ set_target_properties(gs2compiler PROPERTIES
 		POSITION_INDEPENDENT_CODE ON
 		CXX_VISIBILITY_PRESET hidden
 		VISIBILITY_INLINES_HIDDEN ON
-		CXX_SCAN_FOR_MODULES OFF
 )
 if(BUILD_SHARED_LIBS)
 	set_target_properties(gs2compiler PROPERTIES PREFIX "")
