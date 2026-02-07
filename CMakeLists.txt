@@ -115,6 +115,7 @@ endif()
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 add_library(gs2compiler ${SOURCES_ALL} bindings/c/c_interface.cpp)
+set_target_properties(gs2compiler PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 target_include_directories(gs2compiler
 	PUBLIC
