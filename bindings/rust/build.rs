@@ -4,23 +4,19 @@ use cmake::Config;
 
 // Constants for common library names
 const DEBUG_SUFFIX_GS2: &str = "_d";
-const DEBUG_SUFFIX_FMT: &str = "d";
-const STATIC_LIB_DIR: &str = "lib";
-
 fn main() {
     let profile = env::var("PROFILE").unwrap_or_else(|_| "release".to_string());
     let target = env::var("TARGET").expect("TARGET environment variable not set");
 
     // Determine the appropriate library names based on the profile and platform
     let gs2_compiler_lib = library_name("gs2compiler", &profile, DEBUG_SUFFIX_GS2, &target);
-    let fmt_lib = library_name("fmt", &profile, DEBUG_SUFFIX_FMT, &target);
 
-    let mut cmake_config = Config::new(".");
-    cmake_config.build_target("gs2compiler").define("STATIC", "ON");
+    let mut cmake_config = Config::new("../..");
+    cmake_config.build_target("gs2compiler").define("BUILD_SHARED_LIBS", "OFF");
 
     let cpp_lib = configure_platform_specifics(&target, &mut cmake_config);
 
-    link_libraries(cmake_config.build(), cpp_lib, &gs2_compiler_lib, &fmt_lib);
+    link_libraries(cmake_config.build(), cpp_lib, &gs2_compiler_lib);
 }
 
 fn library_name(base: &str, profile: &str, debug_suffix: &str, target: &str) -> String {
@@ -49,13 +45,11 @@ fn configure_platform_specifics(target: &str, cmake_config: &mut Config) -> &'st
     }
 }
 
-fn link_libraries(lib_path: PathBuf, cpp_lib: &str, gs2_lib: &str, fmt_lib: &str) {
-    let lib_dir = env::current_dir().unwrap().join(STATIC_LIB_DIR);
+fn link_libraries(lib_path: PathBuf, cpp_lib: &str, gs2_lib: &str) {
+    let build_lib_dir = lib_path.join("build").join("lib");
 
     println!("cargo:rustc-link-lib=dylib={}", cpp_lib);
-    println!("cargo:rustc-link-search=native={}", lib_path.display());
-    println!("cargo:rustc-link-search=native={}", lib_dir.display());
+    println!("cargo:rustc-link-search=native={}", build_lib_dir.display());
 
     println!("cargo:rustc-link-lib=static={}", gs2_lib);
-    println!("cargo:rustc-link-lib=static={}", fmt_lib);
 }
