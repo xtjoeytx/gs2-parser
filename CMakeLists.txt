@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 project(gs2parser VERSION 1.0)
+include(GenerateExportHeader)
 
 set(CMAKE_DEBUG_POSTFIX _d)
 
@@ -115,6 +116,10 @@ endif()
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
 add_library(gs2compiler ${SOURCES_ALL} bindings/c/c_interface.cpp)
+generate_export_header(gs2compiler
+	BASE_NAME GS2COMPILER
+	EXPORT_FILE_NAME ${CMAKE_CURRENT_BINARY_DIR}/gs2compiler_export.h
+)
 
 target_include_directories(gs2compiler
 	PUBLIC
@@ -128,9 +133,12 @@ target_include_directories(gs2compiler
 		${CMAKE_CURRENT_SOURCE_DIR}/src/memory
 )
 
+if(NOT BUILD_SHARED_LIBS)
+	target_compile_definitions(gs2compiler PUBLIC GS2COMPILER_STATIC_DEFINE)
+endif()
+
 if(WIN32 AND MINGW)
 	target_compile_options(gs2compiler PRIVATE "-fno-rtti")
-	target_link_options(gs2compiler PRIVATE -Wl,--export-all-symbols,--exclude-libs,ALL)
 endif()
 
 if(EMSCRIPTEN)
