@@ -1,12 +1,12 @@
 {
-  "bytecode_hash": "908cb6e380ea9b51bd7d5368fb39034a24a30fb95a6bd33675710bd8331f32a6",
-  "bytecode_size": 6744,
+  "bytecode_hash": "4f4de240cd3ca305cbd2439146a5bfa8b8169f28ea53b8b7d7d99b82e8da3a4f",
+  "bytecode_size": 6737,
   "compilation_success": true,
   "expected_failure": false,
   "error_message": "",
   "metadata": {
     "script_path": "advanced/graalx/weaponLevelEditor.gs2",
-    "generated_at": "2026-01-04 16:44:40",
-    "compiler_version": "modified_1767562734"
+    "generated_at": "2026-01-04 18:39:04",
+    "compiler_version": "modified_1767569912"
   }
 }

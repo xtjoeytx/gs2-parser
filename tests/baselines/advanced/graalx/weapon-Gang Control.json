@@ -1,12 +1,12 @@
 {
-  "bytecode_hash": "4cfbd0c91344a4160244da0379a7e6954909bcb2bd99a9eb47da0bfb0feaa91a",
-  "bytecode_size": 4674,
+  "bytecode_hash": "00111b64dc38d87b5b44829ed5e43d211e4ba9c1ab95be382238e4969894fa90",
+  "bytecode_size": 4673,
   "compilation_success": true,
   "expected_failure": false,
   "error_message": "",
   "metadata": {
     "script_path": "advanced/graalx/weapon-Gang Control.gs2",
-    "generated_at": "2026-01-04 16:44:41",
-    "compiler_version": "modified_1767562734"
+    "generated_at": "2026-01-04 18:39:05",
+    "compiler_version": "modified_1767569912"
   }
 }

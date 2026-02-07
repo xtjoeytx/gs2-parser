@@ -110,8 +110,19 @@ class GS2TestRunner:
             compilation_time = time.time() - start_time
 
             # Check if compilation was successful
-            success = result.returncode == 0
-            error_message = result.stderr if result.stderr else ""
+            # Note: Compiler may return 0 even with errors, so also check for [ERROR] in output
+            has_error_output = result.stdout and "[ERROR]" in result.stdout
+            success = result.returncode == 0 and not has_error_output
+
+            # Compiler outputs errors to stdout via printf, check there first
+            error_message = result.stdout if result.stdout else (result.stderr if result.stderr else "")
+
+            # Extract cleaner error message if [ERROR] is present
+            if has_error_output:
+                lines = result.stdout.split('\n')
+                error_lines = [line for line in lines if "[ERROR]" in line]
+                if error_lines:
+                    error_message = error_lines[0].replace(" -> [ERROR] ", "")
 
             # The GS2 compiler outputs to <script>.gs2bc file
             bytecode = b""
@@ -306,6 +317,7 @@ class GS2TestRunner:
                 "success": test_result.success,
                 "compilation_time": test_result.compilation_time,
                 "bytecode_size": test_result.bytecode_size,
+                "error_message": test_result.error_message,
                 "has_baseline": baseline is not None,
                 "expected_failure": expected_failure,
                 "is_regression": False,
@@ -313,14 +325,21 @@ class GS2TestRunner:
             }
 
             if update_baselines or baseline is None:
-                # Save new baseline
+                # Save new baseline only if compilation succeeded or it's an expected failure
                 success, bytecode, error_message, _ = self._compile_script(script_path)
-                self._save_baseline(script_path, success, bytecode, error_message)
-                if baseline is None:
-                    results["new_tests"].append(test_info)
-                    print(f"  -> Created new baseline")
-                else:
-                    print(f"  -> Updated baseline")
+
+                # Only save baseline if test passed OR it's an expected failure
+                should_save_baseline = success or expected_failure
+
+                if should_save_baseline:
+                    self._save_baseline(script_path, success, bytecode, error_message)
+                    if baseline is None:
+                        results["new_tests"].append(test_info)
+                        print(f"  -> Created new baseline")
+                    else:
+                        print(f"  -> Updated baseline")
+                elif baseline is None:
+                    print(f"  -> Skipping baseline creation (test failed)")
             elif baseline:
                 # Compare with baseline
                 differences = self.compare_with_baseline(test_result, baseline)
