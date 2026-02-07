@@ -1,7 +1,7 @@
 #include <format>
 #include "GS2Context.h"
 #include "encoding/graalencoding.h"
-#include "visitors/GS2CompilerVisitor.h"
+#include "compiler/GS2CompilerVisitor.h"
 #include "GS2Bytecode.h"
 #include "Parser.h"
 

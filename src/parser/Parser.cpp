@@ -62,7 +62,7 @@ std::string unquoteString(std::string_view str)
 }
 
 ParserContext::ParserContext(GS2ErrorService& service)
-		: lineNumber(0), columnNumber(0), buffer(nullptr), failed(false), inputStringPtr(nullptr),
+		: lineNumber(0), columnNumber(0), scanner(nullptr), buffer(nullptr), failed(false), inputStringPtr(nullptr),
 		  lambdaFunctionCount(0), programNode(nullptr), errorService(service)
 {
 	yylex_init_extra(this, &scanner);
@@ -83,9 +83,13 @@ ParserContext::~ParserContext()
 
 void ParserContext::cleanup()
 {
-	for (auto& n : nodes)
-		delete n;
-	nodes.clear();
+#ifdef DBGALLOCATIONS
+	printf("Memory allocated for nodes: %zu bytes in %zu chunks\n",
+		nodeArena.total_allocated(), nodeArena.chunk_count());
+#endif
+
+	// Reset arena - frees all nodes at once
+	nodeArena.reset();
 }
 
 void ParserContext::reset()

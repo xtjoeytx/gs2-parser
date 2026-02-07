@@ -14,6 +14,7 @@
 
 #include <format>
 #include "ast/ast.h"
+#include "memory/ArenaAllocator.h"
 #include "exceptions/GS2CompilerError.h"
 
 typedef void* yyscan_t;
@@ -111,14 +112,6 @@ class ParserContext
 		template<typename T, typename... P>
 		T *alloc(P&&... params);
 
-		/*
-		 * Deallocate node instance, recommend avoid using
-		 * as any node allocated with alloc() will be deallocated
-		 * by a call to cleanup(), or in the destructor of the context
-		 */
-		template<typename T>
-		void dealloc(T *n);
-
 	private:
 		/**
 		 * Cleanup any nodes allocated
@@ -141,7 +134,7 @@ class ParserContext
 		std::unordered_map<std::string, std::shared_ptr<std::string>> stringTable;
 		std::stack<SwitchCaseState> switchCases;
 
-		std::vector<Node*> nodes;
+		ArenaAllocator<> nodeArena;
 		StatementBlock* programNode;
 		GS2ErrorService& errorService;
 };
@@ -204,27 +197,15 @@ inline void ParserContext::addError(GS2CompilerError error)
 
 /*
  * Memory Allocation for Nodes
+ *
+ * Uses arena allocator for fast allocation with excellent cache locality.
+ * All nodes are freed together when the ParserContext is destroyed or reset.
  */
 template<typename T, typename ...P>
 inline T *ParserContext::alloc(P && ...params)
 {
-	T *n = new T(std::forward<P>(params)...);
-	nodes.push_back(n);
+	T *n = nodeArena.allocate<T>(std::forward<P>(params)...);
 	return n;
 }
-
-/*
- * Memory Deallocation for Nodes
- */
-template<typename T>
-inline void ParserContext::dealloc(T *n)
-{
-	if (n)
-	{
-		nodes.erase(std::remove(nodes.begin(), nodes.end(), n), nodes.end());
-		delete n;
-	}
-}
-
 
 #endif

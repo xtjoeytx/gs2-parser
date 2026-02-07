@@ -1,4 +1,4 @@
-#include "GS2Context.h"
+#include "compiler/GS2Context.h"
 
 #ifdef _WIN32
 #define DLL_EXPORT __declspec(dllexport)

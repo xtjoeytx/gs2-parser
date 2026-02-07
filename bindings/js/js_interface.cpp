@@ -1,5 +1,5 @@
 #include <emscripten/bind.h>
-#include "GS2Context.h"
+#include "compiler/GS2Context.h"
 using namespace emscripten;
 
 EMSCRIPTEN_BINDINGS(module) {

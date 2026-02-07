@@ -3,7 +3,7 @@
 #ifndef ASTVISITORIMPL_H
 #define ASTVISITORIMPL_H
 
-#include "ast.h"
+#include "../ast/ast.h"
 
 class ASTNodeVisitor : public NodeVisitor
 {

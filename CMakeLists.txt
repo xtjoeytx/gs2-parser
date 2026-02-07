@@ -44,51 +44,87 @@ endif(WIN32 AND NOT MINGW)
 find_package(BISON 3.4 REQUIRED)
 find_package(FLEX REQUIRED)
 
-BISON_TARGET(GS2Parser generator/gs2parser.y ${CMAKE_CURRENT_BINARY_DIR}/gs2parser.tab.cc)
-FLEX_TARGET(GS2Scanner generator/gs2scanner.l ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.cc DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.h COMPILE_FLAGS "${FLEX_FLAGS}")
+BISON_TARGET(GS2Parser src/parser/gs2parser.y ${CMAKE_CURRENT_BINARY_DIR}/gs2parser.tab.cc)
+FLEX_TARGET(GS2Scanner src/parser/gs2scanner.l ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.cc DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.h COMPILE_FLAGS "${FLEX_FLAGS}")
 ADD_FLEX_BISON_DEPENDENCY(GS2Scanner GS2Parser)
 
 include_directories(
 	${CMAKE_CURRENT_BINARY_DIR}
 	src
+	src/parser
+	src/codegen
+	src/compiler
+	src/encoding
+	src/memory
 )
 
-set(SOURCES_ALL
+set(SOURCES
+	# AST
 	src/ast/ast.cpp
-	src/encoding/buffer.cpp
-	src/visitors/GS2CompilerVisitor.cpp
-	src/GS2BuiltInFunctions.cpp
-	src/GS2Bytecode.cpp
-	src/GS2Context.cpp
-	src/Parser.cpp
-	src/c_interface.cpp
 
+	# Encoding
+	src/encoding/buffer.cpp
+
+	# Codegen
+	src/codegen/GS2Bytecode.cpp
+
+	# Compiler
+	src/compiler/GS2BuiltInFunctions.cpp
+	src/compiler/GS2CompilerVisitor.cpp
+	src/compiler/GS2Context.cpp
+
+	# Parser
+	src/parser/Parser.cpp
+	${BISON_GS2Parser_OUTPUTS}
+	${FLEX_GS2Scanner_OUTPUTS}
+
+	# Bindings
+	bindings/c/c_interface.cpp
+)
+
+set(HEADERS
+	# AST
 	src/ast/ast.h
-	src/ast/astvisitor.h
-	src/ast/astnodevisitor.h
 	src/ast/expressiontypes.h
+	src/ast/NodeVisitor.h
+
+	# Encoding
 	src/encoding/buffer.h
 	src/encoding/graalencoding.h
-	src/utils/EventHandler.h
-	src/exceptions/GS2CompilerError.h
-	src/utils/ContextThreadPool.h
-	src/visitors/FunctionInspectVisitor.h
-	src/visitors/GS2CompilerVisitor.h
-	src/visitors/GS2SourceVisitor.h
-	src/CompilerThreadJob.h
-	src/GS2BuiltInFunctions.h
-	src/GS2Bytecode.h
-	src/GS2Context.h
-	src/opcodes.h
-	src/Parser.h
 
+	# Codegen
+	src/codegen/GS2Bytecode.h
+
+	# Compiler
+	src/compiler/GS2BuiltInFunctions.h
+	src/compiler/GS2CompilerVisitor.h
+	src/compiler/GS2Context.h
+
+	# Parser
+	src/parser/Parser.h
 	${BISON_GS2Parser_INPUT}
 	${FLEX_GS2Scanner_INPUT}
-	${BISON_GS2Parser_OUTPUTS}
-	${FLEX_GS2Scanner_OUTPUTS})
+
+	# Memory
+	src/memory/ArenaAllocator.h
+
+	# Visitors
+	src/visitors/ASTNodeVisitor.h
+	src/visitors/FunctionInspectVisitor.h
+	src/visitors/GS2SourceVisitor.h
+
+	# Utils / Misc
+	src/CompilerThreadJob.h
+	src/exceptions/GS2CompilerError.h
+	src/opcodes.h
+	src/utils/ContextThreadPool.h
+	src/utils/EventHandler.h
+)
+
+set(SOURCES_ALL ${SOURCES} ${HEADERS})
 
 if (DEFINED EMSCRIPTEN)
-	add_executable(gs2test ${SOURCES_ALL} src/js_interface.cpp)
+	add_executable(gs2test ${SOURCES_ALL} bindings/js/js_interface.cpp)
 	set_target_properties(gs2test PROPERTIES LINK_FLAGS "--embind-emit-tsd=gs2test.d.ts -s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
 else()
 	add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
