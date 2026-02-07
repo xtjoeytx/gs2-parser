@@ -137,8 +137,10 @@ set_target_properties(gs2compiler PROPERTIES
 		CXX_VISIBILITY_PRESET hidden
 		VISIBILITY_INLINES_HIDDEN ON
 )
-if(BUILD_SHARED_LIBS)
-	set_target_properties(gs2compiler PROPERTIES PREFIX "")
+if(WIN32 OR APPLE)
+	if(BUILD_SHARED_LIBS)
+		set_target_properties(gs2compiler PROPERTIES PREFIX "")
+	endif()
 endif()
 
 target_include_directories(gs2compiler
