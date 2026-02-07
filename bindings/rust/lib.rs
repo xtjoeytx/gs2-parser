@@ -11,7 +11,7 @@ pub struct Gs2CompilerResult {
     pub bytecode_size: u32,
 }
 
-extern {
+extern "C" {
     fn get_context() -> *mut c_void;
     fn compile_code_no_header(context: *mut c_void, code: *const c_char) -> Gs2CompilerResult;
     fn delete_context(context: *mut c_void);

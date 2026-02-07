@@ -72,6 +72,7 @@ class GS2TestRunner:
         """Find the GS2 compiler executable"""
         possible_paths = [
             self.project_root / "bin" / "gs2test",
+            self.project_root / "build" / "bin" / "gs2test",
             self.project_root / "build" / "gs2test",
             self.project_root / "build" / "Debug" / "gs2test",
             self.project_root / "build" / "Release" / "gs2test",

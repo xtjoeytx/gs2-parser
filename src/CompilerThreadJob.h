@@ -8,7 +8,7 @@
 #include <string>
 
 #include "encoding/buffer.h"
-#include "GS2Context.h"
+#include "compiler/GS2Context.h"
 
 /////// This class will allow you to queue lambda functions into a threadpool
 

@@ -55,7 +55,24 @@ bin/
 # CLion
 cmake-build-*/
 
-
 # Added by cargo
-
 /target
+
+# act (GitHub Actions local testing)
+.actrc
+.secrets
+
+# GS2 bytecode files
+*.gs2bc
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+
+# Test artifacts (generated in build directory, but ignore strays)
+tests/reports/*.json
+tests/outputs/
