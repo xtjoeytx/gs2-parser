@@ -130,7 +130,7 @@ target_include_directories(gs2compiler
 
 if(WIN32 AND MINGW)
 	target_compile_options(gs2compiler PRIVATE "-fno-rtti")
-	target_link_options(gs2compiler PRIVATE -Wl,--export-all-symbols)
+	target_link_options(gs2compiler PRIVATE -Wl,--export-all-symbols,--exclude-libs,ALL)
 endif()
 
 if(EMSCRIPTEN)
