@@ -46,7 +46,7 @@ if(WIN32 AND NOT MINGW)
 			--build ${winflexbison_BINARY_DIR}
 			--parallel
 	)
-	list(APPEND CMAKE_PROGRAM_PATH ${winflexbison_BINARY_DIR}/bin/Release)
+	list(APPEND CMAKE_PROGRAM_PATH ${winflexbison_SOURCE_DIR}/bin/Release)
 	set(FLEX_FLAGS "--wincompat")
 endif()
 
