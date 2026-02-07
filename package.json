@@ -5,7 +5,7 @@
   "main": "dist/gs2test.js",
   "types": "dist/gs2test.d.ts",
   "scripts": {
-    "build": "mkdir -p dist && emcmake cmake -S. -Bbuild/ && cmake --build build/ -j$(nproc) && mv -fv ./bin/* ./dist/"
+    "build": "mkdir -p dist && emcmake cmake -S. -Bbuild/ && cmake --build build/ -j$(nproc) && mv -fv ./build/bin/* ./dist/"
   },
   "keywords": [],
   "author": "xtjoeytx",

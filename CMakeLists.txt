@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
-project(gs2test VERSION 1.0)
+cmake_minimum_required(VERSION 3.14)
+project(gs2parser VERSION 1.0)
 
 set(CMAKE_DEBUG_POSTFIX _d)
 
@@ -10,20 +10,18 @@ set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-# Set up output directories
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/${BIN_DIR})
+# Set up output directories in the build tree
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/${BIN_DIR})
 
 # Second, for multi-config builds (e.g. msvc)
 foreach( OUTPUTCONFIG ${CMAKE_CONFIGURATION_TYPES} )
 	string( TOUPPER ${OUTPUTCONFIG} OUTPUTCONFIG )
-	set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/lib )
-	set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/lib )
-	set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${PROJECT_SOURCE_DIR}/${BIN_DIR} )
+	set( CMAKE_ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/lib )
+	set( CMAKE_LIBRARY_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/lib )
+	set( CMAKE_RUNTIME_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_BINARY_DIR}/${BIN_DIR} )
 endforeach( OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES )
-
-link_directories(${PROJECT_SOURCE_DIR}/lib)
 
 if(WIN32 OR APPLE)
 	set(CMAKE_SHARED_LIBRARY_PREFIX "")
@@ -48,16 +46,6 @@ BISON_TARGET(GS2Parser src/parser/gs2parser.y ${CMAKE_CURRENT_BINARY_DIR}/gs2par
 FLEX_TARGET(GS2Scanner src/parser/gs2scanner.l ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.cc DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.h COMPILE_FLAGS "${FLEX_FLAGS}")
 ADD_FLEX_BISON_DEPENDENCY(GS2Scanner GS2Parser)
 
-include_directories(
-	${CMAKE_CURRENT_BINARY_DIR}
-	src
-	src/parser
-	src/codegen
-	src/compiler
-	src/encoding
-	src/memory
-)
-
 set(SOURCES
 	# AST
 	src/ast/ast.cpp
@@ -77,9 +65,6 @@ set(SOURCES
 	src/parser/Parser.cpp
 	${BISON_GS2Parser_OUTPUTS}
 	${FLEX_GS2Scanner_OUTPUTS}
-
-	# Bindings
-	bindings/c/c_interface.cpp
 )
 
 set(HEADERS
@@ -123,33 +108,37 @@ set(HEADERS
 
 set(SOURCES_ALL ${SOURCES} ${HEADERS})
 
-if (DEFINED EMSCRIPTEN)
-	add_executable(gs2test ${SOURCES_ALL} bindings/js/js_interface.cpp)
-	set_target_properties(gs2test PROPERTIES LINK_FLAGS "--embind-emit-tsd=gs2test.d.ts -s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
-else()
-	add_executable(gs2test ${SOURCES_ALL} src/main.cpp)
+# Use standard BUILD_SHARED_LIBS; Emscripten doesn't support shared libs
+if(EMSCRIPTEN)
+	set(BUILD_SHARED_LIBS OFF)
 endif()
+option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
-if (STATIC)
-	add_library(gs2compiler STATIC ${SOURCES_ALL})
-else()
-	add_library(gs2compiler SHARED ${SOURCES_ALL})
-endif()
+add_library(gs2compiler ${SOURCES_ALL} bindings/c/c_interface.cpp)
+
+target_include_directories(gs2compiler
+	PUBLIC
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>
+		$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
+	PRIVATE
+		${CMAKE_CURRENT_SOURCE_DIR}/src/parser
+		${CMAKE_CURRENT_SOURCE_DIR}/src/codegen
+		${CMAKE_CURRENT_SOURCE_DIR}/src/compiler
+		${CMAKE_CURRENT_SOURCE_DIR}/src/encoding
+		${CMAKE_CURRENT_SOURCE_DIR}/src/memory
+)
 
 if(WIN32 AND MINGW)
 	target_compile_options(gs2compiler PRIVATE "-fno-rtti")
 endif()
 
-set_property(TARGET gs2test PROPERTY CXX_STANDARD 23)
-set_property(TARGET gs2compiler PROPERTY CXX_STANDARD 23)
-
-if(NOT CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
-	set(GS2COMPILER_INCLUDE_DIRECTORY
-		"${PROJECT_SOURCE_DIR}/include"
-		"${PROJECT_BINARY_DIR}/include"
-		"${PROJECT_SOURCE_DIR}/src"
-		PARENT_SCOPE)
+if(EMSCRIPTEN)
+	add_executable(gs2test bindings/js/js_interface.cpp)
+	set_target_properties(gs2test PROPERTIES LINK_FLAGS "--embind-emit-tsd=gs2test.d.ts -s ENVIRONMENT=web -s DYNAMIC_EXECUTION=0 -s SINGLE_FILE=1 -s MODULARIZE -s 'EXPORT_NAME=GS2Compiler' --bind")
+else()
+	add_executable(gs2test src/main.cpp)
 endif()
+target_link_libraries(gs2test PRIVATE gs2compiler)
 
 # Test suite integration
 # Only configure tests if this is the main project (not a subproject)
