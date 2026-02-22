@@ -1,9 +1,8 @@
-﻿namespace Preagonal.Scripting.GS2Compiler
+﻿namespace Preagonal.Scripting.GS2Compiler;
+
+public struct CompilerResponse
 {
-	public struct CompilerResponse
-	{
-		public bool    Success;
-		public string? ErrMsg;
-		public byte[]  ByteCode;
-	}
+	public bool    Success;
+	public string? ErrMsg;
+	public byte[]  ByteCode;
 }
