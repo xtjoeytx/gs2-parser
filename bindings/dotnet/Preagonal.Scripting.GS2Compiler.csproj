@@ -46,33 +46,44 @@
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+		<!-- Prefer explicit RID if caller provides one (dotnet test -r linux-x64) -->
+		<_Rid>$(RuntimeIdentifier)</_Rid>
+
+		<!-- If not provided, fall back to the host RID (works locally without -r) -->
+		<_Rid Condition="'$(_Rid)'==''">$(NETCoreSdkRuntimeIdentifier)</_Rid>
+	</PropertyGroup>
+	
 	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
+		<!-- Linux -->
 		<None Include="cross-compile/linux-x64/libgs2compiler.so"
-			  Condition="Exists('cross-compile/linux-x64/libgs2compiler.so')">
+			  Condition="'$(_Rid)'=='linux-x64' and Exists('cross-compile/linux-x64/libgs2compiler.so')">
 			<Link>libgs2compiler.so</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
 		<None Include="cross-compile/linux-arm64/libgs2compiler.so"
-			  Condition="Exists('cross-compile/linux-arm64/libgs2compiler.so')">
+			  Condition="'$(_Rid)'=='linux-arm64' and Exists('cross-compile/linux-arm64/libgs2compiler.so')">
 			<Link>libgs2compiler.so</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
+		<!-- Windows -->
 		<None Include="cross-compile/win-x64/gs2compiler.dll"
-			  Condition="Exists('cross-compile/win-x64/gs2compiler.dll')">
+			  Condition="'$(_Rid)'=='win-x64' and Exists('cross-compile/win-x64/gs2compiler.dll')">
 			<Link>gs2compiler.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
+		<!-- macOS (best: run tests with -r osx-x64 or -r osx-arm64) -->
 		<None Include="cross-compile/osx-x64/gs2compiler.dylib"
-			  Condition="Exists('cross-compile/osx-x64/gs2compiler.dylib')">
+			  Condition="'$(_Rid)'=='osx-x64' and Exists('cross-compile/osx-x64/gs2compiler.dylib')">
 			<Link>gs2compiler.dylib</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
 		<None Include="cross-compile/osx-arm64/gs2compiler.dylib"
-			  Condition="Exists('cross-compile/osx-arm64/gs2compiler.dylib')">
+			  Condition="'$(_Rid)'=='osx-arm64' and Exists('cross-compile/osx-arm64/gs2compiler.dylib')">
 			<Link>gs2compiler.dylib</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>

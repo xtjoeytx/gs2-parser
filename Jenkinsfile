@@ -143,8 +143,8 @@ def buildStepDocker() {
 				customImage.inside("-u 0") {
 					dir("bindings/dotnet/") {
 						try{
-							sh("dotnet test --logger \"trx;LogFileName=../../Testing/unit_tests.xml\"");
-							sh("dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover");
+							sh("dotnet test -c Debug -r linux-x64 --logger \"trx;LogFileName=../../Testing/unit_tests.xml\"");
+							sh("dotnet test -c Debug -r linux-x64 /p:CollectCoverage=true /p:CoverletOutputFormat=opencover");
 							sh("chmod 777 -R .");
 						} catch(err) {
 							currentBuild.result = 'FAILURE'
@@ -157,10 +157,12 @@ def buildStepDocker() {
 							artifacts: 'Testing/**.xml',
 							fingerprint: true
 						)
-	
+						
+						/* TODO: Enable when codecov is added to GS2Compiler project
 						withCredentials([string(credentialsId: 'PREAGONAL_GS2ENGINE_CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
 							sh("curl -s https://codecov.io/bash > codecov && chmod +x codecov && ./codecov -f \"Testing/unit_tests.xml\" -t ${env.CODECOV_TOKEN} && ./codecov -f \"Preagonal.Scripting.GS2Compiler.UnitTests/coverage.opencover.xml\" -t ${env.CODECOV_TOKEN}")
 						}
+						*/
 	
 						stage("Xunit") {
 							xunit (
