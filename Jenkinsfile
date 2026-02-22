@@ -143,8 +143,8 @@ def buildStepDocker() {
 				customImage.inside("-u 0") {
 					dir("bindings/dotnet/") {
 						try{
-							sh("dotnet test -c Debug --logger \"trx;LogFileName=../../Testing/unit_tests.xml\"");
-							sh("dotnet test -c Debug /p:CollectCoverage=true /p:CoverletOutputFormat=opencover");
+							sh("dotnet test -c Debug -r linux-x64 --logger \"trx;LogFileName=../../Testing/unit_tests.xml\"");
+							sh("dotnet test -c Debug -r linux-x64 /p:CollectCoverage=true /p:CoverletOutputFormat=opencover");
 							sh("chmod 777 -R .");
 						} catch(err) {
 							currentBuild.result = 'FAILURE'

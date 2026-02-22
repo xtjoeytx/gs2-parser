@@ -46,33 +46,57 @@
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+		<!-- Prefer RID if provided (e.g. dotnet test -r linux-x64) -->
+		<_Rid>$(RuntimeIdentifier)</_Rid>
+
+		<!-- Fallbacks when RuntimeIdentifier is empty -->
+		<_IsLinux Condition="'$(_Rid)'=='' and '$(OS)'!='Windows_NT' and '$(MSBuildRuntimeType)'=='Core'">true</_IsLinux>
+		<_IsWindows Condition="'$(_Rid)'=='' and '$(OS)'=='Windows_NT'">true</_IsWindows>
+
+		<!-- Process arch (MSBuild on .NET) -->
+		<_ProcArch>$(PROCESSOR_ARCHITECTURE)</_ProcArch>
+		<_IsArm64 Condition="'$(_ProcArch)'=='ARM64' or '$(_ProcArch)'=='aarch64'">true</_IsArm64>
+		<_IsX64   Condition="'$(_ProcArch)'=='AMD64' or '$(_ProcArch)'=='x86_64'">true</_IsX64>
+
+		<!-- Derived fallback RID -->
+		<_Rid Condition="'$(_Rid)'=='' and '$(_IsWindows)'=='true' and '$(_IsX64)'=='true'">win-x64</_Rid>
+		<_Rid Condition="'$(_Rid)'=='' and '$(_IsLinux)'=='true' and '$(_IsX64)'=='true'">linux-x64</_Rid>
+		<_Rid Condition="'$(_Rid)'=='' and '$(_IsLinux)'=='true' and '$(_IsArm64)'=='true'">linux-arm64</_Rid>
+
+		<!-- macOS: MSBuild doesn't expose a perfect built-in OS switch; for macOS runs, it's best to pass -r osx-x64/osx-arm64 -->
+	</PropertyGroup>
+
 	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
+		<!-- Linux -->
 		<None Include="cross-compile/linux-x64/libgs2compiler.so"
-			  Condition="Exists('cross-compile/linux-x64/libgs2compiler.so')">
+			  Condition="'$(_Rid)'=='linux-x64' and Exists('cross-compile/linux-x64/libgs2compiler.so')">
 			<Link>libgs2compiler.so</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
 		<None Include="cross-compile/linux-arm64/libgs2compiler.so"
-			  Condition="Exists('cross-compile/linux-arm64/libgs2compiler.so')">
+			  Condition="'$(_Rid)'=='linux-arm64' and Exists('cross-compile/linux-arm64/libgs2compiler.so')">
 			<Link>libgs2compiler.so</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
+		<!-- Windows -->
 		<None Include="cross-compile/win-x64/gs2compiler.dll"
-			  Condition="Exists('cross-compile/win-x64/gs2compiler.dll')">
+			  Condition="'$(_Rid)'=='win-x64' and Exists('cross-compile/win-x64/gs2compiler.dll')">
 			<Link>gs2compiler.dll</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
+		<!-- macOS (best: run tests with -r osx-x64 or -r osx-arm64) -->
 		<None Include="cross-compile/osx-x64/gs2compiler.dylib"
-			  Condition="Exists('cross-compile/osx-x64/gs2compiler.dylib')">
+			  Condition="'$(_Rid)'=='osx-x64' and Exists('cross-compile/osx-x64/gs2compiler.dylib')">
 			<Link>gs2compiler.dylib</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
 
 		<None Include="cross-compile/osx-arm64/gs2compiler.dylib"
-			  Condition="Exists('cross-compile/osx-arm64/gs2compiler.dylib')">
+			  Condition="'$(_Rid)'=='osx-arm64' and Exists('cross-compile/osx-arm64/gs2compiler.dylib')">
 			<Link>gs2compiler.dylib</Link>
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</None>
