@@ -12,7 +12,7 @@
 		<AssemblyVersion>1.0.0</AssemblyVersion>
 		<FileVersion>1.0.0</FileVersion>
 		<NeutralLanguage>en-US</NeutralLanguage>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFramework>netstandard2.1</TargetFramework>
 		<AssemblyName>Preagonal.Scripting.GS2Compiler</AssemblyName>
 		<RootNamespace>Preagonal.Scripting.GS2Compiler</RootNamespace>
 		<PackageId>Preagonal.Scripting.GS2Compiler</PackageId>
@@ -26,12 +26,56 @@
 	  <Optimize>true</Optimize>
 	  <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
 	</PropertyGroup>
-
+	
 	<ItemGroup>
+		<None Remove="Preagonal.Scripting.GS2Compiler.UnitTests\**" />
+		<None Remove="Preagonal.Scripting.GS2Compiler.sln.DotSettings" />
+		<EmbeddedResource Remove="Preagonal.Scripting.GS2Compiler.UnitTests\**" />
+		<Compile Remove="Preagonal.Scripting.GS2Compiler.UnitTests\**" />
+	</ItemGroup>
+
+	<ItemGroup Condition=" '$(Configuration)' == 'Release' ">
 		<None Include="cross-compile/linux-x64/libgs2compiler.so" Pack="true" PackagePath="runtimes/linux-x64/native/" />
 		<None Include="cross-compile/linux-arm64/libgs2compiler.so" Pack="true" PackagePath="runtimes/linux-arm64/native/" />
 		<None Include="cross-compile/win-x64/gs2compiler.dll" Pack="true" PackagePath="runtimes/win-x64/native/" />
 		<None Include="cross-compile/osx-x64/gs2compiler.dylib" Pack="true" PackagePath="runtimes/osx-x64/native/" />
 		<None Include="cross-compile/osx-arm64/gs2compiler.dylib" Pack="true" PackagePath="runtimes/osx-arm64/native/" />
 	</ItemGroup>
+	
+	<PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+	</PropertyGroup>
+
+	<ItemGroup Condition="'$(Configuration)' == 'Debug'">
+		<None Include="cross-compile/linux-x64/libgs2compiler.so"
+			  Condition="Exists('cross-compile/linux-x64/libgs2compiler.so')">
+			<Link>libgs2compiler.so</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<None Include="cross-compile/linux-arm64/libgs2compiler.so"
+			  Condition="Exists('cross-compile/linux-arm64/libgs2compiler.so')">
+			<Link>libgs2compiler.so</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<None Include="cross-compile/win-x64/gs2compiler.dll"
+			  Condition="Exists('cross-compile/win-x64/gs2compiler.dll')">
+			<Link>gs2compiler.dll</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<None Include="cross-compile/osx-x64/gs2compiler.dylib"
+			  Condition="Exists('cross-compile/osx-x64/gs2compiler.dylib')">
+			<Link>gs2compiler.dylib</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+
+		<None Include="cross-compile/osx-arm64/gs2compiler.dylib"
+			  Condition="Exists('cross-compile/osx-arm64/gs2compiler.dylib')">
+			<Link>gs2compiler.dylib</Link>
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</None>
+	</ItemGroup>
+	
 </Project>
