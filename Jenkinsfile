@@ -157,10 +157,12 @@ def buildStepDocker() {
 							artifacts: 'Testing/**.xml',
 							fingerprint: true
 						)
-	
+						
+						/* TODO: Enable when codecov is added to GS2Compiler project
 						withCredentials([string(credentialsId: 'PREAGONAL_GS2ENGINE_CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
 							sh("curl -s https://codecov.io/bash > codecov && chmod +x codecov && ./codecov -f \"Testing/unit_tests.xml\" -t ${env.CODECOV_TOKEN} && ./codecov -f \"Preagonal.Scripting.GS2Compiler.UnitTests/coverage.opencover.xml\" -t ${env.CODECOV_TOKEN}")
 						}
+						*/
 	
 						stage("Xunit") {
 							xunit (
