@@ -93,7 +93,7 @@ def buildStepDocker() {
 	def split_job_name = env.JOB_NAME.split(/\/{1}/);
 	def fixed_job_name = split_job_name[1].replace('%2F',' ');
 
-	def customImage = docker.image("mcr.microsoft.com/dotnet/sdk:9.0");
+	def customImage = docker.image("mcr.microsoft.com/dotnet/sdk:10.0");
 	customImage.pull();
 
 	try {
@@ -138,6 +138,53 @@ def buildStepDocker() {
                     }
                 }
             }
+            
+            stage("Run tests...") {
+				customImage.inside("-u 0") {
+					dir("bindings/dotnet/") {
+						try{
+							sh("dotnet test -c Debug -r linux-x64 --logger \"trx;LogFileName=../../Testing/unit_tests.xml\"");
+							sh("dotnet test -c Debug -r linux-x64 /p:CollectCoverage=true /p:CoverletOutputFormat=opencover");
+							sh("chmod 777 -R .");
+						} catch(err) {
+							currentBuild.result = 'FAILURE'
+							sh("chmod 777 -R .");
+							discordSend(description: "Testing Failed: ${fixed_job_name} #${env.BUILD_NUMBER}", footer: "", link: env.BUILD_URL, result: currentBuild.currentResult, title: "[${split_job_name[0]}] Tests Failed: ${fixed_job_name} #${env.BUILD_NUMBER}", webhookURL: env.GS2EMU_WEBHOOK);
+							notify('Build failed')
+						}
+	
+						archiveArtifacts (
+							artifacts: 'Testing/**.xml',
+							fingerprint: true
+						)
+						
+						/* TODO: Enable when codecov is added to GS2Compiler project
+						withCredentials([string(credentialsId: 'PREAGONAL_GS2ENGINE_CODECOV_TOKEN', variable: 'CODECOV_TOKEN')]) {
+							sh("curl -s https://codecov.io/bash > codecov && chmod +x codecov && ./codecov -f \"Testing/unit_tests.xml\" -t ${env.CODECOV_TOKEN} && ./codecov -f \"Preagonal.Scripting.GS2Compiler.UnitTests/coverage.opencover.xml\" -t ${env.CODECOV_TOKEN}")
+						}
+						*/
+	
+						stage("Xunit") {
+							xunit (
+								testTimeMargin: '3000',
+								thresholdMode: 1,
+								thresholds: [
+									skipped(failureThreshold: '1000'),
+									failed(failureThreshold: '0')
+								],
+								tools: [MSTest(
+									pattern: 'Testing/**.xml',
+									deleteOutputFiles: true,
+									failIfNotNew: false,
+									skipNoTestFiles: true,
+									stopProcessingIfError: true
+								)],
+								skipPublishingChecks: false
+							);
+						}
+					}
+				}
+			}
 
             def archive_date = sh (
                 script: 'date +"-%Y%m%d-%H%M"',
@@ -266,7 +313,7 @@ killall_jobs();
 
 	parallel(branches);
 
-	def customImage = docker.image("mcr.microsoft.com/dotnet/sdk:9.0");
+	def customImage = docker.image("mcr.microsoft.com/dotnet/sdk:10.0");
 	customImage.pull();
 
 	project.builds.each { v ->
