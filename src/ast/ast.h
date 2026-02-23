@@ -253,7 +253,6 @@ public:
 		if (list)
 		{
 			exprList = std::move(*list);
-			delete list;
 		}
 
 		for (const auto& expr : exprList)
@@ -523,7 +522,6 @@ public:
 		if (argList)
 		{
 			args = std::move(*argList);
-			delete argList;
 		}
 
 		takeOwnership(funcExpr, objExpr);
@@ -566,7 +564,6 @@ public:
 		if (dim)
 		{
 			dimensions = std::move(*dim);
-			delete dim;
 		}
 	}
 
@@ -596,7 +593,6 @@ public:
 		if (argList)
 		{
 			args = std::move(*argList);
-			delete argList;
 		}
 
 		takeOwnership(newExpr);
@@ -628,7 +624,6 @@ public:
 		if (argList)
 		{
 			args = std::move(*argList);
-			delete argList;
 		}
 
 		for (const auto& node : args)
@@ -701,7 +696,6 @@ public:
 		if (argList)
 		{
 			args = std::move(*argList);
-			delete argList;
 		}
 
 		takeOwnership(stmtBlock);
@@ -731,7 +725,6 @@ public:
 		if (argList)
 		{
 			args = std::move(*argList);
-			delete argList;
 		}
 
 		takeOwnership(stmtBlock);
@@ -899,7 +892,6 @@ public:
 		if (caseNodes)
 		{
 			cases = std::move(*caseNodes);
-			delete caseNodes;
 		}
 
 		takeOwnership(expr);
@@ -943,11 +935,7 @@ class EnumList
 			addMember(member);
 		}
 
-		~EnumList()
-		{
-			for (const auto& n : members)
-				delete n;
-		}
+		~EnumList() = default;
 
 		void addMember(EnumMember *member);
 

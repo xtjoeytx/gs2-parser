@@ -5,6 +5,7 @@
 #include "ast/ast.h"
 #include "visitors/FunctionInspectVisitor.h"
 #include "compiler/GS2CompilerVisitor.h"
+#include "compiler/GS2BuiltInFunctions.h"
 #include "parser/Parser.h"
 
 opcode::Opcode getExpressionOpCode(ExpressionOp op)
@@ -49,8 +50,8 @@ opcode::Opcode getExpressionOpCode(ExpressionOp op)
 	}
 }
 
-GS2CompilerVisitor::GS2CompilerVisitor(ParserContext & context, GS2BuiltInFunctions & builtin)
-	: parserContext(context), builtIn(builtin),
+GS2CompilerVisitor::GS2CompilerVisitor(ParserContext & context)
+	: parserContext(context),
 	_isCopyAssignment(false), _isInlineConditional(true), _isInsideExpression(false), _newObjectCount(0)
 {
 	fail_label = success_label = exit_label = createLabel();
@@ -832,16 +833,15 @@ void GS2CompilerVisitor::Visit(ExpressionFnCallNode *node)
 {
 	auto isObjectCall = (node->objExpr != nullptr);
 
-	// Build-in commands
-	auto& cmdList = (isObjectCall ? builtIn.builtInObjMap : builtIn.builtInCmdMap);
+	// Built-in commands
 	std::string funcName = node->funcExpr->toString();
 
 #ifdef DBGEMITTERS
 	printf("Call Function: %s (obj call: %d)\n", funcName.c_str(), isObjectCall ? 1 : 0);
 #endif
 
-	auto iter = cmdList.find(funcName);
-	BuiltInCmd cmd = (iter != cmdList.end() ? iter->second : (isObjectCall ? defaultObjCall : defaultCall));
+	const BuiltInCmd* found = isObjectCall ? findBuiltInObjCmd(funcName) : findBuiltInCmd(funcName);
+	BuiltInCmd cmd = found ? *found : (isObjectCall ? defaultObjCall : defaultCall);
 
 	{
 		auto argumentVisitFn = [&](auto arg_iter, auto arg_iter_end, auto sig_iter, auto sig_iter_end) {

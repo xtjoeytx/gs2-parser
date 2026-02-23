@@ -9,7 +9,6 @@
 #include <unordered_map>
 #include "ast/NodeVisitor.h"
 #include "GS2Bytecode.h"
-#include "GS2BuiltInFunctions.h"
 
 class ParserContext;
 
@@ -19,7 +18,7 @@ class GS2CompilerVisitor : public NodeVisitor
 	using jmp_address = uint32_t;
 
 	public:
-		GS2CompilerVisitor(ParserContext& context, GS2BuiltInFunctions& builtin);
+		GS2CompilerVisitor(ParserContext& context);
 
 		Buffer getByteCode();
 		const std::set<std::string>& getJoinedClasses() const;
@@ -62,7 +61,6 @@ class GS2CompilerVisitor : public NodeVisitor
 	private:
 		GS2Bytecode byteCode;
 		ParserContext& parserContext;
-		GS2BuiltInFunctions& builtIn;
 		std::set<std::string> joinedClasses;
 
 		bool _isCopyAssignment;

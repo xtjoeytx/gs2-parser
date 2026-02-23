@@ -8,7 +8,6 @@
 #include "gs2compiler_export.h"
 #include "encoding/buffer.h"
 #include "exceptions/GS2CompilerError.h"
-#include "GS2BuiltInFunctions.h"
 
 struct CompilerResponse
 {
@@ -32,7 +31,6 @@ class GS2COMPILER_EXPORT GS2Context
 		static CompilerResponse Compile(const std::string& script, const std::string& scriptType, const std::string& scriptName, bool saveToDisk);
 
 	private:
-		GS2BuiltInFunctions builtIn;
 		GS2ErrorService errorService;
 		std::vector<GS2CompilerError> errors;
 

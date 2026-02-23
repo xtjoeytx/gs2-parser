@@ -156,7 +156,6 @@ void ParserContext::addEnum(EnumList *enumList, std::string prefix)
 		}
 	}
 
-	delete enumList;
 }
 
 void ParserContext::addConstant(const std::string& ident, ExpressionIdentifierNode *node)

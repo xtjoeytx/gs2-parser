@@ -132,9 +132,6 @@ typedef void* yyscan_t;
 
 	// Destructors for allocated std vectors incase an error happens
 	// during parsing before ownership is moved to the node
-%destructor { delete $$; } <enumList>
-%destructor { delete $$; } <caseNodeList>
-%destructor { delete $$; } <indexList>
 
 
 %start program
@@ -168,15 +165,15 @@ decl_enum:
 	;
 
 enum_list:
-	enum_item						{ $$ = new EnumList($1); }
+	enum_item						{ $$ = parser->alloc<EnumList>($1); }
 	| enum_list ',' enum_item		{ $$ = $1; $1->addMember($3); }
 	| enum_list error ','			{ $$ = $1; parser->addParserError("missing comma in enum list"); }
 	;
 
 enum_item:
-	T_IDENTIFIER					{ $$ = new EnumMember($1); }
-	| T_IDENTIFIER '=' T_INT		{ $$ = new EnumMember($1, $3); }
-	| T_IDENTIFIER '=' '-' T_INT	{ $$ = new EnumMember($1, -$4); }
+	T_IDENTIFIER					{ $$ = parser->alloc<EnumMember>($1); }
+	| T_IDENTIFIER '=' T_INT		{ $$ = parser->alloc<EnumMember>($1, $3); }
+	| T_IDENTIFIER '=' '-' T_INT	{ $$ = parser->alloc<EnumMember>($1, -$4); }
 	;
 
 stmt_list:
@@ -261,7 +258,7 @@ stmt_switch:
 
 stmt_caseblock_list:
 	stmt_caseblock_list stmt_caseblock 						{ $$ = $1; $$->push_back(parser->popCaseExpr()); }
-	| stmt_caseblock 										{ $$ = new std::vector<SwitchCaseState>(); $$->push_back(parser->popCaseExpr()); }
+	| stmt_caseblock 										{ $$ = parser->alloc<std::vector<SwitchCaseState>>(); $$->push_back(parser->popCaseExpr()); }
 	;
 
 stmt_case_options:
@@ -290,8 +287,8 @@ expr_list_with_empty:
 expr_list:
 	expr_list ',' expr					{ $1->push_back($3); }
 	| expr_list ',' expr_functionobj	{ $1->push_back($3); }
-	| expr								{ $$ = new std::vector<ExpressionNode *>(); $$->reserve(12); $$->push_back($1); }
-	| expr_functionobj					{ $$ = new std::vector<ExpressionNode *>(); $$->reserve(12); $$->push_back($1); }
+	| expr								{ $$ = parser->alloc<std::vector<ExpressionNode *>>(); $$->reserve(12); $$->push_back($1); }
+	| expr_functionobj					{ $$ = parser->alloc<std::vector<ExpressionNode *>>(); $$->reserve(12); $$->push_back($1); }
 	;
 
 constant:
@@ -443,7 +440,7 @@ array_idx:
 
 array_idx_list:
 	array_idx_list array_idx						{ $$ = $1; $$->push_back($2); }
-	| array_idx										{ $$ = new std::vector<int>(); $$->push_back($1); }
+	| array_idx										{ $$ = parser->alloc<std::vector<int>>(); $$->push_back($1); }
 	;
 
 expr_new:

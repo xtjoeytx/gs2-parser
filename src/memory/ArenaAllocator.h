@@ -5,8 +5,10 @@
 
 #include <algorithm>
 #include <memory>
+#include <type_traits>
 #include <utility>
 #include <vector>
+#include <ranges>
 
 template <std::size_t DefaultChunkSize = 64 * 1024>
 class ArenaAllocator {
@@ -19,20 +21,25 @@ public:
 
     ArenaAllocator(ArenaAllocator&& other) noexcept
         : chunks_(std::move(other.chunks_)),
+          dtors_(std::move(other.dtors_)),
           current_(std::exchange(other.current_, nullptr)),
           remaining_(std::exchange(other.remaining_, 0)) {
     }
 
     ArenaAllocator& operator=(ArenaAllocator&& other) noexcept {
         if (this != &other) {
+            reset();
             chunks_ = std::move(other.chunks_);
+            dtors_ = std::move(other.dtors_);
             current_ = std::exchange(other.current_, nullptr);
             remaining_ = std::exchange(other.remaining_, 0);
         }
         return *this;
     }
 
-    ~ArenaAllocator() = default;
+    ~ArenaAllocator() {
+        reset();
+    }
 
     /**
      * Allocate and construct an object of type T
@@ -45,13 +52,26 @@ public:
     template<typename T, typename... Args>
     [[nodiscard]] T* allocate(Args&&... args) {
         void* ptr = allocate_raw(sizeof(T), alignof(T));
-        return std::construct_at(static_cast<T*>(ptr), std::forward<Args>(args)...);
+        T* obj = std::construct_at(static_cast<T*>(ptr), std::forward<Args>(args)...);
+
+        if constexpr (!std::is_trivially_destructible_v<T>) {
+            dtors_.push_back(DtorRecord{
+                obj,
+                [](void* p) noexcept { std::destroy_at(static_cast<T*>(p)); }
+            });
+        }
+
+        return obj;
     }
 
     /**
      * Reset the arena, freeing all allocated memory
      */
     void reset() noexcept {
+        for (const auto& dtor : std::ranges::reverse_view(dtors_)) {
+            dtor.destroy(dtor.ptr);
+        }
+        dtors_.clear();
         chunks_.clear();
         current_ = nullptr;
         remaining_ = 0;
@@ -76,6 +96,11 @@ public:
     }
 
 private:
+    struct DtorRecord {
+        void* ptr{};
+        void (*destroy)(void*) noexcept = nullptr;
+    };
+
     /**
      * Represents a memory chunk
      */
@@ -113,6 +138,7 @@ private:
     }
 
     std::vector<Chunk> chunks_;
+    std::vector<DtorRecord> dtors_;
     std::byte* current_;
     size_t remaining_;
 };
