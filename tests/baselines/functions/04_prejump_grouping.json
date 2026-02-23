@@ -3,10 +3,10 @@
   "bytecode_size": 250,
   "compilation_success": true,
   "expected_failure": false,
-  "error_message": "Compilation successful\n -> saved to /Users/joey/projects/gs2/gs2-parser/tests/scripts/functions/04_prejump_grouping.gs2bc\n",
+  "error_message": "",
   "metadata": {
     "script_path": "functions/04_prejump_grouping.gs2",
-    "generated_at": "2026-02-23 11:10:36",
-    "compiler_version": "modified_1771862550"
+    "generated_at": "2026-02-23 11:55:54",
+    "compiler_version": "modified_1771863608"
   }
 }
