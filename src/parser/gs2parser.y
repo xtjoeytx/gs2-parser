@@ -129,11 +129,6 @@ typedef void* yyscan_t;
 %type<ival> array_idx
 %type<indexList> array_idx_list
 
-
-	// Destructors for allocated std vectors incase an error happens
-	// during parsing before ownership is moved to the node
-
-
 %start program
 
 %%
