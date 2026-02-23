@@ -77,5 +77,6 @@ __pycache__/
 .DS_Store
 
 # Test artifacts (generated in build directory, but ignore strays)
+tests/baselines/**/*.bytecode
 tests/reports/*.json
 tests/outputs/

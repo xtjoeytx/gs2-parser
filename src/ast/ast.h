@@ -498,17 +498,17 @@ class ExpressionUnaryOpNode : public ExpressionNode
 			return expr->toString() + std::string(ExpressionOpToString(op));
 		}
 
-		virtual ExpressionType expressionType() const
+		ExpressionType expressionType() const override
 		{
 			switch (op)
 			{
 				case ExpressionOp::UnaryMinus:
 				case ExpressionOp::UnaryNot:
 					return ExpressionType::EXPR_NUMBER;
+				default:
+					return expr->expressionType();
 			}
-
-			return expr->expressionType();
-		}
+	}
 };
 
 class ExpressionFnCallNode : public ExpressionNode
