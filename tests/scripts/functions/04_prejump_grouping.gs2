@@ -1,0 +1,18 @@
+function onCreated() {
+  temp.x = 1;
+}
+
+function onTimeout() {
+  temp.y = 2;
+}
+
+temp.startup = "initialized";
+echo("between groups");
+
+function onPlayerEnters() {
+  temp.z = 3;
+}
+
+function onPlayerLeaves() {
+  temp.w = 4;
+}

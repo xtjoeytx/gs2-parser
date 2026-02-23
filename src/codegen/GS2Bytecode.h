@@ -17,12 +17,12 @@ struct FunctionEntry
 {
     std::string functionName;
     uint32_t opIndex;
-    size_t jmpLoc;
 };
 
 class GS2Bytecode
 {
     friend class GS2CompilerVisitor;
+    friend class JumpTarget;
 
     private:
         GS2Bytecode() : opIndex(0), lastOp(opcode::Opcode::OP_NONE) {}
@@ -30,7 +30,7 @@ class GS2Bytecode
         Buffer getByteCode();
         int32_t getStringConst(const std::string& str);
 
-        void addFunction(std::string functionName, uint32_t opIdx, size_t jmpLoc);
+        void addFunction(std::string functionName, uint32_t opIdx);
         
         /*
          * Functions to emit bytecode into the underlying buffer

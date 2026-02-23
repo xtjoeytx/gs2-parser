@@ -1,0 +1,12 @@
+{
+  "bytecode_hash": "d9621d9a021b2e3ef1e6db3ae2f413183afb9f3f2f34ac8cb79c475cd575d2d8",
+  "bytecode_size": 250,
+  "compilation_success": true,
+  "expected_failure": false,
+  "error_message": "",
+  "metadata": {
+    "script_path": "functions/04_prejump_grouping.gs2",
+    "generated_at": "2026-02-23 11:55:54",
+    "compiler_version": "modified_1771863608"
+  }
+}

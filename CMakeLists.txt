@@ -206,10 +206,10 @@ if(PROJECT_IS_TOP_LEVEL)
 		)
 
 		# Custom target: Generate/update baselines
-		add_custom_target(test-baselines
+		add_custom_target(update-test-baselines
 				COMMAND ${TEST_RUNNER_CMD} --update-baselines
 				WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-				COMMENT "Generating test baselines"
+				COMMENT "Updating test baselines"
 				DEPENDS gs2test
 		)
 
@@ -243,7 +243,7 @@ if(PROJECT_IS_TOP_LEVEL)
 		message(STATUS "  Reports in: ${CMAKE_BINARY_DIR}/tests/reports")
 		message(STATUS "  Available targets:")
 		message(STATUS "    run-tests      - Run test suite with verbose output")
-		message(STATUS "    test-baselines - Generate/update baseline bytecode")
+		message(STATUS "    update-test-baselines - Generate/update baseline bytecode")
 		message(STATUS "    test-clean     - Clean test artifacts")
 		message(STATUS "    test or ctest  - Run tests (quiet, for CI/CD)")
 

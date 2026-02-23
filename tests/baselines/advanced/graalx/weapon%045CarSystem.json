@@ -1,12 +1,12 @@
 {
-  "bytecode_hash": "c537528f746fccd7ad8da9319ec365b7f031bd4b2bf8bc3d5462929d3381d3fb",
+  "bytecode_hash": "8a0a716b615c93b4c193b313671e4151593cf0097c348dd32f77e68275edfd94",
   "bytecode_size": 5908,
   "compilation_success": true,
   "expected_failure": false,
   "error_message": "",
   "metadata": {
     "script_path": "advanced/graalx/weapon%045CarSystem.gs2",
-    "generated_at": "2026-01-04 18:39:05",
-    "compiler_version": "modified_1767569912"
+    "generated_at": "2026-02-23 11:42:04",
+    "compiler_version": "modified_1771863608"
   }
 }

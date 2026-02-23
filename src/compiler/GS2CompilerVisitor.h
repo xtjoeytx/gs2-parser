@@ -3,23 +3,80 @@
 #ifndef GS2COMPILER_H
 #define GS2COMPILER_H
 
+#include <cassert>
+#include <optional>
 #include <set>
 #include <string>
 #include <vector>
-#include <unordered_map>
 #include "ast/NodeVisitor.h"
 #include "GS2Bytecode.h"
-#include "GS2BuiltInFunctions.h"
 
 class ParserContext;
 
+class JumpTarget
+{
+	using jmp_address = uint32_t;
+
+	GS2Bytecode& byteCode;
+	std::vector<size_t> pending;
+	std::optional<jmp_address> addr;
+
+public:
+	explicit JumpTarget(GS2Bytecode& bc) : byteCode(bc) {}
+
+	~JumpTarget()
+	{
+		assert(pending.empty() && "unresolved forward references — missing resolve() call");
+	}
+
+	JumpTarget(const JumpTarget&) = delete;
+	JumpTarget& operator=(const JumpTarget&) = delete;
+	JumpTarget(JumpTarget&&) = delete;
+	JumpTarget& operator=(JumpTarget&&) = delete;
+
+	void addRef(size_t pos)
+	{
+		if (addr)
+			byteCode.emit(short(*addr), pos);
+		else
+			pending.push_back(pos);
+	}
+
+	void resolve(jmp_address target)
+	{
+		addr = target;
+		for (auto pos : pending)
+			byteCode.emit(short(*addr), pos);
+		pending.clear();
+	}
+
+	void resolveHere() { resolve(byteCode.getOpIndex()); }
+
+	jmp_address address() const { return *addr; }
+
+	size_t pendingCount() const { return pending.size(); }
+
+	void reset()
+	{
+		assert(pending.empty());
+		addr.reset();
+	}
+
+	void emitJump(opcode::Opcode jumpOp)
+	{
+		byteCode.emit(jumpOp);
+		byteCode.emit(char(0xF4));
+		byteCode.emit(short(0));
+		addRef(byteCode.getBytecodePos() - 2);
+	}
+};
+
 class GS2CompilerVisitor : public NodeVisitor
 {
-	using label_id = uint32_t;
 	using jmp_address = uint32_t;
 
 	public:
-		GS2CompilerVisitor(ParserContext& context, GS2BuiltInFunctions& builtin);
+		GS2CompilerVisitor(ParserContext& context);
 
 		Buffer getByteCode();
 		const std::set<std::string>& getJoinedClasses() const;
@@ -59,50 +116,60 @@ class GS2CompilerVisitor : public NodeVisitor
 		virtual void Visit(ExpressionConstantNode *node);
 		virtual void Visit(ExpressionFnObject* node);
 
-	private:
+	 private:
 		GS2Bytecode byteCode;
 		ParserContext& parserContext;
-		GS2BuiltInFunctions& builtIn;
 		std::set<std::string> joinedClasses;
 
-		bool _isCopyAssignment;
-		bool _isInlineConditional;
-		bool _isInsideExpression;
-		int _newObjectCount;
+		bool _isCopyAssignment = false;
+		bool _isInlineConditional = true;
+		bool _isInsideExpression = false;
+		int _newObjectCount = 0;
 
-		// Jump-labels
-		label_id success_label, fail_label, exit_label;
-		label_id break_label, continue_label;
-		std::unordered_map<label_id, std::vector<size_t>> label_locs;
-		std::unordered_map<label_id, jmp_address> label_addr;
+		// Jump targets
+		JumpTarget* success_target = nullptr;
+		JumpTarget* fail_target = nullptr;
+		JumpTarget* break_target = nullptr;
+		JumpTarget* continue_target = nullptr;
+		JumpTarget* fn_skip_target = nullptr;
+		bool _isRootBlock = true;
 
-		// Jump-label functions
-		label_id createLabel();
-		void addLocation(label_id label, size_t loc);
-		void setLocation(label_id label, jmp_address addr);
-		void writeLabels();
+		struct ScopeGuard
+		{
+			GS2CompilerVisitor& self;
+			JumpTarget* saved_success;
+			JumpTarget* saved_fail;
+			JumpTarget* saved_break;
+			JumpTarget* saved_continue;
+
+			explicit ScopeGuard(GS2CompilerVisitor& s)
+				: self(s),
+				  saved_success(s.success_target),
+				  saved_fail(s.fail_target),
+				  saved_break(s.break_target),
+				  saved_continue(s.continue_target) {}
+
+			~ScopeGuard()
+			{
+				self.success_target = saved_success;
+				self.fail_target = saved_fail;
+				self.break_target = saved_break;
+				self.continue_target = saved_continue;
+			}
+
+			ScopeGuard(const ScopeGuard&) = delete;
+			ScopeGuard& operator=(const ScopeGuard&) = delete;
+		};
 };
 
 inline Buffer GS2CompilerVisitor::getByteCode()
 {
-	setLocation(exit_label, byteCode.getOpIndex());
-	writeLabels();
 	return byteCode.getByteCode();
 }
 
 inline const std::set<std::string>& GS2CompilerVisitor::getJoinedClasses() const
 {
 	return joinedClasses;
-}
-
-inline void GS2CompilerVisitor::addLocation(label_id label, size_t loc)
-{
-	label_locs[label].push_back(loc);
-}
-
-inline void GS2CompilerVisitor::setLocation(label_id label, jmp_address addr)
-{
-	label_addr[label] = addr;
 }
 
 #endif

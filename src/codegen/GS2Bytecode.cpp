@@ -28,15 +28,6 @@ int32_t GS2Bytecode::getStringConst(const std::string& str)
 
 Buffer GS2Bytecode::getByteCode()
 {
-	// This fixes a weird bug in which the last function was uncallable,
-	// i am unsure if this is a bug with our specific client or something
-	// weird is happening during compilation that is causing the issue.
-	// I've used identical bytecode as per the decompiler, and still
-	// ran into this issue so I believe its a client issue.
-	// Either way, emitting this op seems to fix it. *shrugs*
-	// - joey
-	emit(opcode::OP_RET);
-
 	Buffer byteCode;
 
 	// GS1EventFlags
@@ -93,12 +84,6 @@ Buffer GS2Bytecode::getByteCode()
 				functionTableBuffer.Write<encoding::Int32>(func.opIndex);
 				functionTableBuffer.write(func.functionName.c_str(), func.functionName.length());
 				functionTableBuffer.write('\0');
-
-				// emit a jump before the function declaration to the last op index
-				if (func.jmpLoc != 0)
-				{
-					emit(short(opIndex), func.jmpLoc - 2);
-				}
 			}
 		}
 
@@ -130,7 +115,7 @@ Buffer GS2Bytecode::getByteCode()
 	return byteCode;
 }
 
-void GS2Bytecode::addFunction(std::string functionName, uint32_t opIdx, size_t jmpLoc)
+void GS2Bytecode::addFunction(std::string functionName, uint32_t opIdx)
 {
 	auto ret = functionSet.insert(functionName);
 
@@ -138,8 +123,7 @@ void GS2Bytecode::addFunction(std::string functionName, uint32_t opIdx, size_t j
 	{
 		functionTable.push_back(FunctionEntry{
 			std::move(functionName),
-			opIdx,
-			jmpLoc
+			opIdx
 		});
 	}
 	else

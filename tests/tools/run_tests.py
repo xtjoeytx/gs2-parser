@@ -177,7 +177,7 @@ class GS2TestRunner:
             bytecode_size=len(bytecode),
             compilation_success=success,
             expected_failure=expected_failure,
-            error_message=error_message,
+            error_message=error_message if not success else "",
             metadata={
                 "script_path": str(script_path.relative_to(self.scripts_dir)),
                 "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -193,6 +193,17 @@ class GS2TestRunner:
             bytecode_path = baseline_path.with_suffix(".bytecode")
             with open(bytecode_path, 'wb') as f:
                 f.write(bytecode)
+
+    def _baseline_matches_result(self, baseline: BaselineData, success: bool, bytecode: bytes,
+                                 error_message: str, expected_failure: bool) -> bool:
+        """Check whether baseline data already matches a compilation result."""
+        bytecode_hash = hashlib.sha256(bytecode).hexdigest() if bytecode else ""
+        return (
+            baseline.bytecode_hash == bytecode_hash
+            and baseline.bytecode_size == len(bytecode)
+            and baseline.compilation_success == success
+            and baseline.expected_failure == expected_failure
+        )
 
     def _load_baseline(self, script_path: Path) -> Optional[BaselineData]:
         """Load baseline data for a script"""
@@ -291,7 +302,8 @@ class GS2TestRunner:
                 "total_tests": len(script_files),
                 "passed": 0,
                 "failed": 0,
-                "expected_failures": 0
+                "expected_failures": 0,
+                "changed": 0
             },
             "tests": [],
             "regressions": [],
@@ -333,12 +345,18 @@ class GS2TestRunner:
                 should_save_baseline = success or expected_failure
 
                 if should_save_baseline:
-                    self._save_baseline(script_path, success, bytecode, error_message)
-                    if baseline is None:
-                        results["new_tests"].append(test_info)
-                        print(f"  -> Created new baseline")
+                    if baseline is not None and self._baseline_matches_result(
+                        baseline, success, bytecode, error_message, expected_failure
+                    ):
+                        print(f"  -> Baseline unchanged")
                     else:
-                        print(f"  -> Updated baseline")
+                        self._save_baseline(script_path, success, bytecode, error_message)
+                        if baseline is None:
+                            results["new_tests"].append(test_info)
+                            print(f"  -> Created new baseline")
+                        else:
+                            results["summary"]["changed"] += 1
+                            print(f"  -> Updated baseline")
                 elif baseline is None:
                     print(f"  -> Skipping baseline creation (test failed)")
             elif baseline:
@@ -445,6 +463,7 @@ def main():
             print(f"  Expected Failures: {summary['expected_failures']}")
             print(f"  Regressions: {len(results['regressions'])}")
             print(f"  New Tests: {len(results['new_tests'])}")
+            print(f"  Changed Tests: {summary['changed']}")
             print(f"  Execution Time: {results['execution_time']:.2f}s")
             print(f"  Report saved to: {report_file}")
 

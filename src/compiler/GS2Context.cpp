@@ -8,7 +8,6 @@
 GS2Context::GS2Context()
 	: errorService([this](auto && PH1) { handleError(std::forward<decltype(PH1)>(PH1)); })
 {
-	builtIn = GS2BuiltInFunctions::getBuiltIn();
 }
 
 void GS2Context::handleError(GS2CompilerError& error)
@@ -33,7 +32,7 @@ CompilerResponse GS2Context::compile(const std::string& script)
 		if (stmtBlock)
 		{
 			// Walk the AST tree to produce bytecode
-			GS2CompilerVisitor compilerVisitor(parserContext, builtIn);
+			GS2CompilerVisitor compilerVisitor(parserContext);
 			compilerVisitor.Visit(stmtBlock);
 
 			return CompilerResponse{
